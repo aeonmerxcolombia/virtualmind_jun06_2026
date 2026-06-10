@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Activar Cuenta - VirtualMind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }
+    .card-glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+    .input-field { background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); color: #e2e8f0; border-radius: 12px; padding: 12px 16px; width: 100%; font-size: 14px; transition: all 0.2s; }
+    .input-field:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+    .input-field.error { border-color: #ef4444; }
+    .error-text { color: #ef4444; font-size: 12px; margin-top: 4px; display: none; }
+    .error-text.active { display: block; }
+    .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="flex items-center justify-center p-4">
+  <div class="card-glass rounded-3xl max-w-md w-full p-8 animate-fade-in">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
+        <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-white">Activar tu cuenta</h1>
+      <p class="text-slate-400 text-sm mt-1">Crea una contraseña segura para acceder a VirtualMind</p>
+    </div>
+
+    <div id="formContainer">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Nueva Contraseña <span class="text-rose-500">*</span></label>
+          <input type="password" id="password" class="input-field" placeholder="Mínimo 8 caracteres" required minlength="8">
+          <p class="error-text" id="passwordError"><i class="fas fa-exclamation-circle mr-1"></i> Mínimo 8 caracteres.</p>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Confirmar Contraseña <span class="text-rose-500">*</span></label>
+          <input type="password" id="passwordConfirm" class="input-field" placeholder="Repite la contraseña" required>
+          <p class="error-text" id="confirmError"><i class="fas fa-exclamation-circle mr-1"></i> Las contraseñas no coinciden.</p>
+        </div>
+      </div>
+
+      <button id="btnActivar" class="mt-6 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-indigo-600/20 text-sm">
+        <i class="fas fa-shield-alt mr-2"></i> Activar mi cuenta
+      </button>
+    </div>
+
+    <div id="successContainer" class="hidden text-center py-6">
+      <div class="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+        <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-white mb-2">¡Cuenta activada!</h2>
+      <p class="text-slate-400 text-sm mb-6">Tu cuenta ha sido activada exitosamente. Ya puedes iniciar sesión.</p>
+      <a href="/login.html" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-indigo-600/20 text-sm">
+        <i class="fas fa-sign-in-alt mr-2"></i> Iniciar sesión
+      </a>
+    </div>
+
+    <div id="errorContainer" class="hidden text-center py-6">
+      <div class="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+        <svg class="w-8 h-8 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-white mb-2">Enlace inválido</h2>
+      <p class="text-slate-400 text-sm mb-6" id="errorMessage">El enlace de activación es inválido o ha expirado. Solicita un nuevo enlace al administrador.</p>
+      <a href="/login.html" class="inline-block bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-8 rounded-xl transition-all text-sm">
+        <i class="fas fa-arrow-left mr-2"></i> Ir al inicio
+      </a>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+
+      if (!token) {
+        document.getElementById('formContainer').classList.add('hidden');
+        document.getElementById('errorContainer').classList.remove('hidden');
+        document.getElementById('errorMessage').textContent = 'No se encontró un token de activación en el enlace.';
+        return;
+      }
+
+      const passwordInput = document.getElementById('password');
+      const confirmInput = document.getElementById('passwordConfirm');
+      const btnActivar = document.getElementById('btnActivar');
+
+      function validateForm() {
+        let valid = true;
+        document.getElementById('passwordError').classList.remove('active');
+        document.getElementById('confirmError').classList.remove('active');
+        passwordInput.classList.remove('error');
+        confirmInput.classList.remove('error');
+
+        if (passwordInput.value.length < 8) {
+          document.getElementById('passwordError').classList.add('active');
+          passwordInput.classList.add('error');
+          valid = false;
+        }
+        if (passwordInput.value !== confirmInput.value) {
+          document.getElementById('confirmError').classList.add('active');
+          confirmInput.classList.add('error');
+          valid = false;
+        }
+        return valid;
+      }
+
+      btnActivar.addEventListener('click', async function() {
+        if (!validateForm()) return;
+
+        btnActivar.disabled = true;
+        btnActivar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Activando...';
+
+        try {
+          const res = await fetch('/auth/activate-client', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token, password: passwordInput.value })
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            document.getElementById('formContainer').classList.add('hidden');
+            document.getElementById('successContainer').classList.remove('hidden');
+          } else {
+            document.getElementById('formContainer').classList.add('hidden');
+            document.getElementById('errorContainer').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = data.detail || 'Error al activar la cuenta.';
+          }
+        } catch (err) {
+          document.getElementById('formContainer').classList.add('hidden');
+          document.getElementById('errorContainer').classList.remove('hidden');
+          document.getElementById('errorMessage').textContent = 'Error de conexión. Intenta de nuevo más tarde.';
+        }
+      });
+
+      passwordInput.addEventListener('input', validateForm);
+      confirmInput.addEventListener('input', validateForm);
+    });
+  </script>
+</body>
+</html>

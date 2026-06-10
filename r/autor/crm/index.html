@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>CRM — Dashboard de Leads</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <!-- Header -->
+  <header class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center gap-3">
+      <h1 class="text-xl font-semibold">CRM — Dashboard</h1>
+      <div class="ml-auto flex gap-2">
+        <button id="btnOpenCreate" class="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50">Nuevo lead</button>
+        <button id="btnReloadAll" class="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50">Recargar</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filtros -->
+  <section class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 py-3 grid grid-cols-1 md:grid-cols-6 gap-3">
+      <input id="q" class="border rounded-lg px-3 py-2 text-sm md:col-span-2" placeholder="🔎 Buscar (nombre/email/empresa/fuente)…" />
+      <select id="fEtapaVida" class="border rounded-lg px-3 py-2 text-sm">
+        <option value="">Etapa de vida (todas)</option>
+        <option>lead</option><option>mql</option><option>sql</option>
+        <option>opportunity</option><option>customer</option><option>churned</option>
+      </select>
+      <select id="fOwner" class="border rounded-lg px-3 py-2 text-sm">
+        <option value="">Propietario (todos)</option>
+      </select>
+      <input id="fDesde" type="date" class="border rounded-lg px-3 py-2 text-sm" />
+      <input id="fHasta" type="date" class="border rounded-lg px-3 py-2 text-sm" />
+    </div>
+  </section>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <!-- KPIs -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white border rounded-2xl p-4"><div class="text-xs text-slate-500">Leads totales</div><div id="kpiTotal" class="text-2xl font-bold mt-1">—</div></div>
+      <div class="bg-white border rounded-2xl p-4"><div class="text-xs text-slate-500">Clientes (customer)</div><div id="kpiCustomers" class="text-2xl font-bold mt-1">—</div></div>
+      <div class="bg-white border rounded-2xl p-4"><div class="text-xs text-slate-500">Cierre estimado (30 días)</div><div id="kpiClosingSoon" class="text-2xl font-bold mt-1">—</div></div>
+      <div class="bg-white border rounded-2xl p-4"><div class="text-xs text-slate-500">Tasa de conversión</div><div id="kpiConversion" class="text-2xl font-bold mt-1">—</div></div>
+    </section>
+
+    <!-- Charts -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white border rounded-2xl p-4"><div class="text-sm font-medium mb-2">Distribución por etapa de vida</div><canvas id="chartEtapas" height="140"></canvas></div>
+      <div class="bg-white border rounded-2xl p-4"><div class="text-sm font-medium mb-2">Top fuentes</div><canvas id="chartFuentes" height="140"></canvas></div>
+      <div class="bg-white border rounded-2xl p-4"><div class="text-sm font-medium mb-2">Leads creados (últimos 12 meses)</div><canvas id="chartTimeline" height="140"></canvas></div>
+      <div class="bg-white border rounded-2xl p-4"><div class="text-sm font-medium mb-2">Leads por propietario</div><canvas id="chartOwners" height="140"></canvas></div>
+    </section>
+
+    <!-- Listado -->
+    <section class="bg-white border rounded-2xl">
+      <div class="p-4 flex items-center justify-between">
+        <div class="text-base font-medium">Leads</div>
+        <div id="pagerInfo" class="text-xs text-slate-500"></div>
+      </div>
+      <div class="overflow-x-auto border-t">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="text-left px-3 py-2">ID</th>
+              <th class="text-left px-3 py-2">Nombre</th>
+              <th class="text-left px-3 py-2">Email</th>
+              <th class="text-left px-3 py-2">Empresa</th>
+              <th class="text-left px-3 py-2">Etapa vida</th>
+              <th class="text-left px-3 py-2">Propietario</th>
+              <th class="text-left px-3 py-2">Monto</th>
+              <th class="w-40 px-3 py-2"></th>
+            </tr>
+          </thead>
+          <tbody id="tblBody" class="divide-y"></tbody>
+        </table>
+      </div>
+      <div class="p-4 flex items-center justify-between">
+        <div class="text-xs text-slate-500">Tip: usa Enter para buscar</div>
+        <div class="flex gap-2">
+          <button id="btnPrev" class="px-3 py-2 rounded-lg border text-xs hover:bg-slate-50">◀ Ver menos</button>
+          <button id="btnNext" class="px-3 py-2 rounded-lg border text-xs hover:bg-slate-50">Ver más ▶</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal crear/editar: TODOS LOS CAMPOS -->
+  <div id="modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="relative max-w-5xl mx-auto my-10 bg-white border rounded-2xl shadow-xl">
+      <div class="p-4 border-b flex items-center justify-between">
+        <div class="font-semibold">Lead</div>
+        <button id="btnCloseModal" class="px-3 py-1.5 rounded border text-sm hover:bg-slate-50">Cerrar</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="px-4 pt-3">
+        <div class="flex flex-wrap gap-2">
+          <button class="tab px-3 py-1.5 rounded-lg border text-sm" data-tab="t-basico">Básico</button>
+          <button class="tab px-3 py-1.5 rounded-lg border text-sm" data-tab="t-empresa">Empresa</button>
+          <button class="tab px-3 py-1.5 rounded-lg border text-sm" data-tab="t-pipeline">Pipeline</button>
+          <button class="tab px-3 py-1.5 rounded-lg border text-sm" data-tab="t-asignacion">Asignación</button>
+          <button class="tab px-3 py-1.5 rounded-lg border text-sm" data-tab="t-marketing">Marketing</button>
+          <button class="tab px-3 py-1.5 rounded-lg border text-sm" data-tab="t-privacidad">Privacidad</button>
+          <button class="tab px-3 py-1.5 rounded-lg border text-sm" data-tab="t-direccion">Dirección</button>
+          <button class="tab px-3 py-1.5 rounded-lg border text-sm" data-tab="t-contadores">Contadores</button>
+          <button class="tab px-3 py-1.5 rounded-lg border text-sm" data-tab="t-adjuntos">Adjuntos</button>
+          <button class="tab px-3 py-1.5 rounded-lg border text-sm" data-tab="t-extras">Extras</button>
+        </div>
+      </div>
+
+      <div class="p-4 space-y-6 max-h-[75vh] overflow-y-auto">
+        <!-- BASICO -->
+        <section id="t-basico" class="tab-pane">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label class="block text-sm mb-1">Nombre *</label><input id="f_nombre" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Email</label><input id="f_email" type="email" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Teléfono</label><input id="f_telefono" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Teléfono (E.164)</label><input id="f_telefono_e164" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="+57300..." /></div>
+            <div><label class="block text-sm mb-1">País teléfono</label><input id="f_telefono_pais" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="CO" /></div>
+            <div><label class="block text-sm mb-1">Idioma preferido</label><input id="f_idioma_preferido" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="es" /></div>
+            <div><label class="block text-sm mb-1">Cargo</label><input id="f_cargo" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Departamento</label><input id="f_departamento" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">LinkedIn</label><input id="f_linkedin_url" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="https://..." /></div>
+            <div><label class="block text-sm mb-1">Sitio Web</label><input id="f_sitio_web" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="https://..." /></div>
+          </div>
+        </section>
+
+        <!-- EMPRESA -->
+        <section id="t-empresa" class="tab-pane hidden">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div><label class="block text-sm mb-1">Empresa</label><input id="f_empresa" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Industria</label><input id="f_industria" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Tamaño</label><input id="f_tamano_empresa" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="1-10 / 11-50 / ..." /></div>
+            <div><label class="block text-sm mb-1">Ingresos anuales</label><input id="f_ingresos_anuales" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          </div>
+        </section>
+
+        <!-- PIPELINE -->
+        <section id="t-pipeline" class="tab-pane hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm mb-1">Etapa de vida</label>
+              <select id="f_etapa_vida" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <option>lead</option><option>mql</option><option>sql</option>
+                <option>opportunity</option><option>customer</option><option>churned</option>
+              </select>
+            </div>
+            <div><label class="block text-sm mb-1">Pipeline</label><input id="f_pipeline" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Etapa</label><input id="f_etapa" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="discovery/proposal/..." /></div>
+            <div>
+              <label class="block text-sm mb-1">Prioridad</label>
+              <select id="f_prioridad" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="">—</option><option>low</option><option>medium</option><option>high</option>
+              </select>
+            </div>
+            <div><label class="block text-sm mb-1">Puntaje lead</label><input id="f_puntaje_lead" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Monto potencial</label><input id="f_monto_potencial" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Moneda</label><input id="f_moneda" maxlength="3" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="USD" /></div>
+            <div><label class="block text-sm mb-1">Probabilidad (%)</label><input id="f_probabilidad" type="number" min="0" max="100" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Fecha cierre (estimada)</label><input id="f_fecha_cierre" type="date" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Convertido en</label><input id="f_convertido_en" type="datetime-local" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          </div>
+        </section>
+
+        <!-- ASIGNACION -->
+        <section id="t-asignacion" class="tab-pane hidden">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm mb-1">Propietario</label>
+              <select id="f_propietario_uid" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="">—</option>
+              </select>
+            </div>
+            <div><label class="block text-sm mb-1">Equipo</label><input id="f_equipo" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Zona horaria</label><input id="f_zona_horaria" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="America/Bogota" /></div>
+            <div><label class="block text-sm mb-1">Último contacto</label><input id="f_ultimo_contacto_en" type="datetime-local" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Última actividad</label><input id="f_ultima_actividad_en" type="datetime-local" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Próxima acción</label><input id="f_proxima_accion_en" type="datetime-local" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          </div>
+        </section>
+
+        <!-- MARKETING -->
+        <section id="t-marketing" class="tab-pane hidden">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div><label class="block text-sm mb-1">Fuente</label><input id="f_fuente" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Detalle fuente</label><input id="f_fuente_detalle" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Campaña</label><input id="f_campania" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-3">
+            <div><label class="block text-sm mb-1">utm_source</label><input id="f_utm_source" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">utm_medium</label><input id="f_utm_medium" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">utm_campaign</label><input id="f_utm_campaign" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">utm_term</label><input id="f_utm_term" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">utm_content</label><input id="f_utm_content" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          </div>
+        </section>
+
+        <!-- PRIVACIDAD -->
+        <section id="t-privacidad" class="tab-pane hidden">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm mb-1">Email válido</label>
+              <select id="f_email_valido" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="">desconocido</option>
+                <option value="true">sí</option>
+                <option value="false">no</option>
+              </select>
+            </div>
+            <label class="flex items-center gap-2"><input id="f_email_rebotado" type="checkbox" class="h-4 w-4"> Email rebotado</label>
+            <label class="flex items-center gap-2"><input id="f_consentimiento_email" type="checkbox" class="h-4 w-4"> Consentimiento email</label>
+            <label class="flex items-center gap-2"><input id="f_consentimiento_telefono" type="checkbox" class="h-4 w-4"> Consentimiento teléfono</label>
+            <label class="flex items-center gap-2"><input id="f_no_contactar" type="checkbox" class="h-4 w-4"> No contactar</label>
+            <div class="md:col-span-2"><label class="block text-sm mb-1">Clave deduplicación</label><input id="f_clave_deduplicacion" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          </div>
+        </section>
+
+        <!-- DIRECCION -->
+        <section id="t-direccion" class="tab-pane hidden">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-3"><label class="block text-sm mb-1">Calle</label><input id="f_dir_street" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Ciudad</label><input id="f_dir_city" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Estado/Depto</label><input id="f_dir_state" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">ZIP</label><input id="f_dir_zip" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">País</label><input id="f_dir_country" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Lat</label><input id="f_dir_lat" type="number" step="any" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label class="block text-sm mb-1">Lng</label><input id="f_dir_lng" type="number" step="any" class="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+          </div>
+        </section>
+
+        <!-- CONTADORES -->
+        <section id="t-contadores" class="tab-pane hidden">
+          <div class="grid grid-cols-3 gap-4">
+            <div><label class="block text-sm mb-1"># Llamadas</label><input id="f_calls" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="0" /></div>
+            <div><label class="block text-sm mb-1"># Emails</label><input id="f_emails" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="0" /></div>
+            <div><label class="block text-sm mb-1"># Reuniones</label><input id="f_meetings" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" value="0" /></div>
+          </div>
+        </section>
+
+        <!-- ADJUNTOS -->
+        <section id="t-adjuntos" class="tab-pane hidden">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium">Adjuntos</span>
+            <button id="btnAddAdj" class="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50">Agregar</button>
+          </div>
+          <div class="overflow-x-auto border rounded">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50"><tr><th class="px-3 py-2 text-left">Nombre</th><th class="px-3 py-2 text-left">URL</th><th class="w-20 px-3 py-2"></th></tr></thead>
+              <tbody id="tbodyAdj" class="divide-y"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- EXTRAS -->
+        <section id="t-extras" class="tab-pane hidden">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label class="block text-sm mb-1">Etiquetas (coma)</label><input id="f_etiquetas" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="vip, enterprise" /></div>
+            <div><label class="block text-sm mb-1">Personalizado (JSON)</label><input id="f_personalizado" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder='{"preferencia":"..."}' /></div>
+            <div class="md:col-span-2"><label class="block text-sm mb-1">Notas</label><textarea id="f_notas" class="w-full border rounded-lg px-3 py-2 text-sm h-24"></textarea></div>
+          </div>
+        </section>
+
+        <div class="text-right">
+          <button id="btnDeleteLead" class="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50 mr-2 hidden">Eliminar</button>
+          <button id="btnSaveLead" class="px-3 py-2 rounded-lg border text-sm hover:bg-slate-50">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <template id="tplAdj">
+    <tr>
+      <td class="px-3 py-2"><input class="w-full border rounded px-2 py-1 text-sm a-nombre" placeholder="Documento X" /></td>
+      <td class="px-3 py-2"><input class="w-full border rounded px-2 py-1 text-sm a-url" placeholder="https://..." /></td>
+      <td class="px-3 py-2 text-right"><button class="px-2 py-1 rounded border text-xs hover:bg-slate-50 btnDel">Quitar</button></td>
+    </tr>
+  </template>
+
+  <!-- Toast -->
+  <div id="toasts" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+
+  <script>
+    // ===== Config =====
+    const API = location.origin; // o fija: "https://gestordecursos.pegui.edu.co:8000"
+    const token = localStorage.getItem("token");
+    const HEADERS = token
+      ? { "Content-Type": "application/json", "Authorization": "Bearer " + token }
+      : { "Content-Type": "application/json" };
+
+    // ===== Helpers =====
+    const $ = (id) => document.getElementById(id);
+    const show = (e) => e.classList.remove("hidden");
+    const hide = (e) => e.classList.add("hidden");
+    const esc = (s) => String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+    const toBool = (v) => v === "true" ? true : v === "false" ? false : undefined;
+    const isoOrUndef = (v) => v ? new Date(v).toISOString() : undefined;
+    function toast(msg, type="info"){
+      const box = document.createElement("div");
+      box.className = "px-3 py-2 rounded-lg shadow text-white text-sm " + (type==="error"?"bg-rose-600":"bg-emerald-600");
+      box.textContent = msg;
+      $("toasts").appendChild(box);
+      setTimeout(()=> box.remove(), 3000);
+    }
+
+    // ===== Elements =====
+    const q = $("q"), fEtapaVida = $("fEtapaVida"), fOwner = $("fOwner"), fDesde = $("fDesde"), fHasta = $("fHasta");
+    const tblBody = $("tblBody"), pagerInfo = $("pagerInfo"), btnPrev = $("btnPrev"), btnNext = $("btnNext");
+    const btnOpenCreate = $("btnOpenCreate"), btnReloadAll = $("btnReloadAll");
+    const modal = $("modal"), btnCloseModal = $("btnCloseModal"), btnSaveLead = $("btnSaveLead"), btnDeleteLead = $("btnDeleteLead");
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const panes = Array.from(document.querySelectorAll(".tab-pane"));
+
+    // Modal fields
+    const M = {
+      // Básico
+      nombre: $("f_nombre"), email: $("f_email"), telefono: $("f_telefono"),
+      telefono_e164: $("f_telefono_e164"), telefono_pais: $("f_telefono_pais"), idioma_preferido: $("f_idioma_preferido"),
+      cargo: $("f_cargo"), departamento: $("f_departamento"), linkedin_url: $("f_linkedin_url"), sitio_web: $("f_sitio_web"),
+
+      // Empresa
+      empresa: $("f_empresa"), industria: $("f_industria"), tamano_empresa: $("f_tamano_empresa"), ingresos_anuales: $("f_ingresos_anuales"),
+
+      // Pipeline
+      etapa_vida: $("f_etapa_vida"), pipeline: $("f_pipeline"), etapa: $("f_etapa"), prioridad: $("f_prioridad"),
+      puntaje_lead: $("f_puntaje_lead"), monto_potencial: $("f_monto_potencial"), moneda: $("f_moneda"),
+      probabilidad: $("f_probabilidad"), fecha_cierre: $("f_fecha_cierre"), convertido_en: $("f_convertido_en"),
+
+      // Asignación
+      propietario_uid: $("f_propietario_uid"), equipo: $("f_equipo"), zona_horaria: $("f_zona_horaria"),
+      ultimo_contacto_en: $("f_ultimo_contacto_en"), ultima_actividad_en: $("f_ultima_actividad_en"), proxima_accion_en: $("f_proxima_accion_en"),
+
+      // Marketing
+      fuente: $("f_fuente"), fuente_detalle: $("f_fuente_detalle"), campania: $("f_campania"),
+      utm_source: $("f_utm_source"), utm_medium: $("f_utm_medium"), utm_campaign: $("f_utm_campaign"), utm_term: $("f_utm_term"), utm_content: $("f_utm_content"),
+
+      // Privacidad
+      email_valido: $("f_email_valido"), email_rebotado: $("f_email_rebotado"),
+      consentimiento_email: $("f_consentimiento_email"), consentimiento_telefono: $("f_consentimiento_telefono"), no_contactar: $("f_no_contactar"),
+      clave_deduplicacion: $("f_clave_deduplicacion"),
+
+      // Dirección
+      dir_street: $("f_dir_street"), dir_city: $("f_dir_city"), dir_state: $("f_dir_state"), dir_zip: $("f_dir_zip"), dir_country: $("f_dir_country"),
+      dir_lat: $("f_dir_lat"), dir_lng: $("f_dir_lng"),
+
+      // Contadores
+      calls: $("f_calls"), emails: $("f_emails"), meetings: $("f_meetings"),
+
+      // Adjuntos
+      tbodyAdj: $("tbodyAdj"), btnAddAdj: $("btnAddAdj"),
+
+      // Extras
+      etiquetas: $("f_etiquetas"), personalizado: $("f_personalizado"), notas: $("f_notas"),
+    };
+    const tplAdj = $("tplAdj");
+
+    // Charts
+    let chEtapas, chFuentes, chTimeline, chOwners;
+
+    // State
+    let page = 1, limit = 10, lastPageCount = 0, currentEditId = null;
+    let ownersCache = [];
+    let allLeadsCache = [];
+
+    // ===== Tabs logic =====
+    function activateTab(id){
+      panes.forEach(p => p.classList.add("hidden"));
+      tabs.forEach(t => t.classList.remove("bg-slate-100"));
+      document.getElementById(id).classList.remove("hidden");
+      const tb = tabs.find(t => t.dataset.tab === id);
+      tb?.classList.add("bg-slate-100");
+    }
+    tabs.forEach(t => t.addEventListener("click", ()=> activateTab(t.dataset.tab)));
+
+    // ===== Owners =====
+    async function loadOwners(){
+      try {
+        const r = await fetch(`${API}/users`, { headers: HEADERS });
+        if (!r.ok) throw 0;
+        const arr = await r.json();
+        ownersCache = arr.map(u => ({ uid: u.uid || u.id || u.email, name: u.name || u.nombre || u.email || u.uid }));
+      } catch { ownersCache = []; }
+      // Filtros y modal
+      $("fOwner").innerHTML = `<option value="">Propietario (todos)</option>` + ownersCache.map(o => `<option value="${esc(o.uid)}">${esc(o.name)}</option>`).join("");
+      M.propietario_uid.innerHTML = `<option value="">—</option>` + ownersCache.map(o => `<option value="${esc(o.uid)}">${esc(o.name)}</option>`).join("");
+    }
+
+    // ===== Query Build =====
+    function buildQuery(base = `${API}/crm/leads`){
+      const url = new URL(base);
+      const s = $("q").value.trim(); if (s) url.searchParams.set("q", s);
+      const e = $("fEtapaVida").value.trim(); if (e) url.searchParams.set("etapa_vida", e);
+      const ow = $("fOwner").value.trim(); if (ow) url.searchParams.set("propietario_uid", ow);
+      if ($("fDesde").value) url.searchParams.set("desde", $("fDesde").value);
+      if ($("fHasta").value) url.searchParams.set("hasta", $("fHasta").value);
+      return url;
+    }
+
+    // ===== List =====
+    async function listLeads(){
+      const url = buildQuery();
+      url.searchParams.set("skip", String((page-1)*limit));
+      url.searchParams.set("limit", String(limit));
+      const r = await fetch(url, { headers: HEADERS });
+      const arr = r.ok ? await r.json() : [];
+      lastPageCount = arr.length;
+
+      $("tblBody").innerHTML = arr.map(it => `
+        <tr>
+          <td class="px-3 py-2">#${it.id}</td>
+          <td class="px-3 py-2">
+            <div class="font-medium">${esc(it.nombre)}</div>
+            <div class="text-xs text-slate-500">${esc(it.fuente || "-")}</div>
+          </td>
+          <td class="px-3 py-2">${esc(it.email || "-")}</td>
+          <td class="px-3 py-2">${esc(it.empresa || "-")}</td>
+          <td class="px-3 py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-slate-100">${esc(it.etapa_vida || "-")}</span></td>
+          <td class="px-3 py-2">${esc(it.propietario_uid || "-")}</td>
+          <td class="px-3 py-2">${it.monto_potencial != null ? new Intl.NumberFormat().format(it.monto_potencial) : "-"}</td>
+          <td class="px-3 py-2 text-right">
+            <button class="px-2 py-1 rounded-lg border text-xs hover:bg-slate-50" data-id="${it.id}" data-act="edit">Editar</button>
+            <button class="px-2 py-1 rounded-lg border text-xs hover:bg-slate-50 ml-1" data-id="${it.id}" data-act="del">Borrar</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="8" class="px-3 py-8 text-center text-slate-500">Sin resultados.</td></tr>`;
+
+      $("pagerInfo").textContent = `Página ${page} • Mostrando ${arr.length}`;
+      $("btnPrev").disabled = page <= 1;
+      $("btnNext").disabled = arr.length < limit;
+    }
+
+    $("tblBody").addEventListener("click", async (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      const id = b.dataset.id;
+      if (b.dataset.act === "edit") openEditModal(id);
+      else if (b.dataset.act === "del") removeLead(id);
+    });
+
+    $("btnPrev").onclick = () => { if (page > 1) { page--; listLeads(); } };
+    $("btnNext").onclick = () => { if (lastPageCount === limit) { page++; listLeads(); } };
+    $("q").addEventListener("keydown", (e)=>{ if (e.key === "Enter") { page=1; listLeads(); }});
+    ["fEtapaVida","fOwner","fDesde","fHasta"].forEach(id => $(id).addEventListener("change", ()=>{ page=1; listLeads(); refreshAnalytics(); }));
+
+    $("btnReloadAll").onclick = async ()=> { await reloadAll(); toast("Recargado"); };
+
+    // ===== Modal helpers =====
+    function resetModal(){
+      currentEditId = null;
+      // inputs
+      Object.values(M).forEach(n => {
+        if (!n || n === M.tbodyAdj || n === M.btnAddAdj) return;
+        if (n.type === "checkbox") n.checked = false;
+        else n.value = "";
+      });
+      M.etapa_vida.value = "lead";
+      M.calls.value = 0; M.emails.value = 0; M.meetings.value = 0;
+      M.tbodyAdj.innerHTML = "";
+      addAdjuntoRow();
+      activateTab("t-basico");
+    }
+
+    function openCreateModal(){ resetModal(); hide($("btnDeleteLead")); show(modal); }
+    async function openEditModal(id){
+      const r = await fetch(`${API}/crm/leads/${id}`, { headers: HEADERS });
+      if (!r.ok) { toast("No se pudo cargar el lead","error"); return; }
+      const it = await r.json();
+      resetModal();
+      currentEditId = it.id;
+
+      // Setters
+      const set = (k,v)=> { if (M[k]) M[k].value = v ?? ""; }
+      const setBool = (k,v)=> { if (M[k]) M[k].checked = !!v }
+      const setDT = (k,v)=> { if (M[k]) M[k].value = v ? v.slice(0,16) : "" }
+
+      // Básico
+      set("nombre", it.nombre); set("email", it.email); set("telefono", it.telefono);
+      set("telefono_e164", it.telefono_e164); set("telefono_pais", it.telefono_pais); set("idioma_preferido", it.idioma_preferido);
+      set("cargo", it.cargo); set("departamento", it.departamento); set("linkedin_url", it.linkedin_url); set("sitio_web", it.sitio_web);
+
+      // Empresa
+      set("empresa", it.empresa); set("industria", it.industria); set("tamano_empresa", it.tamano_empresa); set("ingresos_anuales", it.ingresos_anuales);
+
+      // Pipeline
+      set("etapa_vida", it.etapa_vida); set("pipeline", it.pipeline); set("etapa", it.etapa); set("prioridad", it.prioridad);
+      set("puntaje_lead", it.puntaje_lead); set("monto_potencial", it.monto_potencial); set("moneda", it.moneda);
+      set("probabilidad", it.probabilidad); set("fecha_cierre", it.fecha_cierre || "");
+      set("convertido_en", it.convertido_en ? it.convertido_en.slice(0,16) : "");
+
+      // Asignación
+      set("propietario_uid", it.propietario_uid); set("equipo", it.equipo); set("zona_horaria", it.zona_horaria);
+      setDT("ultimo_contacto_en", it.ultimo_contacto_en); setDT("ultima_actividad_en", it.ultima_actividad_en); setDT("proxima_accion_en", it.proxima_accion_en);
+
+      // Marketing
+      set("fuente", it.fuente); set("fuente_detalle", it.fuente_detalle); set("campania", it.campania);
+      set("utm_source", it.utm?.utm_source); set("utm_medium", it.utm?.utm_medium); set("utm_campaign", it.utm?.utm_campaign); set("utm_term", it.utm?.utm_term); set("utm_content", it.utm?.utm_content);
+
+      // Privacidad
+      $("f_email_valido").value = it.email_valido === true ? "true" : (it.email_valido === false ? "false" : "");
+      setBool("email_rebotado", it.email_rebotado); setBool("consentimiento_email", it.consentimiento_email);
+      setBool("consentimiento_telefono", it.consentimiento_telefono); setBool("no_contactar", it.no_contactar);
+      set("clave_deduplicacion", it.clave_deduplicacion);
+
+      // Dirección
+      set("dir_street", it.direccion?.street); set("dir_city", it.direccion?.city); set("dir_state", it.direccion?.state);
+      set("dir_zip", it.direccion?.zip); set("dir_country", it.direccion?.country);
+      set("dir_lat", it.direccion?.lat); set("dir_lng", it.direccion?.lng);
+
+      // Contadores
+      set("calls", it.contadores_actividad?.calls ?? 0);
+      set("emails", it.contadores_actividad?.emails ?? 0);
+      set("meetings", it.contadores_actividad?.meetings ?? 0);
+
+      // Adjuntos
+      M.tbodyAdj.innerHTML = "";
+      (it.adjuntos || []).forEach(a => addAdjuntoRow({nombre:a.nombre||"", url:a.url||""}));
+      if (!M.tbodyAdj.children.length) addAdjuntoRow();
+
+      // Extras
+      set("etiquetas", (it.etiquetas||[]).join(", "));
+      set("personalizado", it.personalizado ? JSON.stringify(it.personalizado) : "");
+      set("notas", it.notas);
+
+      show($("btnDeleteLead")); show(modal);
+    }
+    function closeModal(){ hide(modal); }
+
+    $("btnOpenCreate").onclick = openCreateModal;
+    $("btnCloseModal").onclick = closeModal;
+    modal.addEventListener("click", (e)=>{ if (e.target === modal) closeModal(); });
+
+    // Adjuntos
+    M.btnAddAdj.onclick = () => addAdjuntoRow();
+    function addAdjuntoRow(val={nombre:"",url:""}){
+      const tr = tplAdj.content.cloneNode(true);
+      tr.querySelector(".a-nombre").value = val.nombre || "";
+      tr.querySelector(".a-url").value = val.url || "";
+      tr.querySelector(".btnDel").onclick = (e)=> e.target.closest("tr").remove();
+      M.tbodyAdj.appendChild(tr);
+    }
+    function buildAdjuntos(){
+      const arr=[];
+      M.tbodyAdj.querySelectorAll("tr").forEach(tr=>{
+        const nombre = tr.querySelector(".a-nombre").value.trim();
+        const url = tr.querySelector(".a-url").value.trim();
+        if (nombre || url) arr.push({ nombre, url });
+      });
+      return arr.length ? arr : undefined;
+    }
+
+    // Payload
+    function parseJSONOptional(s){ if (!s?.trim()) return undefined; try { return JSON.parse(s); } catch { toast("JSON personalizado inválido","error"); return undefined; } }
+    function buildModalPayload(){
+      const etqs = (M.etiquetas.value || "").split(",").map(x=>x.trim()).filter(Boolean);
+      const utm = {
+        utm_source: M.utm_source.value.trim() || undefined,
+        utm_medium: M.utm_medium.value.trim() || undefined,
+        utm_campaign: M.utm_campaign.value.trim() || undefined,
+        utm_term: M.utm_term.value.trim() || undefined,
+        utm_content: M.utm_content.value.trim() || undefined,
+      };
+      Object.keys(utm).forEach(k => utm[k] === undefined && delete utm[k]);
+
+      const direccion = {
+        street: M.dir_street.value.trim() || undefined,
+        city: M.dir_city.value.trim() || undefined,
+        state: M.dir_state.value.trim() || undefined,
+        zip: M.dir_zip.value.trim() || undefined,
+        country: M.dir_country.value.trim() || undefined,
+        lat: M.dir_lat.value ? Number(M.dir_lat.value) : undefined,
+        lng: M.dir_lng.value ? Number(M.dir_lng.value) : undefined,
+      };
+      Object.keys(direccion).forEach(k => direccion[k] === undefined && delete direccion[k]);
+
+      const payload = {
+        // Básico
+        nombre: M.nombre.value.trim(),
+        email: M.email.value.trim() || undefined,
+        telefono: M.telefono.value.trim() || undefined,
+        telefono_e164: M.telefono_e164.value.trim() || undefined,
+        telefono_pais: M.telefono_pais.value.trim() || undefined,
+        idioma_preferido: M.idioma_preferido.value.trim() || undefined,
+        cargo: M.cargo.value.trim() || undefined,
+        departamento: M.departamento.value.trim() || undefined,
+        linkedin_url: M.linkedin_url.value.trim() || undefined,
+        sitio_web: M.sitio_web.value.trim() || undefined,
+
+        // Empresa
+        empresa: M.empresa.value.trim() || undefined,
+        industria: M.industria.value.trim() || undefined,
+        tamano_empresa: M.tamano_empresa.value.trim() || undefined,
+        ingresos_anuales: M.ingresos_anuales.value ? Number(M.ingresos_anuales.value) : undefined,
+
+        // Pipeline
+        etapa_vida: M.etapa_vida.value || "lead",
+        pipeline: M.pipeline.value.trim() || undefined,
+        etapa: M.etapa.value.trim() || undefined,
+        prioridad: M.prioridad.value || undefined,
+        puntaje_lead: M.puntaje_lead.value ? Number(M.puntaje_lead.value) : undefined,
+        monto_potencial: M.monto_potencial.value ? Number(M.monto_potencial.value) : undefined,
+        moneda: M.moneda.value.trim() || undefined,
+        probabilidad: M.probabilidad.value ? Number(M.probabilidad.value) : undefined,
+        fecha_cierre: M.fecha_cierre.value || undefined,
+        convertido_en: isoOrUndef(M.convertido_en.value),
+
+        // Asignación
+        propietario_uid: M.propietario_uid.value || undefined,
+        equipo: M.equipo.value.trim() || undefined,
+        zona_horaria: M.zona_horaria.value.trim() || undefined,
+        ultimo_contacto_en: isoOrUndef(M.ultimo_contacto_en.value),
+        ultima_actividad_en: isoOrUndef(M.ultima_actividad_en.value),
+        proxima_accion_en: isoOrUndef(M.proxima_accion_en.value),
+
+        // Contadores
+        contadores_actividad: {
+          calls: M.calls.value ? Number(M.calls.value) : 0,
+          emails: M.emails.value ? Number(M.emails.value) : 0,
+          meetings: M.meetings.value ? Number(M.meetings.value) : 0,
+        },
+
+        // Adjuntos
+        adjuntos: buildAdjuntos(),
+
+        // Marketing
+        fuente: M.fuente.value.trim() || undefined,
+        fuente_detalle: M.fuente_detalle.value.trim() || undefined,
+        campania: M.campania.value.trim() || undefined,
+        utm: Object.keys(utm).length ? utm : undefined,
+
+        // Privacidad
+        email_valido: toBool(M.email_valido.value),
+        email_rebotado: M.email_rebotado.checked || undefined,
+        consentimiento_email: M.consentimiento_email.checked || undefined,
+        consentimiento_telefono: M.consentimiento_telefono.checked || undefined,
+        no_contactar: M.no_contactar.checked || undefined,
+        clave_deduplicacion: M.clave_deduplicacion.value.trim() || undefined,
+
+        // Dirección / extras
+        direccion: Object.keys(direccion).length ? direccion : undefined,
+        etiquetas: etqs.length ? etqs : undefined,
+        personalizado: parseJSONOptional(M.personalizado.value),
+        notas: M.notas.value.trim() || undefined,
+      };
+
+      // Limpieza
+      Object.keys(payload).forEach(k => (payload[k] === undefined || (typeof payload[k]==="object" && !Array.isArray(payload[k]) && Object.keys(payload[k]).length===0)) && delete payload[k]);
+      return payload;
+    }
+
+    // Save / Delete
+    $("btnSaveLead").onclick = async ()=>{
+      const payload = buildModalPayload();
+      if (!payload.nombre) { toast("El nombre es obligatorio","error"); return; }
+      try {
+        let r;
+        if (currentEditId) {
+          r = await fetch(`${API}/crm/leads/${currentEditId}`, { method:"PUT", headers: HEADERS, body: JSON.stringify(payload) });
+        } else {
+          r = await fetch(`${API}/crm/leads`, { method:"POST", headers: HEADERS, body: JSON.stringify(payload) });
+        }
+        if (!r.ok) throw 0;
+        toast("Guardado ✔"); closeModal(); await listLeads(); await refreshAnalytics();
+      } catch { toast("No se pudo guardar","error"); }
+    };
+
+    $("btnDeleteLead").onclick = async ()=>{
+      if (!currentEditId) return;
+      if (!confirm("¿Eliminar este lead?")) return;
+      try {
+        const r = await fetch(`${API}/crm/leads/${currentEditId}`, { method:"DELETE", headers: HEADERS });
+        if (!r.ok) throw 0;
+        toast("Eliminado"); closeModal(); await listLeads(); await refreshAnalytics();
+      } catch { toast("No se pudo eliminar","error"); }
+    };
+
+    // Table events
+    $("tblBody").addEventListener("click", async (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      const id = b.dataset.id;
+      if (b.dataset.act === "edit") openEditModal(id);
+      else if (b.dataset.act === "del") removeLead(id);
+    });
+
+    async function removeLead(id){
+      if (!confirm("¿Eliminar este lead?")) return;
+      try {
+        const r = await fetch(`${API}/crm/leads/${id}`, { method:"DELETE", headers: HEADERS });
+        if (!r.ok) throw 0;
+        toast("Eliminado"); await listLeads(); await refreshAnalytics();
+      } catch { toast("No se pudo eliminar","error"); }
+    }
+
+    // ===== Analytics =====
+    async function fetchAllLeadsForAnalytics(maxPages=50){
+      const acc = [];
+      let skip = 0, got = 0, size = 200;
+      for (let i=0; i<maxPages; i++){
+        const url = buildQuery();
+        url.searchParams.set("skip", String(skip));
+        url.searchParams.set("limit", String(size));
+        const r = await fetch(url, { headers: HEADERS });
+        const chunk = r.ok ? await r.json() : [];
+        acc.push(...chunk);
+        got = chunk.length;
+        if (got < size) break;
+        skip += size;
+      }
+      return acc;
+    }
+
+    function computeKPIs(arr){
+      const total = arr.length;
+      const customers = arr.filter(x => x.etapa_vida === "customer").length;
+      const conversion = total ? (customers/total*100) : 0;
+      const in30 = (()=> {
+        const today = new Date(); const limit = new Date(); limit.setDate(today.getDate()+30);
+        return arr.filter(x => x.fecha_cierre && new Date(x.fecha_cierre) <= limit).length;
+      })();
+      $("kpiTotal").textContent = total.toLocaleString();
+      $("kpiCustomers").textContent = customers.toLocaleString();
+      $("kpiClosingSoon").textContent = in30.toLocaleString();
+      $("kpiConversion").textContent = conversion.toFixed(1) + "%";
+    }
+
+    function buildCounts(arr, key, topN=8){
+      const map = new Map();
+      arr.forEach(x => map.set(x[key] || "—", (map.get(x[key] || "—")||0)+1));
+      const sorted = [...map.entries()].sort((a,b)=> b[1]-a[1]);
+      const top = sorted.slice(0, topN);
+      return { labels: top.map(x=>x[0]), data: top.map(x=>x[1]) };
+    }
+
+    function buildTimeline(arr){
+      const now = new Date();
+      const labels = []; const buckets = new Map();
+      for (let i=11;i>=0;i--){
+        const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+        const key = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+        labels.push(key); buckets.set(key, 0);
+      }
+      arr.forEach(x => {
+        const d = x.created_at ? new Date(x.created_at) : null;
+        if (!d) return;
+        const key = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+        if (buckets.has(key)) buckets.set(key, buckets.get(key)+1);
+      });
+      return { labels, data: labels.map(l=>buckets.get(l)||0) };
+    }
+
+    function renderCharts(arr){
+      [chEtapas, chFuentes, chTimeline, chOwners].forEach(c => { try{ c?.destroy(); }catch{} });
+
+      const ce = buildCounts(arr, "etapa_vida", 10);
+      chEtapas = new Chart(document.getElementById("chartEtapas"), {
+        type: "bar",
+        data: { labels: ce.labels, datasets: [{ label: "Leads", data: ce.data }] },
+        options: { responsive:true, plugins: { legend:{display:false} } }
+      });
+
+      const cf = buildCounts(arr, "fuente", 7);
+      chFuentes = new Chart(document.getElementById("chartFuentes"), {
+        type: "doughnut",
+        data: { labels: cf.labels, datasets: [{ data: cf.data }] },
+        options: { responsive:true }
+      });
+
+      const tl = buildTimeline(arr);
+      chTimeline = new Chart(document.getElementById("chartTimeline"), {
+        type: "line",
+        data: { labels: tl.labels, datasets: [{ label: "Leads/mes", data: tl.data, tension: 0.3, fill: false }] },
+        options: { responsive:true, plugins: { legend:{display:false} } }
+      });
+
+      const ow = buildCounts(arr, "propietario_uid", 10);
+      chOwners = new Chart(document.getElementById("chartOwners"), {
+        type: "bar",
+        data: { labels: ow.labels, datasets: [{ label: "Leads", data: ow.data }] },
+        options: { indexAxis: "y", responsive:true, plugins: { legend:{display:false} } }
+      });
+    }
+
+    async function refreshAnalytics(){
+      allLeadsCache = await fetchAllLeadsForAnalytics();
+      computeKPIs(allLeadsCache);
+      renderCharts(allLeadsCache);
+    }
+
+    async function reloadAll(){
+      if (!token) toast("No hay token en localStorage","error");
+      await loadOwners();
+      page = 1;
+      await listLeads();
+      await refreshAnalytics();
+      activateTab("t-basico");
+    }
+
+    // Init
+    (async function(){
+      await reloadAll();
+      // Atajos
+      window.addEventListener("keydown", (e)=>{
+        if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="n") { e.preventDefault(); openCreateModal(); }
+        if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s") { e.preventDefault(); if (!modal.classList.contains("hidden")) $("btnSaveLead").click(); }
+      });
+    })();
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

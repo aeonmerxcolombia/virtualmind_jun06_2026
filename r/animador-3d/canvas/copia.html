@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editor Avanzado VirtualMind</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fabric.js -->
+  <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
+  <!-- FileSaver.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- JSZip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    canvas { border: 1px solid #ccc; }
+    .toolbar-btn { @apply px-3 py-2 rounded-md text-sm font-medium bg-gray-200 hover:bg-indigo-200 transition; }
+    .sidebar { @apply bg-gray-100 border-r border-gray-300 p-4 overflow-y-auto; }
+    .sidebar-section { @apply mb-6; }
+    .sidebar h3 { @apply font-semibold mb-2; }
+  </style>
+</head>
+<body class="flex flex-col h-screen">
+
+  <!-- HEADER -->
+  <header class="bg-indigo-600 text-white shadow p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">📑 Editor VirtualMind</h1>
+    <div class="flex gap-2">
+      <button onclick="newSlide()" class="toolbar-btn">➕ Nueva</button>
+      <button onclick="saveProject()" class="toolbar-btn">💾 Guardar</button>
+      <button onclick="loadProjectInput.click()" class="toolbar-btn">📂 Cargar</button>
+      <button onclick="exportPDF()" class="toolbar-btn">📑 PDF</button>
+      <button onclick="exportZIP()" class="toolbar-btn">🗜️ ZIP</button>
+      <button onclick="enterPresentationMode()" class="toolbar-btn">🎥 Presentar</button>
+      <input type="file" id="loadProjectInput" accept=".json" class="hidden" onchange="loadProject(event)">
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="flex flex-1">
+    <!-- Sidebar izquierda -->
+    <aside class="sidebar w-64">
+      <div class="sidebar-section">
+        <h3>Formas</h3>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="addRect()" class="toolbar-btn">⬛</button>
+          <button onclick="addCircle()" class="toolbar-btn">⚪</button>
+          <button onclick="addTriangle()" class="toolbar-btn">🔺</button>
+          <button onclick="addLine()" class="toolbar-btn">📏</button>
+          <button onclick="addArrow()" class="toolbar-btn">➡️</button>
+          <button onclick="addStar()" class="toolbar-btn">⭐</button>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Texto</h3>
+        <button onclick="addText()" class="toolbar-btn w-full">📝 Texto</button>
+      </div>
+      <div class="sidebar-section">
+        <h3>Imagen</h3>
+        <button onclick="imgLoader.click()" class="toolbar-btn w-full">🖼️ Subir</button>
+        <input type="file" id="imgLoader" accept="image/*" class="hidden" onchange="loadImage(event)">
+      </div>
+      <div class="sidebar-section">
+        <h3>Dibujo</h3>
+        <button onclick="toggleDrawMode()" class="toolbar-btn w-full">✏️ Libre</button>
+        <button onclick="enableEraser()" class="toolbar-btn w-full">🧽 Borrar</button>
+      </div>
+      <div class="sidebar-section">
+        <h3>Fondo</h3>
+        <input type="color" id="bgColorPicker" class="w-full h-10 rounded mb-2" onchange="setBackgroundColor(this.value)">
+        <button onclick="bgImageInput.click()" class="toolbar-btn w-full">🖼️ Imagen</button>
+        <input type="file" id="bgImageInput" accept="image/*" class="hidden" onchange="setBackgroundImage(event)">
+      </div>
+    </aside>
+
+    <!-- Canvas central -->
+    <div class="flex-1 flex flex-col items-center justify-center bg-gray-50 relative">
+      <canvas id="editor-canvas" width="1200" height="700"></canvas>
+    </div>
+
+    <!-- Sidebar derecha -->
+    <aside class="sidebar w-72">
+      <div class="sidebar-section">
+        <h3>Propiedades</h3>
+        <label>Color</label>
+        <input type="color" id="fillColor" class="w-full h-10 mb-2" onchange="updateFillColor(this.value)">
+        <label>Borde</label>
+        <input type="color" id="strokeColor" class="w-full h-10 mb-2" onchange="updateStrokeColor(this.value)">
+        <label>Grosor</label>
+        <input type="range" id="strokeWidth" min="0" max="20" value="2" class="w-full mb-2" onchange="updateStrokeWidth(this.value)">
+        <label>Opacidad</label>
+        <input type="range" id="opacity" min="0" max="1" step="0.1" value="1" class="w-full" onchange="updateOpacity(this.value)">
+      </div>
+      <div class="sidebar-section">
+        <h3>Texto</h3>
+        <select id="fontFamily" class="w-full mb-2" onchange="updateFontFamily(this.value)">
+          <option value="Arial">Arial</option>
+          <option value="Inter">Inter</option>
+          <option value="Times New Roman">Times</option>
+          <option value="Courier New">Courier</option>
+        </select>
+        <label>Tamaño</label>
+        <input type="number" id="fontSize" class="w-full mb-2" onchange="updateFontSize(this.value)" value="24">
+        <div class="flex gap-2">
+          <button onclick="toggleBold()" class="toolbar-btn flex-1">B</button>
+          <button onclick="toggleItalic()" class="toolbar-btn flex-1">I</button>
+          <button onclick="toggleUnderline()" class="toolbar-btn flex-1">U</button>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Capas</h3>
+        <ul id="layersList" class="text-sm space-y-1"></ul>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-200 border-t p-3 flex justify-between items-center">
+    <div>
+      <button onclick="prevSlide()" class="toolbar-btn">⬅️</button>
+      <button onclick="nextSlide()" class="toolbar-btn">➡️</button>
+    </div>
+    <span id="slideCounter">Diapositiva 1</span>
+    <div>
+      <button onclick="undo()" class="toolbar-btn">↩️</button>
+      <button onclick="redo()" class="toolbar-btn">↪️</button>
+      <button onclick="exportPNG()" class="toolbar-btn">📷 PNG</button>
+    </div>
+  </footer>
+
+  <!-- JS -->
+  <script>
+    // =============================
+    // CONFIGURACIÓN DEL CANVAS
+    // =============================
+    const canvas = new fabric.Canvas('editor-canvas', {
+      selection: true,
+      preserveObjectStacking: true
+    });
+
+    let slides = [];
+    let currentSlideIndex = 0;
+    let history = [];
+    let historyIndex = -1;
+
+    slides.push(canvas.toJSON());
+
+    function updateSlideCounter() {
+      document.getElementById('slideCounter').textContent =
+        `Diapositiva ${currentSlideIndex + 1} / ${slides.length}`;
+    }
+
+    function saveCurrentSlide() {
+      slides[currentSlideIndex] = canvas.toJSON();
+    }
+
+    function loadSlide(index) {
+      canvas.clear();
+      canvas.loadFromJSON(slides[index], () => {
+        canvas.renderAll();
+        updateSlideCounter();
+        updateLayersPanel();
+      });
+    }
+
+    // =============================
+    // FORMAS
+    // =============================
+    function addRect() {
+      const rect = new fabric.Rect({ left: 100, top: 100, fill: 'lightblue', width: 150, height: 100, stroke: 'black', strokeWidth: 2 });
+      canvas.add(rect); addToHistory();
+    }
+    function addCircle() {
+      const c = new fabric.Circle({ left: 150, top: 150, fill: 'lightgreen', radius: 60, stroke: 'black', strokeWidth: 2 });
+      canvas.add(c); addToHistory();
+    }
+    function addTriangle() {
+      const t = new fabric.Triangle({ left: 200, top: 200, fill: 'orange', width: 120, height: 100 });
+      canvas.add(t); addToHistory();
+    }
+    function addLine() {
+      const l = new fabric.Line([50, 100, 200, 100], { stroke: 'black', strokeWidth: 3 });
+      canvas.add(l); addToHistory();
+    }
+    function addArrow() {
+      const line = new fabric.Line([50, 100, 200, 100], { stroke: 'black', strokeWidth: 3 });
+      const triangle = new fabric.Triangle({ left: 200, top: 95, width: 20, height: 20, fill: 'black', angle: 90 });
+      const group = new fabric.Group([line, triangle], { left: 100, top: 100 });
+      canvas.add(group); addToHistory();
+    }
+    function addStar() {
+      const points = [];
+      for (let i = 0; i < 5; i++) {
+        let angle = i * 72 * Math.PI / 180;
+        points.push({ x: 50 + 40 * Math.cos(angle), y: 50 + 40 * Math.sin(angle) });
+      }
+      const star = new fabric.Polygon(points, { left: 300, top: 200, fill: 'yellow', stroke: 'black', strokeWidth: 2 });
+      canvas.add(star); addToHistory();
+    }
+
+    // =============================
+    // TEXTO
+    // =============================
+    function addText() {
+      const txt = new fabric.IText('Texto editable', { left: 250, top: 250, fontFamily: 'Inter', fontSize: 24, fill: 'black' });
+      canvas.add(txt); addToHistory();
+    }
+    function updateFontFamily(val) {
+      const obj = canvas.getActiveObject(); if (obj && obj.type === 'i-text') { obj.set('fontFamily', val); canvas.renderAll(); addToHistory(); }
+    }
+    function updateFontSize(val) {
+      const obj = canvas.getActiveObject(); if (obj && obj.type === 'i-text') { obj.set('fontSize', parseInt(val)); canvas.renderAll(); addToHistory(); }
+    }
+    function toggleBold() {
+      const obj = canvas.getActiveObject(); if (obj && obj.type === 'i-text') { obj.set('fontWeight', obj.fontWeight === 'bold' ? 'normal' : 'bold'); canvas.renderAll(); addToHistory(); }
+    }
+    function toggleItalic() {
+      const obj = canvas.getActiveObject(); if (obj && obj.type === 'i-text') { obj.set('fontStyle', obj.fontStyle === 'italic' ? 'normal' : 'italic'); canvas.renderAll(); addToHistory(); }
+    }
+    function toggleUnderline() {
+      const obj = canvas.getActiveObject(); if (obj && obj.type === 'i-text') { obj.set('underline', !obj.underline); canvas.renderAll(); addToHistory(); }
+    }
+
+    // =============================
+    // IMÁGENES Y FONDOS
+    // =============================
+    function loadImage(e) {
+      const reader = new FileReader();
+      reader.onload = function(f) {
+        fabric.Image.fromURL(f.target.result, function(img) {
+          img.set({ left: 250, top: 250, scaleX: 0.5, scaleY: 0.5 });
+          canvas.add(img); addToHistory();
+        });
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+    function setBackgroundColor(color) {
+      canvas.setBackgroundColor(color, canvas.renderAll.bind(canvas));
+    }
+    function setBackgroundImage(e) {
+      const reader = new FileReader();
+      reader.onload = function(f) {
+        fabric.Image.fromURL(f.target.result, function(img) {
+          canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), { scaleX: canvas.width / img.width, scaleY: canvas.height / img.height });
+        });
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+
+    // =============================
+    // DIBUJO LIBRE Y BORRADOR
+    // =============================
+    let drawing = false;
+    function toggleDrawMode() {
+      drawing = !drawing;
+      canvas.isDrawingMode = drawing;
+      canvas.freeDrawingBrush.color = "black";
+      canvas.freeDrawingBrush.width = 3;
+    }
+    function enableEraser() {
+      canvas.freeDrawingBrush = new fabric.EraserBrush(canvas);
+      canvas.isDrawingMode = true;
+      canvas.freeDrawingBrush.width = 10;
+    }
+
+    // =============================
+    // CAPAS
+    // =============================
+    function updateLayersPanel() {
+      const list = document.getElementById("layersList");
+      if (!list) return;
+      list.innerHTML = "";
+      canvas.getObjects().forEach((obj, i) => {
+        const li = document.createElement("li");
+        li.textContent = `${i+1}: ${obj.type}`;
+        li.className = "cursor-pointer hover:bg-indigo-200 px-2 py-1 rounded flex justify-between";
+        li.onclick = () => { canvas.setActiveObject(obj); canvas.renderAll(); };
+        const controls = document.createElement("div");
+        controls.className = "flex gap-1";
+        const toggleBtn = document.createElement("button");
+        toggleBtn.textContent = obj.visible ? "👁️" : "🚫";
+        toggleBtn.onclick = (e) => { e.stopPropagation(); obj.visible = !obj.visible; canvas.renderAll(); updateLayersPanel(); };
+        const lockBtn = document.createElement("button");
+        lockBtn.textContent = obj.lockMovementX ? "🔓" : "🔒";
+        lockBtn.onclick = (e) => { e.stopPropagation(); obj.lockMovementX = obj.lockMovementY = !obj.lockMovementX; canvas.renderAll(); updateLayersPanel(); };
+        controls.appendChild(toggleBtn);
+        controls.appendChild(lockBtn);
+        li.appendChild(controls);
+        list.appendChild(li);
+      });
+    }
+
+    // =============================
+    // HISTORIAL
+    // =============================
+    function addToHistory() {
+      history = history.slice(0, historyIndex + 1);
+      history.push(JSON.stringify(canvas.toJSON()));
+      historyIndex++;
+    }
+    function undo() {
+      if (historyIndex > 0) {
+        historyIndex--;
+        canvas.loadFromJSON(JSON.parse(history[historyIndex]), () => canvas.renderAll());
+      }
+    }
+    function redo() {
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        canvas.loadFromJSON(JSON.parse(history[historyIndex]), () => canvas.renderAll());
+      }
+    }
+
+    // =============================
+    // EXPORTACIONES
+    // =============================
+    function exportPNG() {
+      const dataURL = canvas.toDataURL({ format: 'png' });
+      const link = document.createElement('a');
+      link.download = `diapositiva-${currentSlideIndex + 1}.png`;
+      link.href = dataURL;
+      link.click();
+    }
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('l', 'pt', [canvas.width, canvas.height]);
+      for (let i = 0; i < slides.length; i++) {
+        await new Promise(res => {
+          canvas.loadFromJSON(slides[i], () => {
+            const img = canvas.toDataURL({ format: 'png' });
+            if (i > 0) pdf.addPage();
+            pdf.addImage(img, 'PNG', 0, 0, canvas.width, canvas.height);
+            res();
+          });
+        });
+      }
+      pdf.save("presentacion.pdf");
+    }
+    async function exportZIP() {
+      const zip = new JSZip();
+      for (let i = 0; i < slides.length; i++) {
+        await new Promise(res => {
+          canvas.loadFromJSON(slides[i], () => {
+            const img = canvas.toDataURL({ format: 'png' });
+            zip.file(`slide-${i+1}.png`, img.split(',')[1], { base64: true });
+            res();
+          });
+        });
+      }
+      zip.generateAsync({ type: "blob" }).then(content => saveAs(content, "presentacion.zip"));
+    }
+
+    // =============================
+    // GUARDAR / CARGAR
+    // =============================
+    function saveProject() {
+      saveCurrentSlide();
+      const json = JSON.stringify(slides);
+      const blob = new Blob([json], { type: 'application/json' });
+      saveAs(blob, 'presentacion.json');
+    }
+    function loadProject(e) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const json = JSON.parse(event.target.result);
+        if (Array.isArray(json)) {
+          slides = json;
+          currentSlideIndex = 0;
+          loadSlide(0);
+        } else {
+          alert("Formato inválido");
+        }
+      };
+      reader.readAsText(e.target.files[0]);
+    }
+
+    // =============================
+    // ATAJOS DE TECLADO
+    // =============================
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && e.key === "z") undo();
+      if (e.ctrlKey && e.key === "y") redo();
+      if (e.key === "Delete") {
+        const obj = canvas.getActiveObject();
+        if (obj) canvas.remove(obj);
+      }
+      if (e.ctrlKey && e.key === "c") window._clipboard = fabric.util.object.clone(canvas.getActiveObject());
+      if (e.ctrlKey && e.key === "v") {
+        if (window._clipboard) {
+          const clone = fabric.util.object.clone(window._clipboard);
+          clone.set({ left: clone.left + 20, top: clone.top + 20 });
+          canvas.add(clone);
+          canvas.setActiveObject(clone);
+          canvas.renderAll();
+        }
+      }
+    });
+
+    // =============================
+    // PRESENTACIÓN
+    // =============================
+    function enterPresentationMode() {
+      document.body.requestFullscreen();
+      let i = 0;
+      function showSlide() {
+        if (i < slides.length) {
+          loadSlide(i);
+          i++;
+          setTimeout(showSlide, 3000);
+        }
+      }
+      showSlide();
+    }
+
+    updateSlideCounter();
+    addToHistory();
+  </script>
+</body>
+</html>
+

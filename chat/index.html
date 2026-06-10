@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>VirtualMind Chat</title>
+  <!-- SDK de Jitsi cargado de forma global para disponibilidad instantánea -->
+  <script src="https://8x8.vc/vpaas-magic-cookie-d45c8107f37a4d70a21bf1932daaf52d/external_api.js" defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #f0f2f5; }
+        
+    /* Sidebar estilo WhatsApp */
+    .sidebar { background: #fff; width: 380px; border-right: 1px solid #e0e0e0; }
+    .sidebar-header { background: #008069; padding: 16px; }
+    .search-box { background: #f0f2f5; border-radius: 20px; margin: 0 16px 16px; }
+    .search-box input { background: transparent; }
+        
+    /* Lista de contactos */
+    .contact-item { 
+       transition: background 0.2s; 
+       border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+    }
+    .contact-item:hover { background: #f5f6f6; }
+    .contact-item.active { background: #e8e8e8; }
+    .contact-avatar { 
+       width: 45px; height: 45px; 
+       border-radius: 50%; 
+       display: flex; align-items: center; justify-content: center;
+      font-weight: 600; color: white;
+      font-size: 16px;
+    }
+    .status-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 2px solid white;
+      position: absolute;
+      bottom: 2px; right: 2px;
+    }
+    .status-online { background: #25d366; }
+    .status-offline { background: #b1b1b1; }
+        
+    /* Área de chat */
+    .chat-area { flex: 1; display: flex; flex-direction: column; background: #e5ddd5; }
+    .chat-header { 
+       background: #fff; 
+       padding: 12px 20px; 
+       border-bottom: 1px solid #ddd;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .chat-messages { 
+       flex: 1; 
+       overflow-y: auto; 
+       padding: 20px;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZWVlIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNjY2MiIG9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4=');
+    }
+        
+    /* Mensajes */
+    .message { 
+       max-width: 70%; 
+       padding: 8px 12px; 
+       border-radius: 7.5px; 
+       margin-bottom: 8px;
+      position: relative;
+      font-size: 14.2px;
+      line-height: 19px;
+    }
+    .message-sent { 
+       background: #d9fdd3; 
+       margin-left: auto;
+      border-top-right-radius: 0;
+    }
+    .message-received { 
+       background: #fff; 
+       margin-right: auto;
+      border-top-left-radius: 0;
+    }
+    .message-time {
+      font-size: 11px; color: #667781;
+      text-align: right; margin-top: 4px;
+    }
+    .message-delivered {
+      font-size: 11px; color: #667781;
+    }
+        
+    /* Input de mensajes */
+    .chat-input { 
+       background: #fff; 
+       padding: 10px 16px; 
+       border-top: 1px solid #ddd;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .chat-input input { 
+       flex: 1; 
+       background: #fff; 
+       border: 1px solid #e0e0e0;
+      border-radius: 20px; 
+       padding: 10px 16px;
+      outline: none;
+    }
+    .chat-input input:focus { border-color: #008069; }
+        
+    /* Panel de Emojis */
+    .emoji-panel {
+      position: absolute; bottom: 70px; left: 10px;
+      width: 320px; height: 280px;
+      background: white; border-radius: 10px;
+      box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+      display: none; overflow: hidden;
+      z-index: 200;
+    }
+    .emoji-panel.open { display: block; }
+    .emoji-tabs {
+      display: flex; border-bottom: 1px solid #eee;
+      background: #f5f5f5;
+    }
+    .emoji-tab {
+      flex: 1; padding: 10px; text-align: center;
+      cursor: pointer; font-size: 18px;
+      border-bottom: 2px solid transparent;
+    }
+    .emoji-tab.active { border-bottom-color: #008069; background: white; }
+    .emoji-grid {
+      display: grid; grid-template-columns: repeat(8, 1fr);
+      padding: 10px; gap: 5px; overflow-y: auto; height: 200px;
+    }
+    .emoji-item {
+      font-size: 22px; cursor: pointer;
+      padding: 5px; border-radius: 5px;
+      text-align: center;
+    }
+    .emoji-item:hover { background: #f0f0f0; }
+        
+    .sticker-tab { background: #f0f8ff; }
+    .sticker-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 10px; padding: 15px; overflow-y: auto; height: 200px;
+    }
+    .sticker-item {
+      width: 70px; height: 70px;
+      border-radius: 10px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 35px;
+      background: #f5f5f5;
+    }
+    .sticker-item:hover { background: #e8e8e8; transform: scale(1.1); }
+        
+    /* Audio recorder */
+    .mic-btn { 
+       width: 45px; height: 45px;
+      border-radius: 50%;
+      background: #008069;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s;
+    }
+    .mic-btn:hover { background: #007069; }
+    .mic-btn.recording { 
+       background: #e53935; 
+       animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .recording-indicator {
+      display: none; align-items: center; gap: 10px;
+      background: #fff; padding: 10px 15px;
+      border-radius: 20px; margin-right: 10px;
+    }
+    .recording-indicator.active { display: flex; }
+    .recording-dot {
+      width: 10px; height: 10px;
+      background: #e53935; border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .audio-message {
+      display: flex; align-items: center; gap: 10px;
+      background: #f5f5f5; padding: 8px 12px;
+      border-radius: 15px; min-width: 200px;
+    }
+    .audio-message audio {
+      height: 30px; width: 150px;
+    }
+    .audio-duration {
+      font-size: 12px; color: #667781;
+    }
+    .play-btn {
+      width: 30px; height: 30px;
+      border-radius: 50%; background: #008069;
+      color: white; border: none;
+      cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .send-btn { 
+       background: #008069; 
+       color: white; 
+       width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: none; cursor: pointer;
+    }
+    .send-btn:hover { background: #007069; }
+        
+    /* Notificaciones */
+    .notif-panel {
+      position: fixed; top: 70px; right: 20px;
+      width: 350px; max-height: 400px;
+      background: white; border-radius: 8px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+      z-index: 100; overflow: hidden;
+    }
+        
+    /* Unread badge */
+    .unread-badge {
+      background: #25d366; color: white;
+      font-size: 11px; font-weight: 600;
+      padding: 2px 7px; border-radius: 10px;
+    }
+        
+    /* Loading */
+    .loading-messages {
+      text-align: center; padding: 20px;
+      color: #667781;
+    }
+  </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+  <!-- Sidebar -->
+  <div class="sidebar flex flex-col h-full">
+    <!-- Header -->
+    <div class="sidebar-header text-white">
+      <div class="flex items-center justify-between">
+        <h1 class="text-xl font-bold">💬 VirtualMind</h1>
+        <button onclick="toggleNotificaciones()" class="hover:bg-white/20 p-2 rounded-full relative">
+          🔔
+          <span id="notifCount" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+        </button>
+      </div>
+    </div>
+        
+    <!-- Buscador -->
+    <div class="search-box py-2">
+      <div class="flex items-center px-4 py-2">
+        <span class="text-gray-500 mr-2">🔍</span>
+        <input type="text" id="buscador" placeholder="Buscar..." class="w-full outline-none text-sm" oninput="filtrarContactos()">
+      </div>
+    </div>
+        
+    <!-- Lista de contactos -->
+    <div id="contactList" class="flex-1 overflow-y-auto">
+      <!-- Se carga dinámicamente -->
+    </div>
+  </div>
+
+  <!-- Área de Chat -->
+  <div class="chat-area">
+    <!-- Header del chat -->
+    <div id="chatHeader" class="chat-header">
+      <div class="text-center text-gray-500 py-4">
+        <p class="text-lg">Selecciona un contacto para comenzar</p>
+      </div>
+    </div>
+        
+    <!-- Mensajes -->
+    <div id="chatMessages" class="chat-messages">
+      <div class="loading-messages">
+        <div class="text-4xl mb-2">💬</div>
+        <p class="text-lg font-medium">Bienvenido</p>
+        <p class="text-sm">Selecciona una conversación para empezar</p>
+      </div>
+    </div>
+        
+    <!-- Input -->
+    <div class="chat-input relative">
+      <button onclick="toggleEmojiPanel()" class="text-2xl hover:bg-gray-100 p-1 rounded-full">😀</button>
+      <div id="recordingIndicator" class="recording-indicator">
+        <div class="recording-dot"></div>
+        <span id="recordingTime" class="text-sm font-medium">0:00</span>
+        <span class="text-sm text-gray-500">Grabando...</span>
+      </div>
+      <input type="text" id="mensajeInput" placeholder="Escribe un mensaje..." onkeypress="handleEnter(event)">
+      <button id="micBtn" class="mic-btn" onclick="toggleRecording()" title="Grabar audio">
+        <svg id="micIcon" width="20" height="20" viewBox="0 0 24 24" fill="white">
+          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
+        </svg>
+        <svg id="stopIcon" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="white">
+          <rect x="6" y="6" width="12" height="12"/>
+        </svg>
+      </button>
+      <button class="send-btn" onclick="enviarMensaje()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+            
+      <!-- Panel de Emojis y Stickers -->
+      <div id="emojiPanel" class="emoji-panel">
+        <div class="emoji-tabs">
+          <div class="emoji-tab active" onclick="switchEmojiTab(this, 'recientes')">🕐</div>
+          <div class="emoji-tab" onclick="switchEmojiTab(this, 'caritas')">😀</div>
+          <div class="emoji-tab" onclick="switchEmojiTab(this, 'gestos')">👍</div>
+          <div class="emoji-tab" onclick="switchEmojiTab(this, 'objetos')">🎁</div>
+          <div class="emoji-tab" onclick="switchEmojiTab(this, 'simbolos')">❤️</div>
+          <div class="emoji-tab sticker-tab" onclick="switchEmojiTab(this, 'stickers')">🎉</div>
+        </div>
+        <div id="emojiContent" class="emoji-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de Notificaciones -->
+  <div id="notifPanel" class="hidden notif-panel">
+    <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+      <h3 class="font-semibold">Notificaciones</h3>
+      <button onclick="toggleNotificaciones()" class="text-gray-500 hover:text-gray-700">✕</button>
+    </div>
+    <div id="notifList" class="max-h-80 overflow-y-auto p-2">
+      <p class="text-gray-500 text-sm p-2">Cargando...</p>
+    </div>
+  </div>
+
+  <!-- Modal de Videollamada Jitsi -->
+  <div id="jitsiModal" class="hidden fixed inset-0 z-50 bg-black/90 flex flex-col">
+    <div class="bg-gray-900 text-white p-3 flex justify-between items-center border-b border-gray-800">
+      <div class="flex items-center gap-2">
+        <span class="text-green-500 animate-pulse">●</span>
+        <span class="font-semibold text-sm md:text-base">Reunión VirtualMind - Sesión Protegida</span>
+      </div>
+      <button onclick="cerrarLlamada()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded text-sm transition font-medium">
+        Finalizar Sesión
+      </button>
+    </div>
+    <div id="jaas-container" class="flex-1 w-full h-full bg-black"></div>
+  </div>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token");
+    const headers = { "Authorization": "Bearer " + token, "Content-Type": "application/json" };
+    let usuarios = [], yo = null, contactoActivo = null, estadosUsuarios = {}, ultimosMensajes = {};
+    let apiJitsi = null; // Instancia global del SDK de Jitsi
+
+    if (!token) window.location.href = "/index.html";
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    yo = payload.user_id;
+
+    // === HEARTBEAT ===
+    async function heartbeat() {
+      try { await fetch(`${API}/presence/heartbeat`, { method: "POST", headers }); } catch (e) {}
+    }
+    setInterval(heartbeat, 30000);
+    heartbeat();
+
+    // === CARGAR ESTADOS ===
+    async function cargarEstados() {
+      try {
+        const res = await fetch(`${API}/presence/status`, { headers });
+        const estados = await res.json();
+        estadosUsuarios = {};
+        estados.forEach(u => estadosUsuarios[u.uid] = u);
+      } catch (e) { console.error(e); }
+    }
+
+    function getEstadoHTML(uid) {
+      const est = estadosUsuarios[uid];
+      if (!est) return { clase: 'status-offline', texto: 'Desconectado' };
+      if (est.is_online) return { clase: 'status-online', texto: 'En línea' };
+      return { clase: 'status-offline', texto: est.last_seen || 'Desconectado' };
+    }
+
+    function getColorAvatar(nombre) {
+      const colors = ['#e53935', '#d81b60', '#8e24aa', '#5e35b1', '#3949ab', '#1e88e5', '#039be5', '#00897b', '#43a047', '#7cb342', '#c0ca33', '#fdd835', '#ffb300', '#fb8c00', '#f4511e'];
+      const index = nombre.charCodeAt(0) % colors.length;
+      return colors[index];
+    }
+
+    // === CARGAR USUARIOS Y ÚLTIMOS MENSAJES ===
+    async function cargarContactos() {
+      await cargarEstados();
+      const res = await fetch(`${API}/users`, { headers });
+      usuarios = await res.json();
+            
+      // Cargar últimos mensajes para cada contacto
+      for (const u of usuarios) {
+        if (u.uid !== yo) {
+          try {
+            const res = await fetch(`${API}/mensajes/conversacion/${u.uid}`, { headers });
+            const msgs = await res.json();
+            if (msgs.length > 0) {
+              ultimosMensajes[u.uid] = {
+                contenido: msgs[msgs.length - 1].contenido.substring(0, 40),
+                esMio: msgs[msgs.length - 1].remitente_uid === yo,
+                hora: msgs[msgs.length - 1].timestamp
+              };
+            }
+          } catch (e) {}
+        }
+      }
+            
+      renderContactos();
+    }
+
+    function renderContactos(filtro = '') {
+      const contactList = document.getElementById("contactList");
+      const filtrados = usuarios.filter(u => u.uid !== yo && 
+        (u.nombre || u.email || '').toLowerCase().includes(filtro.toLowerCase()));
+            
+      contactList.innerHTML = filtrados.map(u => {
+        const nombre = u.nombre || u.email || 'Usuario';
+        const inicial = nombre.charAt(0).toUpperCase();
+        const est = getEstadoHTML(u.uid);
+        const color = getColorAvatar(nombre);
+        const ultimo = ultimosMensajes[u.uid];
+        const activa = contactoActivo === u.uid ? 'active' : '';
+                
+        let preview = '';
+        if (ultimo) {
+          const tiempo = new Date(ultimo.hora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+          preview = `
+            <div class="flex justify-between items-center mt-1">
+              <span class="text-sm text-gray-500 truncate flex-1">${ultimo.esMio ? '✓ ' : ''}${ultimo.contenido}</span>
+              <span class="text-xs text-gray-400">${tiempo}</span>
+            </div>
+          `;
+        }
+                
+        return `
+          <div class="contact-item p-3 ${activa}" data-uid="${u.uid}" onclick="seleccionarContacto('${u.uid}', '${nombre.replace(/'/g, "\\'")}')">
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <div class="contact-avatar" style="background: linear-gradient(135deg, ${color}, ${color}dd)">
+                  ${inicial}
+                </div>
+                <div class="status-dot ${est.clase}"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-center">
+                  <h4 class="font-semibold text-gray-900">${nombre}</h4>
+                </div>
+                <p class="text-xs ${est.clase === 'status-online' ? 'text-green-600' : 'text-gray-400'}">${est.texto}</p>
+                ${preview}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filtrarContactos() {
+      const filtro = document.getElementById("buscador").value;
+      renderContactos(filtro);
+    }
+
+    async function seleccionarContacto(uid, nombre) {
+      contactoActivo = uid;
+      const est = getEstadoHTML(uid);
+      const inicial = nombre.charAt(0).toUpperCase();
+      const color = getColorAvatar(nombre);
+            
+      document.getElementById("chatHeader").innerHTML = `
+        <div class="flex items-center justify-between gap-3 w-full">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <div class="contact-avatar" style="background: linear-gradient(135deg, ${color}, ${color}dd)">
+                ${inicial}
+              </div>
+              <div class="status-dot ${est.clase}"></div>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900">${nombre}</h3>
+              <p class="text-sm ${est.clase === 'status-online' ? 'text-green-600' : 'text-gray-500'}">${est.texto}</p>
+            </div>
+          </div>
+          <button onclick="enviarVideollamada()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full flex items-center justify-center gap-2 transition shadow-sm">
+            <span>📹 Iniciar videollamada</span>
+          </button>
+        </div>
+      `;
+            
+      document.querySelectorAll('.contact-item').forEach(item => item.classList.remove('active'));
+      const activeEl = document.querySelector(`[data-uid="${uid}"]`);
+      if (activeEl) activeEl.classList.add('active');
+            
+      await cargarMensajes();
+    }
+
+    async function cargarMensajes() {
+      if (!contactoActivo) return;
+            
+      const res = await fetch(`${API}/mensajes/conversacion/${contactoActivo}`, { headers });
+      const msgs = await res.json();
+            
+      const chatMessages = document.getElementById("chatMessages");
+            
+      if (msgs.length === 0) {
+        chatMessages.innerHTML = `
+          <div class="loading-messages">
+            <p class="text-lg">Sin mensajes aún</p>
+            <p class="text-sm">¡Envía el primero!</p>
+          </div>
+        `;
+        return;
+      }
+            
+      chatMessages.innerHTML = msgs.map(m => {
+        const esMio = m.remitente_uid === yo;
+        const hora = new Date(m.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                
+        let contenidoHTML = m.contenido;
+                
+        // Detectar si es un mensaje de audio
+        const audioMatch = m.contenido.match(/🎤 \[Audio\]\(([^)]+)\)/);
+        if (audioMatch) {
+          const audioUrl = audioMatch[1];
+          contenidoHTML = `
+            <div class="audio-message">
+              <button class="play-btn" onclick="playAudio('${audioUrl}', this)">▶️</button>
+              <audio id="audio-${m.id}" src="${audioUrl}" preload="none"></audio>
+              <span class="audio-duration">Audio</span>
+            </div>
+          `;
+        } else {
+          // Detectar e integrar botón seguro de videollamada in-app
+          const jitsiRegex = /https:\/\/8x8\.vc\/vpaas-magic-cookie-d45c8107f37a4d70a21bf1932daaf52d\/(vm_[a-f0-9]+)/;
+          const callMatch = m.contenido.match(jitsiRegex);
+          if (callMatch) {
+            const roomName = callMatch[1];
+            contenidoHTML = `
+              <div class="flex flex-col gap-2 p-3 bg-gray-50 border border-green-200 rounded-lg max-w-sm mt-1">
+                <span class="text-sm font-semibold text-gray-800 flex items-center gap-1.5">📹 Videollamada Entrante</span>
+                <p class="text-xs text-gray-500">Sesión encriptada con tecnología JaaS.</p>
+                <button onclick="unirseAVideollamada('${roomName}')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold py-2 px-4 rounded-md transition flex items-center justify-center gap-1.5 shadow-sm mt-1">
+                  <span>Unirse ahora</span>
+                </button>
+              </div>
+            `;
+          } else {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            contenidoHTML = m.contenido.replace(urlRegex, '<a href="$1" target="_blank" class="text-blue-600 underline">$1</a>');
+          }
+        }
+                
+        return `
+          <div class="message ${esMio ? 'message-sent' : 'message-received'}">
+            <div class="text-gray-800">${contenidoHTML}</div>
+            <div class="message-time">
+              ${hora}
+              ${esMio ? '<span class="message-delivered"> ✓</span>' : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+            
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function enviarMensaje() {
+      const input = document.getElementById("mensajeInput");
+      const contenido = input.value.trim();
+      if (!contenido || !contactoActivo) return;
+            
+      await fetch(`${API}/mensajes`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ contenido, destinatario_uid: contactoActivo })
+      });
+            
+      input.value = "";
+      await cargarMensajes();
+      await cargarContactos();
+    }
+
+    function handleEnter(e) {
+      if (e.key === 'Enter') enviarMensaje();
+    }
+
+    // --- LÓGICA DE VIDEOLLAMADA EN LA RED SEGURA ---
+    async function enviarVideollamada() {
+      if (!contactoActivo) {
+        alert("Selecciona un contacto primero");
+        return;
+      }
+
+      try {
+        const bodyPayload = {
+          mi_uid: yo,
+          mi_nombre: payload.nombre || "William Andrés",
+          mi_email: payload.sub || "william@virtualmind.com",
+          destinatario_uid: contactoActivo
+        };
+
+        // 1. Solicitar credenciales y token JWT al Router de videollamadas
+        const res = await fetch(`${API}/video/iniciar`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(bodyPayload)
+        });
+
+        if (!res.ok) throw new Error("No se pudo iniciar la videollamada desde el backend.");
+        const data = await res.json();
+
+        // 2. Notificar al destinatario mediante el chat
+        await fetch(`${API}/mensajes`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ 
+            contenido: `🔴 Invitación a videollamada segura: ${data.url}`, 
+            destinatario_uid: contactoActivo 
+          })
+        });
+
+        // 3. Montar la reunión para el creador
+        montarJitsiFrame(data.room_name, data.token);
+        cargarMensajes();
+      } catch (err) {
+        console.error(err);
+        alert("Error de conexión segura con el servidor de llamadas.");
+      }
+    }
+
+    // Unirse a una llamada existente (Invocado al hacer click en el mensaje)
+    async function unirseAVideollamada(roomName) {
+      try {
+        const res = await fetch(`${API}/video/entrar/${roomName}`, { headers });
+        if (!res.ok) throw new Error("Acceso denegado a la sala.");
+        const data = await res.json();
+
+        montarJitsiFrame(roomName, data.token);
+      } catch (err) {
+        console.error(err);
+        alert("Error al validar el ingreso a la reunión.");
+      }
+    }
+
+    function montarJitsiFrame(roomName, jwtToken) {
+      document.getElementById("jitsiModal").classList.remove("hidden");
+      
+      // Inicializar el SDK en el contenedor JaaS de 8x8
+      apiJitsi = new JitsiMeetExternalAPI("8x8.vc", {
+        roomName: `vpaas-magic-cookie-d45c8107f37a4d70a21bf1932daaf52d/${roomName}`,
+        parentNode: document.querySelector('#jaas-container'),
+        jwt: jwtToken,
+        configOverwrite: {
+          startWithAudioMuted: false,
+          startWithVideoMuted: false,
+          disableModeratorIndicator: false,
+          prejoinPageEnabled: false
+        },
+        interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_BRAND_WATERMARK: true
+        }
+      });
+
+      apiJitsi.addListener('videoConferenceLeft', () => {
+        cerrarLlamada();
+      });
+    }
+
+    function cerrarLlamada() {
+      document.getElementById("jitsiModal").classList.add("hidden");
+      if (apiJitsi) {
+        apiJitsi.dispose();
+        apiJitsi = null;
+      }
+      document.querySelector('#jaas-container').innerHTML = '';
+    }
+
+    // === NOTIFICACIONES ===
+    async function cargarNotificaciones() {
+      try {
+        const res = await fetch(`${API}/notifications/`, { headers });
+        const data = await res.json();
+        const notifList = document.getElementById("notifList");
+                
+        if (!data.notificaciones || data.notificaciones.length === 0) {
+          notifList.innerHTML = '<p class="text-gray-500 text-sm p-2">Sin notificaciones</p>';
+          return;
+        }
+                
+        notifList.innerHTML = data.notificaciones.slice(0, 10).map(n => `
+          <div class="p-3 border-b hover:bg-gray-50 cursor-pointer" onclick="marcarLeida('${n.id}')">
+            <div class="text-sm text-gray-800">${n.descripcion || 'Notificación'}</div>
+            <div class="text-xs text-gray-400 mt-1">${new Date(n.fecha).toLocaleString('es-ES')}</div>
+          </div>
+        `).join('');
+                
+        const noLeidas = data.notificaciones.filter(n => !n.leido).length;
+        const countEl = document.getElementById("notifCount");
+        if (noLeidas > 0) {
+          countEl.textContent = noLeidas;
+          countEl.classList.remove("hidden");
+        } else {
+          countEl.classList.add("hidden");
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    async function marcarLeida(id) {
+      await fetch(`${API}/notifications/leer`, { method: "POST", headers });
+      cargarNotificaciones();
+    }
+
+    function toggleNotificaciones() {
+      const panel = document.getElementById("notifPanel");
+      panel.classList.toggle("hidden");
+      if (!panel.classList.contains("hidden")) cargarNotificaciones();
+    }
+
+    // === EMOJIS Y STICKERS ===
+    const emojis = {
+      recientes: ['👍','❤️','😂','😢','😮','🎉','🔥','✅','🙏','💯'],
+      caritas: ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','😮','🥺','😢','😭','😤','😠','😡','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖'],
+      gestos: ['👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','👋','🤚','🖐','✋','🖖','👏','🙌','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🧠','🫀','🫁','🦷','🦴','👀','👁️','👅','👄'],
+      objetos: ['🎁','🎂','🎄','🎆','🎇','🧨','💎','🎉','🎊','🎃','🎯','🎱','🎳','⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🥅','⛳','🪁','🎣','🤿','🎽','🎿','🛷','🥌','🎯','🎮','🎰','🧩','♠️','♥️','♦️','♣️','🎴','🎭','🖼️','🎨','🧵','🪡','🧶','🪢','🎩','👑','🎓','🎒','👞','👟','👠','👡','👢','👧','👦','👩','👨','🧔','👵','👴'],
+      simbolos: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','⭐','🌟','✨','💫','🔥','💥','💯','✅','❌','⚠️','💡','🔔','🔕','📢','📣','💬','💭','🗯️','♻️','✅','❓','❔','❕','❗','©️','®️','™️','#️⃣','*️⃣','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'],
+      stickers: ['🎉','🎊','🎁','🎈','🎂','🍕','🍔','🍟','🌮','🍦','🍪','☕','🍺','🍷','🚗','✈️','🚀','💻','📱','⌚','📸','🎤','🎧','🎷','🎸','🎺','🎻','🥁','🎹','⚽','🏀','🏆','🥇','💎','🌈','☀️','🌙','⚡','❄️','🔥','💥','💯','👍','🙏','💪','🎯','🎲','🎰','🎳']
+    };
+
+    function toggleEmojiPanel() {
+      document.getElementById("emojiPanel").classList.toggle("open");
+      if (document.getElementById("emojiPanel").classList.contains("open")) {
+        switchEmojiTab(document.querySelector(".emoji-tab.active"), "recientes");
+      }
+    }
+
+    function switchEmojiTab(tab, tipo) {
+      document.querySelectorAll(".emoji-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+            
+      const content = document.getElementById("emojiContent");
+      const items = emojis[tipo] || [];
+            
+      if (tipo === "stickers") {
+        content.className = "sticker-grid";
+        content.innerHTML = items.map(e => `
+          <div class="sticker-item" onclick="addEmoji('${e}')">${e}</div>
+        `).join("");
+      } else {
+        content.className = "emoji-grid";
+        content.innerHTML = items.map(e => `
+          <div class="emoji-item" onclick="addEmoji('${e}')">${e}</div>
+        `).join("");
+      }
+    }
+
+    function addEmoji(emoji) {
+      const input = document.getElementById("mensajeInput");
+      input.value += emoji;
+      input.focus();
+    }
+
+    // Cerrar panel al hacer click fuera
+    document.addEventListener("click", function(e) {
+      const panel = document.getElementById("emojiPanel");
+      const btn = document.querySelector("button[onclick='toggleEmojiPanel()']");
+      if (panel && panel.classList.contains("open") && !panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.classList.remove("open");
+      }
+    });
+
+    // === GRABACIÓN DE AUDIO ===
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let recordingTimer = null;
+    let recordingSeconds = 0;
+
+    async function toggleRecording() {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+                
+        mediaRecorder.ondataavailable = event => {
+          audioChunks.push(event.data);
+        };
+                
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+          await uploadAudio(audioBlob);
+                    
+          stream.getTracks().forEach(track => track.stop());
+        };
+                
+        mediaRecorder.start();
+        isRecording = true;
+                
+        // UI de grabación
+        document.getElementById("micBtn").classList.add("recording");
+        document.getElementById("micIcon").classList.add("hidden");
+        document.getElementById("stopIcon").classList.remove("hidden");
+        document.getElementById("recordingIndicator").classList.add("active");
+        document.getElementById("mensajeInput").style.display = "none";
+                
+        // Timer
+        recordingSeconds = 0;
+        recordingTimer = setInterval(() => {
+          recordingSeconds++;
+          const mins = Math.floor(recordingSeconds / 60);
+          const secs = recordingSeconds % 60;
+          document.getElementById("recordingTime").textContent = 
+            `${mins}:${secs.toString().padStart(2, '0')}`;
+        }, 1000);
+              
+      } catch (err) {
+        alert("Error al acceder al micrófono: " + err.message);
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+                
+        clearInterval(recordingTimer);
+        document.getElementById("micBtn").classList.remove("recording");
+        document.getElementById("micIcon").classList.remove("hidden");
+        document.getElementById("stopIcon").classList.add("hidden");
+        document.getElementById("recordingIndicator").classList.remove("active");
+        document.getElementById("mensajeInput").style.display = "block";
+        document.getElementById("recordingTime").textContent = "0:00";
+      }
+    }
+
+    async function uploadAudio(audioBlob) {
+      if (!contactoActivo) {
+        alert("Selecciona un contacto primero");
+        return;
+      }
+            
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "audio.webm");
+            
+      try {
+        const res = await fetch(`${API}/audio/upload`, {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + token },
+          body: formData
+        });
+                
+        if (!res.ok) throw new Error("Error al subir audio");
+                
+        const data = await res.json();
+                
+        // Enviar mensaje con la URL del audio
+        const audioUrl = `https://gestordecursos.pegui.edu.co${data.url}`;
+        await fetch(`${API}/mensajes`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            contenido: `🎤 [Audio](${audioUrl})`,
+            destinatario_uid: contactoActivo
+          })
+        });
+                
+        await cargarMensajes();
+      } catch (err) {
+        alert("Error al enviar audio: " + err.message);
+      }
+    }
+
+    // Función para reproducir audio en mensajes
+    function playAudio(url, btn) {
+      const audio = new Audio(url);
+      if (btn.innerHTML === "▶️") {
+        audio.play();
+        btn.innerHTML = "⏸️";
+        audio.onended = () => btn.innerHTML = "▶️";
+      } else {
+        audio.pause();
+        btn.innerHTML = "▶️";
+      }
+    }
+
+    // === INICIALIZAR ===
+    setInterval(cargarEstados, 15000);
+    setInterval(cargarNotificaciones, 10000);
+    setInterval(cargarMensajes, 5000);
+
+    (async () => {
+      await cargarContactos();
+    })();
+  </script>
+</body>
+</html>

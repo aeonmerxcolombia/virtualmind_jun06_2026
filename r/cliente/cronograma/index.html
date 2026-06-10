@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Cronogramas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.6s ease-out',
+          },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+  
+  <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-12 px-6 mb-8">
+    <div class="max-w-6xl mx-auto text-center">
+      <div class="inline-block p-3 bg-white/10 rounded-2xl mb-4 backdrop-blur-sm">
+        <i class="fas fa-calendar-alt text-3xl"></i>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">
+        Gestor de Cronogramas
+      </h1>
+      <p class="text-xl opacity-90 animate-fade-in">
+        Crea o visualiza los cronogramas de tus proyectos
+      </p>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-6 pb-12">
+    <div class="mb-8 animate-slide-up">
+      <div class="relative max-w-md mx-auto">
+        <input 
+           type="text" 
+           id="search-input"
+          placeholder="Buscar en mis proyectos..."
+          class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition shadow-sm"
+        >
+        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+      </div>
+    </div>
+
+    <div id="loading-spinner" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <p class="mt-4 text-gray-600">Cargando tus proyectos...</p>
+    </div>
+
+    <div id="project-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-0 transition-opacity duration-500"></div>
+    
+    <div id="empty-state" class="hidden text-center py-12 animate-fade-in">
+      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 max-w-md mx-auto">
+        <div class="text-6xl mb-4">📋</div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">No tienes proyectos asignados</h3>
+        <p class="text-gray-600">No se encontraron proyectos para tu cuenta.</p>
+      </div>
+    </div>
+    
+    <div id="error-state" class="hidden text-center py-12 animate-fade-in">
+      <div class="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md mx-auto">
+        <h3 class="text-xl font-semibold text-red-800 mb-2">Error de conexión</h3>
+        <p id="error-message" class="text-red-600 mb-6">No se pudieron cargar los proyectos.</p>
+        <button id="retry-btn" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition">
+          <i class="fas fa-redo mr-2"></i>Reintentar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    let proyectosData = []; // Contendrá solo los proyectos del cliente
+    let cronogramasData = {}; // Será un mapa: { projectId: cronograma }
+
+    // Elementos del DOM (sin cambios)
+    const loadingSpinner = document.getElementById("loading-spinner");
+    const projectList = document.getElementById("project-list");
+    const emptyState = document.getElementById("empty-state");
+    const errorState = document.getElementById("error-state");
+    const errorMessage = document.getElementById("error-message");
+    const searchInput = document.getElementById("search-input");
+    const retryBtn = document.getElementById("retry-btn");
+
+    function parseJwt(token) {
+        try {
+            const jsonPayload = decodeURIComponent(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) { return null; }
+    }
+
+    const fetchWithAuth = async (url, options = {}) => {
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/index.html';
+
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status} en ${url}`);
+        return response.json();
+    };
+
+    function mostrarEstado(estado, mensajeError = null) {
+      loadingSpinner.style.display = estado === 'loading' ? 'block' : 'none';
+      projectList.style.opacity = estado === 'success' ? '1' : '0';
+      projectList.style.display = estado === 'success' ? 'grid' : 'none';
+      emptyState.style.display = estado === 'empty' ? 'block' : 'none';
+      errorState.style.display = estado === 'error' ? 'block' : 'none';
+      if (mensajeError) errorMessage.textContent = mensajeError;
+    }
+
+    function obtenerNombreProyecto(proyecto) {
+      return proyecto.nombre || proyecto.name || `Proyecto ${proyecto.id}`;
+    }
+
+    function crearTarjetaProyecto(proyecto, index) {
+      const card = document.createElement("div");
+      card.className = "bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 animate-slide-up";
+      card.style.animationDelay = `${index * 0.1}s`;
+      
+      const nombreProyecto = obtenerNombreProyecto(proyecto);
+      // **LÓGICA DE VERIFICACIÓN CORREGIDA**
+      const tieneCronograma = cronogramasData[String(proyecto.id)];
+
+      const badgeHTML = tieneCronograma ? 
+        `<span class="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">Con cronograma</span>` :
+        `<span class="inline-flex items-center bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">Sin cronograma</span>`;
+      
+      const botonesHTML = tieneCronograma ? `
+        <div class="flex gap-2">
+          <a href="cliente_ver_cronograma.html?project_id=${proyecto.id}" class="flex-1 bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition font-medium flex items-center justify-center">
+            <i class="fas fa-eye mr-2"></i><span>Ver</span>
+          </a>
+          <a href="cliente_editar_cronograma.html?project_id=${proyecto.id}" class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2.5 rounded-xl hover:shadow-lg transition font-medium flex items-center justify-center">
+            <i class="fas fa-edit mr-2"></i><span>Editar</span>
+          </a>
+        </div>
+      ` : `
+        <a href="cliente_crear_cronograma.html?project_id=${proyecto.id}" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2.5 rounded-xl hover:shadow-lg transition font-medium flex items-center justify-center group">
+          <span class="mr-2">Crear cronograma</span>
+          <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+        </a>
+      `;
+
+      card.innerHTML = `
+        <h2 class="text-xl font-bold text-gray-800 mb-2">${nombreProyecto}</h2>
+        <div class="mb-4">${badgeHTML}</div>
+        <div class="border-t border-gray-100 pt-4">
+          ${botonesHTML}
+        </div>
+      `;
+      return card;
+    }
+
+    function renderizarProyectos(proyectos = proyectosData) {
+      projectList.innerHTML = "";
+      if (proyectos.length === 0) {
+        mostrarEstado('empty');
+        return;
+      }
+      proyectos.forEach((proyecto, index) => {
+        projectList.appendChild(crearTarjetaProyecto(proyecto, index));
+      });
+      mostrarEstado('success');
+    }
+
+    function filtrarProyectos(termino) {
+      const terminoBusqueda = termino.toLowerCase();
+      const proyectosFiltrados = proyectosData.filter(p => 
+        obtenerNombreProyecto(p).toLowerCase().includes(terminoBusqueda)
+      );
+      renderizarProyectos(proyectosFiltrados);
+    }
+    
+    // **FUNCIÓN DE INICIALIZACIÓN PRINCIPAL (MODIFICADA)**
+    async function inicializarVistaCliente() {
+      try {
+        mostrarEstado('loading');
+        
+        const token = localStorage.getItem("token");
+        const payload = parseJwt(token);
+        const userIdFromToken = payload.user_id || payload.uid;
+        if (!userIdFromToken) throw new Error("Token inválido o sin ID de usuario.");
+
+        // **CAMBIO CLAVE: Cargar proyectos y TODOS los cronogramas al inicio**
+        const [todosLosProyectos, todosLosCronogramas] = await Promise.all([
+            fetchWithAuth(`${API_BASE}/projects/`),
+            fetchWithAuth(`${API_BASE}/cronogramas/`)
+        ]);
+
+        if (!Array.isArray(todosLosProyectos)) throw new Error('Formato de datos de proyectos inválido');
+        
+        // Crear un mapa de cronogramas para una búsqueda rápida y eficiente
+        cronogramasData = {};
+        if (Array.isArray(todosLosCronogramas)) {
+            todosLosCronogramas.forEach(crono => {
+                cronogramasData[String(crono.project_id)] = crono;
+            });
+        }
+        
+        // Filtrar los proyectos que pertenecen al cliente
+        proyectosData = todosLosProyectos.filter(p => p.client_id === userIdFromToken);
+
+        // Renderizar las tarjetas. La función crearTarjetaProyecto usará el mapa 'cronogramasData'
+        // que ya está poblado con la información correcta.
+        setTimeout(() => {
+          renderizarProyectos();
+        }, 300);
+
+      } catch (error) {
+        mostrarEstado('error', `Error al cargar: ${error.message}`);
+      }
+    }
+
+    searchInput.addEventListener('input', (e) => filtrarProyectos(e.target.value));
+    retryBtn.addEventListener('click', inicializarVistaCliente);
+
+    inicializarVistaCliente();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cronograma de Tareas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    /* Gradient background */
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* Glass effect */
+    .glass {
+      backdrop-filter: blur(16px) saturate(180%);
+      background-color: rgba(255, 255, 255, 0.75);
+      border: 1px solid rgba(209, 213, 219, 0.3);
+    }
+
+    /* Calendar custom styles */
+    .fc-header-toolbar {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .fc-button-primary {
+      background: rgba(255, 255, 255, 0.2) !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      border-radius: 8px !important;
+      transition: all 0.3s ease !important;
+    }
+
+    .fc-button-primary:hover {
+      background: rgba(255, 255, 255, 0.3) !important;
+      transform: translateY(-1px);
+    }
+
+    .fc-daygrid-event {
+      border-radius: 6px !important;
+      border: none !important;
+      font-weight: 500 !important;
+      font-size: 11px !important;
+      padding: 2px 6px !important;
+      margin: 1px !important;
+      overflow: hidden !important;
+      white-space: nowrap !important;
+      text-overflow: ellipsis !important;
+    }
+
+    /* Task status styles */
+    .task-pendiente { opacity: 0.7; }
+    .task-en-proceso {
+      border-left: 4px solid #fbbf24 !important;
+      animation: pulse 2s infinite;
+    }
+    .task-cerrada {
+      border-left: 4px solid #10b981 !important;
+    }
+    .task-retrasada {
+      border-left: 4px solid #ef4444 !important;
+      animation: shake 0.5s ease-in-out infinite alternate;
+    }
+
+    /* Floating animation */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    @keyframes shake {
+      from { transform: translateX(-2px); }
+      to { transform: translateX(2px); }
+    }
+
+    .floating { animation: float 6s ease-in-out infinite; }
+
+    /* Pulse animation */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.8), 0 0 30px rgba(99, 102, 241, 0.6); }
+    }
+
+    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+    /* Progress bar */
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      background-color: #e5e7eb;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    /* Task priority badges */
+    .priority-low { background-color: #dbeafe; color: #1e40af; }
+    .priority-medium { background-color: #fef3c7; color: #92400e; }
+    .priority-high { background-color: #fee2e2; color: #b91c1c; }
+
+    /* Phase colors - Fondo más claro con borde izquierdo */
+    .phase-inicio { background-color: #fee2e240; border-left: 4px solid #f87171; }
+    .phase-desarrollo { background-color: #fef3c740; border-left: 4px solid #fbbf24; }
+    .phase-final { background-color: #d1fae540; border-left: 4px solid #34d399; }
+
+    /* Collapsible sections */
+    .collapsible-header {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+
+    .collapsible-content.active {
+      max-height: 10000px;
+    }
+
+    .collapsible-icon {
+      transition: transform 0.3s ease;
+    }
+
+    .collapsible-header.active .collapsible-icon {
+      transform: rotate(90deg);
+    }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen p-4 lg:p-8">
+  <div class="max-w-7xl mx-auto space-y-8">
+
+    <!-- Header with floating animation -->
+    <div class="text-center floating">
+      <div class="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full mb-4 pulse-glow">
+        <span class="text-4xl">📋</span>
+      </div>
+      <h1 class="text-4xl lg:text-5xl font-bold text-white mb-2 drop-shadow-lg">
+        Cronograma de Tareas
+      </h1>
+      <p class="text-white/80 text-lg">Visualiza y gestiona las tareas de tus proyectos</p>
+    </div>
+
+    <!-- Project Selector and Stats Cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Project Selector -->
+      <div class="lg:col-span-2 glass rounded-2xl p-6 shadow-2xl transform hover:scale-[1.02] transition-all duration-300">
+        <div class="flex items-center space-x-3 mb-4">
+          <div class="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+          <h2 class="text-xl font-semibold text-gray-800">Selección de Proyecto</h2>
+        </div>
+
+        <div class="relative">
+          <select id="projectSelect" class="w-full p-4 bg-white/50 backdrop-blur-sm border-2 border-white/30 rounded-xl text-gray-800 font-medium focus:ring-4 focus:ring-purple-200 focus:border-purple-400 transition-all duration-300 appearance-none cursor-pointer hover:bg-white/70">
+            <option value="">✨ Cargando proyectos...</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task Stats -->
+      <div class="glass rounded-2xl p-6 shadow-2xl">
+        <div class="flex items-center space-x-3 mb-4">
+          <div class="w-3 h-3 bg-gradient-to-r from-green-500 to-teal-600 rounded-full"></div>
+          <h2 class="text-lg font-semibold text-gray-800">Estadísticas</h2>
+        </div>
+        
+        <div id="taskStats" class="space-y-3">
+          <div class="flex justify-between items-center p-2 bg-white/30 rounded-lg">
+            <span class="text-sm text-gray-700">Total</span>
+            <span id="totalTasks" class="font-bold text-gray-800">0</span>
+          </div>
+          <div class="flex justify-between items-center p-2 bg-white/30 rounded-lg">
+            <span class="text-sm text-gray-700">Cerradas</span>
+            <span id="completedTasks" class="font-bold text-green-600">0</span>
+          </div>
+          <div class="flex justify-between items-center p-2 bg-white/30 rounded-lg">
+            <span class="text-sm text-gray-700">En Proceso</span>
+            <span id="inProgressTasks" class="font-bold text-yellow-600">0</span>
+          </div>
+          <div class="flex justify-between items-center p-2 bg-white/30 rounded-lg">
+            <span class="text-sm text-gray-700">Pendientes</span>
+            <span id="pendingTasks" class="font-bold text-gray-600">0</span>
+          </div>
+          <div class="mt-4">
+            <div class="flex justify-between text-sm mb-1">
+              <span>Progreso</span>
+              <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div id="progressFill" class="progress-fill bg-gradient-to-r from-blue-500 to-purple-600" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend Card -->
+    <div class="glass rounded-2xl p-6 lg:p-8 shadow-2xl">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-3 h-3 bg-gradient-to-r from-pink-500 to-rose-600 rounded-full"></div>
+        <h2 class="text-xl font-semibold text-gray-800">Leyenda de Estados</h2>
+      </div>
+      
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="flex items-center space-x-2 p-3 bg-white/30 rounded-lg">
+          <div class="w-4 h-4 rounded-full bg-gray-400"></div>
+          <span class="text-sm font-medium text-gray-700">Pendiente</span>
+        </div>
+        <div class="flex items-center space-x-2 p-3 bg-white/30 rounded-lg">
+          <div class="w-4 h-4 rounded-full bg-yellow-400"></div>
+          <span class="text-sm font-medium text-gray-700">En Proceso</span>
+        </div>
+        <div class="flex items-center space-x-2 p-3 bg-white/30 rounded-lg">
+          <div class="w-4 h-4 rounded-full bg-green-500"></div>
+          <span class="text-sm font-medium text-gray-700">Cerrada</span>
+        </div>
+        <div class="flex items-center space-x-2 p-3 bg-white/30 rounded-lg">
+          <div class="w-4 h-4 rounded-full bg-red-500"></div>
+          <span class="text-sm font-medium text-gray-700">Retrasada</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar Card -->
+    <div class="glass rounded-2xl p-6 lg:p-8 shadow-2xl">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-3 h-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full"></div>
+        <h2 class="text-xl font-semibold text-gray-800">Calendario de Tareas</h2>
+      </div>
+      
+      <div id="calendar" class="bg-white/40 backdrop-blur-sm rounded-xl p-4 shadow-inner"></div>
+    </div>
+
+    <!-- Cronograma Card -->
+    <div class="glass rounded-2xl p-6 lg:p-8 shadow-2xl">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-3 h-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full"></div>
+        <h2 class="text-xl font-semibold text-gray-800">Cronograma del Proyecto</h2>
+      </div>
+      
+      <div id="cronogramaContent" class="space-y-4">
+        <div class="text-center text-gray-500 py-8">
+          Selecciona un proyecto para ver su cronograma
+        </div>
+      </div>
+    </div>
+
+    <!-- Task List Card -->
+    <div class="glass rounded-2xl p-6 lg:p-8 shadow-2xl">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-3 h-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
+        <h2 class="text-xl font-semibold text-gray-800">Tareas del Proyecto</h2>
+      </div>
+      
+      <div id="taskList" class="space-y-3">
+        <div class="text-center text-gray-500 py-8">
+          Selecciona un proyecto para ver sus tareas
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center py-6">
+      <p class="text-white/60 text-sm">
+        Desarrollado con ❤️ para una mejor gestión de proyectos y tareas
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    const TOKEN = localStorage.getItem("token");
+
+    if (!TOKEN) {
+      alert("⚠️ No hay token en localStorage. Guarda primero el token con localStorage.setItem('token','TU_TOKEN')");
+    }
+
+    // DOM Elements
+    const projectSelect = document.getElementById("projectSelect");
+    const calendarEl = document.getElementById("calendar");
+
+    // State
+    let currentTasks = [];
+    let userMap = {};
+    let faseMap = {};
+    let etapaMap = {};
+    let projectMap = {};
+    let cronogramaData = null;
+
+    // Colores por estado de tarea
+    const statusColors = {
+      'pendiente': '#9ca3af',
+      'en-proceso': '#fbbf24', 
+      'cerrada': '#10b981',
+      'retrasada': '#ef4444'
+    };
+
+    // Colores para fases del cronograma
+    const phaseColors = {
+      'inicio': '#f87171',
+      'desarrollo': '#fbbf24',
+      'final': '#34d399'
+    };
+
+    // Mapeo de fases para estilos CSS
+    const phaseClassMap = {
+      'inicio': 'phase-inicio',
+      'desarrollo': 'phase-desarrollo',
+      'final': 'phase-final'
+    };
+
+    // Inicializar calendario
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "dayGridMonth",
+      locale: "es",
+      height: "auto",
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek"
+      },
+      events: [],
+      eventClick: function(info) {
+        const taskId = info.event.extendedProps.taskId;
+        const phaseType = info.event.extendedProps.phaseType;
+        
+        if (taskId) {
+          window.open(`https://gestordecursos.pegui.edu.co/r/superadmin/tasks/editar.html?id=${taskId}`, '_blank');
+        } else if (phaseType) {
+          // Para fases del cronograma, podrías mostrar un modal con más información
+          alert(`Fase: ${info.event.title}\nResponsables: ${info.event.extendedProps.responsables || 'No especificados'}`);
+        }
+      },
+      eventDidMount: function(info) {
+        const status = info.event.extendedProps.status || 'pendiente';
+        const phaseType = info.event.extendedProps.phaseType;
+        
+        if (status) {
+          info.el.classList.add(`task-${status}`);
+        }
+      }
+    });
+    calendar.render();
+
+    // Collapsible sections
+    function setupCollapsible() {
+      document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+          this.classList.toggle('active');
+          const content = this.nextElementSibling;
+          content.classList.toggle('active');
+        });
+      });
+    }
+
+    async function apiGet(endpoint) {
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          headers: { 
+            "Authorization": `Bearer ${TOKEN}`,
+            "Content-Type": "application/json"
+          }
+        });
+        if (!res.ok) throw new Error(`Error en ${endpoint}: ${res.status} ${res.statusText}`);
+        return await res.json();
+      } catch (error) {
+        console.error('Error en llamada API:', error);
+        throw error;
+      }
+    }
+
+    function parseDate(dateStr) {
+      if (!dateStr) return null;
+      
+      // Intentar varios formatos de fecha
+      const formats = [
+        /(\d{4})-(\d{2})-(\d{2})/,  // YYYY-MM-DD
+        /(\d{2})\/(\d{2})\/(\d{4})/,  // DD/MM/YYYY
+        /(\d{2})-(\d{2})-(\d{4})/   // DD-MM-YYYY
+      ];
+      
+      for (let format of formats) {
+        const match = dateStr.match(format);
+        if (match) {
+          if (format === formats[0]) {
+            // YYYY-MM-DD
+            return new Date(match[1], match[2] - 1, match[3]);
+          } else {
+            // DD/MM/YYYY o DD-MM-YYYY
+            return new Date(match[3], match[2] - 1, match[1]);
+          }
+        }
+      }
+      
+      // Fallback: intenta parsear directamente
+      const date = new Date(dateStr);
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    // Corrección en la lógica de estado de tareas
+    function getTaskStatus(task) {
+      const now = new Date();
+      const fechaLimite = parseDate(task.fecha_entrega);
+      
+      // Verificar si la tarea está marcada como cerrada
+      if (task.cerrada === true || task.estado === 'cerrado') {
+        return 'cerrado';
+      }
+      
+      // Verificar si está retrasada
+      if (fechaLimite && fechaLimite < now) {
+        return 'retrasada';
+      }
+      
+      // Verificar si está en proceso
+      if (task.en_proceso === true || task.estado === 'en-proceso') {
+        return 'en-proceso';
+      }
+      
+      // Por defecto, está pendiente
+      return 'pendiente';
+    }
+
+    // Función auxiliar para formatear fechas del cronograma
+    function formatCronogramaDate(diaInicio, mesInicio, diaFin, mesFin) {
+      const meses = {
+        'enero': 'Enero',
+        'febrero': 'Febrero',
+        'marzo': 'Marzo',
+        'abril': 'Abril',
+        'mayo': 'Mayo',
+        'junio': 'Junio',
+        'julio': 'Julio',
+        'agosto': 'Agosto',
+        'septiembre': 'Septiembre',
+        'octubre': 'Octubre',
+        'noviembre': 'Noviembre',
+        'diciembre': 'Diciembre'
+      };
+
+      const mesInicioFormatted = meses[mesInicio] || mesInicio || 'N/A';
+      const mesFinFormatted = meses[mesFin] || mesFin || 'N/A';
+      return `${diaInicio || '?'} / ${mesInicioFormatted} - ${diaFin || '?'} / ${mesFinFormatted}`;
+    }
+
+    function updateCronogramaDisplay() {
+      const cronogramaContent = document.getElementById('cronogramaContent');
+      
+      if (!cronogramaData || Object.keys(cronogramaData).length === 0) {
+        cronogramaContent.innerHTML = `
+          <div class="text-center text-gray-500 py-8">
+            No hay cronograma disponible para este proyecto
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <div class="space-y-6">
+          <!-- Fase de Inicio -->
+          <div class="collapsible">
+            <div class="collapsible-header flex items-center justify-between p-4 bg-white/30 rounded-lg hover:bg-white/40 transition-all">
+              <div class="flex items-center space-x-3">
+                <i class="collapsible-icon fas fa-chevron-right transform transition-transform"></i>
+                <h3 class="text-lg font-semibold text-gray-800">Fase de Inicio</h3>
+              </div>
+              <div class="text-sm text-gray-600">
+                ${formatCronogramaDate(
+                  cronogramaData.dia_inicio_inicio,
+                  cronogramaData.mes_inicio,
+                  cronogramaData.dia_fin_inicio,
+                  cronogramaData.mes_inicio
+                )}
+              </div>
+            </div>
+            <div class="collapsible-content bg-white/20 rounded-lg mt-2 p-4 space-y-3">
+              <div class="flex items-center space-x-2">
+                <span class="font-medium">Responsables:</span>
+                <span>${cronogramaData.responsables_inicio || 'No especificado'}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Fase de Desarrollo -->
+          <div class="collapsible">
+            <div class="collapsible-header flex items-center justify-between p-4 bg-white/30 rounded-lg hover:bg-white/40 transition-all">
+              <div class="flex items-center space-x-3">
+                <i class="collapsible-icon fas fa-chevron-right transform transition-transform"></i>
+                <h3 class="text-lg font-semibold text-gray-800">Fase de Desarrollo</h3>
+              </div>
+              <div class="text-sm text-gray-600">
+                ${formatCronogramaDate(
+                  cronogramaData.dia_inicio_desarrollo,
+                  cronogramaData.mes_desarrollo,
+                  cronogramaData.dia_fin_desarrollo,
+                  cronogramaData.mes_desarrollo
+                )}
+              </div>
+            </div>
+            <div class="collapsible-content bg-white/20 rounded-lg mt-2 p-4 space-y-3">
+              <div class="flex items-center space-x-2">
+                <span class="font-medium">Responsables:</span>
+                <span>${cronogramaData.responsables_desarrollo || 'No especificado'}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Fase Final -->
+          <div class="collapsible">
+            <div class="collapsible-header flex items-center justify-between p-4 bg-white/30 rounded-lg hover:bg-white/40 transition-all">
+              <div class="flex items-center space-x-3">
+                <i class="collapsible-icon fas fa-chevron-right transform transition-transform"></i>
+                <h3 class="text-lg font-semibold text-gray-800">Fase Final</h3>
+              </div>
+              <div class="text-sm text-gray-600">
+                ${formatCronogramaDate(
+                  cronogramaData.dia_inicio_final,
+                  cronogramaData.mes_final,
+                  cronogramaData.dia_fin_final,
+                  cronogramaData.mes_final
+                )}
+              </div>
+            </div>
+            <div class="collapsible-content bg-white/20 rounded-lg mt-2 p-4 space-y-3">
+              <div class="flex items-center space-x-2">
+                <span class="font-medium">Responsables:</span>
+                <span>${cronogramaData.responsables_final || 'No especificado'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      cronogramaContent.innerHTML = html;
+      setupCollapsible();
+    }
+
+    function updateTaskList(tareas) {
+      const taskList = document.getElementById('taskList');
+      
+      if (tareas.length === 0) {
+        taskList.innerHTML = `
+          <div class="text-center text-gray-500 py-8">
+            No hay tareas para este proyecto
+          </div>
+        `;
+        return;
+      }
+
+      // Agrupar tareas por fase y luego por etapa
+      const tareasPorFase = {};
+      tareas.forEach(tarea => {
+        const faseNombre = faseMap[tarea.fase_id] || 'Sin fase';
+        const etapaNombre = etapaMap[tarea.etapa_id] || 'Sin etapa';
+        
+        if (!tareasPorFase[faseNombre]) {
+          tareasPorFase[faseNombre] = {};
+        }
+        
+        if (!tareasPorFase[faseNombre][etapaNombre]) {
+          tareasPorFase[faseNombre][etapaNombre] = [];
+        }
+        
+        tareasPorFase[faseNombre][etapaNombre].push(tarea);
+      });
+
+      let html = '';
+      
+      // Iterar por fases
+      Object.keys(tareasPorFase).forEach(faseNombre => {
+        const etapas = tareasPorFase[faseNombre];
+        const faseKey = Object.keys(faseMap).find(key => faseMap[key] === faseNombre) || 'sin-fase';
+        const faseClass = phaseClassMap[faseKey.toLowerCase().replace(' ', '-')] || '';
+        
+        html += `
+          <div class="collapsible mb-4">
+            <div class="collapsible-header flex items-center justify-between p-4 bg-white/30 rounded-lg hover:bg-white/40 transition-all ${faseClass}">
+              <div class="flex items-center space-x-3">
+                <i class="collapsible-icon fas fa-chevron-right transform transition-transform"></i>
+                <h3 class="text-lg font-semibold text-gray-800">${faseNombre}</h3>
+              </div>
+              <div class="text-sm text-gray-600">
+                ${Object.values(etapas).reduce((total, etapaTareas) => total + etapaTareas.length, 0)} tareas
+              </div>
+            </div>
+            <div class="collapsible-content bg-white/20 rounded-lg mt-2 p-4 space-y-4">
+        `;
+        
+        // Iterar por etapas dentro de cada fase
+        Object.keys(etapas).forEach(etapaNombre => {
+          const tareasEnEtapa = etapas[etapaNombre];
+          
+          html += `
+            <div class="ml-4">
+              <h4 class="text-md font-medium text-gray-700 mb-3 flex items-center">
+                <span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>
+                ${etapaNombre} <span class="ml-2 text-sm text-gray-500">(${tareasEnEtapa.length} tareas)</span>
+              </h4>
+              <div class="space-y-3 ml-4">
+          `;
+          
+          // Mostrar tareas de la etapa
+          tareasEnEtapa.forEach(tarea => {
+            const status = getTaskStatus(tarea);
+            const responsable = userMap[tarea.asignado] || { nombre: 'Sin asignar', email: '' };
+            
+            const statusBadge = {
+              'pendiente': '<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">Pendiente</span>',
+              'en-proceso': '<span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">En Proceso</span>',
+              'cerrado': '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Cerrado</span>',
+              'retrasada': '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">Retrasada</span>'
+            };
+            
+            html += `
+              <div class="flex items-center justify-between p-3 bg-white/40 rounded-lg hover:bg-white/50 transition-all duration-200 cursor-pointer" 
+                   onclick="window.open('https://gestordecursos.pegui.edu.co/r/superadmin/tasks/editar.html?id=${tarea.id}', '_blank')">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-2 mb-1">
+                    <h4 class="font-medium text-gray-800">${tarea.titulo || 'Tarea sin título'}</h4>
+                    ${statusBadge[status]}
+                  </div>
+                  <div class="text-sm text-gray-600 space-y-1">
+                    <div class="flex items-center space-x-4">
+                      <span>👤 ${responsable.nombre}</span>
+                      ${tarea.fecha_entrega ? `<span>📅 ${tarea.fecha_entrega}</span>` : ''}
+                    </div>
+                    ${tarea.descripcion ? `<p class="text-gray-500 text-xs mt-1">${tarea.descripcion.substring(0, 100)}${tarea.descripcion.length > 100 ? '...' : ''}</p>` : ''}
+                  </div>
+                </div>
+                <div class="ml-4">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += `
+              </div>
+            </div>
+          `;
+        });
+        
+        html += `
+            </div>
+          </div>
+        `;
+      });
+
+      taskList.innerHTML = html;
+      setupCollapsible();
+    }
+
+    function updateTaskStats(tareas) {
+      const stats = {
+        total: tareas.length,
+        cerradas: 0,
+        inProgress: 0,
+        pending: 0
+      };
+
+      tareas.forEach(task => {
+        const status = getTaskStatus(task);
+        switch (status) {
+          case 'cerrado':
+            stats.cerradas++;
+            break;
+          case 'en-proceso':
+            stats.inProgress++;
+            break;
+          case 'pendiente':
+            stats.pending++;
+            break;
+        }
+      });
+
+      document.getElementById('totalTasks').textContent = stats.total;
+      document.getElementById('completedTasks').textContent = stats.cerradas;
+      document.getElementById('inProgressTasks').textContent = stats.inProgress;
+      document.getElementById('pendingTasks').textContent = stats.pending;
+      
+      // Update progress bar
+      const progressPercent = stats.total > 0 ? Math.round((stats.cerradas / stats.total) * 100) : 0;
+      document.getElementById('progressPercent').textContent = `${progressPercent}%`;
+      document.getElementById('progressFill').style.width = `${progressPercent}%`;
+    }
+
+    // Función para obtener el número del mes a partir de su nombre
+    function getMonthNumber(monthName) {
+      const months = {
+        'enero': 0,
+        'febrero': 1,
+        'marzo': 2,
+        'abril': 3,
+        'mayo': 4,
+        'junio': 5,
+        'julio': 6,
+        'agosto': 7,
+        'septiembre': 8,
+        'octubre': 9,
+        'noviembre': 10,
+        'diciembre': 11
+      };
+      return months[monthName.toLowerCase()] || 0;
+    }
+
+    async function loadProjects() {
+      try {
+        console.log('Cargando proyectos...');
+        const projects = await apiGet("/projects/");
+        console.log('Proyectos cargados:', projects);
+        
+        projectMap = {};
+        // Limpiar el select y añadir opción por defecto
+        projectSelect.innerHTML = '<option value="">✨ Selecciona un proyecto</option>';
+        
+        projects.forEach(p => {
+          projectMap[p.id] = p.name || `Proyecto ${p.id}`;
+          
+          const opt = document.createElement("option");
+          opt.value = p.id;
+          opt.textContent = p.name || `Proyecto ${p.id}`;
+          projectSelect.appendChild(opt);
+        });
+        
+        console.log('Mapa de proyectos:', projectMap);
+      } catch (error) {
+        console.error('Error cargando proyectos:', error);
+        projectSelect.innerHTML = '<option value="">❌ Error al cargar proyectos</option>';
+        alert("❌ Error cargando proyectos: " + error.message);
+      }
+    }
+
+    async function loadCronogramaByProject(projectId) {
+      try {
+        console.log(`Cargando cronograma para proyecto ${projectId}...`);
+        const cronogramas = await apiGet(`/cronogramas/project/${projectId}`);
+        console.log('Cronogramas cargados:', cronogramas);
+        
+        // Tomar el primer cronograma si hay varios, o null si el array está vacío
+        cronogramaData = (cronogramas && cronogramas.length > 0) ? cronogramas[0] : {};
+        console.log('Cronograma seleccionado:', cronogramaData);
+        
+        updateCronogramaDisplay();
+      } catch (error) {
+        console.error('Error cargando cronograma:', error);
+        cronogramaData = {};
+        updateCronogramaDisplay();
+      }
+    }
+
+    async function loadTasksForProject(projectId) {
+      try {
+        // Mostrar loading
+        document.getElementById('taskList').innerHTML = `
+          <div class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+            <p class="mt-2 text-gray-600">Cargando tareas...</p>
+          </div>
+        `;
+        
+        // Cargar datos en paralelo
+        console.log(`Cargando datos para proyecto ${projectId}...`);
+        const [tareas, users, fases, etapas] = await Promise.all([
+          apiGet(`/tareas/`),
+          apiGet("/users/"),
+          apiGet("/fases/").catch(() => []),
+          apiGet("/etapas/").catch(() => [])
+        ]);
+
+        console.log('Datos cargados:', { tareas, users, fases, etapas });
+
+        // Filtrar tareas del proyecto
+        const tareasDelProyecto = tareas.filter(t => t.project_id == projectId);
+        console.log('Tareas del proyecto:', tareasDelProyecto);
+
+        // Crear mapas
+        userMap = {};
+        users.forEach(u => {
+          userMap[u.uid] = {
+            nombre: u.name || u.nombre || u.username || 'Usuario desconocido',
+            email: u.email || "Sin correo"
+          };
+        });
+
+        faseMap = {};
+        fases.forEach(f => {
+          faseMap[f.id] = f.nombre || `Fase ${f.id}`;
+        });
+
+        etapaMap = {};
+        etapas.forEach(e => {
+          etapaMap[e.id] = e.nombre || `Etapa ${e.id}`;
+        });
+
+        // Limpiar calendario
+        calendar.removeAllEvents();
+
+        // Agregar eventos de tareas al calendario
+        tareasDelProyecto.forEach(tarea => {
+          const fechaInicio = parseDate(tarea.fecha_inicio);
+          const fechaEntrega = parseDate(tarea.fecha_entrega);
+          const status = getTaskStatus(tarea);
+          
+          const responsable = userMap[tarea.asignado] || { nombre: 'Sin asignar', email: '' };
+          const fase = faseMap[tarea.fase_id] || 'Sin fase';
+          const etapa = etapaMap[tarea.etapa_id] || 'Sin etapa';
+
+          let startDate = fechaInicio;
+          let endDate = fechaEntrega;
+
+          if (!startDate && endDate) {
+            startDate = endDate;
+          }
+
+          if (!startDate && !endDate) {
+            startDate = new Date();
+            endDate = new Date();
+          }
+
+          if (startDate) {
+            const event = {
+              title: `${tarea.titulo || 'Tarea sin título'}`,
+              start: startDate,
+              end: endDate || startDate,
+              color: statusColors[status] || statusColors.pendiente,
+              extendedProps: {
+                taskId: tarea.id,
+                status: status,
+                descripcion: tarea.descripcion,
+                responsable: responsable.nombre,
+                email: responsable.email,
+                fase: fase,
+                etapa: etapa,
+                project_id: tarea.project_id,
+                fase_id: tarea.fase_id,
+                etapa_id: tarea.etapa_id,
+                fecha_inicio: tarea.fecha_inicio,
+                fecha_entrega: tarea.fecha_entrega,
+                cerrada: tarea.cerrada
+              }
+            };
+
+            calendar.addEvent(event);
+          }
+        });
+
+        // Agregar eventos del cronograma al calendario (DESPUÉS de cargar las tareas)
+        if (cronogramaData) {
+          const currentYear = new Date().getFullYear();
+          
+          // Agregar fase de Inicio
+          if (cronogramaData.mes_inicio && cronogramaData.dia_inicio_inicio && cronogramaData.dia_fin_inicio) {
+            const startDate = new Date(currentYear, getMonthNumber(cronogramaData.mes_inicio), cronogramaData.dia_inicio_inicio);
+            const endDate = new Date(currentYear, getMonthNumber(cronogramaData.mes_inicio), cronogramaData.dia_fin_inicio);
+            
+            calendar.addEvent({
+              title: 'Fase de Inicio',
+              start: startDate,
+              end: endDate,
+              color: phaseColors.inicio,
+              extendedProps: {
+                phaseType: 'inicio',
+                responsables: cronogramaData.responsables_inicio
+              }
+            });
+          }
+          
+          // Agregar fase de Desarrollo
+          if (cronogramaData.mes_desarrollo && cronogramaData.dia_inicio_desarrollo && cronogramaData.dia_fin_desarrollo) {
+            const startDate = new Date(currentYear, getMonthNumber(cronogramaData.mes_desarrollo), cronogramaData.dia_inicio_desarrollo);
+            const endDate = new Date(currentYear, getMonthNumber(cronogramaData.mes_desarrollo), cronogramaData.dia_fin_desarrollo);
+            
+            calendar.addEvent({
+              title: 'Fase de Desarrollo',
+              start: startDate,
+              end: endDate,
+              color: phaseColors.desarrollo,
+              extendedProps: {
+                phaseType: 'desarrollo',
+                responsables: cronogramaData.responsables_desarrollo
+              }
+            });
+          }
+          
+          // Agregar fase Final
+          if (cronogramaData.mes_final && cronogramaData.dia_inicio_final && cronogramaData.dia_fin_final) {
+            const startDate = new Date(currentYear, getMonthNumber(cronogramaData.mes_final), cronogramaData.dia_inicio_final);
+            const endDate = new Date(currentYear, getMonthNumber(cronogramaData.mes_final), cronogramaData.dia_fin_final);
+            
+            calendar.addEvent({
+              title: 'Fase Final',
+              start: startDate,
+              end: endDate,
+              color: phaseColors.final,
+              extendedProps: {
+                phaseType: 'final',
+                responsables: cronogramaData.responsables_final
+              }
+            });
+          }
+        }
+
+        // Guardar tareas actuales y actualizar UI
+        currentTasks = tareasDelProyecto;
+        updateTaskStats(tareasDelProyecto);
+        updateTaskList(tareasDelProyecto);
+        
+        console.log(`Cargadas ${tareasDelProyecto.length} tareas para el proyecto ${projectMap[projectId] || projectId}`);
+
+      } catch (error) {
+        console.error('Error cargando tareas:', error);
+        document.getElementById('taskList').innerHTML = `
+          <div class="text-center text-red-500 py-8">
+            ❌ Error cargando tareas del proyecto: ${error.message}
+          </div>
+        `;
+      }
+    }
+
+    // Event listeners
+    projectSelect.addEventListener("change", async () => {
+      const projectId = projectSelect.value;
+      console.log('Proyecto seleccionado:', projectId);
+      
+      if (!projectId) {
+        calendar.removeAllEvents();
+        updateTaskStats([]);
+        document.getElementById('taskList').innerHTML = `
+          <div class="text-center text-gray-500 py-8">
+            Selecciona un proyecto para ver sus tareas
+          </div>
+        `;
+        cronogramaData = {};
+        updateCronogramaDisplay();
+        return;
+      }
+      
+      // Cargar cronograma del proyecto
+      await loadCronogramaByProject(projectId);
+      
+      // Cargar tareas del proyecto
+      await loadTasksForProject(projectId);
+    });
+
+    // Inicializar
+    loadProjects();
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lanzador ONLYOFFICE</title>
+
+  <!-- Tailwind CSS CDN (v3) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fuente bonita -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>body{font-family:"Inter",sans-serif}</style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-100">
+
+  <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8">
+    <h1 class="text-xl font-semibold text-gray-800 mb-6 text-center">
+      Crear nuevo documento
+    </h1>
+
+    <button
+      class="w-full py-3 mb-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition"
+      onclick="openDoc('http://gestordecursos.pegui.edu.co:8086/example/editor?mode=edit&fileName=new.pdf&userid=uid-1&lang=en&directUrl=false')">
+      PDF
+    </button>
+
+    <button
+      class="w-full py-3 mb-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition"
+      onclick="openDoc('http://gestordecursos.pegui.edu.co:8086/example/editor?mode=edit&fileName=new.pptx&userid=uid-1&lang=en&directUrl=false')">
+      Presentación PowerPoint
+    </button>
+
+    <button
+      class="w-full py-3 mb-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold transition"
+      onclick="openDoc('http://gestordecursos.pegui.edu.co:8086/example/editor?mode=edit&fileName=new.xlsx&userid=uid-1&lang=en&directUrl=false')">
+      Hoja de cálculo
+    </button>
+
+    <button
+      class="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold transition"
+      onclick="openDoc('http://gestordecursos.pegui.edu.co:8086/example/editor?mode=edit&fileName=new.docx&userid=uid-1&lang=en&directUrl=false')">
+      Documento de texto
+    </button>
+  </div>
+
+  <script>
+    function openDoc(url){
+      window.open(url,'_blank','noopener');
+    }
+  </script>
+</body>
+</html>
+

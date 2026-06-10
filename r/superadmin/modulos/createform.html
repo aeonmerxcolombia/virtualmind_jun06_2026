@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Nuevo Módulo con Formulario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-section {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        .form-section:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: #2563eb;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            border-radius: 0.375rem;
+            border: 1px solid #D1D5DB;
+            padding: 0.5rem 0.75rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        input[type="checkbox"] {
+             width: 1rem;
+             height: 1rem;
+             border-radius: 0.25rem;
+             accent-color: #2563eb;
+        }
+        select {
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25em 1.25em;
+            padding-right: 2.5rem; 
+        }
+        /* !--- NUEVOS ESTILOS DE VALIDACIÓN ---! */
+        .error {
+            border-color: #ef4444 !important;
+        }
+        .error-text {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            display: none;
+        }
+        .error-text.active {
+            display: block;
+        }
+        .mic-recording { animation: micPulse 1s infinite ease-in-out; background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+        .mic-processing { background-color: #eab308 !important; color: white !important; border-color: #ca8a04 !important; }
+        @keyframes micPulse { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-slate-50">
+    
+    <div class="bg-white shadow-md border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between flex-wrap">
+                <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-plus-circle text-green-600 mr-3"></i>
+                    Crear Nuevo Módulo
+                </h1>
+                <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+                    <a href="index.html" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Volver a la Lista
+                    </a>
+                    <button type="button" id="saveButton" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center w-40 justify-center">
+                        <span id="saveButtonIcon"><i class="fas fa-check mr-2"></i></span>
+                        <span id="saveButtonText">Crear Módulo</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div id="contextContainer" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+            <p class="text-sm font-semibold text-blue-800">Plan de Formación:</p>
+            <h3 class="text-xl font-bold text-gray-900" id="studyPlanNameContext">Cargando...</h3>
+        </div>
+        <div id="mensaje" class="mb-6 text-center"></div>
+
+        <form id="createModuleForm" class="space-y-8">
+            
+            <input type="hidden" name="study_plan_id" id="study_plan_id_hidden">
+            
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-book-open text-blue-500 mr-2"></i>Información General</legend>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <div>
+                        <label>Plan de Formación *</label>
+                        <select id="studyPlanSelect" required>
+                            <option value="">Seleccione un plan...</option>
+                        </select>
+                        <p class="error-text">Este campo es obligatorio.</p>
+                    </div>
+
+                    <div>
+                        <label>Autor/Responsable *</label>
+                        <select name="autor_responsable" id="authorSelect" required>
+                            <option value="">Cargando autores...</option>
+                        </select>
+                        <p class="error-text">Este campo es obligatorio.</p>
+                    </div>
+                    <div>
+                        <label>Nombre del Módulo *</label>
+                        <div class="flex gap-2"><input type="text" name="nombre_del_modulo" id="input-nombre_del_modulo" required class="flex-1"><button type="button" onclick="gestionarGrabacionWhisper(event, 'input-nombre_del_modulo')" id="btn-mic-input-nombre_del_modulo" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-input-nombre_del_modulo" class="fas fa-microphone text-lg"></i></button></div>
+                        <p class="error-text">Este campo es obligatorio.</p>
+                    </div>
+                    <div><label>Nombre Corto</label><div class="flex gap-2"><input type="text" name="nombre_corto_del_modulo" id="input-nombre_corto_del_modulo" class="flex-1"><button type="button" onclick="gestionarGrabacionWhisper(event, 'input-nombre_corto_del_modulo')" id="btn-mic-input-nombre_corto_del_modulo" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-input-nombre_corto_del_modulo" class="fas fa-microphone text-lg"></i></button></div></div>
+                    <div><label>Versión</label><div class="flex gap-2"><input type="text" name="version" id="input-version" class="flex-1" value="1.0"><button type="button" onclick="gestionarGrabacionWhisper(event, 'input-version')" id="btn-mic-input-version" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-input-version" class="fas fa-microphone text-lg"></i></button></div></div>
+                    <div><label>Organización</label><div class="flex gap-2"><input type="text" name="organizacion_institucion" id="input-organizacion_institucion" class="flex-1" placeholder="Ej: VirtualMind"><button type="button" onclick="gestionarGrabacionWhisper(event, 'input-organizacion_institucion')" id="btn-mic-input-organizacion_institucion" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-input-organizacion_institucion" class="fas fa-microphone text-lg"></i></button></div></div>
+                    <div class="md:col-span-2"><label>Palabras Clave (separadas por coma)</label><div class="flex gap-2"><input type="text" name="palabras_clave" id="input-palabras_clave" class="flex-1" placeholder="IA, Diseño, Aprendizaje"><button type="button" onclick="gestionarGrabacionWhisper(event, 'input-palabras_clave')" id="btn-mic-input-palabras_clave" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-input-palabras_clave" class="fas fa-microphone text-lg"></i></button></div></div>
+                    <div class="flex items-center gap-2 pt-4"><input type="checkbox" name="derechos_patrimoniales"><label>Derechos Patrimoniales</label></div>
+                    <div class="flex items-center gap-2 pt-4"><input type="checkbox" name="derechos_intelectuales"><label>Derechos Intelectuales</label></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-graduation-cap text-green-500 mr-2"></i>Contenido Pedagógico</legend>
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label>Objetivo General *</label>
+                        <div class="flex gap-2"><textarea name="objetivo_general" id="textarea-objetivo_general" rows="3" placeholder="Define el propósito principal del módulo..." required class="flex-1"></textarea><button type="button" onclick="gestionarGrabacionWhisper(event, 'textarea-objetivo_general')" id="btn-mic-textarea-objetivo_general" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0 h-[84px]" title="Grabar con Whisper"><i id="ico-mic-textarea-objetivo_general" class="fas fa-microphone text-lg"></i></button></div>
+                        <p class="error-text">Este campo es obligatorio para la validación de IA.</p>
+                    </div>
+                    <div><label>Objetivos Específicos (uno por línea)</label><div class="flex gap-2"><textarea name="objetivos_especificos" id="textarea-objetivos_especificos" rows="5" placeholder="1. Identificar...&#10;2. Aplicar..." class="flex-1"></textarea><button type="button" onclick="gestionarGrabacionWhisper(event, 'textarea-objetivos_especificos')" id="btn-mic-textarea-objetivos_especificos" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0 h-[104px]" title="Grabar con Whisper"><i id="ico-mic-textarea-objetivos_especificos" class="fas fa-microphone text-lg"></i></button></div></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label>Público Objetivo</label>
+                            <select name="publico_objetivo">
+                                <option value="">Seleccione...</option>
+                                <option value="Principiantes">Principiantes</option>
+                                <option value="Intermedio">Intermedio</option>
+                                <option value="Avanzado">Avanzado</option>
+                                <option value="Expertos">Expertos</option>
+                                <option value="Todos los niveles">Todos los niveles</option>
+                                <option value="Personal interno">Personal interno</option>
+                                <option value="Clientes externos">Clientes externos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Duración Estimada</label>
+                            <select name="duracion_estimada">
+                                <option value="">Seleccione...</option>
+                                <option value="1-2 horas">1-2 horas</option>
+                                <option value="3-5 horas">3-5 horas</option>
+                                <option value="6-10 horas">6-10 horas</option>
+                                <option value="10+ horas">10+ horas</option>
+                                <option value="1 semana">1 semana</option>
+                                <option value="2 semanas">2 semanas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div><label>Requisitos Previos</label><div class="flex gap-2"><textarea name="requisitos_previos" id="textarea-requisitos_previos" rows="2" placeholder="Ej: Conocimientos básicos de HTML y CSS" class="flex-1"></textarea><button type="button" onclick="gestionarGrabacionWhisper(event, 'textarea-requisitos_previos')" id="btn-mic-textarea-requisitos_previos" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0 h-[60px]" title="Grabar con Whisper"><i id="ico-mic-textarea-requisitos_previos" class="fas fa-microphone text-lg"></i></button></div></div>
+                    <div><label>Criterios de Logro</label><div class="flex gap-2"><textarea name="criterios_de_logro" id="textarea-criterios_de_logro" rows="2" placeholder="Ej: El participante podrá crear una API REST..." class="flex-1"></textarea><button type="button" onclick="gestionarGrabacionWhisper(event, 'textarea-criterios_de_logro')" id="btn-mic-textarea-criterios_de_logro" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0 h-[60px]" title="Grabar con Whisper"><i id="ico-mic-textarea-criterios_de_logro" class="fas fa-microphone text-lg"></i></button></div></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-sitemap text-purple-500 mr-2"></i>Estructura y Diseño</legend>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label>Número de Unidades *</label>
+                        <input type="number" name="numero_unidades" required min="1" placeholder="Ej: 5">
+                        <p class="error-text">Debe ser al menos 1.</p>
+                    </div>
+                    <div>
+                        <label>Orden de Unidades</label>
+                        <select name="orden_unidades">
+                            <option value="Secuencial">Secuencial</option>
+                            <option value="No lineal (abierto)">No lineal (abierto)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Tiempo por Unidad</label>
+                        <div class="flex gap-2"><input type="text" name="tiempo_estimado_por_unidad" id="input-tiempo_estimado_por_unidad" class="flex-1" placeholder="Ej: 2 horas por unidad"><button type="button" onclick="gestionarGrabacionWhisper(event, 'input-tiempo_estimado_por_unidad')" id="btn-mic-input-tiempo_estimado_por_unidad" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-input-tiempo_estimado_por_unidad" class="fas fa-microphone text-lg"></i></button></div>
+                    </div>
+                    <div>
+                        <label>Tipo de Letra</label>
+                        <select name="tipo_letra">
+                             <option value="Inter">Inter (Recomendada)</option>
+                            <option value="Roboto">Roboto</option>
+                            <option value="Open Sans">Open Sans</option>
+                            <option value="Lato">Lato</option>
+                        </select>
+                    </div>
+                    <div><label>Tamaño de Letra</label><div class="flex gap-2"><input type="text" name="tamano_letra" id="input-tamano_letra" class="flex-1" placeholder="Ej: 16px"><button type="button" onclick="gestionarGrabacionWhisper(event, 'input-tamano_letra')" id="btn-mic-input-tamano_letra" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-input-tamano_letra" class="fas fa-microphone text-lg"></i></button></div></div>
+                    <div><label>Colores Principales</label><div class="flex gap-2"><input type="text" name="colores_principales" id="input-colores_principales" class="flex-1" placeholder="Ej: #3b82f6, #6366f1"><button type="button" onclick="gestionarGrabacionWhisper(event, 'input-colores_principales')" id="btn-mic-input-colores_principales" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-input-colores_principales" class="fas fa-microphone text-lg"></i></button></div></div>
+                    <div class="md:col-span-3"><label>Lista de Temas/Unidades (separados por coma)</label><div class="flex gap-2"><textarea name="lista_unidades_temas" id="textarea-lista_unidades_temas" rows="3" placeholder="Tema 1, Tema 2, Tema 3..." class="flex-1"></textarea><button type="button" onclick="gestionarGrabacionWhisper(event, 'textarea-lista_unidades_temas')" id="btn-mic-textarea-lista_unidades_temas" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0 h-[84px]" title="Grabar con Whisper"><i id="ico-mic-textarea-lista_unidades_temas" class="fas fa-microphone text-lg"></i></button></div></div>
+                    <div><label>Estilos de Texto</label><div class="flex gap-2"><input type="text" name="estilos_texto" id="input-estilos_texto" class="flex-1" placeholder="Estándar Corporativo"><button type="button" onclick="gestionarGrabacionWhisper(event, 'input-estilos_texto')" id="btn-mic-input-estilos_texto" class="px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-input-estilos_texto" class="fas fa-microphone text-lg"></i></button></div></div>
+                </div>
+            </fieldset>
+            
+            <div class="flex justify-center mt-6">
+                <button type="button" id="btnLimpiarProgreso" class="bg-gray-100 text-gray-700 px-5 py-2 rounded-lg shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    <i class="fas fa-trash-alt mr-2"></i>Limpiar Formulario y Progreso
+                </button>
+            </div>
+        </form>    
+    </main>
+        
+    <div id="notification" class="fixed top-24 right-4 z-50"></div>
+
+    <script>
+        const API_BASE = 'https://gestordecursos.pegui.edu.co:8000';
+        const API_GEMINI = `${API_BASE}/chat/gemini`;
+        const API_STUDY_PLANS = `${API_BASE}/study_plans`;
+        const API_USERS = `${API_BASE}/users`;
+        const API_MODULES = `${API_BASE}/modules`;
+        
+        const CACHE_KEY = 'moduleFormProgress'; 
+        const form = document.getElementById('createModuleForm');
+        const token = localStorage.getItem('token');
+        
+        // Variables globales para el contexto
+        let parentStudyPlan = null;
+
+        // --- UTILS ---
+        function showNotification(type, title, message) {
+            const notificationArea = document.getElementById('notification');
+            const colors = { success: 'green', error: 'red', info: 'yellow' };
+            const icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-exclamation-triangle' };
+            const notification = document.createElement('div');
+            notification.className = `bg-white rounded-lg shadow-xl border-l-4 border-${colors[type]}-500 p-4 max-w-md mb-4`;
+            notification.innerHTML = `<div class="flex items-center"><div class="mr-3"><i class="fas ${icons[type]} text-${colors[type]}-500 text-xl"></i></div><div><div class="font-semibold">${title}</div><div class="text-sm text-gray-600">${message}</div></div></div>`;
+            notificationArea.appendChild(notification);
+            setTimeout(() => { notification.remove(); }, 5000);
+        }
+
+        async function fetchAPI(url, options = {}) {
+            const defaultHeaders = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+            const allOptions = { ...options, headers: { ...defaultHeaders, ...options.headers } };
+            const response = await fetch(url, allOptions);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: 'Error en la respuesta del servidor' }));
+                throw new Error(errorData.detail || `Error ${response.status}`);
+            }
+            if (response.status === 204) return null;
+            return response.json();
+        }
+
+        // --- LÓGICA PRINCIPAL DE CARGA ---
+        
+        async function initPage() {
+            if (!token) { window.location.href = '/'; return; }
+            
+            // 1. Cargar autores (siempre necesario)
+            loadAuthors();
+
+            // 2. Verificar URL para herencia
+            const urlParams = new URLSearchParams(window.location.search);
+            const studyPlanId = urlParams.get('study_plan_id') || urlParams.get('project_id');
+
+            if (studyPlanId) {
+                // --- MODO HERENCIA (Viene del flujo) ---
+                console.log("Modo Herencia activado - studyPlanId:", studyPlanId);
+                await loadInheritedData(studyPlanId);
+            } else {
+                // --- MODO MANUAL (Entró directo) ---
+                console.log("Modo Manual activado");
+                await enableManualSelection();
+            }
+            
+            loadProgress();
+        }
+
+        // MODO HERENCIA: Bloquea selects y carga datos específicos
+        async function loadInheritedData(studyPlanId) {
+            try {
+                // Cargar plan de formación
+                parentStudyPlan = await fetchAPI(`${API_STUDY_PLANS}/${studyPlanId}`);
+                
+                // Llenar Select de Plan
+                const planSelect = document.getElementById('studyPlanSelect');
+                planSelect.innerHTML = `<option value="${parentStudyPlan.id}" selected>${parentStudyPlan.name}</option>`;
+                planSelect.disabled = true;
+                planSelect.classList.add("bg-gray-100", "cursor-not-allowed");
+                document.getElementById('study_plan_id_hidden').value = studyPlanId;
+
+                // Mostrar caja de contexto
+                document.getElementById('studyPlanNameContext').textContent = parentStudyPlan.name;
+                document.getElementById('contextContainer').classList.remove('hidden');
+
+            } catch (err) {
+                showNotification('error', 'Error de Carga', `No se pudo cargar el contexto: ${err.message}`);
+            }
+        }
+
+        // MODO MANUAL: Habilita selects para elegir Plan
+        async function enableManualSelection() {
+            const planSelect = document.getElementById('studyPlanSelect');
+
+            // 1. Cargar TODOS los planes
+            try {
+                const plans = await fetchAPI(API_STUDY_PLANS + '/');
+                planSelect.innerHTML = '<option value="">Seleccione un plan...</option>';
+                plans.forEach(p => {
+                    planSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                });
+            } catch (e) {
+                console.error(e);
+                planSelect.innerHTML = '<option value="">Error cargando planes</option>';
+            }
+
+            // 2. Listener: Cuando cambia el Plan -> Guardar contexto
+            planSelect.addEventListener('change', async (e) => {
+                const planId = e.target.value;
+                document.getElementById('study_plan_id_hidden').value = planId; // Guardar en hidden
+                
+                parentStudyPlan = null; // Reset contexto
+
+                if (!planId) return;
+
+                try {
+                    // Obtener detalles del plan para el contexto IA
+                    parentStudyPlan = await fetchAPI(`${API_STUDY_PLANS}/${planId}`);
+                    document.getElementById('studyPlanNameContext').textContent = parentStudyPlan.name;
+                    document.getElementById('contextContainer').classList.remove('hidden');
+
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+        }
+
+        async function loadAuthors() {
+            const authorSelect = document.getElementById('authorSelect');
+            try {
+                const users = await fetchAPI(API_USERS);
+                authorSelect.innerHTML = '<option value="">-- Selecciona un autor --</option>';
+                users.forEach(user => {
+                    authorSelect.innerHTML += `<option value="${user.nombre}">${user.nombre} (${user.email})</option>`;
+                });
+            } catch (error) {
+                authorSelect.innerHTML = '<option value="">Error al cargar autores</option>';
+            }
+        }
+
+        // --- PROGRESO ---
+        function saveProgress() {
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        }
+        function loadProgress() {
+            const savedData = localStorage.getItem(CACHE_KEY);
+            if (!savedData) return;
+            const data = JSON.parse(savedData);
+            for (const key in data) {
+                if (form.elements[key]) {
+                    const element = form.elements[key];
+                    if (element.type === 'checkbox') element.checked = data[key];
+                    else if (element.type !== 'file') element.value = data[key];
+                }
+            }
+        }
+        function clearProgress() {
+            if (confirm("¿Limpiar formulario?")) {
+                localStorage.removeItem(CACHE_KEY);
+                form.reset();
+                document.getElementById('version').value = '1.0';
+                window.location.reload(); // Recargar para reiniciar lógica limpia
+            }
+        }
+
+        // --- VALIDACIÓN ---
+        function validateModuleForm() {
+            let isValid = true;
+            form.querySelectorAll(".error").forEach(el => el.classList.remove("error"));
+            form.querySelectorAll(".error-text.active").forEach(el => el.classList.remove("active"));
+            
+            form.querySelectorAll("[required]").forEach(el => {
+                if (!el.value.trim()) {
+                    isValid = false;
+                    el.classList.add("error");
+                    const errorMsg = el.parentElement.querySelector(".error-text");
+                    if (errorMsg) errorMsg.classList.add("active");
+                }
+            });
+            
+            // Validar que el ID del plan de estudio esté seteado
+            const pId = document.getElementById('study_plan_id_hidden').value;
+            
+            if (!pId) {
+                showNotification('error', 'Faltan Datos', 'Debes seleccionar un Plan de Formación.');
+                isValid = false;
+            }
+
+            if (!isValid) showNotification('error', 'Campos incompletos', 'Revisa los campos marcados en rojo.');
+            return isValid;
+        }
+
+        // --- SUBMIT ---
+        document.getElementById('saveButton').addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            if (!validateModuleForm()) return;
+            
+            // Validar que tengamos contexto cargado para la IA
+            if (!parentStudyPlan) {
+                showNotification('error', 'Error', 'Falta información del Plan de Formación para la IA. Intenta seleccionar de nuevo.');
+                return;
+            }
+
+            const saveButton = document.getElementById('saveButton');
+            const saveButtonIcon = document.getElementById('saveButtonIcon');
+            const saveButtonText = document.getElementById('saveButtonText');
+            const originalIconHTML = saveButtonIcon.innerHTML;
+            const originalText = saveButtonText.textContent;
+
+            saveButton.disabled = true;
+            
+            // Construir payload
+            const payload = {};
+            for (const element of form.elements) {
+                if (element.name) {
+                    if (element.type === 'checkbox') payload[element.name] = element.checked;
+                    else if (element.type === 'number' || element.name.includes('nota')) {
+                         const val = parseFloat(element.value);
+                         payload[element.name] = isNaN(val) ? null : val;
+                    } else {
+                        payload[element.name] = element.value || null;
+                    }
+                }
+            }
+            // Asegurar IDs correctos - solo study_plan_id (sin course_id)
+            payload.study_plan_id = parseInt(document.getElementById('study_plan_id_hidden').value);
+            payload.codigo_id_del_modulo = 'ID_' + new Date().getTime();
+
+            try {
+                // 1. IA CHECK
+                saveButtonText.textContent = 'Validando IA...';
+                saveButtonIcon.innerHTML = '<i class="fas fa-robot fa-spin mr-2"></i>';
+
+                const prompt = `
+                    Eres experto en educación. Valida coherencia:
+                    PLAN DE FORMACIÓN: "${parentStudyPlan.name}" (Obj: ${parentStudyPlan.objetivo_general})
+                    MÓDULO NUEVO: "${payload.nombre_del_modulo}" (Obj: ${payload.objetivo_general})
+                    
+                    Responde brevemente (2 líneas) si tiene sentido pedagógico.
+                `;
+
+                const geminiRes = await fetch(API_GEMINI, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                if (!geminiRes.ok) throw new Error("La IA no está disponible.");
+                const aiData = await geminiRes.json();
+                const aiReview = aiData.respuesta || "Sin respuesta de IA.";
+
+                if (!confirm(`🤖 Opinión de IA:\n\n${aiReview}\n\n¿Guardar módulo?`)) {
+                    throw new Error("Cancelado por usuario.");
+                }
+
+                // 2. GUARDAR
+                saveButtonText.textContent = 'Creando...';
+                saveButtonIcon.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>';
+
+                const response = await fetch(API_MODULES, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                     const errData = await response.json();
+                     throw new Error(errData.detail || 'Error al guardar módulo.');
+                }
+
+                const newModule = await response.json();
+                showNotification('success', 'Éxito', 'Módulo creado.');
+                localStorage.removeItem(CACHE_KEY);
+                form.reset();
+
+                // 3. REDIRECCIÓN
+                setTimeout(() => {
+                    const params = new URLSearchParams();
+                    params.set('study_plan_id', payload.study_plan_id);
+                    params.set('module_id', newModule.id); // ID real del módulo creado
+                    window.location.href = `unidades.html?${params.toString()}`;
+                }, 2000);
+
+            } catch (error) {
+                showNotification('error', 'Error', error.message);
+            } finally {
+                saveButton.disabled = false;
+                saveButtonText.textContent = originalText;
+                saveButtonIcon.innerHTML = originalIconHTML;
+            }
+        });
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', initPage);
+        // Listeners extra
+        form.addEventListener('input', saveProgress);
+        document.getElementById('btnLimpiarProgreso').addEventListener('click', clearProgress);
+
+    </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+<script>
+// ===== WHISPER - CONTROL DE INSTANCIAS SÍNCRONAS =====
+const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+const API_WHISPER = API_URL + '/whisper/transcribir';
+let mediaRecorder = null, audioChunks = [], idCampoDestino = null, temporizadorMaximo = null, estaGrabando = false;
+function getSessionToken() { return localStorage.getItem('token'); }
+async function gestionarGrabacionWhisper(e, idCampo) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (estaGrabando && idCampoDestino === idCampo) { if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop(); return; }
+    if (estaGrabando) { if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop(); await new Promise(r => setTimeout(r, 150)); }
+    idCampoDestino = idCampo; audioChunks = []; estaGrabando = true;
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+        mediaRecorder.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) audioChunks.push(ev.data); };
+        mediaRecorder.onstart = () => {
+            resetearIconosMic();
+            const cb = document.getElementById('btn-mic-' + idCampoDestino);
+            const ci = document.getElementById('ico-mic-' + idCampoDestino);
+            if (cb) cb.classList.add('mic-recording');
+            if (ci) ci.className = 'fas fa-stop text-lg';
+            temporizadorMaximo = setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 10000);
+        };
+        mediaRecorder.onstop = async () => {
+            clearTimeout(temporizadorMaximo); estaGrabando = false;
+            const pb = document.getElementById('btn-mic-' + idCampoDestino);
+            const pi = document.getElementById('ico-mic-' + idCampoDestino);
+            if (pb) { pb.classList.remove('mic-recording'); pb.classList.add('mic-processing'); }
+            if (pi) pi.className = 'fas fa-spinner fa-spin text-lg';
+            const blob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
+            stream.getTracks().forEach(t => t.stop());
+            if (blob.size > 100) await enviarAudioAWhisper(blob);
+            else { console.warn('Audio corto'); resetearIconosMic(); }
+        };
+        mediaRecorder.start();
+    } catch (err) { estaGrabando = false; console.error(err); resetearIconosMic(); }
+}
+async function enviarAudioAWhisper(blob) {
+    if (!blob || !blob.size) { resetearIconosMic(); return; }
+    const fd = new FormData(); fd.append('audio', blob, 'dictado.webm');
+    try {
+        const r = await fetch(API_WHISPER, { method: 'POST', headers: { 'Authorization': 'Bearer ' + getSessionToken() }, body: fd });
+        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || 'Error');
+        const txt = ((await r.json()).texto || '').trim();
+        if (txt) { const inp = document.getElementById(idCampoDestino); if (inp) { inp.value = inp.value.trim() ? inp.value.trim() + ' ' + txt : txt; inp.dispatchEvent(new Event('input', { bubbles: true })); } }
+    } catch(e) { console.error(e); } finally { resetearIconosMic(); }
+}
+function resetearIconosMic() {
+    document.querySelectorAll('[id^="btn-mic-"]').forEach(b => {
+        b.className = 'px-4 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0';
+        if (b.id.includes('notas_adicionales') || b.id.includes('lista_unidades_temas') || b.id.includes('objetivos_especificos')) b.classList.add('h-[104px]');
+        else if (b.id.includes('objetivo_general')) b.classList.add('h-[84px]');
+        else b.classList.add('h-12');
+    });
+    document.querySelectorAll('[id^="ico-mic-"]').forEach(i => i.className = 'fas fa-microphone text-lg');
+    if (!estaGrabando) idCampoDestino = null;
+}
+</script>
+</body>
+</html>

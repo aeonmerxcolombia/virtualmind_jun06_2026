@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtualmind – Superadmin</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    if (window.innerWidth <= 768) {
+      window.location.href = "https://gestordecursos.pegui.edu.co/r/superadmin/responsive/";
+    }
+  </script>
+  <style>
+    .chat-bubble { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    iframe { width: 100%; height: 100%; border: none; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .chat-bubble {
+      max-width: 100%;
+      word-wrap: break-word;
+      line-height: 1.5;
+    }
+    .menu-item.active {
+      background-color: blue;
+      color: #ffffff !important;
+      font-weight: bold;
+      border-radius: 0.25rem;
+      padding-left: 0.5rem;
+    }
+    #google_translate_element {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 1rem;
+      margin-right: 1rem;
+    }
+    #google_translate_element .goog-te-combo {
+      border-radius: 0.25rem;
+      padding: 0.25rem;
+      font-size: 0.875rem;
+      border: 1px solid #d1d5db;
+      background-color: #f3f4f6;
+      color: #1f2937;
+    }
+    .goog-logo-link {
+      display: none !important;
+    }
+    .goog-te-gadget-simple {
+      background-color: transparent !important;
+      border: none !important;
+    }
+    .goog-te-gadget-simple span {
+      display: none;
+    }
+    /* Estilos del widget de chat */
+    #chatWidgetContainer {
+      position: fixed; /* Lo hace flotante respecto al viewport */
+      bottom: 1.5rem; /* Separación de la parte inferior */
+      left: 1.5rem; /* Separación de la parte izquierda */
+      z-index: 1000; /* Asegura que esté por encima de otros elementos */
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start; /* Alinea los elementos a la izquierda del contenedor */
+      /* Ajuste para que el contenedor empiece después de la barra lateral */
+      margin-left: 288px; /* 288px es el ancho de tu aside (72 * 4, w-72) */
+    }
+    #chatWidgetToggle {
+      background-color: #4F46E5;
+      color: white;
+      padding: 1rem;
+      border-radius: 9999px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #chatWidgetToggle:hover {
+      background-color: #4338CA;
+    }
+    #chatWidget {
+      width: 24rem; /* Ancho fijo para el chat */
+      height: 32rem; /* Altura fija para el chat */
+      background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      transform-origin: bottom left; /* Origen para la animación en la esquina inferior izquierda */
+      transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+      opacity: 0;
+      transform: scale(0.9);
+      pointer-events: none;
+      margin-bottom: 1rem; /* Margen para que la ventana se deslice sobre el botón */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #chatWidget.opened {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+    #chatBoxWidget {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    /* Estilos para el menú de accesibilidad en la barra superior */
+    #accessibilityMenu {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      position: static;
+      z-index: auto;
+      margin-left: 1rem;
+    }
+    #accessibilityControls {
+      display: none;
+      flex-direction: row;
+      background: transparent;
+      backdrop-filter: none;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      gap: 0.5rem;
+      margin-bottom: 0;
+      transition: none;
+    }
+    #accessibilityMenu.opened #accessibilityControls {
+      display: flex;
+    }
+    #accessibilityControls button {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      border: 1px solid #d1d5db;
+      background-color: #f3f4f6;
+      color: #1f2937;
+      border-radius: 0.25rem;
+    }
+    #accessibilityControls button:hover {
+      background-color: #e5e7eb;
+    }
+    #accessibilityControls button.reset {
+      color: #DC2626;
+    }
+    #accessibilityToggle {
+      background-color: transparent;
+      color: #1f2937;
+      padding: 0.25rem;
+      border-radius: 9999px;
+      box-shadow: none;
+      font-size: 1.25rem;
+      transition: none;
+      margin-left: 1rem;
+    }
+  </style>
+  <link href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.css" rel="stylesheet">
+</head>
+<body class="min-h-screen font-[Inter] bg-gray-100">
+  <header class="sticky top-0 z-30 bg-white shadow flex items-center justify-between px-6 py-4">
+    <div class="flex items-center space-x-3">
+      <img src="/assets/logo.png" alt="Logo" class="h-10 w-10 rounded-full object-cover">
+      <h1 class="text-xl font-bold text-gray-800">Virtualmind – Superadmin</h1>
+    </div>
+    <div class="flex items-center space-x-3">
+      <div id="accessibilityMenu" class="flex items-center">
+        <button id="accessibilityToggle" aria-expanded="false" aria-label="Opciones de accesibilidad">🧑‍🦯</button>
+        <div id="accessibilityControls">
+          <button data-act="contrast"><span>🌗</span><span>Alto contraste</span></button>
+          <button data-act="large-text"><span>🔠</span><span>Texto más grande</span></button>
+          <button data-act="grayscale"><span>⚫️⚪️</span><span>Escala de grises</span></button>
+          <button data-act="dyslexia"><span>📖</span><span>Fuente disléxica</span></button>
+          <button id="resetAccessibility" class="reset">🔄 Reset</button>
+        </div>
+      </div>
+      <label for="roleSelect" class="text-sm font-medium text-gray-700">Cambiar de rol:</label>
+      <select id="roleSelect" class="border border-gray-300 px-3 py-1 rounded bg-gray-100 text-sm text-gray-800 shadow-sm focus:outline-none focus:ring focus:ring-indigo-300">
+        <option value="">Cargando...</option>
+      </select>
+      <div id="google_translate_element"></div>
+      <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg">
+        Cerrar sesión
+      </button>
+      <div class="relative">
+        <button id="notifButton" class="relative bg-white p-2 rounded-full hover:bg-gray-100">
+          🔔
+          <span id="notifCount" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full px-1.5">0</span>
+        </button>
+        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg overflow-hidden z-50">
+          <div id="notifList" class="flex flex-col divide-y divide-gray-200 max-h-96 overflow-y-auto"></div>
+          <div id="notifEmpty" class="text-center p-2 text-sm text-gray-500">No hay notificaciones</div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="flex min-h-[calc(100vh-80px)]">
+    <aside class="bg-[#21232a] w-72 min-h-screen flex flex-col relative">
+      <div class="flex flex-col items-center py-6 bg-[#23262f] border-b border-gray-700">
+        <div class="bg-white rounded-full w-20 h-20 flex items-center justify-center border-4 border-white shadow mb-2">
+          <img id="sidebarAvatar" src="" alt="Perfil" class="w-16 h-16 rounded-full border-2 border-white object-cover shadow" onerror="this.onerror=null;this.src='/assets/default_avatar.png';">
+        </div>
+        <span id="sidebarName" class="text-white font-semibold text-lg tracking-wide">Perfil</span>
+        <button onclick="verMiPerfil()" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Ver mi perfil</button>
+      </div>
+      <nav class="flex-1 px-2 py-4 space-y-2">
+        <div>
+          <button onclick="toggleMenu('gestionDiaria')" class="flex items-center w-full text-white py-2 px-3 rounded hover:bg-[#282c37] transition">
+            <span class="mr-3">🗂️</span>
+            <span class="flex-1 text-left font-semibold">Proyectos</span>
+            <svg id="icon-gestionDiaria" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="gestionDiaria" class="ml-9 mt-1 space-y-1 hidden">
+            <a href="#" onclick="selectMenu(this); cargarVista('projects/create.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Crear Proyecto</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('projects/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Consultar Proyectos</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('studyplan/listar.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Planes de Formación</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('cursos/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Cursos</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('modulos')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Módulos</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('unidades/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Unidades y Actividades de Aprendizaje</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('tasks/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Tareas</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('evaluaciones/crear.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Evaluaciones</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('etapas')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Fases y Etapas</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('cronograma/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Crear Cronograma</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('calendario/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Calendario</a>
+          </div>
+        </div>
+        <div>
+          <button onclick="toggleMenu('gestionUsuarios')" class="flex items-center w-full text-white py-2 px-3 rounded hover:bg-[#282c37] transition">
+            <span class="mr-3">👥</span>
+            <span class="flex-1 text-left font-semibold">Gestión de usuarios y permisos</span>
+            <svg id="icon-gestionUsuarios" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="gestionUsuarios" class="ml-9 mt-1 space-y-1 hidden">
+            <a href="#" onclick="selectMenu(this); cargarVista('usuarios/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Crear Usuarios</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('roles/index.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Cargos, roles y permisos</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('usuarios/masivos.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Carga masiva de usuarios</a>
+          </div>
+        </div>
+        <div>
+          <button onclick="toggleMenu('gestionArchivos')" class="flex items-center w-full text-white py-2 px-3 rounded hover:bg-[#282c37] transition">
+            <span class="mr-3">📁</span>
+            <span class="flex-1 text-left font-semibold">Gestión de archivos</span>
+            <svg id="icon-gestionArchivos" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="gestionArchivos" class="ml-9 mt-1 space-y-1 hidden">
+            <a href="#" onclick="selectMenu(this); cargarVista('drive/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Drive Personal</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('drive/global/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Drive Global</a>
+          </div>
+        </div>
+        <div>
+          <button onclick="toggleMenu('utilidades')" class="flex items-center w-full text-white py-2 px-3 rounded hover:bg-[#282c37] transition">
+            <span class="mr-3">🛠️</span>
+            <span class="flex-1 text-left font-semibold">Utilidades</span>
+            <svg id="icon-utilidades" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="utilidades" class="ml-9 mt-1 space-y-1 hidden">
+            <a href="#" onclick="selectMenu(this); cargarVista('crearimagen')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Produccion de Imagen con IA</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('generaraudio')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Produccion de Audio con IA</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('chat/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Chat y Videoconferencia</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('editor/ia.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">I.A Linguística</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('podcast')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Crear Podcast</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('videocast')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Crear Video-Podcast</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('chat/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Biblioteca de Recursos</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('canvas/index.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Canvas</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('animaciones3d/index.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Crear Animación 3D</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('powerpoint/index.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Power Point</a>
+          </div>
+        </div>
+        <div>
+          <button onclick="toggleMenu('adminSeguridad')" class="flex items-center w-full text-white py-2 px-3 rounded hover:bg-[#282c37] transition">
+            <span class="mr-3">🔒</span>
+            <span class="flex-1 text-left font-semibold">Administración y seguridad</span>
+            <svg id="icon-adminSeguridad" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="adminSeguridad" class="ml-9 mt-1 space-y-1 hidden">
+            <a href="#" onclick="selectMenu(this); cargarVista('logs')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Auditoría</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('firmadigital')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Firma Digital de Documentos</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('logs')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Bitácora de Actividad por usuarios</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('logs')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Bloqueo de Edición por Fase Finalizada</a>
+          </div>
+        </div>
+        <div>
+          <button onclick="toggleMenu('reportes')" class="flex items-center w-full text-white py-2 px-3 rounded hover:bg-[#282c37] transition">
+            <span class="mr-3">📊</span>
+            <span class="flex-1 text-left font-semibold">Reportes</span>
+            <svg id="icon-reportes" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="reportes" class="ml-9 mt-1 space-y-1 hidden">
+            <a href="#" onclick="selectMenu(this); cargarVista('estadisticas/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Estadísticas</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('cambiarfondo/')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Cambiar Fondo del Login</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('metricas')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Panel de seguimiento y métricas</a>
+          </div>
+        </div>
+        <div>
+          <button onclick="toggleMenu('zona_capacitacion')" class="flex items-center w-full text-white py-2 px-3 rounded hover:bg-[#282c37] transition">
+            <span class="mr-3">📊</span>
+            <span class="flex-1 text-left font-semibold">Zona de Capacitación</span>
+            <svg id="icon-reportes" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="zona_capacitacion" class="ml-9 mt-1 space-y-1 hidden">
+            <a href="#" onclick="selectMenu(this); cargarVista('estadisticas.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Microcursos sobre el uso de la plataforma</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('cambiarfondo.html')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Buenas prácticas por perfil</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('logs')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Tutoriales en Video</a>
+            <a href="#" onclick="selectMenu(this); cargarVista('logs')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">Preguntas Frecuentes (FAQ)</a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+    <main class="flex-1 p-6">
+      <div class="bg-white shadow-xl rounded-xl h-full w-full overflow-hidden">
+        <iframe id="mainFrame" src="https://gestordecursos.pegui.edu.co/r/superadmin/tutorial"></iframe>
+      </div>
+    </main>
+  </div>
+
+  <div id="chatWidgetContainer">
+    <div id="chatWidget" class="hidden">
+      <div class="p-6 flex flex-col h-full">
+        <h2 class="text-lg font-bold text-gray-800 mb-3">Asistente Virtual</h2>
+        <div id="chatBoxWidget" class="bg-gray-100 rounded-lg p-4 overflow-y-auto space-y-2 scrollbar-hide"></div>
+        <div class="space-y-2 mt-4">
+          <div class="flex">
+            <button id="micButton" class="bg-gray-200 hover:bg-gray-300 p-2 rounded-l-lg" title="Iniciar escucha por voz">
+              🎤
+            </button>
+            <input id="chatInput" type="text" placeholder="Escribe tu mensaje o haz clic en el micrófono para hablar..." class="flex-1 border rounded-r-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+          </div>
+          <button onclick="enviarMensaje()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg">Enviar</button>
+        </div>
+      </div>
+    </div>
+    <button id="chatWidgetToggle">💬</button>
+  </div>
+
+  <script>
+    let token = localStorage.getItem("token");
+    let API = "https://gestordecursos.pegui.edu.co:8000";
+    if (!token) window.location.href = "/index.html";
+    const notifBtn = document.getElementById("notifButton");
+    const notifDropdown = document.getElementById("notifDropdown");
+    const notifList = document.getElementById("notifList");
+    const notifCount = document.getElementById("notifCount");
+    const notifEmpty = document.getElementById("notifEmpty");
+    notifBtn.addEventListener("click", () => {
+      notifDropdown.classList.toggle("hidden");
+    });
+    // Función toggleMenu corregida
+    function toggleMenu(id) {
+      const menu = document.getElementById(id);
+      const icon = document.getElementById('icon-' + id);
+      const isOpen = !menu.classList.contains('hidden');
+      document.querySelectorAll('aside .space-y-1').forEach(m => {
+        if (m.id !== id) {
+          m.classList.add('hidden');
+        }
+      });
+      document.querySelectorAll('aside svg').forEach(i => {
+        if (i.id !== 'icon-' + id) {
+          i.classList.remove('rotate-180');
+        }
+      });
+      if (isOpen) {
+        menu.classList.add('hidden');
+        icon.classList.remove('rotate-180');
+      } else {
+        menu.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+      }
+    }
+    function selectMenu(element) {
+      document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      element.classList.add('active');
+    }
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "/index.html";
+    }
+    function cargarVista(url) {
+      document.getElementById("mainFrame").src = url;
+    }
+    async function cargarPerfilSidebar() {
+      if (!token) return;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const user_id = payload.user_id;
+      localStorage.setItem("user_id", user_id);
+      try {
+        const res = await fetch(`${API}/users/${user_id}`, {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const { roles } = await res.json();
+        const sel = document.getElementById("roleSelect");
+        sel.innerHTML = "";
+        const path = window.location.pathname;
+        const currentRole = path.split('/')[2];
+        roles.forEach(r => {
+          const o = document.createElement("option");
+          o.value = r;
+          o.textContent = r.charAt(0).toUpperCase() + r.slice(1);
+          if (r === currentRole) {
+            o.selected = true;
+          }
+          sel.appendChild(o);
+        });
+        sel.addEventListener("change", () => sel.value && (window.location.href = `/r/${sel.value}/`));
+      } catch {}
+      try {
+        const res2 = await fetch(`${API}/profiles/${user_id}`, {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const p = await res2.json();
+        document.getElementById("sidebarAvatar").src = p.foto_url || "/assets/default_avatar.png";
+        document.getElementById("sidebarName").textContent = p.nombre || "Perfil";
+      } catch {}
+    }
+    async function cargarNotificaciones() {
+      try {
+        const res = await fetch(`${API}/notifications/`, {
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (res.status === 401) {
+          alert("Sesión expirada, inicia sesión nuevamente");
+          localStorage.removeItem("token");
+          return window.location.href = "/index.html";
+        }
+        const data = await res.json();
+        const user_id = localStorage.getItem("user_id");
+        const notifs = (data.notificaciones || []).filter(n => String(n.usuario_id) === String(user_id));
+        notifList.innerHTML = "";
+        if (notifs.length === 0) {
+          notifCount.textContent = 0;
+          notifEmpty.style.display = "block";
+          return;
+        }
+        notifCount.textContent = notifs.length;
+        notifEmpty.style.display = "none";
+        notifs.forEach(n => {
+          const div = document.createElement("div");
+          div.className = "px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm";
+          div.textContent = `${n.descripcion} • ${new Date(n.fecha).toLocaleString()}`;
+          notifList.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error al cargar notificaciones:", err);
+      }
+    }
+    (async () => {
+      await cargarPerfilSidebar();
+      cargarNotificaciones();
+      setInterval(cargarNotificaciones, 30000);
+    })();
+    function verMiPerfil() {
+      const u = localStorage.getItem("user_id");
+      if (u) window.location.href = `/r/superadmin/perfil/?user_id=${u}`;
+      else alert("No hay sesión iniciada");
+    }
+    const chatWidget = document.getElementById('chatWidget');
+    const chatWidgetToggle = document.getElementById('chatWidgetToggle');
+    const chatBox = document.getElementById("chatBoxWidget");
+    const KEY = "chat_historial";
+    chatWidgetToggle.addEventListener('click', () => {
+      chatWidget.classList.toggle('opened');
+      if (chatWidget.classList.contains('opened')) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    });
+    window.addEventListener("DOMContentLoaded", () => {
+      chatBox.innerHTML = localStorage.getItem(KEY) || `<div class="chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-600">💬 Hola, ¿en qué puedo ayudarte hoy?</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+    function convertMarkdownToHtml(text) {
+        let htmlText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        htmlText = htmlText.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+        htmlText = htmlText.replace(/\n/g, '<br>');
+        return htmlText;
+    }
+    function appendBubble(originalTxt, who = "IA") {
+      const d = document.createElement("div");
+      d.className = who === "Tú" ? "chat-bubble bg-indigo-100 p-3 rounded-lg text-sm text-gray-800" : "chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-800 relative";
+      const id = `respuesta-${Date.now()}`;
+      const textoParaMostrar = convertMarkdownToHtml(originalTxt);
+      const contenido = `<strong>${who}:</strong> <span id="${id}">${textoParaMostrar}</span>`;
+      d.innerHTML = contenido;
+      if (who === "IA") {
+        const btnCopy = document.createElement("button");
+        btnCopy.textContent = "📋 Copiar";
+        btnCopy.title = "Copiar al portapapeles";
+        btnCopy.className = "ml-2 text-xs text-indigo-600 hover:underline";
+        btnCopy.onclick = () => copiarTexto(id);
+        const btnSpeak = document.createElement("button");
+        btnSpeak.innerHTML = "🔊 Escuchar";
+        btnSpeak.title = "Escuchar esta respuesta";
+        btnSpeak.className = "ml-2 text-xs text-indigo-600 hover:underline";
+        btnSpeak.onclick = () => speakText(originalTxt, btnSpeak);
+        const buttonsContainer = document.createElement("div");
+        buttonsContainer.className = "mt-1 flex";
+        buttonsContainer.appendChild(btnCopy);
+        buttonsContainer.appendChild(btnSpeak);
+        d.appendChild(buttonsContainer);
+      }
+      chatBox.appendChild(d);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      const copia = chatBox.cloneNode(true);
+      copia.querySelectorAll("button").forEach(b => b.remove());
+      localStorage.setItem(KEY, copia.innerHTML);
+    }
+    async function enviarMensaje() {
+      const msg = document.getElementById("chatInput").value.trim();
+      if (!msg) return;
+      appendBubble(msg, "Tú");
+      document.getElementById("chatInput").value = "";
+      const t = document.createElement("div");
+      t.id = "typing";
+      t.className = "chat-bubble bg-gray-100 p-3 rounded-lg italic text-gray-500";
+      t.innerText = "💬 IA está escribiendo...";
+      chatBox.appendChild(t);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      const mdl = "gemini";
+      try {
+        if (mdl === "openai") {
+          const res = await fetch(`${API}/chat/openai`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mensaje: msg })
+          });
+          const rdr = res.body.getReader(), dec = new TextDecoder();
+          const iaDiv = document.createElement("div");
+          iaDiv.className = "chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-800";
+          iaDiv.innerHTML = "<strong>IA:</strong> ";
+          chatBox.appendChild(iaDiv);
+          let txt = "";
+          while (true) {
+            const { value, done } = await rdr.read();
+            if (done) break;
+            txt += dec.decode(value);
+            iaDiv.innerHTML = `<strong>IA:</strong> ${convertMarkdownToHtml(txt)}`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+          }
+          localStorage.setItem(KEY, iaDiv.innerHTML);
+        } else {
+          const r = await fetch(`${API}/chat/gemini`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: msg })
+          });
+          const { respuesta } = await r.json();
+          appendBubble(respuesta, "IA");
+        }
+      } catch {
+        appendBubble("❌ Error al contactar IA.", "IA");
+      } finally {
+        document.getElementById("typing")?.remove();
+      }
+    }
+    const toggleBtn = document.getElementById('accessibilityToggle'),
+      panel = document.getElementById('accessibilityControls'),
+      wrap = document.getElementById('accessibilityMenu');
+    toggleBtn.addEventListener('click', () => {
+      const exp = toggleBtn.getAttribute('aria-expanded') === 'true';
+      toggleBtn.setAttribute('aria-expanded', String(!exp));
+      wrap.classList.toggle('opened');
+    });
+    panel.querySelectorAll('button[data-act]').forEach(b => {
+      b.addEventListener('click', () => document.body.classList.toggle(b.getAttribute('data-act')));
+    });
+    document.getElementById('resetAccessibility').addEventListener('click', () => {
+      ['contrast', 'large-text', 'grayscale', 'dyslexia', 'reduce-motion'].forEach(c => document.body.classList.remove(c));
+    });
+    function copiarTexto(id) {
+      const texto = document.getElementById(id)?.innerText;
+      if (texto) {
+        navigator.clipboard.writeText(texto)
+          .then(() => {
+            console.log("Texto copiado:", texto);
+            alert("✅ Texto copiado al portapapeles");
+          })
+          .catch(() => alert("❌ No se pudo copiar"));
+      }
+    }
+    let recognition;
+    let isListening = false;
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        console.warn('Tu navegador no soporta el reconocimiento de voz. Por favor, usa Chrome.');
+        const micButton = document.getElementById('micButton');
+        if (micButton) {
+          micButton.disabled = true;
+          micButton.title = 'Navegador no compatible';
+        }
+      }
+      const micButton = document.getElementById('micButton');
+      if (micButton) {
+        micButton.addEventListener('click', toggleSpeechRecognition);
+      }
+    });
+    function toggleSpeechRecognition() {
+      if (!recognition) {
+        recognition = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'es-ES';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.onresult = function(event) {
+          const transcript = event.results[0][0].transcript;
+          document.getElementById('chatInput').value = transcript;
+        };
+        recognition.onerror = function(event) {
+          console.error('Error en reconocimiento de voz:', event.error);
+          isListening = false;
+          updateMicButton();
+        };
+        recognition.onend = function() {
+          isListening = false;
+          updateMicButton();
+        };
+      }
+      if (isListening) {
+        recognition.stop();
+      } else {
+        recognition.start();
+        document.getElementById('chatInput').value = 'Escuchando...';
+      }
+      isListening = !isListening;
+      updateMicButton();
+    }
+    function updateMicButton() {
+      const micButton = document.getElementById('micButton');
+      if (micButton) {
+        micButton.textContent = isListening ? '⏹️' : '🎤';
+        micButton.title = isListening ? 'Detener escucha' : 'Iniciar escucha por voz';
+        if (isListening) {
+          micButton.classList.add('bg-red-200');
+          micButton.classList.remove('bg-gray-200');
+        } else {
+          micButton.classList.remove('bg-red-200');
+          micButton.classList.add('bg-gray-200');
+        }
+      }
+    }
+    function sanitizeTextForSpeech(text) {
+        let cleanedText = text.replace(/\*\*(.*?)\*\*/g, '$1');
+        cleanedText = cleanedText.replace(/\*(.*?)\*/g, '$1');
+        cleanedText = cleanedText.replace(/[\#\>\-]/g, '');
+        cleanedText = cleanedText.replace(/\n/g, ' ').replace(/\s{2,}/g, ' ');
+        return cleanedText.trim();
+    }
+    function updateSpeakButtonState(button, state) {
+      if (button) {
+        button.disabled = state === 'disabled';
+        button.style.opacity = state === 'disabled' ? 0.5 : 1;
+        button.style.cursor = state === 'disabled' ? 'not-allowed' : 'pointer';
+        button.textContent = state === 'disabled' ? '🔊 Leyendo...' : '🔊 Escuchar';
+      }
+    }
+    function speakText(text, button) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const cleanedText = sanitizeTextForSpeech(text);
+        const utterance = new SpeechSynthesisUtterance(cleanedText);
+        utterance.lang = 'es-ES';
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        updateSpeakButtonState(button, 'disabled');
+        utterance.onend = function() {
+          console.log('La síntesis de voz ha terminado');
+          updateSpeakButtonState(button, 'enabled');
+        };
+        utterance.onerror = function(event) {
+          console.error('Error en síntesis de voz:', event);
+          updateSpeakButtonState(button, 'enabled');
+        };
+        setTimeout(() => {
+          window.speechSynthesis.speak(utterance);
+        }, 100);
+      } else {
+        alert('Tu navegador no soporta la síntesis de voz.');
+      }
+    }
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'es',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

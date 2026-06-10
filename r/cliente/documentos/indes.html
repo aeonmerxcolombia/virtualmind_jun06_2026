@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Documentos al Proyecto</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/tooltips.js"></script>
+</head>
+<body class="bg-gray-100">
+
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Subir Documentos al Proyecto</h1>
+
+    <!-- Formularios de carga de documentos -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <form id="document-form" enctype="multipart/form-data">
+            <!-- El project_id se toma de la URL -->
+            <input type="hidden" id="project_id" name="project_id" value="">
+
+            <div class="mb-4">
+                <label for="document_type" class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
+                <input type="text" id="document_type" name="document_type" required class="mt-2 p-2 w-full border border-gray-300 rounded-md">
+            </div>
+            <div class="mb-4">
+                <label for="document_name" class="block text-sm font-medium text-gray-700">Nombre del Documento</label>
+                <input type="text" id="document_name" name="document_name" required class="mt-2 p-2 w-full border border-gray-300 rounded-md">
+            </div>
+            <div class="mb-4">
+                <label for="file" class="block text-sm font-medium text-gray-700">Seleccionar Archivo</label>
+                <input type="file" id="file" name="file" required class="mt-2 p-2 w-full border border-gray-300 rounded-md">
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md" title="Subir el documento seleccionado">Subir Documento</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Listado de documentos existentes -->
+    <div id="documents-list" class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Documentos Asociados</h2>
+        <ul id="documents-ul">
+            <!-- Lista de documentos se llenará con JavaScript -->
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Obtener el project_id de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('project_id');
+
+    if (!projectId) {
+        alert('El project_id no está presente en la URL. Redirigiendo...');
+        window.location.href = '/projects';  // Cambia esta URL por la de tu lista de proyectos
+    } else {
+        // Asignar project_id al formulario oculto
+        document.getElementById('project_id').value = projectId;
+    }
+
+    // Mostrar los documentos existentes al cargar la página
+    document.addEventListener("DOMContentLoaded", () => {
+        getDocuments(projectId);
+    });
+
+    // Obtener documentos del proyecto
+    function getDocuments(projectId) {
+        axios.get(`/documents?project_id=${projectId}`)
+            .then(response => {
+                const documents = response.data;
+                const documentsList = document.getElementById('documents-ul');
+                documentsList.innerHTML = ''; // Limpiar lista antes de agregar
+
+                if (documents.length === 0) {
+                    documentsList.innerHTML = '<li>No hay documentos asociados a este proyecto.</li>';
+                } else {
+                    documents.forEach(document => {
+                        const li = document.createElement('li');
+                        li.classList.add('mb-4', 'text-gray-800');
+                        li.innerHTML = `
+                            <strong>${document.document_name}</strong> - ${document.document_type}
+                            <br>
+                            <a href="${document.document_url}" class="text-blue-500" target="_blank">Ver Documento</a>
+                        `;
+                        documentsList.appendChild(li);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener los documentos:', error);
+            });
+    }
+
+    // Manejo del envío del formulario
+    document.getElementById('document-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+
+        try {
+            // Enviar el formulario con Axios
+            const response = await axios.post('/documents', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            console.log('Documento subido:', response.data);
+
+            // Limpiar el formulario después de subir
+            event.target.reset();
+
+            // Refrescar la lista de documentos
+            getDocuments(projectId);
+        } catch (error) {
+            console.error('Error al subir el documento:', error);
+        }
+    });
+</script>
+
+</body>
+</html>
+

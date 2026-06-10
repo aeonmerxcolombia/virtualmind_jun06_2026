@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editar Cliente - VirtualMind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/19.2.16/css/intlTelInput.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/19.2.16/js/intlTelInput.min.js"></script>
+  
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .step { display: none; }
+    .step.active { display: block; animation: fadeIn .4s ease-in; }
+    @keyframes fadeIn { from {opacity:0; transform:translateY(8px);} to {opacity:1; transform:translateY(0);} }
+    .error { border-color: #ef4444 !important; }
+    .error-text { color: #ef4444; font-size: 0.75rem; margin-top: 4px; display: none; }
+    .error-text.active { display: block; }
+    .iti { width: 100%; }
+    .iti__input { width: 100% !important; border-radius: 0 0.5rem 0.5rem 0 !important; border: 1px solid #d1d5db; padding: 0.5rem 0.75rem !important; height: 100%;}
+    .iti__input.error { border-color: #ef4444 !important; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 py-10 flex justify-center items-start">
+  <div class="w-full max-w-5xl bg-white rounded-2xl shadow-lg p-8">
+    <header class="flex justify-between items-center mb-6 border-b pb-4">
+      <h1 id="mainTitle" class="text-2xl font-bold text-slate-800">Editar Cliente</h1>
+      <p id="progressText" class="text-sm text-slate-500 font-semibold">Paso 1 de 5</p>
+    </header>
+    <div class="mb-8">
+      <div class="w-full bg-slate-200 rounded-full h-2">
+        <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 20%"></div>
+      </div>
+    </div>
+    
+    <div id="loader" class="text-center py-10">
+        <p class="text-slate-500">Cargando datos del cliente para editar...</p>
+    </div>
+
+    <form id="clientForm" class="space-y-10 hidden">
+      <section class="step" data-step="1">
+        <h2 class="text-lg font-semibold text-slate-700 mb-4">🏢 Datos de la Empresa</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label for="razon_social" class="block text-sm font-medium text-slate-700">Razón Social *</label>
+            <input id="razon_social" name="razon_social" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required spellcheck="true" title="Razón social de la empresa">
+            <p class="error-text">Este campo es obligatorio.</p>
+          </div>
+          <div>
+            <label for="pais" class="block text-sm font-medium text-slate-700">País *</label>
+            <select id="pais" name="pais" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required title="Seleccione el país del cliente">
+              <option value="">Seleccione...</option>
+            </select>
+            <input id="otro_pais" name="otro_pais" class="hidden w-full border-slate-300 rounded-lg px-3 py-2 mt-2" placeholder="Especifique el país" spellcheck="true" title="Especifique el país">
+            <p class="error-text">Debe seleccionar un país.</p>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <label for="ciudad" class="block text-sm font-medium text-slate-700">Ciudad / Estado *</label>
+            <select id="ciudad" name="ciudad" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" disabled required title="Ciudad o estado del cliente">
+              <option value="">Seleccione un país primero...</option>
+            </select>
+            <input id="otra_ciudad" name="otra_ciudad" class="hidden w-full border-slate-300 rounded-lg px-3 py-2 mt-2" placeholder="Especifique la ciudad" spellcheck="true" title="Especifique la ciudad">
+            <p class="error-text">Debe seleccionar una ciudad.</p>
+          </div>
+          <div>
+            <label id="nitLabel" for="nit" class="block text-sm font-medium text-slate-700">NIT / ID Tributario *</label>
+            <input id="nit" name="nit" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" disabled required placeholder="Seleccione un país primero" spellcheck="false" title="NIT o ID tributario del cliente">
+            <p class="error-text">Este campo es obligatorio.</p>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <label for="direccion" class="block text-sm font-medium text-slate-700">Dirección *</label>
+            <input id="direccion" name="direccion" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required spellcheck="true" title="Dirección del cliente">
+            <p class="error-text">Este campo es obligatorio.</p>
+          </div>
+           <div>
+            <label for="tipo_entidad" class="block text-sm font-medium text-slate-700">Tipo de Entidad *</label>
+            <select id="tipo_entidad" name="tipo_entidad" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required title="Tipo de entidad del cliente">
+              <option value="">Seleccionar...</option>
+              <option value="Persona Natural / Independiente">Persona Natural / Independiente</option>
+              <option value="Empresa Unipersonal (E.U.)">Empresa Unipersonal (E.U.)</option>
+              <option value="Sociedad por Acciones Simplificada (S.A.S)">Sociedad por Acciones Simplificada (S.A.S)</option>
+              <option value="Sociedad Anónima (S.A.)">Sociedad Anónima (S.A.)</option>
+              <option value="Sociedad de Responsabilidad Limitada (LTDA)">Sociedad de Responsabilidad Limitada (LTDA)</option>
+              <option value="Entidad sin Ánimo de Lucro (ESAL)">Entidad sin Ánimo de Lucro (ESAL)</option>
+              <option value="Fundación">Fundación</option>
+              <option value="Cooperativa">Cooperativa</option>
+              <option value="ONG">ONG</option>
+              <option value="Entidad Estatal">Entidad Estatal</option>
+              <option value="Centro Educativo">Centro Educativo</option>
+              <option value="Otra">Otra</option>
+            </select>
+            <input id="tipo_entidad_otra" name="tipo_entidad_otra" class="hidden w-full border-slate-300 rounded-lg px-3 py-2 mt-2" placeholder="Especifique otro tipo" spellcheck="true" title="Especifique otro tipo de entidad">
+            <p class="error-text">Debe seleccionar un tipo de entidad.</p>
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-slate-700">Carácter de la Entidad *</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2" id="caracter_entidad_group">
+              <label class="inline-flex items-center"><input type="radio" name="caracter_entidad" value="Privada" class="mr-2" required title="Carácter privado">Privada</label>
+              <label class="inline-flex items-center"><input type="radio" name="caracter_entidad" value="Pública" class="mr-2" title="Carácter público">Pública</label>
+              <label class="inline-flex items-center"><input type="radio" name="caracter_entidad" value="Mixta" class="mr-2" title="Carácter mixto">Mixta</label>
+              <label class="inline-flex items-center"><input type="radio" name="caracter_entidad" value="Gubernamental" class="mr-2" title="Carácter gubernamental">Gubernamental</label>
+              <label class="inline-flex items-center"><input type="radio" name="caracter_entidad" value="No Gubernamental" class="mr-2" title="Carácter no gubernamental">No Gubernamental</option>
+              <label class="inline-flex items-center"><input type="radio" name="caracter_entidad" value="Educativa" class="mr-2" title="Carácter educativo">Educativa</label>
+              <label class="inline-flex items-center"><input type="radio" name="caracter_entidad" value="Religiosa" class="mr-2" title="Carácter religioso">Religiosa</label>
+              <label class="inline-flex items-center"><input type="radio" name="caracter_entidad" value="Sindicato" class="mr-2" title="Carácter sindical">Sindicato</label>
+              <label class="inline-flex items-center"><input type="radio" name="caracter_entidad" value="Comunitaria" class="mr-2" title="Carácter comunitario">Comunitaria</label>
+          </div>
+          <p class="error-text">Debe seleccionar una opción.</p>
+        </div>
+        <div class="flex justify-end mt-8 items-center">
+          <button type="button" data-action="next" data-step="1" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button>
+        </div>
+      </section>
+      
+      <section class="step" data-step="2">
+        <h2 class="text-lg font-semibold text-slate-700 mb-4">👔 Representante Legal</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label for="rep_legal_pnombre" class="block text-sm font-medium text-slate-700">Primer Nombre *</label>
+            <input id="rep_legal_pnombre" name="rep_legal_pnombre" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required spellcheck="true" title="Primer nombre del representante legal">
+            <p class="error-text">Este campo es obligatorio.</p>
+          </div>
+          <div>
+            <label for="rep_legal_snombre" class="block text-sm font-medium text-slate-700">Segundo Nombre</label>
+            <input id="rep_legal_snombre" name="rep_legal_snombre" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" spellcheck="true" title="Segundo nombre del representante legal">
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <label for="rep_legal_papellido" class="block text-sm font-medium text-slate-700">Primer Apellido *</label>
+            <input id="rep_legal_papellido" name="rep_legal_papellido" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required spellcheck="true" title="Primer apellido del representante legal">
+            <p class="error-text">Este campo es obligatorio.</p>
+          </div>
+          <div>
+            <label for="rep_legal_sapellido" class="block text-sm font-medium text-slate-700">Segundo Apellido</label>
+            <input id="rep_legal_sapellido" name="rep_legal_sapellido" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" spellcheck="true" title="Segundo apellido del representante legal">
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <label for="rep_legal_email" class="block text-sm font-medium text-slate-700">Correo Electrónico *</label>
+            <input id="rep_legal_email" name="rep_legal_email" type="email" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required spellcheck="false" title="Correo electrónico del representante legal">
+            <p class="error-text">Debe ingresar un correo válido.</p>
+          </div>
+          <div>
+            <label for="rep_legal_cargo" class="block text-sm font-medium text-slate-700">Cargo *</label>
+            <input id="rep_legal_cargo" name="rep_legal_cargo" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required spellcheck="true" title="Cargo del representante legal">
+            <p class="error-text">Este campo es obligatorio.</p>
+          </div>
+        </div>
+        <div class="flex justify-between mt-8 items-center">
+          <button type="button" data-action="back" data-step="2" class="bg-slate-200 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-300 transition-colors">⬅️ Anterior</button>
+          <button type="button" data-action="next" data-step="2" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button>
+        </div>
+      </section>
+
+      <section class="step" data-step="3">
+         <h2 class="text-lg font-semibold text-slate-700 mb-4">👤 Contacto Principal / Usuario de la Plataforma</h2>
+        <div class="flex items-center mb-6 p-3 bg-slate-100 rounded-lg">
+          <input id="heredar_datos" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" title="Usar datos del representante legal">
+          <label for="heredar_datos" class="ml-2 block text-sm text-slate-800">Usar los mismos datos del representante legal</label>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label for="pnombre" class="block text-sm font-medium text-slate-700">Primer Nombre *</label>
+            <input id="pnombre" name="pnombre" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required spellcheck="true" title="Primer nombre del contacto principal">
+            <p class="error-text">Este campo es obligatorio.</p>
+          </div>
+          <div>
+            <label for="snombre" class="block text-sm font-medium text-slate-700">Segundo Nombre</label>
+            <input id="snombre" name="snombre" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" spellcheck="true" title="Segundo nombre del contacto principal">
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <label for="papellido" class="block text-sm font-medium text-slate-700">Primer Apellido *</label>
+            <input id="papellido" name="papellido" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required spellcheck="true" title="Primer apellido del contacto principal">
+            <p class="error-text">Este campo es obligatorio.</p>
+          </div>
+          <div>
+            <label for="sapellido" class="block text-sm font-medium text-slate-700">Segundo Apellido</label>
+            <input id="sapellido" name="sapellido" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" spellcheck="true" title="Segundo apellido del contacto principal">
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <label for="cargo" class="block text-sm font-medium text-slate-700">Cargo *</label>
+            <input id="cargo" name="cargo" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required spellcheck="true" title="Cargo del contacto principal">
+            <p class="error-text">Este campo es obligatorio.</p>
+          </div>
+          <div>
+            <label for="email" class="block text-sm font-medium text-slate-700">Correo Electrónico *</label>
+            <input id="email" name="email" type="email" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required spellcheck="false" title="Correo electrónico del contacto principal">
+            <p class="error-text">Debe ingresar un correo válido.</p>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6 mt-4">
+          <div> 
+            <label for="telefono" class="block text-sm font-medium text-slate-700">Teléfono *</label> 
+            <input id="telefono" name="telefono" type="tel" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required title="Número de teléfono del contacto"> 
+            <p class="error-text"></p>
+          </div>
+          <div> 
+            <label for="whatsapp" class="block text-sm font-medium text-slate-700">WhatsApp *</label> 
+            <input id="whatsapp" name="whatsapp" type="tel" class="mt-1 w-full border-slate-300 rounded-lg px-3 py-2" required title="Número de WhatsApp del contacto"> 
+            <p class="error-text"></p>
+          </div>
+        </div>
+        <div class="flex justify-between mt-8 items-center">
+           <button type="button" data-action="back" data-step="3" class="bg-slate-200 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-300 transition-colors">⬅️ Anterior</button>
+           <button type="button" data-action="next" data-step="3" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button>
+        </div>
+      </section>
+
+      <section class="step" data-step="4">
+        <h2 class="text-lg font-semibold text-slate-700 mb-4">📄 Documentos Institucionales</h2>
+        
+        <div class="mb-8">
+            <h3 class="text-md font-semibold text-slate-600 mb-3">Documentos Actuales</h3>
+            <ul id="currentDocumentList" class="space-y-2">
+                <li class="text-sm text-slate-500">Cargando lista de documentos...</li>
+            </ul>
+        </div>
+
+        <p class="text-sm text-slate-600 mb-6 p-3 bg-slate-100 rounded-lg">
+          Para reemplazar un documento, simplemente suba un archivo nuevo en la casilla correspondiente.
+        </p>
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">📘 (Opcional) Nuevo Certificado de Existencia</label>
+            <input type="file" id="doc_existencia" name="doc_existencia" accept=".pdf,.jpg,.png" title="Certificado de existencia y representación legal" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">🧾 (Opcional) Nuevo Registro Tributario (RUT)</label>
+            <input type="file" id="doc_rut" name="doc_rut" accept=".pdf,.jpg,.png" title="Registro tributario RUT del cliente" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">🪪 (Opcional) Nuevo Documento del Rep. Legal</label>
+            <input type="file" id="doc_identificacion" name="doc_identificacion" accept=".pdf,.jpg,.png" title="Documento del representante legal" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500">
+          </div>
+        </div>
+        <div class="flex justify-between mt-8 items-center">
+          <button type="button" data-action="back" data-step="4" class="bg-slate-200 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-300 transition-colors">⬅️ Anterior</button>
+          <button type="button" data-action="next" data-step="4" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button>
+        </div>
+      </section>
+      
+      <section class="step" data-step="5">
+        <h2 class="text-lg font-semibold text-slate-700 mb-4">✅ Resumen de Cambios</h2>
+        <p class="text-sm text-slate-600 mb-6">
+          Por favor, revise que toda la información sea correcta antes de guardar los cambios.
+        </p>
+        <div id="previewContainer" class="space-y-2 p-4 border border-slate-200 rounded-lg bg-slate-50">
+        </div>
+        <div class="flex justify-between mt-8">
+          <button type="button" data-action="back" data-step="5" class="bg-slate-200 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-300 transition-colors">⬅️ Anterior</button>
+          <button type="button" id="btnSubmit" class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors">💾 Guardar Cambios</button>
+        </div>
+      </section>
+
+    </form>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Definiciones iniciales (iguales al form de creación)
+      let currentStep = 1;
+      const totalSteps = 5;
+      const steps = document.querySelectorAll(".step");
+      let iti_telefono, iti_whatsapp;
+      
+      const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+      // OJO: URLs para OBTENER y ACTUALIZAR.
+      const API_CLIENTS = `${API_BASE}/clients/`; // GET y PUT -> /clients/{id}
+      const API_DOCS = `${API_BASE}/clients/documents/client-documents/`; // GET y POST -> /documents/{user_id}
+      const REDIRECT_URL = "URL_A_LA_PAGINA_DE_CLIENTES"; // Cambia esto
+
+      const clientId = new URLSearchParams(window.location.search).get('id');
+      const paisesData = {
+        Colombia: { nitLabel: "NIT", nitPlaceholder: "Ej: 900123456-7", ciudades: ["Bogotá D.C.", "Medellín", "Cali", "Barranquilla", "Otra"], validation: { regex: /^\d{9}-\d{1}$/, error: "Formato incorrecto. El NIT de Colombia debe ser 900123456-7." } },
+        Mexico: { nitLabel: "RFC", nitPlaceholder: "Ej: XAXX010101000", ciudades: ["Ciudad de México", "Guadalajara", "Monterrey", "Otra"], validation: { regex: /^[A-Z&Ñ]{3,4}\d{6}[A-Z\d]{3}$/, error: "Formato incorrecto. El RFC de México debe ser ABC010101XYZ." } },
+        Argentina: { nitLabel: "CUIT", nitPlaceholder: "Ej: 20-12345678-9", ciudades: ["Buenos Aires", "Córdoba", "Rosario", "Otra"], validation: { regex: /^\d{2}-\d{8}-\d{1}$/, error: "Formato incorrecto. El CUIT de Argentina debe ser 20-12345678-9." } },
+        Chile: { nitLabel: "RUT", nitPlaceholder: "Ej: 76123456-K", ciudades: ["Santiago", "Valparaíso", "Concepción", "Otra"], validation: { regex: /^\d{7,8}-[kK\d]$/, error: "Formato incorrecto. El RUT de Chile debe ser 12345678-9." } },
+        Otro: { nitLabel: "ID Tributario", nitPlaceholder: "Ingrese el ID tributario", ciudades: ["Otra"], validation: { regex: /.{5,}/, error: "El ID Tributario debe tener al menos 5 caracteres." } }
+      };
+
+      const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value || '';
+      };
+      const setRadio = (name, value) => {
+        const el = document.querySelector(`input[name="${name}"][value="${value}"]`);
+        if (el) el.checked = true;
+      };
+
+      // =============== NUEVA FUNCIÓN PARA CARGAR DATOS ===============
+      const loadAndPopulateForm = async () => {
+        if (!clientId) {
+            document.getElementById('mainTitle').textContent = "Error";
+            document.getElementById('loader').textContent = "No se especificó un ID de cliente en la URL.";
+            return;
+        }
+        try {
+            const [profileRes, docsRes] = await Promise.all([
+                fetch(`${API_CLIENTS}${clientId}`),
+                fetch(`${API_DOCS}${clientId}`)
+            ]);
+            if (!profileRes.ok) throw new Error("No se pudo cargar el perfil del cliente.");
+            const profileData = await profileRes.json();
+            const docsData = docsRes.ok ? await docsRes.json() : [];
+
+            const p = profileData.profile || profileData;
+            document.getElementById('mainTitle').innerHTML = `Editando: <span class="text-blue-600">${p.razon_social || ''}</span>`;
+            
+            setValue('razon_social', p.razon_social);
+            setValue('pais', p.pais);
+            document.getElementById('pais').dispatchEvent(new Event('change'));
+            
+            setTimeout(() => {
+                setValue('ciudad', p.ciudad);
+                document.getElementById('ciudad').dispatchEvent(new Event('change'));
+            }, 200);
+
+            setValue('nit', profileData.documento || p.nit);
+            setValue('direccion', p.direccion);
+            setValue('tipo_entidad', p.tipo_entidad);
+            document.getElementById('tipo_entidad').dispatchEvent(new Event('change'));
+            setValue('tipo_entidad_otra', p.tipo_entidad_otra);
+            setRadio('caracter_entidad', p.caracter_entidad);
+            
+            setValue('rep_legal_pnombre', p.rep_legal_pnombre);
+            setValue('rep_legal_snombre', p.rep_legal_snombre);
+            setValue('rep_legal_papellido', p.rep_legal_papellido);
+            setValue('rep_legal_sapellido', p.rep_legal_sapellido);
+            setValue('rep_legal_email', p.rep_legal_email);
+            setValue('rep_legal_cargo', p.rep_legal_cargo);
+
+            setValue('pnombre', p.contacto_com_pnombre);
+            setValue('snombre', p.contacto_com_snombre);
+            setValue('papellido', p.contacto_com_papellido);
+            setValue('sapellido', p.contacto_com_sapellido);
+            setValue('cargo', p.contacto_com_cargo);
+            setValue('email', p.contacto_com_email || profileData.email);
+            iti_telefono.setNumber(p.contacto_com_telefono || '');
+            iti_whatsapp.setNumber(p.contacto_com_whatsapp || '');
+            
+            const docList = document.getElementById('currentDocumentList');
+            docList.innerHTML = '';
+            if (docsData.length > 0) {
+                docsData.forEach(doc => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="${doc.archivo_url}" target="_blank" class="text-blue-600 hover:underline text-sm">${doc.tipo_documento}</a>`;
+                    docList.appendChild(li);
+                });
+            } else {
+                docList.innerHTML = '<li class="text-sm text-slate-500">Este cliente no tiene documentos.</li>';
+            }
+
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('clientForm').classList.remove('hidden');
+            showStep(1);
+
+        } catch (error) {
+            document.getElementById('mainTitle').textContent = "Error";
+            document.getElementById('loader').textContent = `Error al cargar: ${error.message}`;
+        }
+      };
+      
+      // =============== FUNCIÓN PARA ACTUALIZAR CLIENTE ===============
+      async function updateClient() {
+        const btn = document.getElementById("btnSubmit");
+        btn.disabled = true;
+        btn.textContent = "⏳ Guardando cambios...";
+        try {
+            const getPhone = (itiInstance) => (itiInstance?.isValidNumber() ? itiInstance.getNumber() : '');
+            const data = {
+                nombre: `${document.getElementById("pnombre").value} ${document.getElementById("papellido").value}`,
+                email: document.getElementById("email").value.trim(),
+                tipo_documento: document.getElementById("nitLabel").textContent.replace(' *', ''),
+                documento: document.getElementById("nit").value,
+                profile: {
+                  razon_social: document.getElementById("razon_social").value,
+                  pais: document.getElementById("pais").value === 'Otro' ? document.getElementById("otro_pais").value : document.getElementById("pais").value,
+                  ciudad: document.getElementById("ciudad").value === 'Otra' ? document.getElementById("otra_ciudad").value : document.getElementById("ciudad").value,
+                  direccion: document.getElementById("direccion").value,
+                  tipo_entidad: document.getElementById("tipo_entidad").value,
+                  tipo_entidad_otra: document.getElementById("tipo_entidad_otra").value,
+                  caracter_entidad: document.querySelector('input[name="caracter_entidad"]:checked')?.value || "",
+                  rep_legal_pnombre: document.getElementById("rep_legal_pnombre").value,
+                  rep_legal_snombre: document.getElementById("rep_legal_snombre").value,
+                  rep_legal_papellido: document.getElementById("rep_legal_papellido").value,
+                  rep_legal_sapellido: document.getElementById("rep_legal_sapellido").value,
+                  rep_legal_email: document.getElementById("rep_legal_email").value,
+                  rep_legal_cargo: document.getElementById("rep_legal_cargo").value,
+                  contacto_com_pnombre: document.getElementById("pnombre").value,
+                  contacto_com_snombre: document.getElementById("snombre").value,
+                  contacto_com_papellido: document.getElementById("papellido").value,
+                  contacto_com_sapellido: document.getElementById("sapellido").value,
+                  contacto_com_email: document.getElementById("email").value,
+                  contacto_com_telefono: getPhone(iti_telefono),
+                  contacto_com_whatsapp: getPhone(iti_whatsapp),
+                  contacto_com_cargo: document.getElementById("cargo").value,
+                }
+            };
+            const res = await fetch(`${API_CLIENTS}${clientId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.detail || "Error al actualizar el cliente.");
+            }
+            if(document.getElementById('doc_existencia').files.length > 0) await uploadDocument("Certificado de Existencia", "doc_existencia");
+            if(document.getElementById('doc_rut').files.length > 0) await uploadDocument("Registro Tributario", "doc_rut");
+            if(document.getElementById('doc_identificacion').files.length > 0) await uploadDocument("Documento Representante Legal", "doc_identificacion");
+
+            alert("✅ ¡Cliente actualizado correctamente!");
+            
+        } catch (err) {
+            alert(`❌ Hubo un error: ${err.message}`);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "💾 Guardar Cambios";
+        }
+      }
+
+      async function uploadDocument(tipo, inputId) {
+        const fileInput = document.getElementById(inputId);
+        if (!fileInput.files.length) return;
+        const formData = new FormData();
+        formData.append("user_id", clientId); // CORREGIDO: Usa el clientId de la URL
+        formData.append("tipo_documento", tipo);
+        formData.append("file", fileInput.files[0]);
+        const res = await fetch(API_DOCS, { method: "POST", body: formData });
+        if (!res.ok) throw new Error(`Error subiendo el nuevo documento: ${tipo}`);
+      }
+
+      // El resto de funciones (showStep, validateStep, buildPreview, etc.) y listeners
+      // son idénticos al código original de creación.
+      function showStep(stepNumber) { 
+        currentStep = stepNumber; 
+        steps.forEach(s => s.classList.remove("active")); 
+        const activeStep = document.querySelector(`[data-step='${stepNumber}']`); 
+        if (activeStep) activeStep.classList.add("active"); 
+        const percent = Math.max(20, (stepNumber / totalSteps) * 100); 
+        document.getElementById("progressBar").style.width = `${percent}%`; 
+        document.getElementById("progressText").textContent = `Paso ${stepNumber} de ${totalSteps}`; 
+        window.scrollTo({ top: 0, behavior: "smooth" }); 
+      }
+      function validateStep(stepContainer) { 
+        let isValid = true; 
+        
+        stepContainer.querySelectorAll(".error, .iti__input.error").forEach(el => {
+            if (el) el.classList.remove("error");
+        }); 
+        stepContainer.querySelectorAll(".error-text.active").forEach(el => {
+            if (el) el.classList.remove("active");
+        }); 
+        
+        stepContainer.querySelectorAll("input[required], select[required], textarea[required]").forEach(el => { 
+            if (el.id === 'telefono' || el.id === 'whatsapp') return; 
+            
+            let fieldValid = true; 
+            let customError = null; 
+            
+            if (el.type === 'file') { 
+                if (el.files.length === 0) fieldValid = false; 
+            } else if (el.type === 'email') { 
+                if (el.value.trim() && !/^\S+@\S+\.\S+$/.test(el.value)) { fieldValid = false; customError = "El formato del email no es válido."; } 
+                if(el.required && !el.value.trim()) { fieldValid = false; customError = "Este campo es obligatorio."; } 
+            } else if (el.id === 'nit') { 
+                const pais = document.getElementById('pais').value; 
+                const validationRules = paisesData[pais]?.validation; 
+                if (validationRules && !validationRules.regex.test(el.value)) { fieldValid = false; customError = validationRules.error; } 
+                else if (!el.value.trim()){ fieldValid = false; customError = "Este campo es obligatorio."; } 
+            } else if (el.id === 'password_contacto') { 
+                const pass = el.value; 
+                if (pass.length < 8) { fieldValid = false; customError = "La contraseña debe tener al menos 8 caracteres."; } 
+            } else if (el.id === 'password_confirmar') { 
+                const pass = document.getElementById('password_contacto').value; 
+                const confirmPass = el.value; 
+                if (pass !== confirmPass) { fieldValid = false; customError = "Las contraseñas no coinciden."; } 
+            } else if (el.required) { 
+                if (!el.value.trim()) { fieldValid = false; customError = "Este campo es obligatorio."; } 
+            } 
+            
+            if (!fieldValid) { 
+                isValid = false; 
+                el.classList.add("error"); 
+                const errorMsg = el.parentElement.querySelector(".error-text"); 
+                if (errorMsg) { 
+                    errorMsg.textContent = customError || "Este campo es obligatorio."; 
+                    errorMsg.classList.add("active"); 
+                } 
+            } 
+        }); 
+
+        stepContainer.querySelectorAll('#telefono, #whatsapp').forEach(originalInput => {
+            if (!originalInput) return; 
+            const itiInstance = window.intlTelInputGlobals.getInstance(originalInput);
+            if (!itiInstance) return; 
+            const isRequired = originalInput.hasAttribute('required');
+            const itiWrapper = originalInput.closest('.iti');
+            if (!itiWrapper) return; 
+            const visibleInput = originalInput; 
+            const errorMsg = itiWrapper.nextElementSibling;
+            
+            if (!errorMsg || !errorMsg.classList.contains('error-text')) {
+                 return;
+            }
+
+            if (isRequired && !originalInput.value.trim()) {
+                isValid = false; 
+                visibleInput.classList.add('error'); 
+                errorMsg.textContent = "Este campo es obligatorio.";
+                errorMsg.classList.add('active');
+            } else if (originalInput.value.trim() && !itiInstance.isValidNumber()) {
+                isValid = false; 
+                visibleInput.classList.add('error'); 
+                errorMsg.textContent = "El número no es válido para el país.";
+                errorMsg.classList.add('active');
+            }
+        });
+
+        const radioGroup = stepContainer.querySelector('input[type="radio"][required]'); 
+        if (radioGroup) { 
+            const groupName = radioGroup.name; 
+            if (!stepContainer.querySelector(`input[name="${groupName}"]:checked`)) { 
+                isValid = false; 
+                const errorEl = document.querySelector(`#${groupName}_group`).nextElementSibling;
+                if (errorEl && errorEl.classList.contains('error-text')) {
+                   errorEl.classList.add("active");
+                }
+            } 
+        } 
+        return isValid; 
+      }
+      
+      function buildPreview() { 
+        const container = document.getElementById("previewContainer"); 
+        container.innerHTML = ""; 
+        const getValue = (id) => document.getElementById(id)?.value || ""; 
+        const getRadio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || ""; 
+        const getPhone = (itiInstance) => { 
+            if (!itiInstance) return ''; 
+            if (itiInstance.isValidNumber()) return itiInstance.getNumber(); 
+            return itiInstance.getNumber() ? 'Inválido' : 'No-ingresado'; 
+        }; 
+        const previewData = { 
+            "<h3>🏢 Datos de la Empresa</h3>": null, 
+            "Razón Social": getValue("razon_social"), 
+            "País": getValue("pais") === 'Otro' ? getValue("otro_pais") : getValue("pais"), 
+            "Ciudad": getValue("ciudad") === 'Otra' ? getValue("otra_ciudad") : getValue("ciudad"), 
+            [document.getElementById("nitLabel").textContent.replace(' *', '')]: getValue("nit"), 
+            "Dirección": getValue("direccion"), 
+            "Tipo Entidad": getValue("tipo_entidad") === 'Otra' ? getValue("tipo_entidad_otra") : getValue("tipo_entidad"), 
+            "Carácter Entidad": getRadio("caracter_entidad"), 
+            "<h3>👔 Representante Legal</h3>": null, 
+            "Nombre Completo": `${getValue("rep_legal_pnombre")} ${getValue("rep_legal_papellido")}`, 
+            "Email": getValue("rep_legal_email"), 
+            "Cargo": getValue("rep_legal_cargo"), 
+            "<h3>👤 Contacto Principal</h3>": null, 
+            "Nombre Completo ": `${getValue("pnombre")} ${getValue("papellido")}`, 
+            "Email ": getValue("email"), 
+            "Cargo ": getValue("cargo"), 
+            "Teléfono": getPhone(iti_telefono), 
+            "WhatsApp": getPhone(iti_whatsapp) 
+        }; 
+        for (const label in previewData) { 
+            const value = previewData[label]; 
+            if (value === null) { 
+                container.innerHTML += `<h3 class="font-semibold text-slate-800 pt-4 pb-2 border-b">${label.replace(/<[^>]+>/g, '')}</h3>`; 
+            } else { 
+                const row = document.createElement("div"); 
+                row.className = "flex justify-between py-1.5 text-sm"; 
+                row.innerHTML = `<span class='font-medium text-slate-600'>${label.trim()}:</span><span class='text-slate-900 text-right'>${value || 'N/A'}</span>`; 
+                container.appendChild(row); 
+            } 
+        } 
+      }
+      
+      document.getElementById('clientForm').addEventListener('click', async (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        const action = target.dataset.action;
+        const step = parseInt(target.dataset.step);
+        if (action === 'next') {
+            const currentSection = document.querySelector(`[data-step='${step}']`);
+            if (validateStep(currentSection)) {
+                const nextStep = step + 1;
+                if (nextStep === totalSteps) buildPreview();
+                showStep(nextStep);
+            } else {
+                alert("⚠️ Por favor, complete los campos obligatorios y corrija los errores marcados.");
+            }
+        } else if (action === 'back') {
+            showStep(step - 1);
+        } else if (target.id === 'btnSubmit') {
+            await updateClient(); // Llamada a la nueva función de actualización
+        }
+      });
+      
+      const paisSelect = document.getElementById("pais");
+      Object.keys(paisesData).forEach(pais => paisSelect.add(new Option(pais, pais)));
+      paisSelect.addEventListener("change", e => {
+        const selectedPais = e.target.value;
+        const data = paisesData[selectedPais];
+        const ciudadSelect = document.getElementById("ciudad");
+        const nitInput = document.getElementById("nit");
+        const nitLabel = document.getElementById("nitLabel");
+        const otroPaisInput = document.getElementById("otro_pais");
+        
+        ciudadSelect.innerHTML = '<option value="">Seleccione...</option>';
+        
+        if (selectedPais && data) {
+          ciudadSelect.disabled = false;
+          nitInput.disabled = false;
+          nitLabel.textContent = `${data.nitLabel} *`;
+          nitInput.placeholder = data.nitPlaceholder;
+          data.ciudades.forEach(ciudad => ciudadSelect.add(new Option(ciudad, ciudad)));
+          otroPaisInput.classList.toggle('hidden', selectedPais !== 'Otro');
+        } else {
+          ciudadSelect.disabled = true;
+          nitInput.disabled = true;
+          nitLabel.textContent = "NIT / ID Tributario *";
+          nitInput.placeholder = "Seleccione un país primero";
+          otroPaisInput.classList.add('hidden');
+        }
+      });
+      
+      document.getElementById('ciudad').addEventListener("change", e => {
+        const selectedCiudad = e.target.value;
+        const otraCiudadInput = document.getElementById('otra_ciudad');
+        otraCiudadInput.classList.toggle('hidden', selectedCiudad !== 'Otra');
+      });
+      
+      document.getElementById('tipo_entidad').addEventListener("change", e => {
+        const selectedTipo = e.target.value;
+        const otraInput = document.getElementById('tipo_entidad_otra');
+        otraInput.classList.toggle('hidden', selectedTipo !== 'Otra');
+      });
+      
+      document.getElementById('heredar_datos').addEventListener("change", e => {
+        const checked = e.target.checked;
+        if (checked) {
+          document.getElementById('pnombre').value = document.getElementById('rep_legal_pnombre').value;
+          document.getElementById('snombre').value = document.getElementById('rep_legal_snombre').value;
+          document.getElementById('papellido').value = document.getElementById('rep_legal_papellido').value;
+          document.getElementById('sapellido').value = document.getElementById('rep_legal_sapellido').value;
+          document.getElementById('email').value = document.getElementById('rep_legal_email').value;
+          document.getElementById('cargo').value = document.getElementById('rep_legal_cargo').value;
+        }
+      });
+      
+      const iti_options = {
+        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/19.2.16/js/utils.js",
+        initialCountry: "auto",
+        geoIpLookup: function(callback) { fetch("https://ipapi.co/json").then(res => res.json()).then(data => callback(data.country_code)).catch(() => callback("co")); },
+        preferredCountries: ['co', 'mx', 'ar', 'cl', 'pe', 'ec', 'es', 'us'],
+      };
+      iti_telefono = window.intlTelInput(document.querySelector("#telefono"), iti_options);
+      iti_whatsapp = window.intlTelInput(document.querySelector("#whatsapp"), iti_options);
+      
+      loadAndPopulateForm(); // Inicia la carga de datos del cliente
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

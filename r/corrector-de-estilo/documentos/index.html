@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentos del Proyecto - VirtualMind</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      
+  <script src="/onlyoffice/web-apps/apps/api/documents/api.js"></script>
+  <script src="https://8x8.vc/vpaas-magic-cookie-d45c8107f37a4d70a21bf1932daaf52d/external_api.js" defer></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/documentos-unified.js"></script>
+      
+  <style>
+    body { 
+      background-color: #090D16; 
+      color: #cbd5e1;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    @media (max-width: 1024px) {
+      .workspace-grid { grid-template-columns: 1fr !important; grid-template-rows: 1fr auto; }
+      .collab-panel { flex-direction: column !important; }
+      .video-box { height: 260px !important; }
+      .chat-box { min-height: 200px; }
+      .editor-panel { min-height: 400px; }
+    }
+    @media (max-width: 640px) {
+      .workspace-grid { padding: 8px !important; gap: 8px !important; }
+      .video-box { height: 200px !important; }
+      .chat-box { min-height: 180px; }
+      #editorWrapper { height: calc(100vh - 60px) !important; }
+      .nav-pills .nav-link { width: 36px !important; height: 36px !important; font-size: 0.9rem !important; }
+      #docTabs { gap: 6px; justify-content: center; }
+      #mainContainer .d-flex.justify-content-end { flex-wrap: wrap; gap: 8px; justify-content: center !important; }
+    }
+    
+    /* Custom premium glow background blobs */
+    .glow-blob {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card, .offcanvas, .modal-content { 
+      background: rgba(15, 23, 42, 0.8) !important; 
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      color: #f1f5f9 !important;
+      border-radius: 16px !important;
+    }
+
+    .modal-header, .modal-footer {
+      border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .form-control, .form-select {
+      background: rgba(15, 23, 42, 0.6) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: #f8fafc !important;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #6366f1 !important;
+      background: rgba(15, 23, 42, 0.8) !important;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.25) !important;
+      color: #f8fafc !important;
+    }
+    .form-control::placeholder {
+      color: #64748b !important;
+    }
+
+    .card-doc { 
+      border: none; 
+      background: rgba(15, 23, 42, 0.5) !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      border-radius: 16px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+      cursor: pointer; 
+    }
+    .card-doc:hover { 
+      transform: translateY(-5px); 
+      border-color: rgba(99, 102, 241, 0.3) !important;
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn-primary { 
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important; 
+      border: none !important; 
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3) !important;
+    }
+    .btn-primary:hover { 
+      background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%) !important; 
+      transform: translateY(-1px);
+    }
+    .btn-outline-primary {
+      border-color: rgba(99, 102, 241, 0.4) !important;
+      color: #818cf8 !important;
+    }
+    .btn-outline-primary:hover, .btn-outline-primary.active {
+      background-color: #4f46e5 !important;
+      border-color: #4f46e5 !important;
+      color: #fff !important;
+    }
+
+    /* WORKSPACE UNIFICADO (ONLYOFFICE + JITSI + CHAT) */
+    #editorWrapper { display: none; height: calc(100vh - 70px); width: 100%; background: #020617; overflow: hidden; }
+    .workspace-grid { display: grid; grid-template-columns: 1fr 400px; height: calc(100vh - 130px); gap: 16px; padding: 16px; }
+    .editor-panel { background: #0b1329; border-radius: 12px; overflow: hidden; height: 100%; border: 1px solid rgba(255,255,255,0.05); }
+    .collab-panel { display: flex; flex-direction: column; gap: 14px; height: 100%; }
+    .collab-card { background: rgba(15, 23, 42, 0.8); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); }
+    
+    /* FIX: Ampliación de espacio de vídeo para control óptimo */
+    .video-box { height: 380px; position: relative; background: #000; }
+    
+    .chat-box { flex: 1; display: flex; flex-direction: column; }
+    .workspace-chat-msgs { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .chat-msg-bubble { max-width: 85%; padding: 10px; border-radius: 12px; font-size: 0.85rem; color: white; }
+    .chat-msg-sent { background: #4f46e5; margin-left: auto; border-top-right-radius: 0; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2); }
+    .chat-msg-received { background: #1e293b; margin-right: auto; border-top-left-radius: 0; border: 1px solid rgba(255,255,255,0.05); }
+            
+    #editorContainer { width: 100%; height: 100%; }
+            
+    /* ESTILOS DEL COPILOTO IA */
+    .ai-sidebar { background: rgba(15, 23, 42, 0.95) !important; color: #fff; box-shadow: -10px 0 35px rgba(0,0,0,0.6); }
+    .ai-sidebar .offcanvas-header { border-bottom: 1px solid rgba(255,255,255,0.08); background: #020617; }
+    .ai-input { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: white !important; }
+    .ai-input:focus { background: rgba(255,255,255,0.08) !important; border-color: #10b981 !important; color: white; box-shadow: none; }
+    .ai-input::placeholder { color: rgba(255,255,255,0.3); }
+    .ai-input option { background: #0f172a; color: white; }
+    .nav-pills .nav-link { color: rgba(255,255,255,0.6); }
+    .ai-result { background: rgba(15, 23, 42, 0.6); border-radius: 12px; padding: 15px; font-size: 0.9rem; min-height: 150px; white-space: pre-wrap; border: 1px solid rgba(255,255,255,0.08); color: #e2e8f0; }
+            
+    /* VISTAS */
+    .doc-list-item { transition: all 0.2s; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03) !important; }
+    .doc-list-item:hover { background-color: rgba(99, 102, 241, 0.06) !important; transform: translateX(5px); }
+    .doc-list-item .doc-icon { font-size: 1.5rem; }
+    .doc-list-item:hover .doc-icon { transform: scale(1.1); }
+            
+    /* Tabs de documentos (Botones Circulares Flotantes) */
+    .nav-pills { gap: 12px; }
+    .nav-pills .nav-link { 
+        width: 46px; height: 46px; border-radius: 50% !important; 
+        display: flex; align-items: center; justify-content: center; 
+        font-size: 1.15rem; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        color: #94a3b8; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08);
+    }
+    .nav-pills .nav-link:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(99, 102, 241, 0.15); color: #fff; border-color: rgba(255,255,255,0.2); }
+            
+    /* Colores dinámicos para los tabs activos con efectos de neón */
+    #tab-word.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 0 15px rgba(37,99,235,0.45); }
+    #tab-excel.active { background: #16a34a; color: white; border-color: #16a34a; box-shadow: 0 0 15px rgba(22,163,74,0.45); }
+    #tab-ppt.active { background: #dc2626; color: white; border-color: #dc2626; box-shadow: 0 0 15px rgba(220,38,38,0.45); }
+    #tab-subir.active { background: #0891b2; color: white; border-color: #0891b2; box-shadow: 0 0 15px rgba(8,145,178,0.45); }
+    #tab-compartidos.active { background: #d97706; color: white; border-color: #d97706; box-shadow: 0 0 15px rgba(217,119,6,0.45); }
+    #tab-revisiones.active { background: #9333ea; color: white; border-color: #9333ea; box-shadow: 0 0 15px rgba(147,51,234,0.45); }
+    #tab-videollamada.active { background: #7c3aed; color: white; border-color: #7c3aed; box-shadow: 0 0 15px rgba(124,58,237,0.45); }
+    #tab-chat.active { background: #0ea5e9; color: white; border-color: #0ea5e9; box-shadow: 0 0 15px rgba(14,165,233,0.45); }
+
+    .badge-proyecto { font-size: 0.725rem; padding: 0.4em 0.75em; border-radius: 6px; }
+    .drop-zone {
+      border: 2px dashed rgba(99, 102, 241, 0.3) !important;
+      background: rgba(15, 23, 42, 0.4);
+      transition: all 0.3s;
+    }
+    .drop-zone:hover {
+      border-color: #6366f1 !important;
+      background: rgba(99, 102, 241, 0.05);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  
+  <div class="glow-blob top-10 left-10"></div>
+  <div class="glow-blob bottom-10 right-10"></div>
+
+  <!-- Custom Toast Alerts (Removes grey alert prompts) -->
+  <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
+
+  <!-- HEADER Premium con Glassmorphism -->
+  <nav class="navbar navbar-dark sticky-top backdrop-blur-md bg-slate-900/80 border-b border-indigo-500/10 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.3)]">
+    <div class="container d-flex align-items-center justify-content-between">
+      <span class="navbar-brand d-flex align-items-center gap-2" id="tituloVista" data-tooltip="Documentos del Proyecto" data-tooltip-position="bottom">
+        <i class="fas fa-folder-open text-indigo-400"></i>
+        <span class="fw-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent tracking-wide">Documentos del Proyecto</span>
+      </span>
+    </div>
+  </nav>
+
+  <div class="container py-4 relative z-10" id="mainContainer">
+    <div class="d-flex justify-content-end align-items-center mb-4 gap-3">
+      <!-- Selector de Proyectos para filtrado asíncrono -->
+      <div class="me-auto d-none" id="divSeleccionarProyectoFiltro" style="min-width: 320px;">
+        <select id="proyectoFiltroInput" class="form-select border-indigo-500/20" onchange="cambiarProyectoFiltro(this.value)" title="Filtrar por Proyecto">
+          <option value="">-- Todos los Proyectos (Global) --</option>
+        </select>
+      </div>
+
+      <button class="btn btn-secondary rounded-circle d-flex align-items-center justify-content-center border-0 bg-slate-800 hover:bg-slate-700" style="width:42px;height:42px;" id="btnVolverProyecto" onclick="window.history.back()" data-tooltip="Volver al Proyecto" data-tooltip-position="bottom">
+        <i class="fas fa-arrow-left text-slate-300"></i>
+      </button>
+      <button class="btn btn-primary d-flex align-items-center gap-2 px-4 py-2 rounded-xl shadow-lg shadow-indigo-500/20" onclick="mostrarModal()" data-tooltip="Crear Documento" data-tooltip-position="bottom">
+        <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Nuevo</span>
+      </button>
+      <div class="btn-group border border-white/5 rounded-xl overflow-hidden shadow-lg bg-slate-900/40" role="group">
+        <button type="button" class="btn btn-outline-primary px-3 py-2 border-0" id="btnGrid" onclick="cambiarVista('grid')" data-tooltip="Vista Cuadrícula" data-tooltip-position="bottom">
+          <i class="fas fa-th"></i>
+        </button>
+        <button type="button" class="btn btn-outline-primary px-3 py-2 border-0 active" id="btnList" onclick="cambiarVista('list')" data-tooltip="Vista Lista" data-tooltip-position="bottom">
+          <i class="fas fa-list"></i>
+        </button>
+      </div>
+    </div>
+            
+    <ul class="nav nav-pills mb-4 flex-wrap" id="docTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-word" data-bs-toggle="pill" onclick="filtrarPorTipo('docx')" type="button" data-tooltip="Documentos Word" data-tooltip-position="top">
+          <i class="fas fa-file-word"></i>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-excel" data-bs-toggle="pill" onclick="filtrarPorTipo('xlsx')" type="button" data-tooltip="Hojas de Cálculo" data-tooltip-position="top">
+          <i class="fas fa-file-excel"></i>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-ppt" data-bs-toggle="pill" onclick="filtrarPorTipo('pptx')" type="button" data-tooltip="Presentaciones" data-tooltip-position="top">
+          <i class="fas fa-file-powerpoint"></i>
+        </button>
+      </li>
+      <li class="nav-item ms-auto" role="presentation">
+        <button class="nav-link" id="tab-subir" data-bs-toggle="pill" onclick="filtrarPorTipo('subir')" type="button" data-tooltip="Subir Archivo" data-tooltip-position="top">
+          <i class="fas fa-upload"></i>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-compartidos" data-bs-toggle="pill" onclick="cargarCompartidos()" type="button" data-tooltip="Compartidos Conmigo" data-tooltip-position="top">
+          <i class="fas fa-share-alt"></i>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-videollamada" onclick="mostrarVideollamada()" type="button" data-tooltip="Videollamada Original" data-tooltip-position="top">
+          <i class="fas fa-video"></i>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-chat" onclick="mostrarChat()" type="button" data-tooltip="Chat Original" data-tooltip-position="top">
+          <i class="fas fa-comment-dots"></i>
+        </button>
+      </li>
+      <li class="nav-item ${obtenerRol() !== 'coordinador' && obtenerRol() !== 'superadmin' ? 'd-none' : ''}" role="presentation">
+        <button class="nav-link" id="tab-revisiones" onclick="cargarRevisionesPendientes()" type="button" data-tooltip="Revisiones Pendientes" data-tooltip-position="top">
+          <i class="fas fa-check-double"></i>
+        </button>
+      </li>
+    </ul>
+            
+    <!-- SECCIONES ORIGINALES -->
+    <div id="subirArchivos" class="card mb-4 d-none">
+      <div class="card-body p-4">
+        <div class="mb-3 d-none" id="divSeleccionarProyectoSubir">
+          <label class="form-label text-slate-300 fw-bold">Asociar a Proyecto (Opcional)</label>
+          <select id="proyectoSubirInput" class="form-select border-white/5"></select>
+        </div>
+        <div class="drop-zone rounded-xl p-5 text-center cursor-pointer" onclick="document.getElementById('inputSubir').click()" data-tooltip="Haz clic o arrastra archivos aquí para subir" data-tooltip-position="top">
+          <i class="fas fa-cloud-upload-alt text-indigo-400 mb-3" style="font-size: 3rem;"></i>
+          <p class="text-sm text-slate-400">Arrastra archivos aquí o haz clic para buscarlos</p>
+          <input type="file" id="inputSubir" class="d-none" accept=".docx,.xlsx,.pptx,.pdf" onchange="subirArchivo(this)">
+        </div>
+        <div id="uploadProgress" class="mt-3 d-none">
+          <div class="progress bg-slate-950" style="height: 10px; border-radius: 9999px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-indigo-500" role="progressbar" style="width: 100%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+            
+    <div id="compartidosSection" class="card mb-4 d-none">
+      <div class="card-body p-4">
+        <div id="listaCompartidos"><p class="text-muted text-xs">Cargando...</p></div>
+      </div>
+    </div>
+            
+    <!-- Sección Videollamada (FIXED Y REFORZADO CONTRA COLAPSOS DE ALTURA) -->
+    <div id="seccionVideollamada" class="card mb-4 d-none">
+      <div class="card-body p-4">
+        <div class="mb-4">
+          <div class="mb-3">
+            <label class="form-label text-slate-300 fw-bold">Seleccionar Colaborador para Invitar</label>
+            <select id="videoDestinatarioSelect" class="form-select border-white/5" title="Selecciona a quién enviar la videollamada"></select>
+          </div>
+          <label class="form-label text-slate-300 fw-bold">Nombre de la Sala</label>
+          <div class="input-group">
+            <input type="text" id="salaNombre" class="form-control" placeholder="Ej: proyecto-final-revision">
+            <button class="btn btn-primary" onclick="iniciarVideollamada()" data-tooltip="Iniciar videollamada" data-tooltip-position="top">
+              <i class="fas fa-video me-1"></i> Iniciar
+            </button>
+          </div>
+        </div>
+        <!-- FIX DE ALTURA: Se aplica un alto estricto al contenedor para evitar colapso de Jitsi -->
+        <div id="jitsiContainer" class="border border-indigo-500/10 rounded-xl d-none shadow-2xl bg-black" style="height:580px; width:100%; overflow:hidden;"></div>
+        <div id="jitsiControls" class="mt-3 d-none">
+          <button class="btn btn-danger px-4 py-2 rounded-xl shadow-lg shadow-rose-500/20" onclick="colgarVideollamada()"><i class="fas fa-phone-slash me-2"></i>Colgar</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sección Chat -->
+    <div id="seccionChat" class="card mb-4 d-none">
+      <div class="card-body p-4">
+        <h5 class="text-slate-200 fw-bold mb-3"><i class="fas fa-comments text-indigo-400 me-2"></i> Participantes del Proyecto</h5>
+        <hr class="border-white/5">
+        <div id="chatParticipantes" class="mb-3"></div>
+        <div id="chatConversacion" class="d-none mb-3">
+          <div id="chatMensajes" class="border border-white/5 rounded-xl p-3 mb-3 scrollbar-hide" style="max-height:400px; overflow-y:auto; background: rgba(15,23,42,0.4)"></div>
+        </div>
+        <div id="chatInputArea" class="d-none">
+          <div class="input-group">
+            <button class="btn btn-outline-secondary border-white/10 text-slate-300" onclick="adjuntarDocumentoChat()" data-tooltip="Adjuntar" data-tooltip-position="top">
+              <i class="fas fa-paperclip"></i>
+            </button>
+            <input type="text" id="chatInput" class="form-control" placeholder="Escribe un mensaje...">
+            <button class="btn btn-primary" id="btnEnviarChat" onclick="enviarMensajeChat()">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="seccionRevisiones" class="card mb-4 d-none">
+      <div class="card-body p-4">
+        <div id="listaRevisiones"><div class="text-center py-4 text-muted">Cargando revisiones pendientes...</div></div>
+      </div>
+    </div>
+    
+    <div id="documentos-lista" class="mt-4">
+      <div class="text-center py-5">
+        <div class="spinner-border text-indigo-500" role="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKSPACE INTEGRADO CON SECCIÓN DE VÍDEO EXPANDIDA -->
+  <div id="editorWrapper" class="flex-column">
+    <div class="bg-slate-900 border-b border-indigo-500/10 p-3 d-flex justify-content-between align-items-center">
+      <h6 id="editorTitle" class="mb-0 text-indigo-300 fw-bold ms-2"></h6>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-sm btn-outline-info rounded-circle d-flex align-items-center justify-content-center border-0 bg-slate-800 text-indigo-300 hover:bg-slate-700" style="width:34px;height:34px;" data-bs-toggle="offcanvas" data-bs-target="#copilotoIA" data-tooltip="Copiloto IA" data-tooltip-position="bottom">
+          <i class="fas fa-robot"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center border-0 bg-rose-500/10 text-rose-400 hover:bg-rose-500" style="width:34px;height:34px;" onclick="cerrarEditor()" data-tooltip="Cerrar Workspace" data-tooltip-position="bottom">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+                
+    <div class="workspace-grid">
+      <div class="editor-panel">
+        <div id="editorContainer"></div>
+      </div>
+                        
+      <div class="collab-panel">
+        <!-- Selector de Contacto Integrado al Workspace -->
+        <div class="collab-card p-2 bg-slate-900/90 d-flex flex-row align-items-center gap-2 border-bottom border-white/5" style="border-radius: 12px 12px 0 0;">
+          <i class="fas fa-user-circle text-indigo-400 ms-1"></i>
+          <select id="workspaceDestinatario" class="form-select form-select-sm bg-slate-950 text-white border-0" onchange="cambiarDestinatarioWorkspace()">
+            <option value="">Selecciona un contacto...</option>
+          </select>
+        </div>
+        
+        <!-- Video box optimizado en altura -->
+        <div class="collab-card video-box" style="border-radius: 0; border-top: 0;">
+          <div class="bg-slate-900 text-slate-300 px-3 py-2 d-flex justify-content-between align-items-center border-bottom border-white/5">
+            <small class="fw-bold"><i class="fas fa-video text-indigo-400 me-1"></i> Llamada Segura</small>
+            <button class="btn btn-sm btn-success py-0 rounded-circle d-flex align-items-center justify-content-center" id="btnIniciarSuiteVideo" style="width:28px;height:28px;" onclick="iniciarVideollamadaWorkspace()" data-tooltip="Llamar al contacto" data-tooltip-position="left">
+              <i class="fas fa-phone"></i>
+            </button>
+          </div>
+          <div id="jitsiSuiteContainer" class="w-100 h-100 bg-slate-950">
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-slate-500" id="suiteVideoPlaceholder">
+              <i class="fas fa-video-slash fa-2x mb-2 text-slate-600"></i>
+            </div>
+          </div>
+        </div>
+                                
+        <div class="collab-card chat-box">
+          <div class="bg-slate-900 text-slate-300 px-3 py-2 d-flex justify-content-between align-items-center border-bottom border-white/5">
+            <small class="fw-bold"><i class="fas fa-comments text-sky-400 me-1"></i> Chat Directo</small>
+            <button class="btn btn-sm btn-outline-light py-0 rounded-circle d-flex align-items-center justify-content-center border-white/10 hover:bg-white/5" style="width:28px;height:28px;" onclick="adjuntarDocumentoWorkspaceChat()" data-tooltip="Adjuntar actual" data-tooltip-position="left">
+              <i class="fas fa-paperclip"></i>
+            </button>
+          </div>
+          <div id="workspaceChatMessages" class="workspace-chat-msgs bg-slate-950/40">
+            <div class="text-center text-slate-600 py-5 small"><i class="fas fa-hand-pointer fa-2x mb-2"></i><br>Elige un contacto para iniciar</div>
+          </div>
+          <div class="p-2 bg-slate-900">
+            <div class="input-group input-group-sm">
+              <input type="text" id="workspaceChatInput" class="form-control bg-slate-950 text-white border-0" placeholder="Escribe..." onkeypress="handleWorkspaceChatEnter(event)">
+              <button class="btn btn-primary" onclick="enviarMensajeWorkspaceChat()" data-tooltip="Enviar" data-tooltip-position="top">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- IA SIDEBAR -->
+  <div class="offcanvas offcanvas-end ai-sidebar" tabindex="-1" id="copilotoIA">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title fw-bold" style="color: #34d399;"><i class="fas fa-robot me-2"></i> Copiloto VirtualMind</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-4">
+      <ul class="nav nav-pills mb-4 nav-fill" id="ai-tabs" role="tablist">
+        <li class="nav-item">
+          <button class="nav-link active rounded-xl" data-bs-toggle="pill" data-bs-target="#ai-texto" data-tooltip="Generar Texto" data-tooltip-position="bottom"><i class="fas fa-pen-nib"></i></button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link rounded-xl" data-bs-toggle="pill" data-bs-target="#ai-imagen" data-tooltip="Diseñar Imagen" data-tooltip-position="bottom"><i class="fas fa-image"></i></button>
+        </li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="ai-texto">
+          <div class="mb-3">
+            <select id="iaAgente" class="form-select ai-input"><option value="gemini">VirtualMind IA 2.5</option><option value="openai">ChatGPT GPT-5.5</option><option value="kimi">Kimi LLM</option></select>
+          </div>
+          <div class="mb-3">
+            <textarea id="iaTextoPrompt" class="form-control ai-input" rows="4" placeholder="Escribe aquí las instrucciones para la IA..."></textarea>
+          </div>
+          <button onclick="generarTextoIA()" id="btnGenerarTexto" class="btn w-100 text-white mb-4 shadow-lg shadow-blue-500/20" style="background-color: #3b82f6;" data-tooltip="Generar Texto" data-tooltip-position="top">
+            <i class="fas fa-magic me-2"></i> Generar Contenido
+          </button>
+          <div id="iaTextoResultado" class="ai-result mb-3">Los resultados aparecerán aquí...</div>
+          <button onclick="copiarTextoIA()" class="btn btn-outline-light w-100 btn-sm rounded-xl" data-tooltip="Copiar Resultado" data-tooltip-position="top"><i class="fas fa-copy me-2"></i>Copiar texto</button>
+        </div>
+        
+        <div class="tab-pane fade" id="ai-imagen">
+          <div class="mb-3"><textarea id="iaImgPrompt" class="form-control ai-input" rows="3" placeholder="Describe la imagen en detalle..."></textarea></div>
+          <div class="mb-3"><textarea id="iaImgNegPrompt" class="form-control ai-input" rows="2">Low resolution, blurry, distorted anatomy</textarea></div>
+          <div class="row mb-3">
+            <div class="col-6"><select id="iaImgSize" class="form-select ai-input"><option value="2048*2048">1:1 Cuadrado</option></select></div>
+            <div class="col-6"><select id="iaImgModel" class="form-select ai-input"><option value="qwen-image-2.0-pro">Qwen Engine</option></select></div>
+          </div>
+          <div class="form-check form-switch mb-4 text-slate-300">
+            <input class="form-check-input" type="checkbox" id="iaImgExtend" checked>
+            <label class="form-check-label text-xs font-semibold" for="iaImgExtend">Mejorar Prompt por IA</label>
+          </div>
+          <button onclick="generarImagenIA()" id="btnGenerarImagen" class="btn w-100 text-white mb-4 shadow-lg shadow-emerald-500/20" style="background: linear-gradient(to right, #10b981, #0891b2);" data-tooltip="Generar Imagen" data-tooltip-position="top"><i class="fas fa-paint-brush me-2"></i>Diseñar Imagen</button>
+          <div id="iaImgPreviewContainer" class="text-center d-none">
+            <div class="position-relative w-100 mb-3" style="min-height: 200px; background: #0b1120;">
+              <img id="iaImgPreview" class="img-fluid rounded d-none" src="" alt="">
+              <div id="iaImgLoading" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-dark"><div class="spinner-border text-info mb-3"></div></div>
+            </div>
+            <button onclick="copiarImagenIA()" id="btnCopiarImagen" class="btn btn-outline-light w-100 btn-sm rounded-xl" data-tooltip="Copiar Imagen" data-tooltip-position="top"><i class="fas fa-copy me-2"></i>Copiar imagen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Crear -->
+  <div class="modal fade" id="modalCrear" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-slate-100">Crear Nuevo Documento</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3 d-none" id="divSeleccionarProyecto">
+            <select id="proyectoInput" class="form-select bg-light"></select>
+          </div>
+          <div class="mb-3"><input type="text" id="nombreInput" class="form-control" placeholder="Escribe el nombre del documento..."></div>
+          <div class="mb-3">
+            <select id="tipoInput" class="form-select">
+              <option value="docx">Word (.docx)</option>
+              <option value="xlsx">Excel (.xlsx)</option>
+              <option value="pptx">PowerPoint (.pptx)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary rounded-circle d-flex align-items-center justify-content-center bg-slate-800 border-0" style="width:40px;height:40px;" data-bs-dismiss="modal" data-tooltip="Cancelar" data-tooltip-position="top"><i class="fas fa-times"></i></button>
+          <button type="button" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;" onclick="crearArchivo()" data-tooltip="Crear y Abrir" data-tooltip-position="top"><i class="fas fa-check"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://gestordecursos.pegui.edu.co/js/roles.js"></script>
+  
+  <script>
+    // ==========================================
+    // MOTOR DE TOOLTIPS DINÁMICOS (ROSA IA)
+    // ==========================================
+    document.addEventListener("DOMContentLoaded", () => {
+        const style = document.createElement("style");
+        style.textContent = `
+            .vm-tooltip {
+                position: absolute; background-color: #0f172a; color: #ffffff;
+                font-size: 11px; padding: 6px 12px; border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.08);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); pointer-events: none;
+                opacity: 0; transform: translateY(4px);
+                transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+                z-index: 10000; max-width: 250px; text-align: center; white-space: nowrap;
+                font-weight: 500;
+            }
+            .vm-tooltip.visible { opacity: 1; transform: translateY(0); }
+        `;
+        document.head.appendChild(style);
+
+        let tooltipEl = null;
+        document.addEventListener("mouseover", (e) => {
+            const target = e.target.closest("[data-tooltip]");
+            if (!target) return;
+            const text = target.getAttribute("data-tooltip");
+            if (!text) return;
+
+            if (tooltipEl) tooltipEl.remove();
+            tooltipEl = document.createElement("div");
+            tooltipEl.className = "vm-tooltip";
+            tooltipEl.textContent = text;
+            document.body.appendChild(tooltipEl);
+
+            const rect = target.getBoundingClientRect();
+            const pos = target.getAttribute("data-tooltip-position") || "top";
+            let top = 0, left = 0;
+
+            requestAnimationFrame(() => {
+                if (!tooltipEl) return;
+                const tRect = tooltipEl.getBoundingClientRect();
+                if (pos === "top") {
+                    top = rect.top + window.scrollY - tRect.height - 8;
+                    left = rect.left + window.scrollX + (rect.width / 2) - (tRect.width / 2);
+                } else if (pos === "bottom") {
+                    top = rect.bottom + window.scrollY + 8;
+                    left = rect.left + window.scrollX + (rect.width / 2) - (tRect.width / 2);
+                } else if (pos === "left") {
+                    top = rect.top + window.scrollY + (rect.height / 2) - (tRect.height / 2);
+                    left = rect.left + window.scrollX - tRect.width - 8;
+                } else if (pos === "right") {
+                    top = rect.top + window.scrollY + (rect.height / 2) - (tRect.height / 2);
+                    left = rect.right + window.scrollX + 8;
+                }
+                                    
+                if (left < 5) left = 5;
+                if (left + tRect.width > window.innerWidth - 5) left = window.innerWidth - tRect.width - 5;
+                                    
+                tooltipEl.style.top = top + "px";
+                tooltipEl.style.left = left + "px";
+                tooltipEl.classList.add("visible");
+            });
+        });
+
+        document.addEventListener("mouseout", (e) => {
+            const target = e.target.closest("[data-tooltip]");
+            if (target && tooltipEl) {
+                tooltipEl.classList.remove("visible");
+                setTimeout(() => { if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; } }, 150);
+            }
+        });
+    });
+
+    // ==========================================
+    // LÓGICA PRINCIPAL (ONLYOFFICE + REVISIONES + COMPARTIR)
+    // ==========================================
+    const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+    let archivos = [];
+    let editorInstance = null; 
+    let vistaActual = 'list';
+    let filtroTipo = 'docx'; 
+    let currentProjectId = null;
+    let mapNombresProyectos = {};
+            
+    let usuarioUID = "";
+    let usuarioNombre = "Usuario";
+    let usuarioEmail = "user@virtualmind.com";
+    let listaUsuariosGlobal = [];
+    let participantesProyecto = [];
+            
+    let apiJitsiSuite = null;
+    let chatInterval = null;
+    let actualDocEnWorkspace = null;
+
+    const rolesMap = {
+        1: "Superadmin",
+        2: "Admin",
+        3: "Coordinador",
+        4: "Cliente",
+        5: "Diseñador Instruccional",
+        6: "Autor",
+        7: "Revisor QA",
+        8: "Editor",
+        9: "Desarrollador Multimedia",
+        10: "Abogado",
+        11: "Diseñador Gráfico",
+        12: "Animador 2D",
+        13: "Animador 3D",
+        14: "Video",
+        16: "Corrector de Estilo",
+        17: "Ingeniero LMS",
+        18: "Registrado"
+    };
+
+    function getToken() { return localStorage.getItem('token') || sessionStorage.getItem('token'); }
+    function obtenerRol() { const m = window.location.pathname.match(/\/r\/([^/]+)\//); return m ? m[1] : ''; }
+    function logout() { localStorage.removeItem('token'); window.location.href = '/'; }
+
+    function parsearToken() {
+        const token = getToken();
+        if (!token) return;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            usuarioUID = payload.user_id || payload.sub;
+            usuarioEmail = payload.sub;
+            usuarioNombre = payload.nombre || payload.sub.split('@')[0];
+        } catch(e) {}
+    }
+
+    // Elegant Toast Alerts (Sustituye a alerts de navegador)
+    function showNotification(type, message) {
+      const container = document.getElementById('customToastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `flex items-center p-3 rounded-xl shadow-xl border backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+        type === 'success' 
+          ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' 
+          : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+      }`;
+      toast.innerHTML = `
+        <span class="mr-2 text-lg">${type === 'success' ? '✨' : '⚠️'}</span>
+        <div class="text-xs font-semibold tracking-wide">${message}</div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 50);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+    
+    // Override alert globally
+    window.alert = function(msg) {
+      const isSuccess = msg.includes('✅') || msg.toLowerCase().includes('éxito') || msg.toLowerCase().includes('copiado');
+      showNotification(isSuccess ? 'success' : 'error', msg.replace(/[✅❌]/g, '').trim());
+    };
+
+    // Utilidad Centralizada para ocultar todas las secciones (evita cruces)
+    function ocultarTodasSecciones() {
+        document.getElementById('subirArchivos').classList.add('d-none');
+        document.getElementById('compartidosSection').classList.add('d-none');
+        document.getElementById('seccionRevisiones').classList.add('d-none');
+        document.getElementById('documentos-lista').classList.add('d-none');
+        document.getElementById('seccionVideollamada').classList.add('d-none');
+        document.getElementById('seccionChat').classList.add('d-none');
+    }
+
+    function filtrarPorTipo(tipo) {
+        filtroTipo = tipo;
+        ocultarTodasSecciones();
+        document.querySelectorAll('#docTabs .nav-link').forEach(tab => tab.classList.remove('active'));
+                    
+        if (tipo === 'docx') { document.getElementById('tab-word').classList.add('active'); document.getElementById('documentos-lista').classList.remove('d-none'); }
+        else if (tipo === 'xlsx') { document.getElementById('tab-excel').classList.add('active'); document.getElementById('documentos-lista').classList.remove('d-none'); }
+        else if (tipo === 'pptx') { document.getElementById('tab-ppt').classList.add('active'); document.getElementById('documentos-lista').classList.remove('d-none'); }
+        else if (tipo === 'subir') { document.getElementById('tab-subir').classList.add('active'); document.getElementById('subirArchivos').classList.remove('d-none'); }
+                    
+        if (tipo !== 'subir') mostrarDocumentos();
+    }
+
+    // === RESTAURACIÓN DE TABS ORIGINALES DE CHAT Y VIDEO ===
+    function mostrarVideollamada() {
+        ocultarTodasSecciones();
+        document.querySelectorAll('#docTabs .nav-link').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-videollamada').classList.add('active');
+        document.getElementById('seccionVideollamada').classList.remove('d-none');
+        poblarVideoDestinatariosOriginal();
+    }
+
+    function mostrarChat() {
+        ocultarTodasSecciones();
+        document.querySelectorAll('#docTabs .nav-link').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-chat').classList.add('active');
+        document.getElementById('seccionChat').classList.remove('d-none');
+        poblarChatParticipantesOriginal();
+    }
+
+    async function cargarProyectosAsignados() {
+        try {
+            const res = await fetch(`${API_URL}/projects/`, { headers: { 'Authorization': 'Bearer ' + getToken(), 'X-Rol-Vista': 'autor' }});
+            if (res.ok) {
+                const proyectos = await res.json();
+                let optionsFiltro = '<option value="">-- Todos los Proyectos (Global) --</option>';
+                let options = '<option value="">-- Sin asociar (Global) --</option>';
+                proyectos.forEach(p => { 
+                    optionsFiltro += `<option value="${p.id}">${p.name} (ID: ${p.id})</option>`;
+                    options += `<option value="${p.id}">${p.name} (ID: ${p.id})</option>`; 
+                    mapNombresProyectos[p.id] = p.name; 
+                });
+                document.getElementById('proyectoFiltroInput').innerHTML = optionsFiltro;
+                document.getElementById('proyectoInput').innerHTML = options;
+                document.getElementById('proyectoSubirInput').innerHTML = options;
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function cambiarProyectoFiltro(val) {
+        currentProjectId = val || null;
+        if (currentProjectId) {
+            localStorage.setItem('currentProjectId', currentProjectId);
+        } else {
+            localStorage.removeItem('currentProjectId');
+        }
+        cargarArchivos();
+        await cargarUsuariosParaWorkspace();
+    }
+
+    async function cargarArchivos() {
+        try {
+            let url = API_URL + '/documentos-office/';
+            if (currentProjectId) url += `?project_id=${currentProjectId}`;
+            const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + getToken(), 'X-Rol-Vista': 'autor' }});
+            if (res.ok) { archivos = await res.json(); mostrarDocumentos(); }
+        } catch(e) { console.error(e); }
+    }
+
+    async function cargarCompartidos() {
+        ocultarTodasSecciones();
+        document.querySelectorAll('#docTabs .nav-link').forEach(tab => tab.classList.remove('active'));
+        document.getElementById('tab-compartidos').classList.add('active');
+        document.getElementById('compartidosSection').classList.remove('d-none');
+        const lista = document.getElementById('listaCompartidos');
+        lista.innerHTML = '<p class="text-muted text-xs">Cargando...</p>';
+        try {
+            const res = await fetch(`${API_URL}/documentos-office/mis-compartidos-usuario`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+            if (res.ok) {
+                const docs = await res.json();
+                if (docs.length === 0) { lista.innerHTML = '<p class="text-slate-400 text-sm">No hay documentos compartidos</p>'; } 
+                else {
+                    lista.innerHTML = docs.map(doc => `
+                        <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-white/5 bg-slate-900/40 rounded-xl mb-2">
+                            <div><i class="fas fa-file-${doc.tipo === 'xlsx' ? 'excel text-emerald-400' : doc.tipo === 'pptx' ? 'powerpoint text-rose-400' : 'word text-blue-400'} me-2"></i><strong class="text-slate-200">${doc.nombre}.${doc.tipo}</strong></div>
+                            <button class="btn btn-sm btn-primary rounded-circle" style="width:34px;height:34px;" onclick="editarConOnlyOfficeById(${doc.id})" data-tooltip="Abrir Workspace" data-tooltip-position="left"><i class="fas fa-edit"></i></button>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch(e) { lista.innerHTML = '<p class="text-danger">Error</p>'; }
+    }
+
+    async function subirArchivo(input) {
+        if (!input.files.length) return;
+        const formData = new FormData();
+        formData.append('archivo', input.files[0]);
+        const target = currentProjectId || document.getElementById('proyectoSubirInput').value;
+        if (target) formData.append('project_id', target);
+        document.getElementById('uploadProgress').classList.remove('d-none');
+        try {
+            const res = await fetch(`${API_URL}/documentos-office/subir-archivo`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken() }, body: formData });
+            if (res.ok) { filtrarPorTipo('docx'); await cargarArchivos(); }
+        } catch(e) {}
+        document.getElementById('uploadProgress').classList.add('d-none');
+        input.value = '';
+    }
+
+    function cambiarVista(tipo) { vistaActual = tipo; document.getElementById('btnGrid').classList.toggle('active', tipo === 'grid'); document.getElementById('btnList').classList.toggle('active', tipo === 'list'); mostrarDocumentos(); }
+
+    function getBadgeProyectoHtml(projectId) {
+        if (!projectId) return `<span class="badge bg-slate-800 text-slate-300 badge-proyecto ms-2">Global</span>`;
+        return `<span class="badge bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 badge-proyecto ms-2"><i class="fas fa-project-diagram"></i> #${projectId}</span>`;
+    }
+
+    function mostrarDocumentos() {
+        const container = document.getElementById('documentos-lista');
+        let docsF = archivos;
+        if (filtroTipo === 'docx') docsF = archivos.filter(d => d.tipo === 'docx');
+        else if (filtroTipo === 'xlsx') docsF = archivos.filter(d => d.tipo === 'xlsx');
+        else if (filtroTipo === 'pptx') docsF = archivos.filter(d => d.tipo === 'pptx');
+
+        if (!docsF.length) { container.innerHTML = `<div class="text-center py-5"><i class="fas fa-folder-open text-slate-600 fa-3x"></i></div>`; return; }
+
+        const dW = docsF.filter(d => d.tipo === 'docx'); const dE = docsF.filter(d => d.tipo === 'xlsx'); const dP = docsF.filter(d => d.tipo === 'pptx');
+
+        const renderCards = (docs, iconClass, title) => {
+            if (!docs.length) return '';
+            if (vistaActual === 'list') {
+                return `
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3"><i class="${iconClass} me-2"></i></h5>
+                        <div class="table-responsive rounded-xl border border-white/5 overflow-hidden"><table class="table table-dark table-hover align-middle mb-0">
+                            <thead class="bg-slate-950"><tr><th class="p-3">Archivo</th><th class="p-3">Fecha</th><th class="text-end p-3">Acciones</th></tr></thead>
+                            <tbody>
+                                ${docs.map(doc => {
+                                    const rIdx = archivos.indexOf(doc);
+                                    const bHtml = currentProjectId ? '' : getBadgeProyectoHtml(doc.project_id);
+                                    const getBVer = (e, v) => e === 'cerrada' ? `<span class="badge bg-slate-800 text-slate-400 ms-1 border border-white/5">v${v||'1.0'} 🔒</span>` : `<span class="badge bg-indigo-600 ms-1">v${v||'1.0'}</span>`;
+                                    return `
+                                        <tr class="doc-list-item" onclick="editarConOnlyOffice(${rIdx})">
+                                            <td class="p-3"><strong>${doc.nombre}.${doc.tipo}</strong> ${getBVer(doc.estado_version, doc.version_actual)} ${bHtml}</td>
+                                            <td class="p-3 text-slate-400">${new Date(doc.actualizado || doc.creado).toLocaleDateString()}</td>
+                                            <td class="text-end p-3">
+                                                <div class="d-flex gap-1 justify-content-end" onclick="event.stopPropagation()">
+                                                    <button class="btn btn-outline-info rounded-circle d-flex align-items-center justify-content-center border-0 bg-slate-800 text-indigo-300 hover:bg-slate-700" style="width:34px;height:34px;" onclick="verVersiones(${doc.id})" data-tooltip="Historial" data-tooltip-position="top"><i class="fas fa-history"></i></button>
+                                                    <button class="btn btn-outline-primary rounded-circle d-flex align-items-center justify-content-center border-0 bg-slate-800 text-indigo-300 hover:bg-slate-700" style="width:34px;height:34px;" onclick="descargarArchivo(${doc.id})" data-tooltip="Descargar" data-tooltip-position="top"><i class="fas fa-download"></i></button>
+                                                    <button class="btn btn-outline-success rounded-circle d-flex align-items-center justify-content-center border-0 bg-slate-800 text-indigo-300 hover:bg-slate-700" style="width:34px;height:34px;" onclick="compartirArchivo(${doc.id})" data-tooltip="Compartir" data-tooltip-position="top"><i class="fas fa-share-alt"></i></button>
+                                                    <button class="btn btn-outline-danger rounded-circle d-flex align-items-center justify-content-center border-0 bg-rose-500/10 text-rose-400 hover:bg-rose-500" style="width:34px;height:34px;" onclick="eliminarArchivo(${doc.id})" data-tooltip="Eliminar" data-tooltip-position="top"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table></div>
+                    </div>`;
+            } else {
+                return `
+                    <div class="mb-4">
+                        <div class="row">
+                            ${docs.map(doc => {
+                                const rIdx = archivos.indexOf(doc);
+                                const bHtml = currentProjectId ? '' : `<div class="mb-2">${getBadgeProyectoHtml(doc.project_id)}</div>`;
+                                return `
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card card-doc p-3 h-100" onclick="editarConOnlyOffice(${rIdx})">
+                                            <div class="text-center py-3"><i class="${iconClass}" style="font-size: 2.5rem;"></i></div>
+                                            <div class="card-body text-center p-1">
+                                                <h6 class="card-title fw-bold text-truncate text-slate-100">${doc.nombre}</h6>${bHtml}
+                                                <div class="d-flex gap-1 justify-content-center mt-3" onclick="event.stopPropagation()">
+                                                    <button class="btn btn-outline-info rounded-circle d-flex align-items-center justify-content-center border-0 bg-slate-800 text-indigo-300 hover:bg-slate-700" style="width:34px;height:34px;" onclick="verVersiones(${doc.id})" data-tooltip="Historial" data-tooltip-position="top"><i class="fas fa-history"></i></button>
+                                                    <button class="btn btn-outline-danger rounded-circle d-flex align-items-center justify-content-center border-0 bg-rose-500/10 text-rose-400 hover:bg-rose-500" style="width:34px;height:34px;" onclick="eliminarArchivo(${doc.id})" data-tooltip="Eliminar" data-tooltip-position="top"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                            }).join('')}
+                        </div>
+                    </div>`;
+            }
+        };
+        container.innerHTML = (dW.length > 0 ? renderCards(dW, 'fa-file-word text-blue-400') : '') + (dE.length > 0 ? renderCards(dE, 'fa-file-excel text-emerald-400') : '') + (dP.length > 0 ? renderCards(dP, 'fa-file-powerpoint text-rose-400') : '');
+    }
+
+    function mostrarModal() {
+        document.getElementById('nombreInput').value = '';
+        if (!currentProjectId && document.getElementById('proyectoInput')) document.getElementById('proyectoInput').value = "";
+        new bootstrap.Modal(document.getElementById('modalCrear')).show();
+    }
+
+    async function crearArchivo() {
+        const n = document.getElementById('nombreInput').value.trim(); const t = document.getElementById('tipoInput').value;
+        if (!n) return;
+        const fd = new FormData(); fd.append('nombre', n); fd.append('tipo', t);
+        const tgt = currentProjectId || document.getElementById('proyectoInput').value; if (tgt) fd.append('project_id', tgt);
+        try {
+            const res = await fetch(API_URL + '/documentos-office/', { method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken() }, body: fd });
+            if (res.ok) { bootstrap.Modal.getInstance(document.getElementById('modalCrear')).hide(); filtrarPorTipo(t); await cargarArchivos(); }
+        } catch(e) {}
+    }
+
+    async function eliminarArchivo(id) {
+        if (!confirm('¿Eliminar documento de forma permanente?')) return;
+        try { const res = await fetch(API_URL + '/documentos-office/eliminar/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken() }}); if (res.ok) cargarArchivos(); } catch(e) {}
+    }
+
+    async function descargarArchivo(id) {
+        try { const res = await fetch(`${API_URL}/documentos-office/info/${id}`, { headers: { 'Authorization': 'Bearer ' + getToken() }}); const data = await res.json(); if (data.url_descarga) window.open(data.url_descarga, '_blank'); } catch(e) {}
+    }
+
+    function compartirArchivo(id) {
+        const h = `
+            <div class="modal fade" id="modalCompartir" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title fw-bold text-slate-100">Compartir Documento</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body"><input type="email" id="emailDestino" class="form-control mb-3" placeholder="Email del usuario..."><textarea id="mensajeCompartir" class="form-control" rows="3" placeholder="Añade una descripción o nota..."></textarea></div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;" onclick="enviarCompartir(${id})" data-tooltip="Compartir ahora" data-tooltip-position="top"><i class="fas fa-paper-plane"></i></button></div>
+            </div></div></div>`;
+        if (!document.getElementById('modalCompartir')) document.body.insertAdjacentHTML('beforeend', h);
+        new bootstrap.Modal(document.getElementById('modalCompartir')).show();
+    }
+
+    async function enviarCompartir(id) {
+        const e = document.getElementById('emailDestino').value; const m = document.getElementById('mensajeCompartir').value; if (!e) return;
+        try { const res = await fetch(`${API_URL}/documentos-office/compartir/${id}`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ email_destino: e, mensaje: m }) }); if (res.ok) bootstrap.Modal.getInstance(document.getElementById('modalCompartir')).hide(); } catch(er) {}
+    }
+
+    // ============ VERSIONADO ============
+    function getEstadoVersionBadge(e) { return `<span class="badge bg-${e==='cerrada'?'slate-800 border border-white/5':e==='aprobada'?'emerald-600':'indigo-600'}">${e}</span>`; }
+
+    async function verVersiones(docId) {
+        const doc = archivos.find(d => d.id === docId); if (!doc) return;
+        const mId = 'modalVersiones_' + docId; if (document.getElementById(mId)) document.getElementById(mId).remove();
+        const h = `
+            <div class="modal fade" id="${mId}" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+                <div class="modal-header bg-slate-900"><h5 class="modal-title fw-bold text-slate-100"><i class="fas fa-history me-2 text-indigo-400"></i> Historial de Versiones</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div><strong class="text-lg text-slate-200">${doc.nombre}</strong> ${getEstadoVersionBadge(doc.estado_version)}</div>
+                        <div class="d-flex gap-2">
+                            ${doc.estado_version !== 'cerrada' ? `<button class="btn btn-success btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width:34px;height:34px;" onclick="cerrarVersion(${docId})" data-tooltip="Cerrar Versión" data-tooltip-position="top"><i class="fas fa-lock"></i></button>` : ''}
+                            ${obtenerRol() === 'autor' && doc.estado_version !== 'cerrada' && doc.estado_version !== 'en_revision' ? `<button class="btn btn-warning btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width:34px;height:34px;" onclick="enviarARevision(${docId})" data-tooltip="Enviar a Revisión" data-tooltip-position="top"><i class="fas fa-paper-plane"></i></button>` : ''}
+                            <button class="btn btn-info btn-sm rounded-circle d-flex align-items-center justify-content-center text-white" style="width:34px;height:34px;background-color:#0ea5e9;border:0;" onclick="auditarDocumentoIA(${docId})" data-tooltip="Auditar con IA VirtualMind" data-tooltip-position="top"><i class="fas fa-robot"></i></button>
+                            <button class="btn btn-primary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width:34px;height:34px;" onclick="crearNuevaVersion(${docId})" data-tooltip="Crear Nueva Versión" data-tooltip-position="top"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <ul class="nav nav-pills mb-3"><li class="nav-item"><button class="nav-link active" id="tabVerHistorial_${docId}" onclick="mostrarSubTab('versiones', '${docId}')" data-tooltip="Lista de Versiones" data-tooltip-position="top"><i class="fas fa-list-ol"></i></button></li><li class="nav-item"><button class="nav-link" id="tabVerTrazabilidad_${docId}" onclick="cargarTrazabilidad(${docId})" data-tooltip="Trazabilidad y Eventos" data-tooltip-position="top"><i class="fas fa-route"></i></button></li></ul>
+                    <div id="versionesLista_${docId}">...</div><div id="trazabilidadLista_${docId}" class="d-none"></div>
+                </div>
+            </div></div></div>`;
+        document.body.insertAdjacentHTML('beforeend', h); new bootstrap.Modal(document.getElementById(mId)).show();
+        try {
+            const res = await fetch(`${API_URL}/documentos-office/version/${docId}`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+            if (res.ok) {
+                const vs = await res.json();
+                document.getElementById('versionesLista_'+docId).innerHTML = '<div class="table-responsive rounded-xl border border-white/5"><table class="table table-dark table-hover mb-0"><tbody>' + vs.map(v => `<tr><td class="p-3">v${v.version}</td><td class="p-3">${getEstadoVersionBadge(v.estado)}</td><td class="p-3 text-end">${v.estado === 'cerrada' ? `<a href="/r/${obtenerRol()}/biblioteca/index.html" class="btn btn-sm btn-outline-emerald rounded-circle d-inline-flex align-items-center justify-content-center me-1" style="width:32px;height:32px;" data-tooltip="Ver en Biblioteca" data-tooltip-position="top"><i class="fas fa-book"></i></a>` : ''}<button onclick="descargarVersion(${v.id})" class="btn btn-sm btn-outline-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width:32px;height:32px;" data-tooltip="Descargar Versión" data-tooltip-position="top"><i class="fas fa-download"></i></button></td></tr>`).join('') + '</tbody></table></div>';
+            }
+        } catch(e) {}
+    }
+
+    async function crearNuevaVersion(id) { if (confirm('¿Crear nueva versión?')) { await fetch(`${API_URL}/documentos-office/version/${id}/nueva`, { method:'POST', headers: {'Authorization':'Bearer '+getToken()}}); cargarArchivos(); } }
+    async function cerrarVersion(id) {
+        const modalId = 'modalPermisosCierre';
+        if (document.getElementById(modalId)) document.getElementById(modalId).remove();
+
+        const rolesDisponibles = ['superadmin', 'admin', 'coordinador', 'autor', 'cliente', 'editor', 'abogado', 'revisor-qa', 'guionista', 'ingeniero-lms', 'disenador-instruccional', 'disenador-grafico', 'animador-2d', 'animador-3d', 'video', 'desarrollador-multimedia', 'corrector-de-estilo', 'gerente-general', 'registrado'];
+
+        const h = `
+            <div class="modal fade" id="${modalId}" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog"><div class="modal-content">
+                    <div class="modal-header" style="background:linear-gradient(135deg,#1e1b4b,#3730a3);color:white;">
+                        <h5 class="modal-title fw-bold"><i class="fas fa-lock me-2"></i> Permisos de Acceso</h5>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="text-slate-300 mb-3">Define quién podrá acceder a este documento en la Biblioteca:</p>
+                        <label class="text-sm text-slate-400 font-medium mb-2">Roles con acceso:</label>
+                        <div class="row g-2 mb-4">
+                            ${rolesDisponibles.map(r => `
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="rol_${r}" value="${r}" ${['autor','cliente','coordinador','admin','superadmin'].includes(r) ? 'checked' : ''}>
+                                        <label class="form-check-label text-slate-300 text-sm" for="rol_${r}">${r.charAt(0).toUpperCase()+r.slice(1)}</label>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <label class="text-sm text-slate-400 font-medium mb-2">Usuarios adicionales (emails separados por coma):</label>
+                        <input type="text" id="usuariosExtra" class="form-control bg-dark text-slate-200 border-slate-600" placeholder="usuario@email.com, otro@email.com">
+                    </div>
+                    <div class="modal-footer border-t border-white/10">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button class="btn" style="background:#4f46e5;color:white;" onclick="confirmarCierreVersion(${id})">
+                            <i class="fas fa-check me-1"></i> Cerrar Versión y Archivar
+                        </button>
+                    </div>
+                </div></div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', h);
+        new bootstrap.Modal(document.getElementById(modalId)).show();
+    }
+
+    async function confirmarCierreVersion(id) {
+        const rolesSel = [];
+        document.querySelectorAll('#modalPermisosCierre input[type=checkbox]:checked').forEach(cb => rolesSel.push(cb.value));
+        const usuariosRaw = document.getElementById('usuariosExtra').value.trim();
+        const usuariosSel = usuariosRaw ? usuariosRaw.split(',').map(u => u.trim()).filter(u => u) : [];
+
+        try {
+            const res = await fetch(`${API_URL}/documentos-office/version/${id}/cerrar`, {
+                method:'POST',
+                headers: {'Authorization':'Bearer '+getToken(), 'Content-Type':'application/json'},
+                body: JSON.stringify({ roles_acceso: rolesSel, usuarios_acceso: usuariosSel })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                cargarArchivos();
+                bootstrap.Modal.getInstance(document.getElementById('modalPermisosCierre')).hide();
+                if (data.nota_bibliografica) {
+                    mostrarNotaBiblioteca(data);
+                } else {
+                    mostrarToastBiblioteca(data.biblioteca_id);
+                }
+            }
+        } catch(e) { alert('Error al cerrar versión'); }
+    }
+    function mostrarNotaBiblioteca(data) {
+        const id = 'modalNotaBiblioteca';
+        if (document.getElementById(id)) document.getElementById(id).remove();
+        const h = `
+            <div class="modal fade" id="${id}" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-lg"><div class="modal-content">
+                <div class="modal-header" style="background:linear-gradient(135deg,#065f46,#047857);color:white;">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-check-circle me-2"></i> Versión Cerrada y Archivada</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="bg-emerald-900/20 border border-emerald-700/30 rounded-xl p-4 mb-4">
+                        <p class="text-emerald-400 text-sm font-medium mb-1"><i class="fas fa-check me-1"></i> Documento archivado en la Biblioteca</p>
+                        <p class="text-slate-300 text-sm">El documento <strong>${data.biblioteca_nombre || ''}</strong> ha sido cerrado y agregado automáticamente a la biblioteca con control de acceso.</p>
+                    </div>
+                    <h6 class="text-slate-300 text-sm font-semibold uppercase tracking-wide mb-2">📝 Nota Bibliográfica Generada</h6>
+                    <div class="bg-indigo-900/20 border border-indigo-700/30 rounded-xl p-4 mb-1">
+                        <p class="text-indigo-200 italic text-sm leading-relaxed">${data.nota_bibliografica}</p>
+                    </div>
+                </div>
+                <div class="modal-footer border-t border-white/10">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <a href="/r/${obtenerRol()}/biblioteca/index.html" class="btn" style="background:#4f46e5;color:white;text-decoration:none;"><i class="fas fa-book me-1"></i> Ir a Biblioteca</a>
+                </div>
+            </div></div></div>`;
+        document.body.insertAdjacentHTML('beforeend', h);
+        new bootstrap.Modal(document.getElementById(id)).show();
+    }
+    function mostrarToastBiblioteca(bibliotecaId) {
+        const id = 'modalBibToast';
+        if (document.getElementById(id)) document.getElementById(id).remove();
+        const h = `
+            <div class="modal fade" id="${id}" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+                <div class="modal-header" style="background:linear-gradient(135deg,#065f46,#047857);color:white;">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-check-circle me-2"></i> Versión Cerrada</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-slate-300">El documento ha sido cerrado y archivado en la biblioteca.</p>
+                </div>
+                <div class="modal-footer border-t border-white/10">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <a href="/r/${obtenerRol()}/biblioteca/index.html" class="btn" style="background:#4f46e5;color:white;text-decoration:none;"><i class="fas fa-book me-1"></i> Ir a Biblioteca</a>
+                </div>
+            </div></div></div>`;
+        document.body.insertAdjacentHTML('beforeend', h);
+        new bootstrap.Modal(document.getElementById(id)).show();
+    }
+    async function enviarARevision(id) {
+        const doc = archivos.find(d => d.id === id);
+        if (!doc) { alert('Documento no encontrado'); return; }
+        if (!doc.project_id) { alert('Este documento no está vinculado a ningún proyecto. Asigna un proyecto primero.'); return; }
+
+        try {
+            const res = await fetch(`${API_URL}/participantes/${doc.project_id}/con-usuarios`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+            if (!res.ok) { alert('Error al obtener participantes del proyecto.'); return; }
+            const participantes = await res.json();
+            if (participantes.length === 0) { alert('No hay participantes en este proyecto. Agrega participantes primero.'); return; }
+
+            const options = participantes.map(p => `<option value="${p.email}">${p.nombre} (${p.email})</option>`).join('');
+
+            const div = document.createElement('div');
+            div.innerHTML = `
+            <div class="modal fade" id="modalCoordSelector" tabindex="-1"><div class="modal-dialog"><div class="modal-content bg-slate-800 text-slate-100">
+              <div class="modal-header border-b border-white/10"><h5 class="modal-title"><i class="fas fa-paper-plane text-indigo-400 me-2"></i>Enviar a Revisión</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+              <div class="modal-body">
+                <p class="text-sm text-slate-400 mb-3">Selecciona el miembro del proyecto a quien enviarás este documento para revisión:</p>
+                <select id="coordSelectorSelect" class="form-select bg-slate-700 text-slate-100 border-slate-600 mb-3">${options}</select>
+                <div class="mb-3"><label class="block text-sm text-slate-400 mb-1">Comentarios (opcional):</label><textarea id="coordComentarios" class="form-select bg-slate-700 text-slate-100 border-slate-600" rows="2" style="width:100%;padding:8px;border-radius:8px;" placeholder="Agrega un comentario para el revisor..."></textarea></div>
+              </div>
+              <div class="modal-footer border-t border-white/10">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-indigo" style="background:#4f46e5;color:white;" onclick="enviarRevisionConCoordinador(${id})"><i class="fas fa-paper-plane me-1"></i>Enviar a Revisión</button>
+              </div>
+            </div></div></div>`;
+            document.body.appendChild(div.firstElementChild);
+            new bootstrap.Modal(document.getElementById('modalCoordSelector')).show();
+        } catch(e) { alert('Error al preparar la revisión. Intenta de nuevo.'); }
+    }
+    async function enviarRevisionConCoordinador(id) {
+        const email = document.getElementById('coordSelectorSelect').value;
+        const comentarios = document.getElementById('coordComentarios').value;
+        bootstrap.Modal.getInstance(document.getElementById('modalCoordSelector')).hide();
+        await fetch(`${API_URL}/documentos-office/revision/${id}/enviar`,{method:'POST',headers:{'Authorization':'Bearer '+getToken(),'Content-Type':'application/json'},body:JSON.stringify({coordinador_email:email, comentarios:comentarios})});
+        cargarArchivos();
+    }
+
+    // MÉTODOS DE REVISIÓN CORREGIDOS
+    function cargarRevisionesPendientes() {
+        ocultarTodasSecciones();
+        document.querySelectorAll('#docTabs .nav-link').forEach(t => t.classList.remove('active'));
+        const tab = document.getElementById('tab-revisiones');
+        if (tab) tab.classList.add('active');
+        document.getElementById('seccionRevisiones').classList.remove('d-none');
+                    
+        const lista = document.getElementById('listaRevisiones');
+        lista.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Comprobando permisos...</p></div>';
+
+        fetch(`${API_URL}/documentos-office/revision/pendientes`, { headers: { 'Authorization': 'Bearer ' + getToken() } })
+        .then(async r => {
+            const data = await r.json();
+            if (!r.ok) throw data; 
+            return data;
+        })
+        .then(revs => {
+            if (!Array.isArray(revs)) throw new Error("Respuesta inválida");
+            if (revs.length === 0) {
+                lista.innerHTML = '<div class="text-center py-5 text-slate-500"><i class="fas fa-inbox fa-3x mb-3 d-block"></i>No hay revisiones pendientes</div>';
+                return;
+            }
+            lista.innerHTML = '<div class="table-responsive rounded-xl border border-white/5"><table class="table table-dark table-hover mb-0"><thead><tr><th class="p-3">Documento</th><th class="p-3">Autor</th><th class="p-3">Comentarios</th><th class="p-3 text-end">Acción</th></tr></thead><tbody>' +
+                revs.map(r => `<tr><td class="p-3"><strong>${r.documento_nombre}.${r.documento_tipo}</strong> <span class="badge bg-info">v${r.version}</span></td><td class="p-3"><small class="text-slate-300">${r.autor_nombre}</small></td><td class="p-3"><small class="text-slate-400">${r.comentarios || '-'}</small></td><td class="p-3 text-end"><button class="btn btn-success btn-sm rounded-circle me-1" style="width:32px;height:32px;" onclick="aprobarRevision(${r.documento_id})" data-tooltip="Aprobar" data-tooltip-position="top"><i class="fas fa-check"></i></button><button class="btn btn-danger btn-sm rounded-circle" style="width:32px;height:32px;" onclick="devolverRevision(${r.documento_id})" data-tooltip="Devolver" data-tooltip-position="top"><i class="fas fa-undo"></i></button></td></tr>`).join('') + '</tbody></table></div>';
+        })
+        .catch(e => {
+            lista.innerHTML = `<div class="text-center py-5 text-danger bg-rose-950/20 border border-rose-500/20 rounded-xl"><i class="fas fa-lock fa-3x mb-3 d-block opacity-50"></i><h6>Acceso Limitado</h6><small>${e.detail || 'No dispones de los permisos jerárquicos necesarios para auditar revisiones.'}</small></div>`;
+        });
+    }
+
+    async function aprobarRevision(id) {
+        const doc = archivos.find(d => d.id === id);
+        if (!doc || !doc.project_id) { const e=prompt('Email Cliente:'); if(e){ await fetch(`${API_URL}/documentos-office/revision/${id}/aprobar`,{method:'POST',headers:{'Authorization':'Bearer '+getToken(),'Content-Type':'application/json'},body:JSON.stringify({cliente_email:e})}); cargarRevisionesPendientes(); } return; }
+        try {
+            const res = await fetch(`${API_URL}/participantes/${doc.project_id}/con-usuarios`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+            if (!res.ok) throw Error();
+            const participantes = await res.json();
+            const clientes = participantes.filter(p => p.role_id === 6);
+            const elegibles = clientes.length > 0 ? clientes : participantes;
+            if (elegibles.length === 0) { const e=prompt('Email Cliente:'); if(e){ await fetch(`${API_URL}/documentos-office/revision/${id}/aprobar`,{method:'POST',headers:{'Authorization':'Bearer '+getToken(),'Content-Type':'application/json'},body:JSON.stringify({cliente_email:e})}); cargarRevisionesPendientes(); } return; }
+
+            const options = elegibles.map(p => `<option value="${p.email}">${p.nombre} (${p.email})${clientes.length === 0 ? '' : ' - Cliente'}</option>`).join('');
+            const div = document.createElement('div');
+            div.innerHTML = `
+            <div class="modal fade" id="modalClienteSelector" tabindex="-1"><div class="modal-dialog"><div class="modal-content bg-slate-800 text-slate-100">
+              <div class="modal-header border-b border-white/10"><h5 class="modal-title"><i class="fas fa-check-circle text-emerald-400 me-2"></i>Aprobar Revisión</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+              <div class="modal-body">
+                <p class="text-sm text-slate-400 mb-3">Selecciona el cliente que aprobará este documento:</p>
+                <select id="clienteSelectorSelect" class="form-select bg-slate-700 text-slate-100 border-slate-600 mb-3">${options}</select>
+                ${clientes.length === 0 ? '<div class="bg-amber-900/30 border border-amber-700/50 text-amber-300 px-4 py-2 rounded-lg text-sm mb-3"><i class="fas fa-exclamation-triangle me-2"></i>No hay clientes en este proyecto. Selecciona un miembro.</div>' : ''}
+              </div>
+              <div class="modal-footer border-t border-white/10">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success" style="background:#059669;color:white;" onclick="aprobarRevisionConCliente(${id})"><i class="fas fa-check me-1"></i>Aprobar</button>
+              </div>
+            </div></div></div>`;
+            document.body.appendChild(div.firstElementChild);
+            new bootstrap.Modal(document.getElementById('modalClienteSelector')).show();
+        } catch(e) { const email=prompt('Email Cliente:'); if(email){ await fetch(`${API_URL}/documentos-office/revision/${id}/aprobar`,{method:'POST',headers:{'Authorization':'Bearer '+getToken(),'Content-Type':'application/json'},body:JSON.stringify({cliente_email:email})}); cargarRevisionesPendientes(); } }
+    }
+    async function aprobarRevisionConCliente(id) {
+        const email = document.getElementById('clienteSelectorSelect').value;
+        bootstrap.Modal.getInstance(document.getElementById('modalClienteSelector')).hide();
+        await fetch(`${API_URL}/documentos-office/revision/${id}/aprobar`,{method:'POST',headers:{'Authorization':'Bearer '+getToken(),'Content-Type':'application/json'},body:JSON.stringify({cliente_email:email})});
+        cargarRevisionesPendientes();
+    }
+    async function devolverRevision(id) { const m=prompt('Motivo:'); if(m) { await fetch(`${API_URL}/documentos-office/revision/${id}/devolver`,{method:'POST',headers:{'Authorization':'Bearer '+getToken(),'Content-Type':'application/json'},body:JSON.stringify({comentarios:m})}); cargarRevisionesPendientes(); }}
+
+    function mostrarSubTab(t, id) { document.getElementById('versionesLista_'+id).classList.toggle('d-none', t!=='versiones'); document.getElementById('trazabilidadLista_'+id).classList.toggle('d-none', t!=='trazabilidad'); }
+    async function cargarTrazabilidad(id) { mostrarSubTab('trazabilidad', id); const c = document.getElementById('trazabilidadLista_'+id); try{ const res=await fetch(API_URL+'/documentos-office/trazabilidad/'+id,{headers:{'Authorization':'Bearer '+getToken()}}); const d=await res.json(); c.innerHTML=d.eventos.map(e=>`<div><small>${e.fecha}</small> ${e.descripcion}</div>`).join(''); }catch(e){} }
+    async function auditarDocumentoIA(id) {
+        const b = document.getElementById('iaTextoResultado'); document.getElementById('modalVersiones_'+id).querySelector('.btn-close').click(); new bootstrap.Offcanvas(document.getElementById('copilotoIA')).show(); b.innerHTML='<i class="fas fa-spinner fa-spin"></i> Auditando...';
+        try { const res=await fetch(API_URL+'/documentos-office/auditar/'+id,{method:'POST',headers:{'Authorization':'Bearer '+getToken()}}); const d=await res.json(); b.innerHTML=`<b>${d.resultado.calificacion}/10</b><p>${d.resultado.resumen}</p>`; } catch(e){}
+    }
+
+    async function descargarVersion(versionId) {
+        const token = getToken();
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_URL}/documentos-office/version/archivo/${versionId}?token=${token}`, { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!res.ok) { alert('Error al descargar: token no autorizado'); return; }
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url;
+            const disposition = res.headers.get('content-disposition');
+            const match = disposition && disposition.match(/filename="?(.+)"?/);
+            a.download = match ? match[1] : `version_${versionId}`;
+            document.body.appendChild(a); a.click(); a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch(e) { alert('Error de conexión al descargar'); }
+    }
+
+    // ==========================================
+    // WORKSPACE MULTI-PANE (ONLYOFFICE + JITSI + CHAT)
+    // ==========================================
+    async function cargarUsuariosParaWorkspace() {
+        try {
+            const resUsers = await fetch(`${API_URL}/users`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+            if (resUsers.ok) {
+                listaUsuariosGlobal = await resUsers.json();
+            }
+            if (currentProjectId) {
+                const resPart = await fetch(`${API_URL}/participantes/${currentProjectId}`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+                if (resPart.ok) {
+                    participantesProyecto = await resPart.json();
+                }
+            } else {
+                participantesProyecto = [];
+            }
+            poblarWorkspaceDestinatarios();
+            poblarVideoDestinatariosOriginal();
+            poblarChatParticipantesOriginal();
+        } catch(e) {
+            console.error("Error al sincronizar participantes:", e);
+        }
+    }
+
+    function obtenerUsuariosFiltrados() {
+        if (currentProjectId && participantesProyecto.length > 0) {
+            const uidsPart = participantesProyecto.map(p => p.user_uid);
+            return listaUsuariosGlobal.filter(u => u.uid !== usuarioUID && uidsPart.includes(u.uid));
+        }
+        return listaUsuariosGlobal.filter(u => u.uid !== usuarioUID);
+    }
+
+    function poblarWorkspaceDestinatarios() {
+        const sel = document.getElementById('workspaceDestinatario');
+        if (!sel) return;
+        const filtrados = obtenerUsuariosFiltrados();
+        const opts = filtrados.map(u => `<option value="${u.uid}">${u.nombre || u.email}</option>`).join('');
+        sel.innerHTML = '<option value="">Selecciona un contacto...</option>' + opts;
+    }
+
+    function poblarVideoDestinatariosOriginal() {
+        const sel = document.getElementById('videoDestinatarioSelect');
+        if (!sel) return;
+        const filtrados = obtenerUsuariosFiltrados();
+        const opts = filtrados.map(u => `<option value="${u.uid}">${u.nombre || u.email}</option>`).join('');
+        sel.innerHTML = '<option value="">Selecciona a quién invitar...</option>' + opts;
+    }
+
+    function poblarChatParticipantesOriginal() {
+        const container = document.getElementById('chatParticipantes');
+        if (!container) return;
+        const filtrados = obtenerUsuariosFiltrados();
+        if (filtrados.length === 0) {
+            container.innerHTML = '<p class="text-slate-500 text-center py-3">No hay participantes activos en este proyecto en la base de datos.</p>';
+            return;
+        }
+        container.className = "list-group list-group-flush rounded-3 overflow-hidden border border-white/5";
+        container.innerHTML = filtrados.map(u => {
+            const nombre = u.nombre || u.email;
+            const partObj = participantesProyecto.find(p => p.user_uid === u.uid);
+            const rolLabel = partObj ? (rolesMap[partObj.role_id] || "Colaborador") : "Colaborador";
+            return `
+                <button type="button" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 border-bottom border-white/5 bg-slate-900/10 text-slate-300 hover:bg-slate-800" onclick="seleccionarContactoChatOriginal('${u.uid}', '${nombre.replace(/'/g, "\\'")}')">
+                    <span><i class="fas fa-user-circle text-indigo-400 me-2"></i> ${nombre} <small class="text-slate-500">(${rolLabel})</small></span>
+                    <span class="badge bg-indigo-600 rounded-pill">Chat</span>
+                </button>
+            `;
+        }).join('');
+    }
+
+    // === ACCIONES DE CHAT ORIGINAL ===
+    let contactoActivoOriginal = null;
+    let chatIntervalOriginal = null;
+
+    function seleccionarContactoChatOriginal(uid, nombre) {
+        contactoActivoOriginal = uid;
+        document.getElementById('chatConversacion').classList.remove('d-none');
+        document.getElementById('chatInputArea').classList.remove('d-none');
+                    
+        const buttons = document.querySelectorAll('#chatParticipantes button');
+        buttons.forEach(b => {
+            if (b.innerText.includes(nombre)) {
+                b.classList.add('active', 'bg-indigo-600', 'text-white');
+            } else {
+                b.classList.remove('active', 'bg-indigo-600', 'text-white');
+            }
+        });
+
+        if (chatIntervalOriginal) clearInterval(chatIntervalOriginal);
+        chatIntervalOriginal = null;
+        if (window._sseOriginalController) window._sseOriginalController.abort();
+        cargarMensajesChatOriginal();
+        conectarSSEOriginal(uid);
+    }
+
+    async function conectarSSEOriginal(otroUid) {
+        if (window._sseOriginalController) window._sseOriginalController.abort();
+        const controller = new AbortController();
+        window._sseOriginalController = controller;
+
+        try {
+            const response = await fetch(`${API_URL}/mensajes/stream?otro_uid=${otroUid}`, {
+                headers: { 'Authorization': 'Bearer ' + getToken() },
+                signal: controller.signal
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            if (data.remitente_uid && data.contenido) {
+                                appendMensajeOriginal(data);
+                            }
+                        } catch(e) {
+                            console.error("SSE parse error:", e);
+                        }
+                    }
+                }
+            }
+        } catch(e) {
+            if (e.name !== 'AbortError') {
+                setTimeout(() => conectarSSEOriginal(otroUid), 3000);
+            }
+        }
+    }
+
+    function appendMensajeOriginal(msg) {
+        const container = document.getElementById('chatMensajes');
+        if (container.querySelector(`[data-msg-id="${msg.id}"]`)) return;
+
+        const esMio = msg.remitente_uid === usuarioUID;
+        const hora = new Date(msg.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        let cont = msg.contenido;
+        const matchVid = cont.match(/https:\/\/8x8\.vc\/.*\/([a-z0-9_]+)/);
+        if (matchVid) {
+            cont = `<button class="btn btn-xs btn-danger" onclick="unirseAVideollamadaExterna('${matchVid[1]}')"><i class="fas fa-video"></i> Unirse</button>`;
+        }
+
+        const div = document.createElement('div');
+        div.setAttribute('data-msg-id', msg.id);
+        div.className = `d-flex mb-2 ${esMio ? 'justify-content-end' : 'justify-content-start'}`;
+        div.innerHTML = `
+            <div class="p-2 rounded-3 text-white" style="max-width: 75%; background: ${esMio ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)' : '#334155'}">
+                <div class="small fw-bold mb-1">${esMio ? 'Tú' : 'Colaborador'}</div>
+                <div>${cont}</div>
+                <div class="text-end" style="font-size: 0.7rem; opacity: 0.7">${hora}</div>
+            </div>
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function cargarMensajesChatOriginal() {
+        if (!contactoActivoOriginal) return;
+        const container = document.getElementById('chatMensajes');
+        try {
+            const res = await fetch(`${API_URL}/mensajes/conversacion/${contactoActivoOriginal}`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+            if (res.ok) {
+                const msgs = await res.json();
+                if (msgs.length === 0) {
+                    container.innerHTML = '<p class="text-slate-500 text-center py-3">No hay mensajes. Envía el primero.</p>';
+                    return;
+                }
+                container.innerHTML = msgs.map(m => {
+                    const esMio = m.remitente_uid === usuarioUID;
+                    const hora = new Date(m.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    let cont = m.contenido;
+                    if (cont.match(/https:\/\/8x8\.vc\/.*\/([a-z0-9_]+)/)) {
+                        cont = `<button class="btn btn-xs btn-danger" onclick="unirseAVideollamadaExterna('${cont.match(/https:\/\/8x8\.vc\/.*\/([a-z0-9_]+)/)[1]}')"><i class="fas fa-video"></i> Unirse</button>`;
+                    }
+                    return `
+                        <div class="d-flex mb-2 ${esMio ? 'justify-content-end' : 'justify-content-start'}">
+                            <div class="p-2 rounded-3 text-white" style="max-width: 75%; background: ${esMio ? 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)' : '#334155'}">
+                                <div class="small fw-bold mb-1">${esMio ? 'Tú' : m.remitente_nombre || 'Colaborador'}</div>
+                                <div>${cont}</div>
+                                <div class="text-end" style="font-size: 0.7rem; opacity: 0.7">${hora}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                container.scrollTop = container.scrollHeight;
+            }
+        } catch (e) {
+            console.error("Error al cargar mensajes:", e);
+        }
+    }
+
+    async function enviarMensajeChat() {
+        const input = document.getElementById('chatInput');
+        const txt = input.value.trim();
+        if (!txt || !contactoActivoOriginal) return;
+
+        try {
+            const res = await fetch(`${API_URL}/mensajes`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': 'Bearer ' + getToken(), 
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({ contenido: txt, destinatario_uid: contactoActivoOriginal })
+            });
+            if (res.ok) {
+                input.value = '';
+            }
+        } catch (e) {
+            console.error("Error al enviar mensaje:", e);
+        }
+    }
+
+    function adjuntarDocumentoChat() {
+        if (archivos.length > 0) {
+            const primerDoc = archivos[0];
+            document.getElementById('chatInput').value = `📄 Documento: ${primerDoc.nombre} (${window.location.origin}/documentos-office/info/${primerDoc.id})`;
+        } else {
+            alert("No hay documentos creados para adjuntar en este proyecto.");
+        }
+    }
+
+    // === ACCIONES DE VIDEOLLAMADA ORIGINAL (CON CORRECCIÓN DE HEIGHT) ===
+    async function iniciarVideollamada() {
+        const dest = document.getElementById('videoDestinatarioSelect').value;
+        const sala = document.getElementById('salaNombre').value.trim();
+                    
+        if (!dest) {
+            alert("Por favor, selecciona un destinatario de la lista para invitar.");
+            return;
+        }
+        if (!sala) {
+            alert("Por favor, ingresa un nombre para la sala de videollamada.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/video/iniciar`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': 'Bearer ' + getToken(), 
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({ 
+                    mi_uid: usuarioUID, 
+                    mi_nombre: usuarioNombre, 
+                    mi_email: usuarioEmail, 
+                    destinatario_uid: dest 
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('jitsiContainer').classList.remove('d-none');
+                document.getElementById('jitsiControls').classList.remove('d-none');
+                                    
+                // FIX EXPLICIT HEIGHT: Se declara el height exacto (580px) para evitar el colapso a tamaño minúsculo
+                apiJitsiSuite = new JitsiMeetExternalAPI("8x8.vc", {
+                    roomName: `vpaas-magic-cookie-d45c8107f37a4d70a21bf1932daaf52d/${data.room_name}`,
+                    parentNode: document.getElementById('jitsiContainer'),
+                    jwt: data.token,
+                    width: '100%',
+                    height: 580, // <-- FIX! Forzado de altura para evitar recorte de pantalla
+                    interfaceConfigOverwrite: { SHOW_JITSI_WATERMARK: false }
+                });
+
+                await fetch(`${API_URL}/mensajes`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + getToken(), 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({ 
+                        contenido: `📹 Videollamada activa: ${data.url}`, 
+                        destinatario_uid: dest 
+                    })
+                });
+
+                alert(`Videollamada iniciada en la sala "${sala}". Se envió la invitación al chat.`);
+            } else {
+                alert("Error de conexión segura con el servidor de videollamadas.");
+            }
+        } catch (err) {
+            console.error("Error al iniciar videollamada:", err);
+        }
+    }
+
+    function colgarVideollamada() {
+        if (apiJitsiSuite) {
+            apiJitsiSuite.dispose();
+            apiJitsiSuite = null;
+        }
+        document.getElementById('jitsiContainer').innerHTML = '';
+        document.getElementById('jitsiContainer').classList.add('d-none');
+        document.getElementById('jitsiControls').classList.add('d-none');
+    }
+
+    async function editarConOnlyOfficeById(docId) { try { const res = await fetch(`${API_URL}/documentos-office/info/${docId}`, { headers: { 'Authorization': 'Bearer ' + getToken() }}); if (res.ok) { const doc = await res.json(); archivos.push(doc); await editarConOnlyOffice(archivos.length - 1); } } catch(e) {} }
+
+    async function editarConOnlyOffice(idx) {
+        const doc = archivos[idx]; if (!doc) return; actualDocEnWorkspace = doc;
+        if (editorInstance) { editorInstance.destroyEditor(); editorInstance = null; }
+        document.getElementById('mainContainer').style.display = 'none'; document.getElementById('editorWrapper').style.display = 'flex'; document.getElementById('editorTitle').innerHTML = `<i class="fas fa-file"></i> ${doc.nombre}`;
+                    
+        if (doc.project_id && !currentProjectId) {
+            currentProjectId = doc.project_id;
+            await cargarUsuariosParaWorkspace(); 
+        }
+                    
+        try {
+            const res = await fetch(`${API_URL}/documentos-office/config/${doc.id}`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+            if (res.ok) { 
+                 const data = await res.json(); 
+                 editorInstance = new DocsAPI.DocEditor("editorContainer", data.config); 
+                 document.getElementById('workspaceChatMessages').innerHTML = '<div class="text-center text-white-50 py-5 small"><i class="fas fa-hand-pointer fa-2x mb-2 text-slate-700"></i><br>Elige un contacto para iniciar</div>';
+                if(chatInterval) clearInterval(chatInterval);
+                chatInterval = null;
+                if (window._sseWorkspaceController) { window._sseWorkspaceController.abort(); window._sseWorkspaceController = null; }
+            }
+        } catch(e) { cerrarEditor(); }
+    }
+
+    function cerrarEditor() {
+        if (editorInstance) { editorInstance.destroyEditor(); editorInstance = null; }
+        if (apiJitsiSuite) { apiJitsiSuite.dispose(); apiJitsiSuite = null; }
+        if (chatInterval) { clearInterval(chatInterval); chatInterval = null; }
+        if (window._sseWorkspaceController) { window._sseWorkspaceController.abort(); window._sseWorkspaceController = null; }
+        document.getElementById('mainContainer').style.display = 'block'; document.getElementById('editorWrapper').style.display = 'none'; document.getElementById('suiteVideoPlaceholder').classList.remove('d-none');
+        cargarArchivos();
+    }
+
+    async function iniciarVideollamadaWorkspace() {
+        const dest = document.getElementById('workspaceDestinatario').value;
+        if (!dest) { alert("¡Ups! Selecciona primero un contacto en la lista superior."); return; }
+        if (!actualDocEnWorkspace) return;
+                    
+        try {
+            const res = await fetch(`${API_URL}/video/iniciar`, {
+                method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mi_uid: usuarioUID, mi_nombre: usuarioNombre, mi_email: usuarioEmail, destinatario_uid: dest })
+            });
+            const data = await res.json();
+            document.getElementById('suiteVideoPlaceholder').classList.add('d-none');
+            
+            // Inicialización de Jitsi en suite con un ratio estable
+            apiJitsiSuite = new JitsiMeetExternalAPI("8x8.vc", { 
+              roomName: `vpaas-magic-cookie-d45c8107f37a4d70a21bf1932daaf52d/${data.room_name}`, 
+              parentNode: document.getElementById('jitsiSuiteContainer'), 
+              jwt: data.token,
+              width: '100%',
+              height: '100%', // Se adaptará fluidamente a los 380px configurados en CSS
+              interfaceConfigOverwrite: { SHOW_JITSI_WATERMARK: false }
+            });
+                            
+            await fetch(`${API_URL}/mensajes`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ contenido: `📹 Videollamada activa: ${data.url}`, destinatario_uid: dest })});
+        } catch (err) {}
+    }
+
+    function cambiarDestinatarioWorkspace() {
+        const dest = document.getElementById('workspaceDestinatario').value;
+        const container = document.getElementById('workspaceChatMessages');
+
+        if (window._sseWorkspaceController) {
+            window._sseWorkspaceController.abort();
+            window._sseWorkspaceController = null;
+        }
+
+        if (!dest) {
+            container.innerHTML = '<div class="text-center text-white-50 py-5 small"><i class="fas fa-hand-pointer fa-2x mb-2 text-slate-700"></i><br>Elige un contacto para iniciar</div>';
+            return;
+        }
+
+        cargarMensajesWorkspaceChat();
+        conectarSSEWorkspace(dest);
+    }
+
+    async function conectarSSEWorkspace(dest) {
+        if (window._sseWorkspaceController) window._sseWorkspaceController.abort();
+        const controller = new AbortController();
+        window._sseWorkspaceController = controller;
+
+        try {
+            const response = await fetch(`${API_URL}/mensajes/stream?otro_uid=${dest}`, {
+                headers: { 'Authorization': 'Bearer ' + getToken() },
+                signal: controller.signal
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            if (data.remitente_uid && data.contenido) {
+                                appendMensajeWorkspace(data);
+                            }
+                        } catch(e) {}
+                    }
+                }
+            }
+        } catch(e) {
+            if (e.name !== 'AbortError') {
+                setTimeout(() => conectarSSEWorkspace(dest), 3000);
+            }
+        }
+    }
+
+    function appendMensajeWorkspace(msg) {
+        const container = document.getElementById('workspaceChatMessages');
+        if (container.querySelector(`[data-msg-id="${msg.id}"]`)) return;
+
+        const esMio = msg.remitente_uid === usuarioUID;
+        let cont = msg.contenido;
+        const matchVid = cont.match(/https:\/\/8x8\.vc\/.*\/([a-z0-9_]+)/);
+        if (matchVid) {
+            cont = `<button class="btn btn-xs btn-danger" onclick="unirseAVideollamadaExterna('${matchVid[1]}')"><i class="fas fa-video"></i> Unirse</button>`;
+        }
+
+        const div = document.createElement('div');
+        div.setAttribute('data-msg-id', msg.id);
+        div.className = `chat-msg-bubble ${esMio ? 'chat-msg-sent' : 'chat-msg-received'}`;
+        div.innerHTML = `<div>${cont}</div>`;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function cargarMensajesWorkspaceChat() {
+        const dest = document.getElementById('workspaceDestinatario').value;
+        const container = document.getElementById('workspaceChatMessages');
+        if (!dest) return;
+                    
+        try {
+            const res = await fetch(`${API_URL}/mensajes/conversacion/${dest}`, { headers: { 'Authorization': 'Bearer ' + getToken() }});
+            if (res.ok) {
+                const msgs = await res.json(); 
+                if (msgs.length === 0) { container.innerHTML = '<div class="text-center text-white-50 py-5 small">No hay mensajes. Envía el primero.</div>'; return; }
+                                    
+                container.innerHTML = msgs.map(m => {
+                    const esMio = m.remitente_uid === usuarioUID; let cont = m.contenido;
+                    if (cont.match(/https:\/\/8x8\.vc\/.*\/([a-z0-9_]+)/)) {
+                        cont = `<button class="btn btn-xs btn-danger" onclick="unirseAVideollamadaExterna('${cont.match(/https:\/\/8x8\.vc\/.*\/([a-z0-9_]+)/)[1]}')"><i class="fas fa-video"></i> Unirse</button>`;
+                    }
+                    return `<div class="chat-msg-bubble ${esMio ? 'chat-msg-sent' : 'chat-msg-received'}"><div>${cont}</div></div>`;
+                }).join('');
+                container.scrollTop = container.scrollHeight;
+            }
+        } catch(e) {}
+    }
+
+    async function enviarMensajeWorkspaceChat() {
+        const dest = document.getElementById('workspaceDestinatario').value;
+        const input = document.getElementById('workspaceChatInput'); 
+        const txt = input.value.trim(); 
+        if (!txt || !dest) return;
+        try {
+             await fetch(`${API_URL}/mensajes`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ contenido: txt, destinatario_uid: dest })}); 
+             input.value = '';
+         } catch(e) {}
+    }
+
+    function handleWorkspaceChatEnter(e) { if (e.key === 'Enter') enviarMensajeWorkspaceChat(); }
+    function adjuntarDocumentoWorkspaceChat() { if (!actualDocEnWorkspace) return; document.getElementById('workspaceChatInput').value = `📄 Link: ${window.location.origin}/documentos-office/info/${actualDocEnWorkspace.id}`; }
+            
+    function unirseAVideollamadaExterna(room) { 
+         document.getElementById('suiteVideoPlaceholder').classList.add('d-none'); 
+         if (apiJitsiSuite) apiJitsiSuite.dispose();
+         fetch(`${API_URL}/video/entrar/${room}`, { headers: { 'Authorization': 'Bearer ' + getToken() }})
+         .then(res => res.json())
+         .then(data => {
+            apiJitsiSuite = new JitsiMeetExternalAPI("8x8.vc", { 
+              roomName: `vpaas-magic-cookie-d45c8107f37a4d70a21bf1932daaf52d/${room}`, 
+              parentNode: document.getElementById('jitsiSuiteContainer'), 
+              jwt: data.token,
+              width: '100%',
+              height: '100%'
+            }); 
+         });
+    }
+
+    // ==========================================
+    // COPILOTO IA (TEXTO E IMÁGENES)
+    // ==========================================
+    async function generarTextoIA() {
+        const prompt = document.getElementById('iaTextoPrompt').value.trim(); const ag = document.getElementById('iaAgente').value; const rBox = document.getElementById('iaTextoResultado'); if (!prompt) return;
+        rBox.innerHTML = "<i class='fas fa-spinner fa-spin'></i>";
+        try { const res = await fetch(`${API_URL}/chat/${ag}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ag==='gemini'?{prompt}:{mensaje:prompt})}); const d = await res.json(); rBox.innerText = d.mensaje || d.result || d.text; } catch(e) { rBox.innerText="Error"; }
+    }
+    function copiarTextoIA() { navigator.clipboard.writeText(document.getElementById('iaTextoResultado').innerText); }
+    async function generarImagenIA() {
+        const prompt = document.getElementById("iaImgPrompt").value.trim(); const s = document.getElementById("iaImgSize").value; if (!prompt) return; document.getElementById("iaImgPreviewContainer").classList.remove("d-none");
+        try { const res = await fetch(`${API_URL}/ai/generate-image`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt, size:s }) }); const d = await res.json(); if (res.ok && d.images) { document.getElementById("iaImgPreview").src = `data:image/png;base64,${d.images[0]}`; document.getElementById("iaImgPreview").classList.remove("d-none"); } } catch(e) {}
+    }
+    async function copiarImagenIA() { const img = document.getElementById("iaImgPreview").src; const res = await fetch(img); const blob = await res.blob(); await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]); }
+
+    window.onload = async () => {
+        if (!getToken()) { window.location.href = '/'; return; }
+        parsearToken(); 
+        const params = new URLSearchParams(window.location.search);
+        currentProjectId = params.get('project_id') || params.get('id') || localStorage.getItem('currentProjectId');
+                    
+        await cargarProyectosAsignados(); 
+                    
+        if (!params.get('project_id') && !params.get('id')) {
+            const selectDiv = document.getElementById('divSeleccionarProyectoFiltro');
+            if (selectDiv) {
+                selectDiv.classList.remove('d-none');
+            }
+            document.getElementById('btnVolverProyecto').classList.add('d-none');
+            document.getElementById('tituloVista').innerHTML = '<i class="fas fa-folder-open text-indigo-400"></i> <span class="fw-bold text-slate-100">Documentos del Proyecto</span>';
+            document.getElementById('divSeleccionarProyecto').classList.remove('d-none');
+                            
+            if (currentProjectId) {
+                const selectorFiltro = document.getElementById('proyectoFiltroInput');
+                if (selectorFiltro) {
+                    selectorFiltro.value = currentProjectId;
+                }
+            }
+        } else {
+            localStorage.setItem('currentProjectId', currentProjectId);
+        }
+                    
+        cargarArchivos();
+        await cargarUsuariosParaWorkspace(); 
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editor Canvas VirtualMind</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <!-- Fabric.js -->
+  <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
+  <!-- FileSaver.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- JSZip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+    }
+    canvas { 
+      border: 1px solid #ccc; 
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .toolbar-btn { 
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      background-color: #e5e7eb;
+      transition: all 0.2s;
+    }
+    .toolbar-btn:hover { 
+      background-color: #c7d2fe;
+    }
+    .sidebar { 
+      background-color: #f3f4f6;
+      border-right: 1px solid #d1d5db;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    .sidebar-section { 
+      margin-bottom: 1.5rem;
+    }
+    .sidebar h3 { 
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .active-layer {
+      background-color: #e0e7ff !important;
+      border-left: 3px solid #4f46e5;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen bg-gray-100">
+
+  <!-- HEADER -->
+  <header class="bg-indigo-600 text-white shadow-md p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold flex items-center gap-2">
+      <span>📑</span>
+      <span>Editor Canvas VirtualMind</span>
+    </h1>
+    <div class="flex flex-wrap gap-2">
+      <button onclick="newSlide()" class="toolbar-btn bg-white text-indigo-600 hover:bg-indigo-100 flex items-center gap-1">
+        <span>➕</span>
+        <span>Nueva</span>
+      </button>
+      <button onclick="saveProject()" class="toolbar-btn bg-white text-indigo-600 hover:bg-indigo-100 flex items-center gap-1">
+        <span>💾</span>
+        <span>Guardar</span>
+      </button>
+      <button onclick="document.getElementById('loadProjectInput').click()" class="toolbar-btn bg-white text-indigo-600 hover:bg-indigo-100 flex items-center gap-1">
+        <span>📂</span>
+        <span>Cargar</span>
+      </button>
+      <button onclick="exportPDF()" class="toolbar-btn bg-white text-indigo-600 hover:bg-indigo-100 flex items-center gap-1">
+        <span>📑</span>
+        <span>PDF</span>
+      </button>
+      <button onclick="exportZIP()" class="toolbar-btn bg-white text-indigo-600 hover:bg-indigo-100 flex items-center gap-1">
+        <span>🗜️</span>
+        <span>ZIP</span>
+      </button>
+      <button onclick="enterPresentationMode()" class="toolbar-btn bg-white text-indigo-600 hover:bg-indigo-100 flex items-center gap-1">
+        <span>🎥</span>
+        <span>Presentar</span>
+      </button>
+      <input type="file" id="loadProjectInput" accept=".json" class="hidden" onchange="loadProject(event)">
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar izquierda -->
+    <aside class="sidebar w-64 flex-shrink-0">
+      <div class="sidebar-section">
+        <h3 class="text-lg">Formas</h3>
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="addRect()" class="toolbar-btn flex flex-col items-center justify-center h-16 bg-white" title="Rectángulo">
+            <span class="text-2xl">⬛</span>
+            <span class="text-xs mt-1">Rect</span>
+          </button>
+          <button onclick="addCircle()" class="toolbar-btn flex flex-col items-center justify-center h-16 bg-white" title="Círculo">
+            <span class="text-2xl">⚪</span>
+            <span class="text-xs mt-1">Círculo</span>
+          </button>
+          <button onclick="addTriangle()" class="toolbar-btn flex flex-col items-center justify-center h-16 bg-white" title="Triángulo">
+            <span class="text-2xl">🔺</span>
+            <span class="text-xs mt-1">Triángulo</span>
+          </button>
+          <button onclick="addLine()" class="toolbar-btn flex flex-col items-center justify-center h-16 bg-white" title="Línea">
+            <span class="text-2xl">📏</span>
+            <span class="text-xs mt-1">Línea</span>
+          </button>
+          <button onclick="addArrow()" class="toolbar-btn flex flex-col items-center justify-center h-16 bg-white" title="Flecha">
+            <span class="text-2xl">➡️</span>
+            <span class="text-xs mt-1">Flecha</span>
+          </button>
+          <button onclick="addStar()" class="toolbar-btn flex flex-col items-center justify-center h-16 bg-white" title="Estrella">
+            <span class="text-2xl">⭐</span>
+            <span class="text-xs mt-1">Estrella</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <h3 class="text-lg">Texto</h3>
+        <button onclick="addText()" class="toolbar-btn w-full bg-white flex items-center justify-center gap-2">
+          <span>📝</span>
+          <span>Agregar Texto</span>
+        </button>
+      </div>
+      
+      <div class="sidebar-section">
+        <h3 class="text-lg">Imagen</h3>
+        <button onclick="document.getElementById('imgLoader').click()" class="toolbar-btn w-full bg-white flex items-center justify-center gap-2">
+          <span>🖼️</span>
+          <span>Subir Imagen</span>
+        </button>
+        <input type="file" id="imgLoader" accept="image/*" class="hidden" onchange="loadImage(event)">
+      </div>
+      
+      <div class="sidebar-section">
+        <h3 class="text-lg">Dibujo</h3>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="toggleDrawMode()" id="drawModeBtn" class="toolbar-btn bg-white flex flex-col items-center justify-center h-16">
+            <span class="text-xl">✏️</span>
+            <span class="text-xs mt-1">Libre</span>
+          </button>
+          <button onclick="enableEraser()" id="eraserBtn" class="toolbar-btn bg-white flex flex-col items-center justify-center h-16">
+            <span class="text-xl">🧽</span>
+            <span class="text-xs mt-1">Borrar</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <h3 class="text-lg">Fondo</h3>
+        <div class="mb-2">
+          <label class="block text-sm mb-1">Color de fondo</label>
+          <input type="color" id="bgColorPicker" class="w-full h-10 rounded border" onchange="setBackgroundColor(this.value)" value="#ffffff">
+        </div>
+        <button onclick="document.getElementById('bgImageInput').click()" class="toolbar-btn w-full bg-white flex items-center justify-center gap-2">
+          <span>🖼️</span>
+          <span>Imagen de fondo</span>
+        </button>
+        <input type="file" id="bgImageInput" accept="image/*" class="hidden" onchange="setBackgroundImage(event)">
+      </div>
+    </aside>
+
+    <!-- Canvas central -->
+    <div class="flex-1 flex flex-col items-center justify-center bg-gray-200 p-4 overflow-auto">
+      <div class="bg-white p-4 rounded-lg shadow-lg">
+        <canvas id="editor-canvas" width="1000" height="600"></canvas>
+      </div>
+    </div>
+
+    <!-- Sidebar derecha -->
+    <aside class="sidebar w-72 flex-shrink-0">
+      <div class="sidebar-section">
+        <h3 class="text-lg">Propiedades</h3>
+        <div class="mb-3">
+          <label class="block text-sm mb-1">Color de relleno</label>
+          <input type="color" id="fillColor" class="w-full h-10 rounded border mb-2" onchange="updateFillColor(this.value)" value="#3b82f6">
+        </div>
+        <div class="mb-3">
+          <label class="block text-sm mb-1">Color de borde</label>
+          <input type="color" id="strokeColor" class="w-full h-10 rounded border mb-2" onchange="updateStrokeColor(this.value)" value="#000000">
+        </div>
+        <div class="mb-3">
+          <label class="block text-sm mb-1">Grosor de borde: <span id="strokeWidthValue">2</span>px</label>
+          <input type="range" id="strokeWidth" min="0" max="20" value="2" class="w-full" onchange="updateStrokeWidth(this.value)">
+        </div>
+        <div class="mb-3">
+          <label class="block text-sm mb-1">Opacidad: <span id="opacityValue">100</span>%</label>
+          <input type="range" id="opacity" min="0" max="1" step="0.01" value="1" class="w-full" onchange="updateOpacity(this.value)">
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <h3 class="text-lg">Texto</h3>
+        <div class="mb-3">
+          <label class="block text-sm mb-1">Fuente</label>
+          <select id="fontFamily" class="w-full rounded border p-2" onchange="updateFontFamily(this.value)">
+            <option value="Arial">Arial</option>
+            <option value="Inter" selected>Inter</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Verdana">Verdana</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="block text-sm mb-1">Tamaño: <span id="fontSizeValue">24</span>px</label>
+          <input type="range" id="fontSize" min="8" max="120" value="24" class="w-full" onchange="updateFontSize(this.value)">
+        </div>
+        <div class="grid grid-cols-3 gap-2 mb-3">
+          <button onclick="toggleBold()" id="boldBtn" class="toolbar-btn bg-white font-bold">B</button>
+          <button onclick="toggleItalic()" id="italicBtn" class="toolbar-btn bg-white italic">I</button>
+          <button onclick="toggleUnderline()" id="underlineBtn" class="toolbar-btn bg-white underline">U</button>
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <h3 class="text-lg">Capas</h3>
+        <div class="bg-white rounded border max-h-60 overflow-y-auto">
+          <ul id="layersList" class="text-sm"></ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-200 border-t p-3 flex justify-between items-center">
+    <div class="flex gap-2">
+      <button onclick="prevSlide()" class="toolbar-btn bg-white flex items-center gap-1">
+        <span>⬅️</span>
+        <span>Anterior</span>
+      </button>
+      <button onclick="nextSlide()" class="toolbar-btn bg-white flex items-center gap-1">
+        <span>Siguiente</span>
+        <span>➡️</span>
+      </button>
+    </div>
+    <span id="slideCounter" class="font-medium">Diapositiva 1 de 1</span>
+    <div class="flex gap-2">
+      <button onclick="undo()" class="toolbar-btn bg-white flex items-center gap-1">
+        <span>↩️</span>
+        <span>Deshacer</span>
+      </button>
+      <button onclick="redo()" class="toolbar-btn bg-white flex items-center gap-1">
+        <span>↪️</span>
+        <span>Rehacer</span>
+      </button>
+      <button onclick="exportPNG()" class="toolbar-btn bg-white flex items-center gap-1">
+        <span>📷</span>
+        <span>PNG</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- JS -->
+  <script>
+    // =============================
+    // CONFIGURACIÓN DEL CANVAS
+    // =============================
+    let canvas;
+    let slides = [];
+    let currentSlideIndex = 0;
+    let history = [];
+    let historyIndex = -1;
+    let isDrawing = false;
+
+    // Inicializar canvas cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+      canvas = new fabric.Canvas('editor-canvas', {
+        selection: true,
+        preserveObjectStacking: true,
+        backgroundColor: '#ffffff'
+      });
+
+      // Inicializar proyecto
+      slides.push(canvas.toJSON());
+      updateSlideCounter();
+      addToHistory();
+      updateLayersPanel();
+      
+      // Configurar eventos del canvas
+      setupCanvasEvents();
+    });
+
+    function setupCanvasEvents() {
+      canvas.on('object:added', function() {
+        updateLayersPanel();
+        addToHistory();
+      });
+      
+      canvas.on('object:modified', function() {
+        updateLayersPanel();
+        addToHistory();
+      });
+      
+      canvas.on('object:removed', function() {
+        updateLayersPanel();
+        addToHistory();
+      });
+      
+      canvas.on('selection:created', function() {
+        updatePropertyControls();
+        updateLayersPanel();
+      });
+      
+      canvas.on('selection:updated', function() {
+        updatePropertyControls();
+        updateLayersPanel();
+      });
+      
+      canvas.on('selection:cleared', function() {
+        updatePropertyControls();
+        updateLayersPanel();
+      });
+    }
+
+    function updateSlideCounter() {
+      document.getElementById('slideCounter').textContent = 
+        `Diapositiva ${currentSlideIndex + 1} de ${slides.length}`;
+    }
+
+    function saveCurrentSlide() {
+      if (canvas) {
+        slides[currentSlideIndex] = canvas.toJSON();
+      }
+    }
+
+    function loadSlide(index) {
+      if (!canvas) return;
+      
+      saveCurrentSlide();
+      canvas.clear();
+      
+      if (slides[index]) {
+        canvas.loadFromJSON(slides[index], () => {
+          canvas.renderAll();
+          currentSlideIndex = index;
+          updateSlideCounter();
+          updateLayersPanel();
+          updatePropertyControls();
+        });
+      }
+    }
+
+    // =============================
+    // FORMAS
+    // =============================
+    function addRect() {
+      const rect = new fabric.Rect({
+        left: 100, 
+        top: 100, 
+        fill: document.getElementById('fillColor').value, 
+        width: 150, 
+        height: 100, 
+        stroke: document.getElementById('strokeColor').value, 
+        strokeWidth: parseInt(document.getElementById('strokeWidth').value)
+      });
+      canvas.add(rect);
+      canvas.setActiveObject(rect);
+    }
+    
+    function addCircle() {
+      const circle = new fabric.Circle({
+        left: 150, 
+        top: 150, 
+        fill: document.getElementById('fillColor').value, 
+        radius: 60, 
+        stroke: document.getElementById('strokeColor').value, 
+        strokeWidth: parseInt(document.getElementById('strokeWidth').value)
+      });
+      canvas.add(circle);
+      canvas.setActiveObject(circle);
+    }
+    
+    function addTriangle() {
+      const triangle = new fabric.Triangle({
+        left: 200, 
+        top: 200, 
+        fill: document.getElementById('fillColor').value, 
+        width: 120, 
+        height: 100,
+        stroke: document.getElementById('strokeColor').value, 
+        strokeWidth: parseInt(document.getElementById('strokeWidth').value)
+      });
+      canvas.add(triangle);
+      canvas.setActiveObject(triangle);
+    }
+    
+    function addLine() {
+      const line = new fabric.Line([50, 100, 200, 100], {
+        stroke: document.getElementById('strokeColor').value,
+        strokeWidth: parseInt(document.getElementById('strokeWidth').value)
+      });
+      canvas.add(line);
+      canvas.setActiveObject(line);
+    }
+    
+    function addArrow() {
+      const line = new fabric.Line([50, 100, 200, 100], {
+        stroke: document.getElementById('strokeColor').value,
+        strokeWidth: parseInt(document.getElementById('strokeWidth').value)
+      });
+      
+      const triangle = new fabric.Triangle({
+        left: 200, 
+        top: 95, 
+        width: 20, 
+        height: 20, 
+        fill: document.getElementById('strokeColor').value, 
+        angle: 90
+      });
+      
+      const group = new fabric.Group([line, triangle], { 
+        left: 100, 
+        top: 100 
+      });
+      
+      canvas.add(group);
+      canvas.setActiveObject(group);
+    }
+    
+    function addStar() {
+      const points = [];
+      for (let i = 0; i < 5; i++) {
+        const angle = i * 72 * Math.PI / 180;
+        points.push({ 
+          x: 50 + 40 * Math.cos(angle), 
+          y: 50 + 40 * Math.sin(angle) 
+        });
+      }
+      
+      const star = new fabric.Polygon(points, {
+        left: 300, 
+        top: 200, 
+        fill: document.getElementById('fillColor').value, 
+        stroke: document.getElementById('strokeColor').value, 
+        strokeWidth: parseInt(document.getElementById('strokeWidth').value)
+      });
+      
+      canvas.add(star);
+      canvas.setActiveObject(star);
+    }
+
+    // =============================
+    // TEXTO
+    // =============================
+    function addText() {
+      const text = new fabric.IText('Texto editable', {
+        left: 250, 
+        top: 250, 
+        fontFamily: document.getElementById('fontFamily').value, 
+        fontSize: parseInt(document.getElementById('fontSize').value), 
+        fill: document.getElementById('fillColor').value
+      });
+      canvas.add(text);
+      canvas.setActiveObject(text);
+    }
+    
+    function updateFontFamily(val) {
+      const obj = canvas.getActiveObject();
+      if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
+        obj.set('fontFamily', val);
+        canvas.renderAll();
+      }
+    }
+    
+    function updateFontSize(val) {
+      const obj = canvas.getActiveObject();
+      if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
+        obj.set('fontSize', parseInt(val));
+        canvas.renderAll();
+      }
+      document.getElementById('fontSizeValue').textContent = val;
+    }
+    
+    function toggleBold() {
+      const obj = canvas.getActiveObject();
+      if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
+        obj.set('fontWeight', obj.fontWeight === 'bold' ? 'normal' : 'bold');
+        canvas.renderAll();
+        document.getElementById('boldBtn').classList.toggle('bg-indigo-200');
+      }
+    }
+    
+    function toggleItalic() {
+      const obj = canvas.getActiveObject();
+      if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
+        obj.set('fontStyle', obj.fontStyle === 'italic' ? 'normal' : 'italic');
+        canvas.renderAll();
+        document.getElementById('italicBtn').classList.toggle('bg-indigo-200');
+      }
+    }
+    
+    function toggleUnderline() {
+      const obj = canvas.getActiveObject();
+      if (obj && (obj.type === 'i-text' || obj.type === 'text')) {
+        obj.set('underline', !obj.underline);
+        canvas.renderAll();
+        document.getElementById('underlineBtn').classList.toggle('bg-indigo-200');
+      }
+    }
+
+    // =============================
+    // IMÁGENES Y FONDOS
+    // =============================
+    function loadImage(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(f) {
+        fabric.Image.fromURL(f.target.result, function(img) {
+          img.set({ 
+            left: 250, 
+            top: 250, 
+            scaleX: 0.5, 
+            scaleY: 0.5 
+          });
+          canvas.add(img);
+          canvas.setActiveObject(img);
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    function setBackgroundColor(color) {
+      canvas.setBackgroundColor(color, canvas.renderAll.bind(canvas));
+      addToHistory();
+    }
+    
+    function setBackgroundImage(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(f) {
+        fabric.Image.fromURL(f.target.result, function(img) {
+          canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+            scaleX: canvas.width / img.width,
+            scaleY: canvas.height / img.height
+          });
+          addToHistory();
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // =============================
+    // DIBUJO LIBRE Y BORRADOR
+    // =============================
+    function toggleDrawMode() {
+      isDrawing = !isDrawing;
+      canvas.isDrawingMode = isDrawing;
+      
+      if (isDrawing) {
+        canvas.freeDrawingBrush.color = document.getElementById('strokeColor').value;
+        canvas.freeDrawingBrush.width = parseInt(document.getElementById('strokeWidth').value);
+        document.getElementById('drawModeBtn').classList.add('bg-indigo-200');
+        document.getElementById('eraserBtn').classList.remove('bg-indigo-200');
+      } else {
+        document.getElementById('drawModeBtn').classList.remove('bg-indigo-200');
+      }
+    }
+    
+    function enableEraser() {
+      canvas.freeDrawingBrush = new fabric.EraserBrush(canvas);
+      canvas.freeDrawingBrush.width = 20;
+      canvas.isDrawingMode = true;
+      isDrawing = true;
+      
+      document.getElementById('eraserBtn').classList.add('bg-indigo-200');
+      document.getElementById('drawModeBtn').classList.remove('bg-indigo-200');
+    }
+
+    // =============================
+    // CAPAS
+    // =============================
+    function updateLayersPanel() {
+      const list = document.getElementById("layersList");
+      if (!list || !canvas) return;
+      
+      list.innerHTML = "";
+      const objects = canvas.getObjects();
+      
+      if (objects.length === 0) {
+        list.innerHTML = '<li class="p-2 text-gray-500 text-center">No hay objetos</li>';
+        return;
+      }
+      
+      // Mostrar objetos en orden inverso (el último añadido primero)
+      objects.slice().reverse().forEach((obj, i) => {
+        const index = objects.length - 1 - i;
+        const li = document.createElement("li");
+        li.textContent = `${index + 1}: ${obj.type}`;
+        li.className = "cursor-pointer hover:bg-indigo-100 px-3 py-2 rounded flex justify-between items-center";
+        
+        // Resaltar el objeto seleccionado
+        if (canvas.getActiveObject() === obj) {
+          li.classList.add('active-layer');
+        }
+        
+        li.onclick = () => { 
+          canvas.setActiveObject(obj); 
+          canvas.renderAll(); 
+          updateLayersPanel();
+        };
+        
+        // Controles de capa
+        const controls = document.createElement("div");
+        controls.className = "flex gap-1";
+        
+        // Visibilidad
+        const toggleBtn = document.createElement("button");
+        toggleBtn.textContent = obj.visible ? "👁️" : "🚫";
+        toggleBtn.className = "p-1 rounded hover:bg-gray-200";
+        toggleBtn.title = obj.visible ? "Ocultar" : "Mostrar";
+        toggleBtn.onclick = (e) => { 
+          e.stopPropagation(); 
+          obj.visible = !obj.visible; 
+          canvas.renderAll(); 
+          updateLayersPanel(); 
+        };
+        
+        // Bloqueo
+        const lockBtn = document.createElement("button");
+        lockBtn.textContent = obj.lockMovementX ? "🔒" : "🔓";
+        lockBtn.className = "p-1 rounded hover:bg-gray-200";
+        lockBtn.title = obj.lockMovementX ? "Desbloquear" : "Bloquear";
+        lockBtn.onclick = (e) => { 
+          e.stopPropagation(); 
+          obj.lockMovementX = obj.lockMovementY = !obj.lockMovementX; 
+          canvas.renderAll(); 
+          updateLayersPanel(); 
+        };
+        
+        // Eliminar
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "🗑️";
+        deleteBtn.className = "p-1 rounded hover:bg-red-200";
+        deleteBtn.title = "Eliminar";
+        deleteBtn.onclick = (e) => { 
+          e.stopPropagation(); 
+          canvas.remove(obj); 
+          canvas.renderAll(); 
+          updateLayersPanel(); 
+        };
+        
+        controls.appendChild(toggleBtn);
+        controls.appendChild(lockBtn);
+        controls.appendChild(deleteBtn);
+        li.appendChild(controls);
+        list.appendChild(li);
+      });
+    }
+
+    // =============================
+    // PROPIEDADES DE OBJETOS
+    // =============================
+    function updatePropertyControls() {
+      const obj = canvas.getActiveObject();
+      
+      if (obj) {
+        // Actualizar controles de color
+        if (obj.fill) {
+          document.getElementById('fillColor').value = obj.fill;
+        }
+        
+        if (obj.stroke) {
+          document.getElementById('strokeColor').value = obj.stroke;
+        }
+        
+        // Actualizar controles de grosor
+        if (obj.strokeWidth !== undefined) {
+          document.getElementById('strokeWidth').value = obj.strokeWidth;
+          document.getElementById('strokeWidthValue').textContent = obj.strokeWidth;
+        }
+        
+        // Actualizar opacidad
+        if (obj.opacity !== undefined) {
+          document.getElementById('opacity').value = obj.opacity;
+          document.getElementById('opacityValue').textContent = Math.round(obj.opacity * 100);
+        }
+        
+        // Actualizar controles de texto si es texto
+        if (obj.type === 'i-text' || obj.type === 'text') {
+          if (obj.fontFamily) {
+            document.getElementById('fontFamily').value = obj.fontFamily;
+          }
+          
+          if (obj.fontSize) {
+            document.getElementById('fontSize').value = obj.fontSize;
+            document.getElementById('fontSizeValue').textContent = obj.fontSize;
+          }
+          
+          // Actualizar estado de botones de estilo
+          document.getElementById('boldBtn').classList.toggle('bg-indigo-200', obj.fontWeight === 'bold');
+          document.getElementById('italicBtn').classList.toggle('bg-indigo-200', obj.fontStyle === 'italic');
+          document.getElementById('underlineBtn').classList.toggle('bg-indigo-200', obj.underline);
+        }
+      }
+    }
+    
+    function updateFillColor(color) {
+      const obj = canvas.getActiveObject();
+      if (obj) {
+        obj.set('fill', color);
+        canvas.renderAll();
+      }
+    }
+    
+    function updateStrokeColor(color) {
+      const obj = canvas.getActiveObject();
+      if (obj) {
+        obj.set('stroke', color);
+        canvas.renderAll();
+        
+        // Si estamos en modo dibujo, actualizar el color del pincel
+        if (canvas.isDrawingMode) {
+          canvas.freeDrawingBrush.color = color;
+        }
+      }
+    }
+    
+    function updateStrokeWidth(value) {
+      const obj = canvas.getActiveObject();
+      if (obj) {
+        obj.set('strokeWidth', parseInt(value));
+        canvas.renderAll();
+      }
+      document.getElementById('strokeWidthValue').textContent = value;
+      
+      // Si estamos en modo dibujo, actualizar el grosor del pincel
+      if (canvas.isDrawingMode) {
+        canvas.freeDrawingBrush.width = parseInt(value);
+      }
+    }
+    
+    function updateOpacity(value) {
+      const obj = canvas.getActiveObject();
+      if (obj) {
+        obj.set('opacity', parseFloat(value));
+        canvas.renderAll();
+      }
+      document.getElementById('opacityValue').textContent = Math.round(value * 100);
+    }
+
+    // =============================
+    // HISTORIAL
+    // =============================
+    function addToHistory() {
+      if (!canvas) return;
+      
+      // Limitar el historial a 50 estados para evitar consumo excesivo de memoria
+      if (history.length > 50) {
+        history.shift();
+        historyIndex--;
+      }
+      
+      history = history.slice(0, historyIndex + 1);
+      history.push(JSON.stringify(canvas.toJSON()));
+      historyIndex++;
+    }
+    
+    function undo() {
+      if (historyIndex > 0) {
+        historyIndex--;
+        canvas.loadFromJSON(JSON.parse(history[historyIndex]), () => {
+          canvas.renderAll();
+          updateLayersPanel();
+          updatePropertyControls();
+        });
+      }
+    }
+    
+    function redo() {
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        canvas.loadFromJSON(JSON.parse(history[historyIndex]), () => {
+          canvas.renderAll();
+          updateLayersPanel();
+          updatePropertyControls();
+        });
+      }
+    }
+
+    // =============================
+    // EXPORTACIONES
+    // =============================
+    function exportPNG() {
+      if (!canvas) return;
+      
+      const dataURL = canvas.toDataURL({ format: 'png' });
+      const link = document.createElement('a');
+      link.download = `diapositiva-${currentSlideIndex + 1}.png`;
+      link.href = dataURL;
+      link.click();
+    }
+    
+    async function exportPDF() {
+      if (!window.jspdf) {
+        alert('Error: jsPDF no cargado');
+        return;
+      }
+      
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('l', 'pt', [canvas.width, canvas.height]);
+      
+      for (let i = 0; i < slides.length; i++) {
+        await new Promise(resolve => {
+          canvas.loadFromJSON(slides[i], () => {
+            const img = canvas.toDataURL({ format: 'png' });
+            if (i > 0) pdf.addPage();
+            pdf.addImage(img, 'PNG', 0, 0, canvas.width, canvas.height);
+            resolve();
+          });
+        });
+      }
+      
+      pdf.save("presentacion.pdf");
+    }
+    
+    async function exportZIP() {
+      if (!window.JSZip) {
+        alert('Error: JSZip no cargado');
+        return;
+      }
+      
+      const zip = new JSZip();
+      
+      for (let i = 0; i < slides.length; i++) {
+        await new Promise(resolve => {
+          canvas.loadFromJSON(slides[i], () => {
+            const img = canvas.toDataURL({ format: 'png' });
+            zip.file(`slide-${i+1}.png`, img.split(',')[1], { base64: true });
+            resolve();
+          });
+        });
+      }
+      
+      zip.generateAsync({ type: "blob" }).then(content => {
+        saveAs(content, "presentacion.zip");
+      });
+    }
+
+    // =============================
+    // GUARDAR / CARGAR
+    // =============================
+    function saveProject() {
+      saveCurrentSlide();
+      const json = JSON.stringify(slides);
+      const blob = new Blob([json], { type: 'application/json' });
+      saveAs(blob, 'presentacion.json');
+    }
+    
+    function loadProject(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const json = JSON.parse(event.target.result);
+          if (Array.isArray(json)) {
+            slides = json;
+            currentSlideIndex = 0;
+            loadSlide(0);
+          } else {
+            alert("Formato de archivo inválido");
+          }
+        } catch (err) {
+          alert("Error al cargar el archivo: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // =============================
+    // DIAPOSITIVAS
+    // =============================
+    function newSlide() {
+      saveCurrentSlide();
+      const emptySlide = { version: "5.3.0", objects: [] };
+      slides.push(emptySlide);
+      currentSlideIndex = slides.length - 1;
+      loadSlide(currentSlideIndex);
+    }
+    
+    function nextSlide() {
+      if (currentSlideIndex < slides.length - 1) {
+        loadSlide(currentSlideIndex + 1);
+      }
+    }
+    
+    function prevSlide() {
+      if (currentSlideIndex > 0) {
+        loadSlide(currentSlideIndex - 1);
+      }
+    }
+
+    // =============================
+    // ATAJOS DE TECLADO
+    // =============================
+    document.addEventListener("keydown", (e) => {
+      // Prevenir comportamiento predeterminado para ciertos atajos
+      if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "y")) {
+        e.preventDefault();
+      }
+      
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        if (e.shiftKey) {
+          redo(); // Ctrl+Shift+Z para rehacer
+        } else {
+          undo(); // Ctrl+Z para deshacer
+        }
+      }
+      
+      if ((e.ctrlKey || e.metaKey) && e.key === "y") {
+        redo(); // Ctrl+Y para rehacer
+      }
+      
+      if (e.key === "Delete") {
+        const obj = canvas.getActiveObject();
+        if (obj) {
+          canvas.remove(obj);
+          canvas.renderAll();
+        }
+      }
+      
+      if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+        const obj = canvas.getActiveObject();
+        if (obj) {
+          window._clipboard = fabric.util.object.clone(obj);
+        }
+      }
+      
+      if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+        if (window._clipboard) {
+          const clone = fabric.util.object.clone(window._clipboard);
+          clone.set({ 
+            left: clone.left + 20, 
+            top: clone.top + 20 
+          });
+          canvas.add(clone);
+          canvas.setActiveObject(clone);
+          canvas.renderAll();
+        }
+      }
+    });
+
+    // =============================
+    // PRESENTACIÓN
+    // =============================
+    function enterPresentationMode() {
+      if (slides.length <= 1) {
+        alert("Agrega más diapositivas para la presentación");
+        return;
+      }
+      
+      if (document.body.requestFullscreen) {
+        document.body.requestFullscreen();
+      } else if (document.body.webkitRequestFullscreen) {
+        document.body.webkitRequestFullscreen();
+      } else if (document.body.msRequestFullscreen) {
+        document.body.msRequestFullscreen();
+      }
+      
+      let i = 0;
+      const presentDiv = document.createElement('div');
+      presentDiv.id = 'presentation-mode';
+      presentDiv.style.position = 'fixed';
+      presentDiv.style.top = '0';
+      presentDiv.style.left = '0';
+      presentDiv.style.width = '100%';
+      presentDiv.style.height = '100%';
+      presentDiv.style.backgroundColor = 'black';
+      presentDiv.style.display = 'flex';
+      presentDiv.style.alignItems = 'center';
+      presentDiv.style.justifyContent = 'center';
+      presentDiv.style.zIndex = '10000';
+      
+      const presentCanvas = document.createElement('canvas');
+      presentCanvas.id = 'presentation-canvas';
+      presentCanvas.width = window.innerWidth;
+      presentCanvas.height = window.innerHeight;
+      presentDiv.appendChild(presentCanvas);
+      
+      const exitBtn = document.createElement('button');
+      exitBtn.textContent = 'Salir (ESC)';
+      exitBtn.style.position = 'absolute';
+      exitBtn.style.top = '20px';
+      exitBtn.style.right = '20px';
+      exitBtn.style.padding = '10px 15px';
+      exitBtn.style.backgroundColor = 'rgba(255,255,255,0.8)';
+      exitBtn.style.border = 'none';
+      exitBtn.style.borderRadius = '5px';
+      exitBtn.style.cursor = 'pointer';
+      exitBtn.onclick = exitPresentationMode;
+      presentDiv.appendChild(exitBtn);
+      
+      document.body.appendChild(presentDiv);
+      
+      function showSlide() {
+        if (i < slides.length) {
+          const presentCanvasEl = document.getElementById('presentation-canvas');
+          const presentCtx = presentCanvasEl.getContext('2d');
+          presentCtx.clearRect(0, 0, presentCanvasEl.width, presentCanvasEl.height);
+          
+          // Crear un canvas temporal para renderizar la diapositiva
+          const tempCanvas = new fabric.Canvas(document.createElement('canvas'), {
+            width: canvas.width,
+            height: canvas.height
+          });
+          
+          tempCanvas.loadFromJSON(slides[i], () => {
+            tempCanvas.renderAll();
+            
+            // Dibujar en el canvas de presentación
+            presentCtx.drawImage(tempCanvas.getElement(), 0, 0, presentCanvasEl.width, presentCanvasEl.height);
+            
+            i++;
+            setTimeout(showSlide, 3000); // Cambiar cada 3 segundos
+          });
+        } else {
+          exitPresentationMode();
+        }
+      }
+      
+      showSlide();
+    }
+    
+    function exitPresentationMode() {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+      
+      const presentDiv = document.getElementById('presentation-mode');
+      if (presentDiv) {
+        presentDiv.remove();
+      }
+    }
+    
+    // Salir de presentación con tecla ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        exitPresentationMode();
+      }
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

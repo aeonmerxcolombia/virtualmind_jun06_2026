@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconocimiento Facial - Virtualmind</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.5s ease-out',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f172a;
+            background-image: url('/assets/login-bg.jpg'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .bg-overlay {
+            background-color: rgba(15, 23, 42, 0.85); 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+        }
+        .hidden { display: none !important; }
+        .video-wrapper {
+            position: relative;
+            width: 320px;
+            height: 240px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #1e293b;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        video, canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 320px;
+            height: 240px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-overlay"></div>
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-md animate-fade-in-up">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white text-center">
+            <h1 class="text-2xl font-bold">Biometría Facial</h1>
+            <p class="text-indigo-100 text-sm mt-1">Acceso seguro a Virtualmind</p>
+        </div>
+
+        <div class="p-6">
+            <div id="alertMsg" class="hidden rounded-lg p-3 mb-4 text-sm text-center font-medium transition-all"></div>
+
+            <div id="step-login" class="space-y-5">
+                <div class="text-center">
+                    <p class="text-gray-600 text-sm">Ingresa con tu rostro registrado</p>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-1" for="email">Correo electrónico</label>
+                    <input class="shadow-sm border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" id="email" type="email" required placeholder="tu@email.com">
+                </div>
+                
+                <div class="video-wrapper">
+                    <video id="video" autoplay playsinline muted></video>
+                    <canvas id="canvas"></canvas>
+                </div>
+
+                <div class="flex gap-2">
+                    <button id="startCamera" class="flex-1 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 font-semibold py-2 px-4 rounded transition flex items-center justify-center gap-2">
+                        <span>📷</span> Iniciar Cámara
+                    </button>
+                    <button id="captureBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Capturar
+                    </button>
+                </div>
+
+                <div id="previewContainer" class="hidden text-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-2 font-semibold">Captura analizada:</p>
+                    <img id="preview" class="mx-auto rounded border-2 border-indigo-400 shadow-sm" style="max-width: 150px;">
+                    <p id="statusText" class="text-sm font-medium text-green-600 mt-2">✓ Procesando...</p>
+                </div>
+
+                <button id="loginBtn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded shadow-lg transition transform hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none" disabled>
+                    Iniciar Sesión con Rostro
+                </button>
+
+                <div class="flex items-center justify-between text-sm mt-6">
+                    <a href="/login.html" class="text-gray-500 hover:text-indigo-600 transition">← Login tradicional</a>
+                    <button id="registerFaceBtn" class="text-indigo-600 font-bold hover:underline transition">
+                        Registrar mi rostro
+                    </button>
+                </div>
+            </div>
+
+            <div id="step-register" class="hidden space-y-5">
+                <div class="text-center border-b pb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Registrar Rostro</h3>
+                    <p class="text-gray-500 text-sm mt-1">Vincula tu biometría a tu cuenta</p>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-1" for="regEmail">Correo electrónico</label>
+                    <input class="shadow-sm border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" id="regEmail" type="email" required placeholder="tu@email.com">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-1" for="regPassword">Contraseña actual</label>
+                    <input class="shadow-sm border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" id="regPassword" type="password" required placeholder="••••••••">
+                </div>
+                
+                <div class="video-wrapper">
+                    <video id="videoRegister" autoplay playsinline muted></video>
+                    <canvas id="canvasRegister"></canvas>
+                </div>
+
+                <div class="flex gap-2">
+                    <button id="startCameraReg" class="flex-1 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 font-semibold py-2 px-4 rounded transition flex items-center justify-center gap-2">
+                        <span>📷</span> Iniciar Cámara
+                    </button>
+                    <button id="captureRegBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Capturar
+                    </button>
+                </div>
+
+                <div id="previewRegContainer" class="hidden text-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-2 font-semibold">Foto registrada:</p>
+                    <img id="previewReg" class="mx-auto rounded border-2 border-green-400 shadow-sm" style="max-width: 150px;">
+                    <p id="statusRegText" class="text-sm font-medium text-green-600 mt-2">Listo para registrar</p>
+                </div>
+
+                <button id="saveFaceBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded shadow-lg transition transform hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none" disabled>
+                    Guardar Rostro
+                </button>
+
+                <div class="text-center mt-4">
+                    <button id="backToLogin" class="text-sm font-medium text-gray-500 hover:text-gray-800 transition">
+                        ← Volver al login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    
+    <script>
+        const API_URL = "https://gestordecursos.pegui.edu.co:8000"; 
+        
+        let currentDescriptor = null;
+        let descriptorReg = null;
+        let modelsLoaded = false;
+        
+        // Elementos DOM Centralizados
+        const elements = {
+            video: document.getElementById('video'),
+            canvas: document.getElementById('canvas'),
+            videoReg: document.getElementById('videoRegister'),
+            canvasReg: document.getElementById('canvasRegister')
+        };
+
+        const contexts = {
+            login: elements.canvas.getContext('2d'),
+            register: elements.canvasReg.getContext('2d')
+        };
+
+        // --- SISTEMA DE MODELOS Y ALERTAS ---
+        async function loadModels() {
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+            try {
+                showAlert('Cargando modelos biométricos, por favor espera...', 'info');
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                modelsLoaded = true;
+                hideAlert();
+                console.log('Modelos de FaceAPI cargados exitosamente');
+            } catch (e) {
+                console.error('Error cargando modelos:', e);
+                showAlert('Error cargando IA de reconocimiento', 'error');
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            const alert = document.getElementById('alertMsg');
+            alert.textContent = message;
+            alert.className = 'rounded-lg p-3 mb-4 text-sm text-center font-medium transition-all block'; 
+            
+            if (type === 'success') alert.classList.add('bg-green-100', 'text-green-800', 'border', 'border-green-200');
+            else if (type === 'error') alert.classList.add('bg-red-100', 'text-red-800', 'border', 'border-red-200');
+            else alert.classList.add('bg-blue-100', 'text-blue-800', 'border', 'border-blue-200');
+        }
+
+        function hideAlert() {
+            document.getElementById('alertMsg').classList.add('hidden');
+        }
+
+        // --- GESTIÓN DE CÁMARA MEJORADA ---
+        async function startCamera(videoElement, captureBtnId) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 320, height: 240, facingMode: 'user' } 
+                });
+                videoElement.srcObject = stream;
+                document.getElementById(captureBtnId).disabled = false;
+            } catch (e) {
+                showAlert('Por favor, permite el acceso a la cámara.', 'error');
+            }
+        }
+
+        function stopCamera(videoElement) {
+            if (videoElement && videoElement.srcObject) {
+                videoElement.srcObject.getTracks().forEach(track => track.stop());
+                videoElement.srcObject = null;
+            }
+        }
+
+        // --- PROCESAMIENTO CENTRAL DE ROSTROS ---
+        async function processFace(videoEl, canvasEl, ctx, previewId, statusId, submitBtnId, isLogin = true) {
+            if (!modelsLoaded) {
+                showAlert('Los modelos de IA aún están cargando...', 'info');
+                return null;
+            }
+
+            canvasEl.width = 320;
+            canvasEl.height = 240;
+            ctx.drawImage(videoEl, 0, 0, 320, 240);
+            
+            const preview = document.getElementById(previewId);
+            preview.src = canvasEl.toDataURL('image/jpeg');
+            document.getElementById(isLogin ? 'previewContainer' : 'previewRegContainer').classList.remove('hidden');
+            
+            document.getElementById(statusId).textContent = 'Analizando vectores...';
+            document.getElementById(statusId).classList.replace('text-red-500', 'text-green-600');
+            document.getElementById(submitBtnId).disabled = true;
+
+            try {
+                const detection = await faceapi.detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
+
+                if (!detection) {
+                    document.getElementById(statusId).textContent = '❌ Rostro no detectado. Ubícate mejor frente a la luz.';
+                    document.getElementById(statusId).classList.replace('text-green-600', 'text-red-500');
+                    return null;
+                }
+
+                document.getElementById(statusId).textContent = '✓ Vectores extraídos con éxito';
+                document.getElementById(submitBtnId).disabled = false;
+                
+                return Array.from(detection.descriptor); 
+            } catch (e) {
+                console.error("Error procesando rostro:", e);
+                showAlert('Error al procesar la imagen.', 'error');
+                return null;
+            }
+        }
+
+        // ==========================================
+        // EVENTOS DE LA PANTALLA DE LOGIN
+        // ==========================================
+        document.getElementById('startCamera').addEventListener('click', () => startCamera(elements.video, 'captureBtn'));
+        
+        document.getElementById('captureBtn').addEventListener('click', async () => {
+            currentDescriptor = await processFace(elements.video, elements.canvas, contexts.login, 'preview', 'statusText', 'loginBtn', true);
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const email = document.getElementById('email').value.trim();
+            if (!email || !currentDescriptor) {
+                showAlert('Ingresa tu correo y captura tu rostro.', 'error');
+                return;
+            }
+
+            const payload = { email: email, embedding: currentDescriptor };
+
+            try {
+                const res = await fetch(`${API_URL}/auth/face/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showAlert(data.detail || 'Acceso denegado', 'error');
+                    return;
+                }
+
+                showAlert('¡Identidad verificada! Entrando...', 'success');
+                stopCamera(elements.video);
+                
+                localStorage.setItem("token", data.access_token);
+                localStorage.setItem("termsAccepted", String(data.terms_accepted));
+
+                setTimeout(() => {
+                    if(data.terms_accepted) {
+                        const jwtPayload = JSON.parse(atob(data.access_token.split(".")[1]));
+                        const roles = jwtPayload.roles || [jwtPayload.role];
+                        if(roles && roles.length > 0) window.location.href = `r/${roles[0]}/`;
+                    } else {
+                        window.location.href = 'accept-terms.html';
+                    }
+                }, 1000);
+
+            } catch (e) {
+                console.error(e);
+                showAlert('Error de red al conectar con el servidor', 'error');
+            }
+        });
+
+        // ==========================================
+        // EVENTOS DE CAMBIO DE PANTALLA
+        // ==========================================
+        document.getElementById('registerFaceBtn').addEventListener('click', () => {
+            document.getElementById('step-login').classList.add('hidden');
+            document.getElementById('step-register').classList.remove('hidden');
+            stopCamera(elements.video); 
+            hideAlert();
+        });
+
+        document.getElementById('backToLogin').addEventListener('click', () => {
+            document.getElementById('step-register').classList.add('hidden');
+            document.getElementById('step-login').classList.remove('hidden');
+            stopCamera(elements.videoReg); 
+            hideAlert();
+        });
+
+        // ==========================================
+        // EVENTOS DE LA PANTALLA DE REGISTRO
+        // ==========================================
+        document.getElementById('startCameraReg').addEventListener('click', () => startCamera(elements.videoReg, 'captureRegBtn'));
+
+        document.getElementById('captureRegBtn').addEventListener('click', async () => {
+            descriptorReg = await processFace(elements.videoReg, elements.canvasReg, contexts.register, 'previewReg', 'statusRegText', 'saveFaceBtn', false);
+        });
+
+        document.getElementById('saveFaceBtn').addEventListener('click', async () => {
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+
+            if (!email || !password || !descriptorReg) {
+                showAlert('Completa todos los campos biométricos', 'error');
+                return;
+            }
+
+            const payload = { email: email, password: password, embedding: descriptorReg };
+
+            try {
+                const res = await fetch(`${API_URL}/auth/face/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showAlert(data.detail || 'Error al guardar biometría', 'error');
+                    return;
+                }
+
+                showAlert('¡Rostro registrado exitosamente!', 'success');
+                
+                setTimeout(() => {
+                    document.getElementById('step-register').classList.add('hidden');
+                    document.getElementById('step-login').classList.remove('hidden');
+                    document.getElementById('email').value = email;
+                    stopCamera(elements.videoReg);
+                    hideAlert();
+                }, 2000);
+
+            } catch (e) {
+                console.error(e);
+                showAlert('Error de red al conectar con el servidor', 'error');
+            }
+        });
+
+        // INICIAR
+        window.addEventListener('DOMContentLoaded', loadModels);
+    </script>
+</body>
+</html>

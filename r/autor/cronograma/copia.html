@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear Cronograma</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.6s ease-out',
+            'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'bounce-light': 'bounce 1s infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+  <!-- Header mejorado -->
+  <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-10"></div>
+    <div class="relative p-6 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <button onclick="history.back()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+          <i class="fas fa-arrow-left text-xl"></i>
+        </button>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold flex items-center">
+            <i class="fas fa-calendar-plus mr-3"></i>
+            Crear Cronograma
+          </h1>
+          <p class="text-indigo-100 mt-1">Planifica y organiza las fases de tu proyecto</p>
+        </div>
+      </div>
+      <div class="hidden md:flex items-center space-x-4">
+        <div class="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center">
+          <i class="fas fa-clock mr-2"></i>
+          <span id="currentTime" class="text-sm"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-8 flex flex-col items-center space-y-4 shadow-2xl">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <p class="text-gray-700 font-medium">Cargando proyecto...</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 animate-fade-in">
+    <div class="max-w-6xl mx-auto">
+      <!-- Project Info Card -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100 animate-slide-up">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div class="flex items-center space-x-4 mb-4 md:mb-0">
+            <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center text-white shadow-lg">
+              <i class="fas fa-project-diagram text-2xl"></i>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-gray-800 mb-1">
+                <span id="projectName" class="text-indigo-600">Cargando...</span>
+              </h2>
+              <p class="text-gray-600 flex items-center">
+                <i class="fas fa-info-circle mr-2"></i>
+                Configura las fechas y responsables para cada fase
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg font-medium flex items-center">
+              <i class="fas fa-layer-group mr-2"></i>
+              8 Fases
+            </div>
+            <div class="bg-green-50 text-green-600 px-4 py-2 rounded-lg font-medium flex items-center">
+              <i class="fas fa-calendar-check mr-2"></i>
+              Cronograma
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Container -->
+      <form id="cronogramaForm" class="space-y-6">
+        <div id="fasesContainer" class="space-y-6"></div>
+
+        <!-- Action Buttons -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+          <div class="flex flex-col sm:flex-row gap-4 justify-between items-center">
+            <div class="flex items-center text-gray-600">
+              <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+              <span class="text-sm">Revisa todos los campos antes de guardar</span>
+            </div>
+            <div class="flex gap-3 w-full sm:w-auto">
+              <button type="button" onclick="resetForm()" 
+                class="flex-1 sm:flex-none bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center">
+                <i class="fas fa-undo mr-2"></i>
+                Resetear
+              </button>
+              <button type="submit" id="saveButton"
+                class="flex-1 sm:flex-none bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg transition-all transform hover:scale-105 flex items-center justify-center">
+                <i class="fas fa-save mr-2"></i>
+                <span>Guardar Cronograma</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-check text-2xl text-green-600"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">¡Cronograma Guardado!</h3>
+        <p class="text-gray-600 mb-6">El cronograma se ha creado exitosamente</p>
+        <button onclick="redirectToList()" 
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold transition-colors">
+          Ver Lista de Cronogramas
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Modal -->
+  <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-exclamation-triangle text-2xl text-red-600"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Error al Guardar</h3>
+        <p class="text-gray-600 mb-6">Hubo un problema al guardar el cronograma. Inténtalo de nuevo.</p>
+        <button onclick="closeErrorModal()" 
+          class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold transition-colors">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token");
+    const projectId = new URLSearchParams(window.location.search).get("project_id") || 
+                      new URLSearchParams(window.location.search).get("projectId");
+
+    const fasesContainer = document.getElementById("fasesContainer");
+    const projectName = document.getElementById("projectName");
+    const loadingOverlay = document.getElementById("loadingOverlay");
+
+    let usersData = [];
+
+    // Fases predefinidas del sistema
+    const fasesPredefinidas = [
+      {
+        key: 'inicio',
+        nombre: 'Inicio',
+        descripcion: 'Fase inicial del proyecto',
+        icon: 'fa-play-circle',
+        color: 'from-green-500 to-emerald-600'
+      },
+      {
+        key: 'planificacion',
+        nombre: 'Planificación',
+        descripcion: 'Planificación y análisis del proyecto',
+        icon: 'fa-clipboard-list',
+        color: 'from-blue-500 to-indigo-600'
+      },
+      {
+        key: 'diseno_instruccional',
+        nombre: 'Diseño Instruccional',
+        descripcion: 'Diseño pedagógico y estructura del contenido',
+        icon: 'fa-graduation-cap',
+        color: 'from-purple-500 to-indigo-600'
+      },
+      {
+        key: 'diseno_grafico',
+        nombre: 'Diseño Gráfico',
+        descripcion: 'Diseño visual y elementos gráficos',
+        icon: 'fa-palette',
+        color: 'from-pink-500 to-rose-600'
+      },
+      {
+        key: 'produccion',
+        nombre: 'Producción',
+        descripcion: 'Desarrollo y producción de contenidos',
+        icon: 'fa-cogs',
+        color: 'from-orange-500 to-amber-600'
+      },
+      {
+        key: 'virtualizacion',
+        nombre: 'Virtualización',
+        descripcion: 'Implementación en plataforma virtual',
+        icon: 'fa-cloud',
+        color: 'from-cyan-500 to-blue-600'
+      },
+      {
+        key: 'validacion',
+        nombre: 'Validación',
+        descripcion: 'Pruebas y validación del contenido',
+        icon: 'fa-check-double',
+        color: 'from-teal-500 to-green-600'
+      },
+      {
+        key: 'cierre',
+        nombre: 'Cierre',
+        descripcion: 'Cierre y entrega final del proyecto',
+        icon: 'fa-flag-checkered',
+        color: 'from-red-500 to-pink-600'
+      }
+    ];
+
+    // Meses del año
+    const meses = [
+      { value: 'enero', label: 'Enero' },
+      { value: 'febrero', label: 'Febrero' },
+      { value: 'marzo', label: 'Marzo' },
+      { value: 'abril', label: 'Abril' },
+      { value: 'mayo', label: 'Mayo' },
+      { value: 'junio', label: 'Junio' },
+      { value: 'julio', label: 'Julio' },
+      { value: 'agosto', label: 'Agosto' },
+      { value: 'septiembre', label: 'Septiembre' },
+      { value: 'octubre', label: 'Octubre' },
+      { value: 'noviembre', label: 'Noviembre' },
+      { value: 'diciembre', label: 'Diciembre' }
+    ];
+
+    // Actualizar reloj
+    function updateTime() {
+      const now = new Date();
+      document.getElementById("currentTime").textContent = now.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // Función para obtener nombre del proyecto
+    function getProjectName(project) {
+      return project.nombre || project.name || project.title || project.titulo || `Proyecto ${project.id}` || 'Proyecto Sin Nombre';
+    }
+
+    // Función para obtener nombre del usuario
+    function getUserName(user) {
+      return user.nombre || user.name || user.username || `Usuario ${user.id}` || 'Usuario Sin Nombre';
+    }
+
+    async function fetchData(endpoint) {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error(`Error fetching ${endpoint}`);
+      return res.json();
+    }
+
+    function createPhaseCard(fase, index) {
+      const phaseCard = document.createElement("div");
+      phaseCard.className = "bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-slide-up";
+      phaseCard.style.animationDelay = `${index * 0.1}s`;
+
+      phaseCard.innerHTML = `
+        <div class="bg-gradient-to-r ${fase.color} p-6 text-white relative overflow-hidden">
+          <div class="absolute inset-0 bg-black opacity-10"></div>
+          <div class="relative flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <i class="fas ${fase.icon} text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-2xl font-bold">${fase.nombre}</h3>
+                <p class="opacity-90">${fase.descripcion}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-2">
+                <div class="text-lg font-bold">Fase ${index + 1}</div>
+                <div class="text-sm opacity-90">de 8</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+            <!-- Responsable -->
+            <div class="lg:col-span-1">
+              <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                <i class="fas fa-user mr-2 text-purple-500"></i>
+                Responsable *
+              </label>
+              <select name="responsable_${fase.key}" required
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm">
+                <option value="">Seleccione...</option>
+                ${usersData.map(u => `<option value="${u.uid || u.id}">${getUserName(u)}</option>`).join("")}
+              </select>
+            </div>
+            
+            <!-- Mes -->
+            <div class="lg:col-span-1">
+              <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                <i class="fas fa-calendar mr-2 text-blue-500"></i>
+                Mes *
+              </label>
+              <select name="mes_${fase.key}" required
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm">
+                <option value="">Seleccione mes...</option>
+                ${meses.map(m => `<option value="${m.value}">${m.label}</option>`).join("")}
+              </select>
+            </div>
+            
+            <!-- Día Inicio -->
+            <div class="lg:col-span-1">
+              <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                <i class="fas fa-calendar-day mr-2 text-green-500"></i>
+                Día Inicio *
+              </label>
+              <input type="number" name="dia_inicio_${fase.key}" required min="1" max="31"
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm"
+                placeholder="1-31" />
+            </div>
+            
+            <!-- Día Fin -->
+            <div class="lg:col-span-1">
+              <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                <i class="fas fa-calendar-times mr-2 text-red-500"></i>
+                Día Fin *
+              </label>
+              <input type="number" name="dia_fin_${fase.key}" required min="1" max="31"
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm"
+                placeholder="1-31" />
+            </div>
+          </div>
+        </div>
+      `;
+
+      fasesContainer.appendChild(phaseCard);
+    }
+
+    async function loadData() {
+      try {
+        loadingOverlay.style.display = 'flex';
+
+        // Cargar datos en paralelo
+        const [proyecto, users] = await Promise.all([
+          fetchData(`/projects/${projectId}`),
+          fetchData("/users/")
+        ]);
+
+        // Guardar datos globalmente
+        usersData = users;
+
+        // Actualizar UI
+        projectName.textContent = getProjectName(proyecto);
+
+        // Renderizar fases predefinidas
+        fasesPredefinidas.forEach((fase, index) => {
+          createPhaseCard(fase, index);
+        });
+
+        // Ocultar loading
+        setTimeout(() => {
+          loadingOverlay.style.display = 'none';
+        }, 500);
+
+      } catch (error) {
+        console.error("Error loading data:", error);
+        loadingOverlay.innerHTML = `
+          <div class="bg-white rounded-2xl p-8 flex flex-col items-center space-y-4 shadow-2xl">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-exclamation-triangle text-2xl text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">Error al cargar</h3>
+            <p class="text-gray-600 text-center">No se pudieron cargar los datos del proyecto.</p>
+            <button onclick="window.location.reload()" 
+              class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl transition-colors">
+              Reintentar
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function resetForm() {
+      if (confirm('¿Estás seguro de que quieres resetear todos los campos?')) {
+        document.getElementById('cronogramaForm').reset();
+      }
+    }
+
+    function showSuccessModal() {
+      document.getElementById('successModal').classList.remove('hidden');
+    }
+
+    function showErrorModal() {
+      document.getElementById('errorModal').classList.remove('hidden');
+    }
+
+    function closeErrorModal() {
+      document.getElementById('errorModal').classList.add('hidden');
+    }
+
+    function redirectToList() {
+      window.location.href = "https://gestordecursos.pegui.edu.co/r/superadmin/cronograma/listarcronogramas.html";
+    }
+
+    // Validación de días
+    function validateDays() {
+      const errors = [];
+      
+      fasesPredefinidas.forEach(fase => {
+        const diaInicio = parseInt(document.querySelector(`input[name="dia_inicio_${fase.key}"]`).value);
+        const diaFin = parseInt(document.querySelector(`input[name="dia_fin_${fase.key}"]`).value);
+        
+        if (diaInicio && diaFin && diaInicio > diaFin) {
+          errors.push(`En ${fase.nombre}: El día de inicio no puede ser mayor al día de fin`);
+        }
+      });
+      
+      return errors;
+    }
+
+    // Manejar envío del formulario
+    document.getElementById("cronogramaForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Validar días
+      const validationErrors = validateDays();
+      if (validationErrors.length > 0) {
+        alert('Errores de validación:\n' + validationErrors.join('\n'));
+        return;
+      }
+
+      const saveButton = document.getElementById('saveButton');
+      const originalText = saveButton.innerHTML;
+      
+      // Mostrar loading en botón
+      saveButton.innerHTML = `
+        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+        Guardando...
+      `;
+      saveButton.disabled = true;
+
+      try {
+        const formData = new FormData(e.target);
+        
+        // Construir payload según el esquema exacto
+        const payload = {
+          project_id: parseInt(projectId)
+        };
+
+        // Agregar datos de cada fase según el esquema
+        fasesPredefinidas.forEach(fase => {
+          payload[`responsable_${fase.key}`] = formData.get(`responsable_${fase.key}`) || "";
+          payload[`mes_${fase.key}`] = formData.get(`mes_${fase.key}`) || "";
+          payload[`dia_inicio_${fase.key}`] = parseInt(formData.get(`dia_inicio_${fase.key}`)) || 0;
+          payload[`dia_fin_${fase.key}`] = parseInt(formData.get(`dia_fin_${fase.key}`)) || 0;
+        });
+
+        console.log('Payload enviado:', payload); // Para debug
+
+        const res = await fetch(`${API_BASE}/cronogramas/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          showSuccessModal();
+        } else {
+          const errorData = await res.text();
+          console.error('Error response:', errorData);
+          showErrorModal();
+        }
+
+      } catch (error) {
+        console.error("Error saving:", error);
+        showErrorModal();
+      } finally {
+        // Restaurar botón
+        saveButton.innerHTML = originalText;
+        saveButton.disabled = false;
+      }
+    });
+
+    // Inicializar
+    loadData();
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

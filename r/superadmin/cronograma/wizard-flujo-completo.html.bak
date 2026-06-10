@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flujo Completo - VirtualMind</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/fetch-con-token.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #090D16; color: #cbd5e1; }
+        .card-glass { background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .input-focus { transition: all 0.3s; background: rgba(15, 23, 42, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; color: #f8fafc !important; border-radius: 0.75rem; padding: 0.75rem 1rem; }
+        .input-focus:focus { border-color: #6366f1 !important; box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important; }
+        .step-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; transition: all 0.3s; }
+        .step-active { background: #6366f1; color: white; box-shadow: 0 0 15px rgba(99, 102, 241, 0.5); }
+        .step-done { background: #10b981; color: white; }
+        .step-pending { background: rgba(255,255,255,0.1); color: #64748b; }
+        .step-line { height: 2px; flex: 1; transition: all 0.3s; }
+        .step-line-active { background: #6366f1; }
+        .step-line-pending { background: rgba(255,255,255,0.1); }
+        .checkbox-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
+        .checkbox-custom input { opacity: 0; position: absolute; }
+        .checkbox-custom .checkmark { display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8); border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 6px; margin-right: 8px; transition: all 0.3s; flex-shrink: 0; }
+        .checkbox-custom input:checked + .checkmark { background: #6366f1; border-color: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+        .checkbox-custom input:checked + .checkmark:after { content: "✓"; color: #fff; font-size: 13px; position: absolute; left: 4px; top: 0; }
+        .animate-fade { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden-step { display: none !important; }
+        select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em; padding-right: 2.5rem; }
+        .driverjs-theme { font-family: 'Inter', sans-serif; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); padding: 20px; background: rgba(15, 23, 42, 0.95) !important; color: #f1f5f9 !important; }
+        .driverjs-theme .driver-popover-title { font-size: 18px; font-weight: 700; color: #818cf8; }
+        .driverjs-theme .driver-popover-description { color: #94a3b8; font-size: 14px; }
+        .driverjs-theme .driver-popover-next-btn, .driverjs-theme .driver-popover-prev-btn { background: #4f46e5; color: white; border-radius: 8px; border: none; padding: 6px 14px; font-weight: 600; }
+        .driverjs-theme .driver-popover-close-btn { color: #64748b; }
+        .spinner { border: 3px solid rgba(255,255,255,0.1); border-top-color: #6366f1; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen py-6">
+    <div class="max-w-5xl mx-auto px-4">
+        <div class="text-center mb-6 animate-fade">
+            <h1 class="text-3xl font-bold text-white">Flujo Completo del Proyecto</h1>
+            <p class="text-indigo-300 text-sm mt-1">Configura fases, cronograma y plan de estudio en un solo paso</p>
+        </div>
+
+        <div class="card-glass rounded-3xl p-6 animate-fade">
+            <!-- PROJECT INFO BAR -->
+            <div id="projectInfoBar" class="flex flex-wrap items-center justify-between p-4 bg-indigo-950/40 border border-indigo-500/20 rounded-2xl mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center"><i class="fas fa-folder-open text-white"></i></div>
+                    <div>
+                        <p class="text-sm font-bold text-white" id="projectNameDisplay">Cargando...</p>
+                        <p class="text-xs text-indigo-400" id="projectMetaDisplay"></p>
+                    </div>
+                </div>
+                <button type="button" onclick="verTutorial()" class="flex items-center gap-2 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 px-4 py-2 rounded-full text-indigo-300 hover:text-white text-xs font-bold transition-all cursor-pointer">
+                    <span class="bg-indigo-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">?</span>
+                    Tutorial
+                </button>
+            </div>
+
+            <!-- STEP PROGRESS -->
+            <div class="flex items-center mb-8 px-2">
+                <div class="step-circle step-done" id="step1Circle">1</div>
+                <div class="step-line step-line-active" id="line1"></div>
+                <div class="step-circle step-active" id="step2Circle">2</div>
+                <div class="step-line step-line-pending" id="line2"></div>
+                <div class="step-circle step-pending" id="step3Circle">3</div>
+                <div class="step-line step-line-pending" id="line3"></div>
+                <div class="step-circle step-pending" id="step4Circle">4</div>
+                <div class="step-line step-line-pending" id="line4"></div>
+                <div class="step-circle step-pending" id="step5Circle">5</div>
+            </div>
+            <div class="flex justify-between text-xs font-semibold mb-8 px-1 text-slate-500">
+                <span class="text-emerald-400">Proyecto</span>
+                <span id="labelStep2" class="text-indigo-400">Fases</span>
+                <span id="labelStep3">Etapas</span>
+                <span id="labelStep4">Cronograma</span>
+                <span id="labelStep5">Plan Estudio</span>
+            </div>
+
+            <!-- ========== STEP 1: RESUMEN PROYECTO (always done) ========== -->
+            <div id="step1" class="animate-fade">
+                <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5">
+                    <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2"><i class="fas fa-check-circle text-emerald-400"></i> Proyecto Creado</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div><span class="text-slate-500">Nombre:</span> <p class="text-white font-semibold" id="s1Name">-</p></div>
+                        <div><span class="text-slate-500">Tipo:</span> <p class="text-white font-semibold" id="s1Type">-</p></div>
+                        <div><span class="text-slate-500">Horas:</span> <p class="text-white font-semibold" id="s1Horas">-</p></div>
+                        <div><span class="text-slate-500">ID:</span> <p class="text-white font-semibold" id="s1Id">-</p></div>
+                    </div>
+                    <div class="mt-3"><span class="text-slate-500">Descripción:</span> <p class="text-slate-300 text-sm" id="s1Desc">-</p></div>
+                </div>
+                <div class="text-right mt-4"><button onclick="goToStep(2)" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all">Continuar a Fases <i class="fas fa-arrow-right ml-2"></i></button></div>
+            </div>
+
+            <!-- ========== STEP 2: SELECCIONAR / CREAR FASES ========== -->
+            <div id="step2" class="hidden-step animate-fade">
+                <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2"><i class="fas fa-layer-group text-indigo-400"></i> Seleccionar Fases del Proyecto</h3>
+                        <button type="button" onclick="sugerirFasesIA()" id="btnSugerirFases" class="px-4 py-2 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 text-purple-300 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                            <i class="fas fa-robot mr-1"></i> Sugerir con IA
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">Selecciona las fases que aplican a este proyecto. Puedes crearlas si no existen.</p>
+                    <div id="fasesSelector" class="space-y-3 max-h-80 overflow-y-auto p-3 bg-slate-900/40 rounded-xl border border-white/5">
+                        <div class="text-center text-slate-500 py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando fases...</div>
+                    </div>
+                    <div class="mt-4 flex gap-3">
+                        <button type="button" onclick="mostrarCrearFase()" class="px-4 py-2 bg-emerald-600/10 hover:bg-emerald-600 border border-emerald-500/20 text-emerald-300 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                            <i class="fas fa-plus mr-1"></i> Crear Nueva Fase
+                        </button>
+                    </div>
+                    <div id="crearFaseForm" class="hidden mt-4 p-4 bg-slate-900/60 rounded-xl border border-white/5">
+                        <h4 class="text-sm font-bold text-slate-300 mb-3">Nueva Fase</h4>
+                        <div class="flex gap-3">
+                            <input type="text" id="nuevaFaseNombre" class="flex-1 input-focus" placeholder="Nombre de la fase (Ej: Diseño)">
+                            <input type="text" id="nuevaFaseDesc" class="flex-1 input-focus" placeholder="Descripción breve">
+                            <button type="button" onclick="crearFase()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 transition-all cursor-pointer">Crear</button>
+                            <button type="button" onclick="cerrarCrearFase()" class="px-4 py-2 bg-slate-700 text-slate-300 rounded-xl text-sm hover:bg-slate-600 transition-all cursor-pointer">Cancelar</button>
+                        </div>
+                        <p id="crearFaseMsg" class="text-xs mt-2"></p>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-4">
+                    <button onclick="goToStep(1)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-sm font-semibold transition-all cursor-pointer"><i class="fas fa-arrow-left mr-1"></i> Volver</button>
+                    <button onclick="goToStep(3)" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all cursor-pointer">Continuar a Etapas <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </div>
+
+            <!-- ========== STEP 3: SELECCIONAR ETAPAS ========== -->
+            <div id="step3" class="hidden-step animate-fade">
+                <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2"><i class="fas fa-tasks text-emerald-400"></i> Seleccionar Etapas</h3>
+                        <button type="button" onclick="sugerirEtapasIA()" id="btnSugerirEtapas" class="px-4 py-2 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 text-purple-300 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                            <i class="fas fa-robot mr-1"></i> Sugerir con IA
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">Selecciona las etapas para cada fase. Las fases seleccionadas en el paso anterior se muestran abajo.</p>
+                    <div id="etapasSelector" class="space-y-4 max-h-96 overflow-y-auto p-3 bg-slate-900/40 rounded-xl border border-white/5">
+                        <div class="text-center text-slate-500 py-4">Primero selecciona las fases en el paso anterior.</div>
+                    </div>
+                    <div class="mt-4 flex gap-3">
+                        <button type="button" onclick="mostrarCrearEtapa()" class="px-4 py-2 bg-emerald-600/10 hover:bg-emerald-600 border border-emerald-500/20 text-emerald-300 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+                            <i class="fas fa-plus mr-1"></i> Crear Nueva Etapa
+                        </button>
+                    </div>
+                    <div id="crearEtapaForm" class="hidden mt-4 p-4 bg-slate-900/60 rounded-xl border border-white/5">
+                        <h4 class="text-sm font-bold text-slate-300 mb-3">Nueva Etapa</h4>
+                        <div class="flex gap-3 flex-wrap">
+                            <select id="nuevaEtapaFase" class="input-focus cursor-pointer min-w-[180px]"></select>
+                            <input type="text" id="nuevaEtapaNombre" class="flex-1 input-focus" placeholder="Nombre de la etapa">
+                            <input type="text" id="nuevaEtapaDesc" class="flex-1 input-focus" placeholder="Descripción breve">
+                            <button type="button" onclick="crearEtapa()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 transition-all cursor-pointer">Crear</button>
+                            <button type="button" onclick="cerrarCrearEtapa()" class="px-4 py-2 bg-slate-700 text-slate-300 rounded-xl text-sm hover:bg-slate-600 transition-all cursor-pointer">Cancelar</button>
+                        </div>
+                        <p id="crearEtapaMsg" class="text-xs mt-2"></p>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-4">
+                    <button onclick="goToStep(2)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-sm font-semibold transition-all cursor-pointer"><i class="fas fa-arrow-left mr-1"></i> Volver</button>
+                    <button onclick="goToStep(4)" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all cursor-pointer">Continuar a Cronograma <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </div>
+
+            <!-- ========== STEP 4: CREAR CRONOGRAMA ========== -->
+            <div id="step4" class="hidden-step animate-fade">
+                <div id="cronogramaExistenteWarning" class="hidden mb-4 p-4 bg-amber-950/40 border border-amber-500/30 rounded-xl text-amber-300 text-sm">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Este proyecto ya tiene un cronograma.
+                    <a id="cronogramaExistenteLink" href="#" class="underline text-amber-200 ml-2">Ver Cronograma</a>
+                </div>
+                <div id="cronogramaFormContainer">
+                    <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5">
+                        <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2"><i class="fas fa-calendar-alt text-purple-400"></i> Crear Cronograma</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Nombre del Cronograma</label>
+                                <input type="text" id="cronoNombre" class="w-full input-focus" placeholder="Cronograma de Desarrollo">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Fechas del Proyecto</label>
+                                <p class="text-sm text-slate-300 pt-2" id="cronoFechasProyecto">-</p>
+                            </div>
+                        </div>
+
+                        <div id="cronoEtapasContainer" class="space-y-4 mt-4">
+                            <p class="text-xs text-slate-500 mb-2">Las etapas seleccionadas aparecerán aquí para asignar fechas y responsables:</p>
+                            <div id="cronoNoEtapas" class="text-center text-slate-500 py-6 border border-dashed border-white/10 rounded-xl">
+                                <i class="fas fa-info-circle mr-1"></i> No hay etapas seleccionadas. Ve al paso anterior.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-4">
+                    <button onclick="goToStep(3)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-sm font-semibold transition-all cursor-pointer"><i class="fas fa-arrow-left mr-1"></i> Volver</button>
+                    <button onclick="guardarCronograma()" id="btnGuardarCrono" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-bold rounded-xl transition-all cursor-pointer">
+                        <i class="fas fa-save mr-2"></i> Guardar Cronograma
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========== STEP 5: PLAN DE ESTUDIO ========== -->
+            <div id="step5" class="hidden-step animate-fade">
+                <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 text-center">
+                    <div class="w-20 h-20 bg-emerald-600/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30">
+                        <i class="fas fa-check-circle text-4xl text-emerald-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">¡Cronograma Listo!</h3>
+                    <p class="text-slate-400 mb-2">El cronograma se ha guardado correctamente.</p>
+                    <p class="text-xs text-slate-500 mb-6">Ahora puedes continuar para crear el Plan de Estudio con toda la información del proyecto heredada.</p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="window.location.href=document.getElementById('projectId').value ? `${window.location.origin}${roleBase}/projects/read.html?id=${document.getElementById('projectId').value}` : `${window.location.origin}${roleBase}/projects`" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-all cursor-pointer">
+                            <i class="fas fa-arrow-left mr-2"></i> Volver al Proyecto
+                        </button>
+                        <button onclick="irAPlanEstudio()" class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-bold rounded-xl transition-all cursor-pointer">
+                            <i class="fas fa-graduation-cap mr-2"></i> Crear Plan de Estudio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" id="projectId">
+    <input type="hidden" id="projectName">
+    <input type="hidden" id="projectDesc">
+    <input type="hidden" id="projectType">
+    <input type="hidden" id="projectHoras">
+    <input type="hidden" id="selectedFases" value="[]">
+    <input type="hidden" id="selectedEtapas" value="[]">
+
+    <script>
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        const roleBase = '/' + window.location.pathname.split('/').slice(1, 3).join('/');
+        let token = localStorage.getItem('token');
+        let masterFases = [];
+        let masterEtapas = [];
+        let usersData = [];
+        let cronogramaGuardado = null;
+        let projectData = {};
+
+        function getParams() {
+            const p = new URLSearchParams(window.location.search);
+            return {
+                project_id: p.get('project_id'),
+                project_name: decodeURIComponent(p.get('project_name') || ''),
+                project_desc: decodeURIComponent(p.get('project_desc') || ''),
+                project_type: decodeURIComponent(p.get('project_type') || ''),
+                project_horas: decodeURIComponent(p.get('project_horas') || '')
+            };
+        }
+
+        function getToken() { return localStorage.getItem('token'); }
+
+        async function fetchAPI(endpoint) {
+            const res = await fetch(`${API}${endpoint}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+            if (!res.ok) { const t = await res.text(); throw new Error(`Error ${res.status}: ${t}`); }
+            return res.json();
+        }
+
+        function showMsg(el, msg, type = 'success') {
+            const d = document.getElementById(el);
+            if (d) { d.textContent = msg; d.className = `text-xs mt-2 ${type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`; }
+        }
+
+        function goToStep(n) {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`step${i}`).classList.add('hidden-step');
+            }
+            document.getElementById(`step${n}`).classList.remove('hidden-step');
+            for (let i = 2; i <= 5; i++) {
+                const circle = document.getElementById(`step${i}Circle`);
+                const line = document.getElementById(`line${i-1}`);
+                const label = document.getElementById(`labelStep${i}`);
+                if (i < n) {
+                    circle.className = 'step-circle step-done';
+                    if (line) line.className = 'step-line step-line-active';
+                    if (label) label.className = 'text-emerald-400';
+                } else if (i === n) {
+                    circle.className = 'step-circle step-active';
+                    if (label) label.className = 'text-indigo-400';
+                } else {
+                    circle.className = 'step-circle step-pending';
+                    if (line) line.className = 'step-line step-line-pending';
+                    if (label) label.className = 'text-slate-500';
+                }
+            }
+            if (n === 3) loadEtapasSelector();
+            if (n === 4) loadCronoForm();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ============ INIT ============
+        async function init() {
+            const p = getParams();
+            if (!p.project_id) { document.getElementById('projectNameDisplay').textContent = 'Error: Sin ID de proyecto'; return; }
+
+            document.getElementById('projectId').value = p.project_id;
+            document.getElementById('projectName').value = p.project_name;
+            document.getElementById('projectDesc').value = p.project_desc;
+            document.getElementById('projectType').value = p.project_type;
+            document.getElementById('projectHoras').value = p.project_horas;
+
+            document.getElementById('s1Name').textContent = p.project_name || '-';
+            document.getElementById('s1Type').textContent = p.project_type || '-';
+            document.getElementById('s1Horas').textContent = p.project_horas || '-';
+            document.getElementById('s1Id').textContent = '#' + p.project_id;
+            document.getElementById('s1Desc').textContent = p.project_desc || '-';
+            document.getElementById('projectNameDisplay').textContent = p.project_name || 'Proyecto #' + p.project_id;
+            document.getElementById('projectMetaDisplay').textContent = `${p.project_type || 'Sin tipo'} | ${p.project_horas || '0'}h | ID: #${p.project_id}`;
+
+            try {
+                projectData = await fetchAPI(`/projects/${p.project_id}`);
+                if (projectData.start_date && projectData.end_date) {
+                    document.getElementById('cronoFechasProyecto').textContent = `${projectData.start_date} al ${projectData.end_date}`;
+                }
+            } catch(e) { console.log('No se pudo cargar proyecto completo:', e); }
+
+            try {
+                masterFases = await fetchAPI('/fases/');
+                masterEtapas = await fetchAPI('/etapas/');
+                usersData = await fetchAPI('/users/');
+            } catch(e) { console.error('Error cargando datos maestros:', e); }
+
+            loadFasesSelector();
+
+            // Check existing cronograma
+            try {
+                const existing = await fetchAPI(`/cronogramas/project/${p.project_id}`);
+                if (existing) {
+                    document.getElementById('cronogramaExistenteWarning').classList.remove('hidden');
+                    document.getElementById('cronogramaExistenteLink').href = `ver-cronograma.html?cronograma_id=${existing.id}`;
+                    document.getElementById('cronogramaFormContainer').classList.add('hidden');
+                    document.getElementById('btnGuardarCrono').classList.add('hidden');
+                    cronogramaGuardado = existing;
+                }
+            } catch(e) { /* No existing cronograma - normal */ }
+        }
+
+        // ============ STEP 2: FASES ============
+        function loadFasesSelector() {
+            const container = document.getElementById('fasesSelector');
+            if (!masterFases.length) {
+                container.innerHTML = '<div class="text-center text-slate-500 py-4">No hay fases disponibles. Crea una nueva.</div>';
+                return;
+            }
+            const selected = JSON.parse(document.getElementById('selectedFases').value || '[]');
+            container.innerHTML = masterFases.map(f => `
+                <label class="checkbox-custom flex items-center p-2 hover:bg-slate-800/40 rounded-xl transition-all text-sm">
+                    <input type="checkbox" class="fase-checkbox" value="${f.id}" data-nombre="${f.nombre}" ${selected.includes(f.id) ? 'checked' : ''}>
+                    <span class="checkmark"></span>
+                    <div>
+                        <span class="font-semibold text-slate-200">${f.nombre}</span>
+                        ${f.descripcion ? `<span class="text-xs text-slate-500 ml-2">${f.descripcion}</span>` : ''}
+                    </div>
+                </label>
+            `).join('');
+            container.querySelectorAll('.fase-checkbox').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const checked = Array.from(container.querySelectorAll('.fase-checkbox:checked')).map(c => parseInt(c.value));
+                    document.getElementById('selectedFases').value = JSON.stringify(checked);
+                });
+            });
+        }
+
+        function mostrarCrearFase() { document.getElementById('crearFaseForm').classList.remove('hidden'); }
+        function cerrarCrearFase() { document.getElementById('crearFaseForm').classList.add('hidden'); document.getElementById('nuevaFaseNombre').value = ''; document.getElementById('nuevaFaseDesc').value = ''; document.getElementById('crearFaseMsg').textContent = ''; }
+
+        async function crearFase() {
+            const nombre = document.getElementById('nuevaFaseNombre').value.trim();
+            const desc = document.getElementById('nuevaFaseDesc').value.trim();
+            if (!nombre) { showMsg('crearFaseMsg', 'El nombre es obligatorio', 'error'); return; }
+            try {
+                const res = await fetch(`${API}/fases/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify({ nombre, descripcion: desc || null })
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || 'Error');
+                const nueva = await res.json();
+                masterFases.push(nueva);
+                showMsg('crearFaseMsg', `Fase "${nombre}" creada`, 'success');
+                cerrarCrearFase();
+                loadFasesSelector();
+            } catch(e) { showMsg('crearFaseMsg', `Error: ${e.message}`, 'error'); }
+        }
+
+        async function sugerirFasesIA() {
+            const btn = document.getElementById('btnSugerirFases');
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Sugiriendo...';
+            try {
+                const projectType = document.getElementById('projectType').value;
+                const projectDesc = document.getElementById('projectDesc').value;
+                const res = await fetch(`${API}/cronogramas/sugerir-ia`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify({ tipo_proyecto: projectType || 'Curso virtual', descripcion: projectDesc, horas_curso: parseFloat(document.getElementById('projectHoras').value) || null })
+                });
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    const nombresSugeridos = data.map(f => f.nombre_fase);
+                    const container = document.getElementById('fasesSelector');
+                    const checkboxes = container.querySelectorAll('.fase-checkbox');
+                    checkboxes.forEach(cb => {
+                        const nombre = cb.dataset.nombre;
+                        if (nombresSugeridos.some(n => n.toLowerCase().includes(nombre.toLowerCase()) || nombre.toLowerCase().includes(n.toLowerCase()))) {
+                            cb.checked = true;
+                        }
+                    });
+                    const checked = Array.from(container.querySelectorAll('.fase-checkbox:checked')).map(c => parseInt(c.value));
+                    document.getElementById('selectedFases').value = JSON.stringify(checked);
+                    showMsg('crearFaseMsg', `IA sugirió ${data.length} fases relacionadas. Revisa las seleccionadas.`, 'success');
+                } else {
+                    showMsg('crearFaseMsg', 'La IA no pudo sugerir fases. Selecciona manualmente.', 'error');
+                }
+            } catch(e) { showMsg('crearFaseMsg', `Error IA: ${e.message}`, 'error'); }
+            finally { btn.disabled = false; btn.innerHTML = orig; }
+        }
+
+        // ============ STEP 3: ETAPAS ============
+        function loadEtapasSelector() {
+            const container = document.getElementById('etapasSelector');
+            const selectedFases = JSON.parse(document.getElementById('selectedFases').value || '[]');
+            if (!selectedFases.length) {
+                container.innerHTML = '<div class="text-center text-slate-500 py-4"><i class="fas fa-info-circle mr-1"></i> No hay fases seleccionadas. Ve al paso anterior.</div>';
+                return;
+            }
+            const selected = JSON.parse(document.getElementById('selectedEtapas').value || '[]');
+            const fasesFiltradas = masterFases.filter(f => selectedFases.includes(f.id));
+            let html = '';
+            fasesFiltradas.forEach(fase => {
+                const etapas = masterEtapas.filter(e => e.fase_id === fase.id);
+                html += `<div class="p-3 bg-slate-900/60 rounded-xl border border-white/5">
+                    <h4 class="text-sm font-bold text-indigo-400 mb-2"><i class="fas fa-layer-group mr-1"></i>${fase.nombre}</h4>`;
+                if (etapas.length) {
+                    etapas.forEach(et => {
+                        const isChecked = selected.includes(et.id);
+                        html += `<label class="checkbox-custom flex items-center py-1.5 px-2 hover:bg-slate-800/40 rounded-lg transition-all text-sm">
+                            <input type="checkbox" class="etapa-checkbox" value="${et.id}" data-nombre="${et.nombre}" data-fase-id="${fase.id}" data-fase-nombre="${fase.nombre}" ${isChecked ? 'checked' : ''}>
+                            <span class="checkmark"></span>
+                            <span>${et.nombre}</span>
+                            ${et.descripcion ? `<span class="text-xs text-slate-500 ml-2">- ${et.descripcion}</span>` : ''}
+                        </label>`;
+                    });
+                } else {
+                    html += `<p class="text-xs text-slate-500 ml-6">No hay etapas para esta fase</p>`;
+                }
+                html += `</div>`;
+            });
+            container.innerHTML = html || '<div class="text-center text-slate-500 py-4">No hay etapas para las fases seleccionadas.</div>';
+            container.querySelectorAll('.etapa-checkbox').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const checked = Array.from(container.querySelectorAll('.etapa-checkbox:checked')).map(c => parseInt(c.value));
+                    document.getElementById('selectedEtapas').value = JSON.stringify(checked);
+                });
+            });
+        }
+
+        function mostrarCrearEtapa() {
+            const sel = document.getElementById('nuevaEtapaFase');
+            sel.innerHTML = masterFases.map(f => `<option value="${f.id}">${f.nombre}</option>`).join('');
+            document.getElementById('crearEtapaForm').classList.remove('hidden');
+        }
+        function cerrarCrearEtapa() { document.getElementById('crearEtapaForm').classList.add('hidden'); document.getElementById('nuevaEtapaNombre').value = ''; document.getElementById('nuevaEtapaDesc').value = ''; document.getElementById('crearEtapaMsg').textContent = ''; }
+
+        async function crearEtapa() {
+            const faseId = parseInt(document.getElementById('nuevaEtapaFase').value);
+            const nombre = document.getElementById('nuevaEtapaNombre').value.trim();
+            const desc = document.getElementById('nuevaEtapaDesc').value.trim();
+            if (!nombre) { showMsg('crearEtapaMsg', 'El nombre es obligatorio', 'error'); return; }
+            try {
+                const res = await fetch(`${API}/etapas/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify({ nombre, descripcion: desc || null, fase_id: faseId })
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || 'Error');
+                const nueva = await res.json();
+                masterEtapas.push(nueva);
+                showMsg('crearEtapaMsg', `Etapa "${nombre}" creada`, 'success');
+                cerrarCrearEtapa();
+                loadEtapasSelector();
+            } catch(e) { showMsg('crearEtapaMsg', `Error: ${e.message}`, 'error'); }
+        }
+
+        async function sugerirEtapasIA() {
+            const btn = document.getElementById('btnSugerirEtapas');
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Sugiriendo...';
+            try {
+                const projectType = document.getElementById('projectType').value;
+                const res = await fetch(`${API}/cronogramas/sugerir-ia`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify({ tipo_proyecto: projectType || 'Curso virtual', descripcion: document.getElementById('projectDesc').value })
+                });
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    const nombresEtapas = data.flatMap(f => (f.etapas || []).map(e => e.nombre_etapa));
+                    const container = document.getElementById('etapasSelector');
+                    const checkboxes = container.querySelectorAll('.etapa-checkbox');
+                    checkboxes.forEach(cb => {
+                        const nombre = cb.dataset.nombre;
+                        if (nombresEtapas.some(n => n.toLowerCase().includes(nombre.toLowerCase()) || nombre.toLowerCase().includes(n.toLowerCase()))) {
+                            cb.checked = true;
+                        }
+                    });
+                    const checked = Array.from(container.querySelectorAll('.etapa-checkbox:checked')).map(c => parseInt(c.value));
+                    document.getElementById('selectedEtapas').value = JSON.stringify(checked);
+                    showMsg('crearEtapaMsg', `IA analizó y seleccionó etapas sugeridas.`, 'success');
+                }
+            } catch(e) { showMsg('crearEtapaMsg', `Error IA: ${e.message}`, 'error'); }
+            finally { btn.disabled = false; btn.innerHTML = orig; }
+        }
+
+        // ============ STEP 4: CRONOGRAMA ============
+        function loadCronoForm() {
+            const container = document.getElementById('cronoEtapasContainer');
+            const selectedEtapas = JSON.parse(document.getElementById('selectedEtapas').value || '[]');
+            const cronoNoEtapas = document.getElementById('cronoNoEtapas');
+
+            if (!selectedEtapas.length) {
+                cronoNoEtapas.classList.remove('hidden');
+                return;
+            }
+            cronoNoEtapas.classList.add('hidden');
+
+            // Remove existing forms (keep header and no-etapas msg)
+            container.querySelectorAll('.crono-etapa-form').forEach(el => el.remove());
+
+            const projectStart = projectData.start_date || '';
+            const projectEnd = projectData.end_date || '';
+
+            selectedEtapas.forEach((etapaId, index) => {
+                const etapa = masterEtapas.find(e => e.id === etapaId);
+                if (!etapa) return;
+                const fase = masterFases.find(f => f.id === etapa.fase_id);
+                const faseName = fase ? fase.nombre : 'Sin fase';
+                const div = document.createElement('div');
+                div.className = 'crono-etapa-form p-4 bg-slate-900/60 rounded-xl border border-white/5 animate-fade';
+                div.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-bold text-indigo-300"><span class="text-slate-500">${faseName} /</span> ${etapa.nombre}</h4>
+                        <span class="text-xs text-slate-500">#${index + 1}</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Fecha Inicio</label>
+                            <input type="date" class="crono-fecha-inicio w-full input-focus" min="${projectStart}" max="${projectEnd}" data-etapa-id="${etapa.id}">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Fecha Fin</label>
+                            <input type="date" class="crono-fecha-fin w-full input-focus" min="${projectStart}" max="${projectEnd}" data-etapa-id="${etapa.id}">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Responsables</label>
+                            <select multiple class="crono-responsables w-full input-focus" data-etapa-id="${etapa.id}">
+                                ${usersData.map(u => `<option value="${u.uid}">${u.nombre || u.username || u.email}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function guardarCronograma() {
+            const btn = document.getElementById('btnGuardarCrono');
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+
+            const projectId = parseInt(document.getElementById('projectId').value);
+            const nombre = document.getElementById('cronoNombre').value.trim() || `Cronograma ${document.getElementById('projectName').value || ''}`;
+            const selectedEtapas = JSON.parse(document.getElementById('selectedEtapas').value || '[]');
+
+            if (!selectedEtapas.length) { alert('Selecciona al menos una etapa primero.'); btn.disabled = false; btn.innerHTML = orig; return; }
+
+            const formas = document.querySelectorAll('.crono-etapa-form');
+            const fasesMap = new Map();
+
+            let valid = true;
+            formas.forEach(form => {
+                const etapaId = parseInt(form.querySelector('[data-etapa-id]').dataset.etapaId);
+                const faseId = masterEtapas.find(e => e.id === etapaId)?.fase_id;
+                const fechaInicio = form.querySelector('.crono-fecha-inicio').value;
+                const fechaFin = form.querySelector('.crono-fecha-fin').value;
+                const responsables = Array.from(form.querySelector('.crono-responsables').selectedOptions).map(o => o.value);
+
+                if (!fechaInicio || !fechaFin || !responsables.length) { valid = false; return; }
+
+                const etapa = masterEtapas.find(e => e.id === etapaId);
+                const fase = masterFases.find(f => f.id === faseId);
+                if (!etapa || !fase) return;
+
+                const etapaData = {
+                    etapa_id: etapaId,
+                    nombre_etapa: etapa.nombre,
+                    fecha_inicio: fechaInicio,
+                    fecha_fin: fechaFin,
+                    estado: 'pendiente',
+                    responsables: responsables
+                };
+
+                if (!fasesMap.has(faseId)) {
+                    fasesMap.set(faseId, {
+                        fase_id: faseId,
+                        nombre_fase: fase.nombre,
+                        fecha_inicio: fechaInicio,
+                        fecha_fin: fechaFin,
+                        estado: 'pendiente',
+                        etapas: []
+                    });
+                }
+                fasesMap.get(faseId).etapas.push(etapaData);
+            });
+
+            if (!valid) { alert('Completa todas las fechas y responsables para cada etapa.'); btn.disabled = false; btn.innerHTML = orig; return; }
+
+            // Calculate fase dates
+            fasesMap.forEach(fase => {
+                const fechasInicio = fase.etapas.map(e => new Date(e.fecha_inicio));
+                const fechasFin = fase.etapas.map(e => new Date(e.fecha_fin));
+                fase.fecha_inicio = new Date(Math.min(...fechasInicio)).toISOString().split('T')[0];
+                fase.fecha_fin = new Date(Math.max(...fechasFin)).toISOString().split('T')[0];
+            });
+
+            const estructura = Array.from(fasesMap.values());
+
+            const payload = {
+                project_id: projectId,
+                nombre: nombre,
+                estado: 'planificado',
+                estructura: estructura
+            };
+
+            try {
+                const res = await fetch(`${API}/cronogramas/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Error al guardar');
+                }
+                cronogramaGuardado = await res.json();
+                goToStep(5);
+            } catch(e) {
+                alert(`Error: ${e.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
+        }
+
+        // ============ STEP 5: PLAN DE ESTUDIO ============
+        function irAPlanEstudio() {
+            const projectId = document.getElementById('projectId').value;
+            const name = encodeURIComponent(document.getElementById('projectName').value || '');
+            const desc = encodeURIComponent(document.getElementById('projectDesc').value || '');
+            const horas = encodeURIComponent(document.getElementById('projectHoras').value || '');
+            window.location.href = `${window.location.origin}${roleBase}/studyplan/index.html?project_id=${projectId}&project_name=${name}&project_desc=${desc}&project_horas=${horas}`;
+        }
+
+        // ============ TUTORIAL ============
+        function verTutorial() {
+            const d = window.driver.js.driver;
+            const tour = d({
+                showProgress: true,
+                animate: true,
+                nextBtnText: 'Siguiente &rarr;',
+                prevBtnText: '&larr; Anterior',
+                doneBtnText: '¡Entendido!',
+                progressText: 'Paso {{current}} de {{total}}',
+                popoverClass: 'driverjs-theme',
+                steps: [
+                    { element: '#projectInfoBar', popover: { title: 'Proyecto', description: 'Aquí ves el proyecto que acabas de crear. Toda la información se heredará automáticamente.', side: 'bottom', align: 'start' } },
+                    { element: '#step2', popover: { title: '1. Fases del Proyecto', description: 'Selecciona las fases que componen tu proyecto. Puedes usar IA para que las sugiera según el tipo de proyecto.', side: 'top', align: 'start' } },
+                    { element: '#step3', popover: { title: '2. Etapas del Proyecto', description: 'Elige las etapas para cada fase. También puedes crearlas si falta alguna.', side: 'top', align: 'start' } },
+                    { element: '#step4', popover: { title: '3. Cronograma', description: 'Asigna fechas y responsables a cada etapa para crear el cronograma del proyecto.', side: 'top', align: 'start' } },
+                    { element: '#step5', popover: { title: '4. Plan de Estudio', description: 'Una vez listo el cronograma, continúa al plan de estudio. Todos los datos del proyecto se pasarán automáticamente.', side: 'top', align: 'start' } }
+                ]
+            });
+            tour.drive();
+        }
+
+        init();
+    </script>
+    <script src="/js/roles.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', function() {
+        const allowedRoles = ['superadmin', 'admin', 'coordinador', 'gerente-general', 'disenador-instruccional', 'autor'];
+        const t = localStorage.getItem('token');
+        if (!t) { window.location.href = '/'; return; }
+        try { const p = JSON.parse(atob(t.split('.')[1])); const r = p.roles || [p.role].filter(Boolean); if (!r.some(ro => allowedRoles.includes(ro))) window.location.href = '/'; } catch(e) { window.location.href = '/'; }
+    });</script>
+    <script>(function() {
+        const t = localStorage.getItem('token'); if (!t) return;
+        try { const p = JSON.parse(atob(t.split('.')[1])); const perms = p.permissions || []; const hasAny = (ps) => ps.some(pr => perms.includes(pr));
+        const m = { 'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'], 'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'], 'menu-cronogramas': ['proyectos_cronogramas_crear'] };
+        Object.entries(m).forEach(([id, req]) => { const el = document.getElementById(id); if (el && !hasAny(req)) el.style.display = 'none'; }); } catch(e) {}
+    })();</script>
+</body>
+</html>

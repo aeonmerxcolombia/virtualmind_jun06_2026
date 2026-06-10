@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtualmind - Ingeniero LMS</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="/js/tooltips.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    if (window.innerWidth <= 768) {
+      window.location.href = "https://gestordecursos.pegui.edu.co/r/superadmin/responsive/";
+    }
+  </script>
+  <style>
+    /* Estilos CSS */
+    .chat-bubble { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    iframe { width: 100%; height: 100%; border: none; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .chat-bubble {
+      max-width: 100%;
+      word-wrap: break-word;
+      line-height: 1.5;
+    }
+    .menu-item.active {
+      background-color: blue;
+      color: #ffffff !important;
+      font-weight: bold;
+      border-radius: 0.25rem;
+      padding-left: 0.5rem;
+    }
+    #google_translate_element {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 1rem;
+      margin-right: 1rem;
+    }
+    #google_translate_element .goog-te-combo {
+      border-radius: 0.25rem;
+      padding: 0.25rem;
+      font-size: 0.875rem;
+      border: 1px solid #d1d5db;
+      background-color: #f3f4f6;
+      color: #1f2937;
+    }
+    .goog-logo-link { display: none !important; }
+    .goog-te-gadget-simple { background-color: transparent !important; border: none !important; }
+    .goog-te-gadget-simple span { display: none; }
+    
+    body.contrast { filter: invert(1) hue-rotate(180deg); }
+    body.large-text { font-size: 1.15rem !important; line-height: 1.6 !important; }
+    body.grayscale { filter: grayscale(1); }
+    body.dyslexia { font-family: 'OpenDyslexic', sans-serif !important; }
+    body.reduce-motion * { animation: none !important; transition: none !important; }
+    body.large-cursor, body.large-cursor * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="black" opacity="0.8"/></svg>') 16 16, auto !important; }
+    body.highlight-links a { outline: 3px solid #f59e0b !important; outline-offset: 2px !important; }
+    body.reading-guide { background: linear-gradient(to right, transparent 0%, transparent 10%, rgba(59, 130, 246, 0.1) 10%, rgba(59, 130, 246, 0.1) 90%, transparent 90%, transparent 100%); }
+    body.paragraph-spacing p, body.paragraph-spacing div, body.paragraph-spacing li { margin-bottom: 1.5rem !important; line-height: 1.8 !important; }
+    body.no-flashing * { animation: none !important; }
+    body.focus-highlight *:focus { outline: 3px solid #4f46e5 !important; outline-offset: 2px !important; }
+    body.show-keys { -webkit-user-select: none; user-select: none; }
+    body.show-keys kbd { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; padding: 2px 6px; font-family: monospace; box-shadow: 0 2px 0 #d1d5db; margin: 0 2px; }
+    body.screen-reader * { pointer-events: auto !important; }
+    
+    body.dark-mode { background-color: #1a1a2e !important; }
+    body.dark-mode .bg-gray-100 { background-color: #16213e !important; }
+    body.dark-mode .bg-white { background-color: #1f2937 !important; }
+    body.dark-mode .text-gray-800 { color: #e5e7eb !important; }
+    body.dark-mode .text-gray-700 { color: #d1d5db !important; }
+    body.dark-mode .text-gray-600 { color: #9ca3af !important; }
+    body.dark-mode header { background-color: #0f3460 !important; }
+    body.dark-mode aside { background-color: #16213e !important; }
+    body.dark-mode .shadow-xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; }
+    
+    #chatWidgetContainer {
+      position: fixed;
+      bottom: 0.5rem;
+      left: calc(18rem + 1.5rem);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    #chatWidgetToggle {
+      background-color: #4F46E5;
+      color: white;
+      padding: 1rem;
+      border-radius: 9999px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #chatWidgetToggle:hover { background-color: #4338CA; }
+    #chatWidget {
+      width: 24rem;
+      height: 34rem;
+      background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      transform-origin: bottom left;
+      transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+      opacity: 0;
+      transform: translateY(100%) scale(0.9);
+      pointer-events: none;
+      margin-bottom: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: absolute;
+      bottom: calc(100% + 1rem);
+      left: 0;
+    }
+    #chatWidget.opened {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    #chatBoxWidget { flex-grow: 1; overflow-y: auto; }
+    
+    /* Voice Navigation Widget */
+    #voiceNavContainer {
+      position: fixed;
+      bottom: 0.5rem;
+      right: 0.5rem;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    #voiceNavToggle {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    #voiceNavToggle:hover { transform: scale(1.05); }
+    #voiceNavToggle.listening {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+    }
+    #voiceNavPanel {
+      width: 280px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      margin-bottom: 10px;
+      display: none;
+      overflow: hidden;
+    }
+    #voiceNavPanel.opened { display: block; }
+    #voiceNavStatus {
+      padding: 12px;
+      background: #f3f4f6;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.875rem;
+    }
+    #voiceNavStatus.listening { background: #fef2f2; color: #dc2626; }
+    #voiceNavCommands {
+      padding: 12px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    .voice-cmd {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;      margin: 4px 0;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      background: #f9fafb;
+    }
+    .voice-cmd kbd {
+      background: #e5e7eb;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    
+    #accessibilityMenu { display: inline-flex; align-items: center; position: relative; margin-left: 1rem; }
+    #accessibilityControls { display: none; position: absolute; right: 0; top: 100%; margin-top: 0.5rem; z-index: 9999; width: 18rem; background: white; border-radius: 0.75rem; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1px solid #e5e7eb; }
+    #accessibilityControls.visible { display: block; }
+    #accessibilityMenu.opened #accessibilityControls { display: block; }
+    #accessibilityControls button {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      border: 1px solid #d1d5db;
+      background-color: #f3f4f6;
+      color: #1f2937;
+      border-radius: 0.25rem;
+    }
+    #accessibilityControls button:hover { background-color: #e5e7eb; }
+    #accessibilityControls button.reset { color: #DC2626; }
+    #accessibilityToggle {
+      background-color: transparent;
+      color: #1f2937;
+      padding: 0.25rem;
+      border-radius: 9999px;
+      box-shadow: none;
+      font-size: 1.25rem;
+      transition: none;
+      margin-left: 1rem;
+    }
+  </style>
+  <link href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.css" rel="stylesheet">
+</head>
+<body class="min-h-screen font-[Inter] bg-gray-100">
+  <header class="sticky top-0 z-30 bg-green-100 shadow flex items-center justify-between px-6 py-4">
+    <div class="flex items-center space-x-3">
+      <img src="/assets/logo.png" alt="Logo" class="h-10 w-10 rounded-full object-cover">
+      <h1 class="text-xl font-bold text-gray-800">Virtualmind - Ingeniero LMS</h1>
+    </div>
+    <div class="flex items-center space-x-3">
+      
+      <div id="accessibilityMenu" class="relative flex items-center">
+        <button id="accessibilityToggle" aria-expanded="false" aria-label="Opciones de accesibilidad"
+           class="flex items-center gap-2 px-3 py-2 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors">
+          <span class="text-lg">♿</span>
+          <span class="text-sm font-medium text-indigo-700">Accesibilidad</span>
+          <svg class="w-4 h-4 text-indigo-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="accessibilityControls">
+          <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3">
+            <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              Accesibilidad
+            </h3>
+          </div>
+          <div class="p-4 space-y-4 max-h-96 overflow-y-auto">
+            <div class="border-b border-gray-200 pb-3 mb-3">
+              <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">👁️ Vista</h4>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+                <div class="flex items-center gap-2"><span class="text-lg">🌗</span><span class="block text-sm font-medium text-gray-800">Alto Contraste</span></div>
+                <input type="checkbox" data-act="contrast" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+                <div class="flex items-center gap-2"><span class="text-lg">🔠</span><span class="block text-sm font-medium text-gray-800">Texto Grande (+15%)</span></div>
+                <input type="checkbox" data-act="large-text" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+                <div class="flex items-center gap-2"><span class="text-lg">⚫</span><span class="block text-sm font-medium text-gray-800">Escala de Grises</span></div>
+                <input type="checkbox" data-act="grayscale" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+                <div class="flex items-center gap-2"><span class="text-lg">🌙</span><span class="block text-sm font-medium text-gray-800">Tema Oscuro</span></div>
+                <input type="checkbox" data-act="dark-mode" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+                <div class="flex items-center gap-2"><span class="text-lg">🔍</span><span class="block text-sm font-medium text-gray-800">Cursor Grande</span></div>
+                <input type="checkbox" data-act="large-cursor" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
+                <div class="flex items-center gap-2"><span class="text-lg">🔗</span><span class="block text-sm font-medium text-gray-800">Resaltar Enlaces</span></div>
+                <input type="checkbox" data-act="highlight-links" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+            </div>
+            <div class="border-b border-gray-200 pb-3 mb-3">
+              <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">📖 Lectura</h4>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+                <div class="flex items-center gap-2"><span class="text-lg">📖</span><span class="block text-sm font-medium text-gray-800">Fuente Disléxica</span></div>
+                <input type="checkbox" data-act="dyslexia" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+                <div class="flex items-center gap-2"><span class="text-lg">📏</span><span class="block text-sm font-medium text-gray-800">Guías de Lectura</span></div>
+                <input type="checkbox" data-act="reading-guide" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
+                <div class="flex items-center gap-2"><span class="text-lg">📝</span><span class="block text-sm font-medium text-gray-800">Espaciado de Párrafos</span></div>
+                <input type="checkbox" data-act="paragraph-spacing" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+            </div>
+            <div class="border-b border-gray-200 pb-3 mb-3">
+              <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">⏸️ Movimiento</h4>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+                <div class="flex items-center gap-2"><span class="text-lg">⏸️</span><span class="block text-sm font-medium text-gray-800">Reducir Animaciones</span></div>
+                <input type="checkbox" data-act="reduce-motion" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
+                <div class="flex items-center gap-2"><span class="text-lg">🚫</span><span class="block text-sm font-medium text-gray-800">Evitar Parpadeo</span></div>
+                <input type="checkbox" data-act="no-flashing" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+            </div>
+            <div class="pb-2">
+              <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">⌨️ Navegación</h4>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+                <div class="flex items-center gap-2"><span class="text-lg">🎯</span><span class="block text-sm font-medium text-gray-800">Resaltar Enfoque</span></div>
+                <input type="checkbox" data-act="focus-highlight" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+                <div class="flex items-center gap-2"><span class="text-lg">⌨️</span><span class="block text-sm font-medium text-gray-800">Mostrar Teclas</span></div>
+                <input type="checkbox" data-act="show-keys" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+              <label class="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
+                <div class="flex items-center gap-2"><span class="text-lg">🔊</span><span class="block text-sm font-medium text-gray-800">Lector de Pantalla</span></div>
+                <input type="checkbox" id="screenReaderToggle" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+              </label>
+            </div>
+          </div>
+          <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+            <button id="resetAccessibility" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors font-medium">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Restablecer Todo
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <label for="roleSelect" class="text-sm font-medium text-gray-700">Cambiar de rol:</label>
+      <select id="roleSelect" class="border border-gray-300 px-3 py-1 rounded bg-gray-100 text-sm text-gray-800 shadow-sm focus:outline-none focus:ring focus:ring-indigo-300">
+        <option value="">Cargando...</option>
+      </select>
+      <div id="google_translate_element"></div>
+      <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg">
+        Cerrar sesión
+      </button>
+      
+      <div class="relative">
+        <button id="notifButton" class="relative bg-white p-2 rounded-full hover:bg-gray-100">
+          🔔
+          <span id="notifCount" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full px-1.5">0</span>
+        </button>
+        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg overflow-hidden z-50">
+          <div id="notifList" class="flex flex-col divide-y divide-gray-200 max-h-96 overflow-y-auto"></div>
+          <div id="notifEmpty" class="text-center p-2 text-sm text-gray-500">No hay notificaciones</div>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <div class="flex min-h-[calc(100vh-80px)]">
+    <aside class="bg-[#21232a] w-72 min-h-screen flex flex-col">
+      <div class="flex flex-col items-center py-6 bg-[#23262f] border-b border-gray-700">
+        <div class="bg-white rounded-full w-20 h-20 flex items-center justify-center border-4 border-white shadow mb-2">
+          <img id="sidebarAvatar" src="" alt="Perfil"
+               class="w-16 h-16 rounded-full border-2 border-white object-cover shadow"
+               onerror="this.onerror=null;this.src='/assets/default_avatar.png';">
+        </div>
+        <span id="sidebarName" class="text-white font-semibold text-lg tracking-wide">Perfil</span>
+        <button onclick="verMiPerfil()" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+          Ver mi perfil
+        </button>
+      </div>
+      <nav id="dynamic-sidebar-menu" class="flex-1 px-2 py-4 space-y-2"></nav>
+    </aside>
+    <main class="flex-1 p-6">
+      <div class="bg-white shadow-xl rounded-xl h-full w-full overflow-hidden">
+        <iframe id="mainFrame" src="tutorial/index.html"></iframe>
+      </div>
+    </main>
+  </div>
+
+  <!-- Voice Navigation Widget -->
+  <div id="voiceNavContainer">
+    <button id="voiceNavToggle" title="Activar navegación por voz">🎤</button>
+    <div id="voiceNavPanel">
+      <div id="voiceNavStatus">🎤 Di un comando...</div>
+      <div id="voiceNavCommands">
+        <div class="voice-cmd"><kbd>Proyectos</kbd> Ir a proyectos</div>
+        <div class="voice-cmd"><kbd>Documentos</kbd> Ir a mis documentos</div>
+        <div class="voice-cmd"><kbd>Biblioteca</kbd> Ir a biblioteca</div>
+        <div class="voice-cmd"><kbd>Drive</kbd> Ir a drive</div>
+        <div class="voice-cmd"><kbd>Podcast</kbd> Ir a podcast</div>
+        <div class="voice-cmd"><kbd>Chat</kbd> Abrir chat</div>
+        <div class="voice-cmd"><kbd>Tareas</kbd> Ver mis tareas</div>
+        <div class="voice-cmd"><kbd>Inicio</kbd> Volver al inicio</div>
+        <div class="voice-cmd"><kbd>Cerrar</kbd> Cerrar este panel</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WIDGET DE CHAT Y ASISTENTE VIRTUAL MEJORADO -->
+  <div id="chatWidgetContainer">
+    <button id="chatWidgetToggle">💬</button>
+    <div id="chatWidget">
+      <div class="p-5 border-b bg-gray-50 rounded-t-xl">
+        <h2 class="text-lg font-bold text-gray-800">Asistente Virtual</h2>
+        <p class="text-xs text-gray-500">Impulsado por IA local y en la nube</p>
+      </div>
+      <div class="p-4 flex flex-col h-full overflow-hidden">
+        
+        <div id="chatBoxWidget" class="bg-gray-100 rounded-lg p-4 overflow-y-auto space-y-3 scrollbar-hide flex-1 border border-gray-200 shadow-inner"></div>
+        
+        <div class="space-y-3 mt-4">
+          <!-- Selector de Modelo Moderno -->
+          <div class="relative">
+              <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 4h3a3 3 0 006 0h3a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm2.5 7a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm2.45 4a2.5 2.5 0 10-4.9 0h4.9zM12 9a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm-1.45 4a2.5 2.5 0 104.9 0h-4.9z" clip-rule="evenodd"></path></svg>
+            </div>
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
+
+          <!-- Input con Micrófono SVG Integrado -->
+          <div class="relative flex items-center">
+            <input id="chatInput" type="text" placeholder="Escribe o graba un audio..."
+                   class="w-full border border-gray-300 rounded-lg py-2.5 pl-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all" />
+            
+            <button id="micButton" class="absolute right-2 p-1.5 rounded-full text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors focus:outline-none" title="Iniciar grabación con IA">
+              <!-- Icono por defecto (Gris) -->
+              <svg id="micIconDefault" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+            </button>
+          </div>
+
+          <!-- Botón de Enviar -->
+          <button onclick="enviarMensaje()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow-sm transition-colors flex justify-center items-center gap-2">
+            <span>Enviar Mensaje</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Guardián de Ruta ---
+    let token = localStorage.getItem("token");
+    let termsAccepted = localStorage.getItem("termsAccepted"); 
+    let API = "https://gestordecursos.pegui.edu.co:8000";
+    if (!token) { window.location.href = "/index.html"; } else if (termsAccepted !== 'true') { window.location.href = '/accept-terms.html'; }
+
+    const notifBtn = document.getElementById("notifButton");
+    const notifDropdown = document.getElementById("notifDropdown");
+    const notifList = document.getElementById("notifList");
+    const notifCount = document.getElementById("notifCount");
+    const notifEmpty = document.getElementById("notifEmpty");
+    let notifAbierto = false;
+    
+    notifBtn.addEventListener("click", () => { 
+      notifDropdown.classList.toggle("hidden"); 
+      if (!notifAbierto) {
+        notifAbierto = true;
+        cargarNotificaciones();
+        fetch(`${API}/notifications/leer`, { method: "POST", headers: { Authorization: "Bearer " + token } })
+          .then(() => { notifCount.textContent = "0"; notifCount.style.display = "none"; })
+          .catch(() => {});
+      }
+    });
+
+    function toggleMenu(id) {
+      const menu = document.getElementById(id);
+      const icon = document.getElementById('icon-' + id);
+      const isCurrentlyOpen = !menu.classList.contains('hidden');
+      document.querySelectorAll('.menu-container .space-y-1').forEach(m => { m.classList.add('hidden'); });
+      document.querySelectorAll('.menu-container svg').forEach(i => { i.classList.remove('rotate-180'); });
+      if (!isCurrentlyOpen) { menu.classList.remove('hidden'); icon.classList.add('rotate-180'); }
+    }
+
+    function selectMenu(element) {
+      document.querySelectorAll('.menu-item').forEach(item => { item.classList.remove('active'); });
+      element.classList.add('active');
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("termsAccepted");
+      window.location.href = "/index.html";
+    }
+
+    function cargarVista(url) { document.getElementById("mainFrame").src = url; }
+    window.iniciarTourSidebar = function() {
+      document.querySelectorAll('.menu-container .space-y-1').forEach(function(m) { m.classList.remove('hidden'); });
+      if (!window.driver?.js?.driver) return;
+      var d = window.driver.js.driver;
+      var steps = [];
+      var avatar = document.getElementById('sidebarAvatar');
+      if (avatar) steps.push({ element: '#sidebarAvatar', popover: { title: 'Tu Perfil', description: 'Tu foto y nombre. Haz clic para ir a tu perfil.', side: "right", align: "start" } });
+      document.querySelectorAll('#dynamic-sidebar-menu > .menu-item').forEach(function(item) {
+        var iconSpan = item.querySelector('span');
+        var icon = iconSpan ? iconSpan.textContent.trim() : '';
+        var label = item.textContent.replace(icon, '').trim() || item.textContent.trim();
+        steps.push({ element: item, popover: { title: label, description: 'Acceso directo a ' + label + '.', side: "right", align: "center" } });
+      });
+      document.querySelectorAll('#dynamic-sidebar-menu .menu-container').forEach(function(container) {
+        var toggleBtn = container.querySelector('button');
+        var submenu = container.querySelector('.space-y-1');
+        var items = submenu ? submenu.querySelectorAll('.menu-item') : [];
+        var labelEl = toggleBtn ? toggleBtn.querySelector('.font-medium, .font-semibold') : null;
+        var label = labelEl ? labelEl.textContent.trim() : (toggleBtn ? toggleBtn.textContent.replace(/svg.*svg/g,'').trim() : 'Seccion');
+        var iconEl = toggleBtn ? toggleBtn.querySelector('span') : null;
+        var icon = iconEl ? iconEl.textContent.trim() : '';
+        if (items.length > 0) {
+          steps.push({ element: container, popover: { title: icon + ' ' + label, description: items.length + ' herramienta' + (items.length > 1 ? 's' : '') + '.', side: "right", align: "center" } });
+          Array.from(items).slice(0, 3).forEach(function(item) {
+            var text = item.textContent.trim();
+            if (text) steps.push({ element: item, popover: { title: text, description: 'Accede a ' + text + '.', side: "right", align: "center" } });
+          });
+          if (items.length > 3) steps.push({ element: container, popover: { title: '+' + (items.length - 3) + ' mas', description: (items.length - 3) + ' herramientas adicionales.', side: "right", align: "center" } });
+        } else {
+          steps.push({ element: container, popover: { title: icon + ' ' + label, description: 'Seccion disponible.', side: "right", align: "center" } });
+        }
+      });
+      if (steps.length === 0) steps.push({ element: '#dynamic-sidebar-menu', popover: { title: 'Menu Lateral', description: 'Menu de navegacion con tus herramientas.', side: "right", align: "center" } });
+      steps.push({ element: '#mainFrame', popover: { title: 'Area de Trabajo', description: 'Aqui se cargan todas las herramientas.', side: "left", align: "center" } });
+      steps.push({ element: '#mainFrame', popover: { title: 'Listo!', description: 'Explora el menu para descubrir todas las herramientas.', side: "left", align: "center" } });
+      var tour = d({ showProgress: true, animate: true, nextBtnText: 'Siguiente', prevBtnText: 'Anterior', doneBtnText: 'Entendido!', progressText: 'Paso {{current}} de {{total}}', popoverClass: 'driverjs-theme', onDestroy: function() { document.querySelectorAll('.menu-container .space-y-1').forEach(function(m) { m.classList.add('hidden'); }); document.querySelectorAll('.menu-container svg[id^="icon-"]').forEach(function(i) { i.classList.remove('rotate-180'); }); }, steps: steps });
+      tour.drive();
+    };
+
+
+    const mainFrame_autor = document.getElementById('mainFrame');
+    if (mainFrame_autor) {
+      mainFrame_autor.addEventListener('load', function() {
+        try {
+          if (mainFrame_autor.contentWindow && !mainFrame_autor.contentWindow.__tooltipsLoaded) {
+            const script = mainFrame_autor.contentDocument.createElement('script');
+            script.src = '/js/tooltips.js';
+            mainFrame_autor.contentDocument.head.appendChild(script);
+          }
+        } catch(e) {}
+      });
+    }
+    
+    const menuMapping = {
+      'proyectos': {
+        label: 'Proyectos',
+        icon: '🗂️',
+        id: 'menu-proyectos',
+        items: [
+          { label: 'Consultar Proyectos', permission: 'proyectos_consultar', url: 'projects/' },
+          { label: 'Tareas', permission: 'proyectos_tareas_listar', url: 'tasks/' }
+        ]
+      },
+      'office': {
+        label: 'Mis Documentos',
+        icon: '📄',
+        url: 'documentos/',
+        permission: 'herramientas_Office_usar'
+      },
+      'biblioteca': {
+        label: 'Banco de Recursos',
+        icon: '📚',
+        url: 'https://gestordecursos.pegui.edu.co/biblioteca/',
+        permission: 'recursos_biblioteca_ver'
+      },
+      'canvas': {
+        label: 'Canvas',
+        icon: '🎨',
+        url: 'canvas/index.html',
+        permission: 'herramientas_canvas_usar'
+      },
+      'drive': {
+        label: 'Drive',
+        icon: '💾',
+        items: [
+          { label: 'Drive Personal', permission: 'archivos_drive_personal_ver', url: 'https://gestordecursos.pegui.edu.co/drive/personal/' },
+          { label: 'Drive Global', permission: 'archivos_drive_global_ver', url: 'https://gestordecursos.pegui.edu.co/drive/global/' }
+        ]
+      },
+      'podcast': {
+        label: 'Podcast',
+        icon: '🎙️',
+        url: 'podcast',
+        permission: 'ia_podcast_crear'
+      },
+      'videopodcast': {
+        label: 'Video-Podcast',
+        icon: '📹',
+        url: 'videocast',
+        permission: 'ia_videocast_crear'
+      },
+      'utilidades': {
+        label: 'Herramientas de Productividad IA',
+        icon: '🛠️',
+        items: [
+          { label: '🧠 VirtualMind Omni - IA Total', permission: 'ia_produccion_imagen', url: 'omnistudio/index.html' },
+          { label: '📚 Biblioteca de Documentos', permission: 'recursos_biblioteca_ver', url: 'biblioteca/index.html' }
+        ]
+      }
+    };
+
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent( atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('') );
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        console.error("Error decodificando token:", e);
+        return null;
+      }
+    }
+
+    async function fetchPermissionsForCurrentRole() {
+      if (!token) { return new Set(); }
+      const path = window.location.pathname;
+      const currentRole = path.split('/')[2];
+      if (!currentRole || currentRole === 'superadmin') { return new Set(); }
+      try {
+        const res = await fetch(`${API}/roles/`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) {
+          if (res.status === 401) { logout(); }
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const allRoles = await res.json();
+        const currentRoleObject = allRoles.find(r => r.name === currentRole);
+        if (currentRoleObject && currentRoleObject.permissions) {
+          return new Set(currentRoleObject.permissions.map(p => p.name));
+        }
+        return new Set();
+      } catch (error) {
+        console.error(`Error consultando permisos para el rol '${currentRole}':`, error);
+        return new Set();
+      }
+    }
+
+    async function renderSidebar() {
+      const sidebarMenu = document.getElementById('dynamic-sidebar-menu');
+      if (!sidebarMenu) return;
+      sidebarMenu.innerHTML = '';
+      const path = window.location.pathname;
+      const currentRole = path.split('/')[2];
+      let permissionsToRender = new Set();
+      
+      if (currentRole === 'superadmin') {
+        for (const sectionId in menuMapping) {
+          const section = menuMapping[sectionId];
+          if (section.items) {
+            section.items.forEach(item => permissionsToRender.add(item.permission));
+          } else if (section.permission) {
+            permissionsToRender.add(section.permission);
+          }
+        }
+      } else {
+        permissionsToRender = await fetchPermissionsForCurrentRole();
+      }
+      
+      for (const sectionId in menuMapping) {
+        const section = menuMapping[sectionId];
+        const sectionPermissions = section.items ? section.items.map(i => i.permission) : [section.permission];
+        const hasAnyPermission = sectionPermissions.some(p => permissionsToRender.has(p));
+        
+        if (section.url && section.permission && permissionsToRender.has(section.permission)) {
+          sidebarMenu.innerHTML += `<a href="#" onclick="selectMenu(this); cargarVista('${section.url}')" class="menu-item block text-gray-200 hover:text-indigo-300 py-2 px-3"><span class="mr-3">${section.icon}</span>${section.label}</a>`;
+        } else if (section.items && hasAnyPermission) {
+          const visibleItems = section.items.filter(item => permissionsToRender.has(item.permission));
+          if (visibleItems.length > 0) {
+            let sectionItemsHTML = visibleItems.map(item => `<a href="#" onclick="selectMenu(this); cargarVista('${item.url}')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">${item.label}</a>`).join('');
+            sidebarMenu.innerHTML += `
+              <div class="menu-container">
+                <button onclick="toggleMenu('${sectionId}')" class="flex items-center w-full text-white py-2 px-3 rounded hover:bg-[#282c37] transition">
+                  <span class="mr-3">${section.icon}</span>
+                  <span class="flex-1 text-left font-semibold">${section.label}</span>
+                  <svg id="icon-${sectionId}" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div id="${sectionId}" class="ml-9 mt-1 space-y-1 hidden">
+                  ${sectionItemsHTML}
+                </div>
+              </div> `;
+          }
+        }
+      }
+    }
+
+    async function cargarPerfilSidebar() {
+      if (!token) return;
+      const payload = parseJwt(token);
+      if (!payload || !payload.user_id) { logout(); return; }
+      const user_id = payload.user_id;
+      localStorage.setItem("user_id", user_id);
+      
+      try {
+        const res = await fetch(`${API}/users/${user_id}`, { headers: { Authorization: "Bearer " + token } });
+        const data = await res.json();
+        const roles = data.roles;
+        const sel = document.getElementById("roleSelect");
+        sel.innerHTML = "";
+        const path = window.location.pathname;
+        const currentRole = path.split('/')[2];
+        roles.forEach(r => {
+          const o = document.createElement("option");
+          o.value = r;
+          o.textContent = r.charAt(0).toUpperCase() + r.slice(1);
+          if (r === currentRole) o.selected = true;
+          sel.appendChild(o);
+        });
+        sel.addEventListener("change", () => sel.value && (window.location.href = `/r/${sel.value}/`));
+      } catch (e) {
+        console.error("Error cargando roles de usuario:", e);
+      }
+      
+      try {
+        const res2 = await fetch(`${API}/profiles/${user_id}`, { headers: { Authorization: "Bearer " + token } });
+        const p = await res2.json();
+        document.getElementById("sidebarAvatar").src = p.foto_url || "/assets/default_avatar.png";
+        document.getElementById("sidebarName").textContent = p.nombre || "Perfil";
+      } catch (e) {
+        console.error("Error cargando perfil:", e);
+      }
+    }
+
+    async function cargarNotificaciones() {
+      try {
+        const res = await fetch(`${API}/notifications/`, { headers: { Authorization: "Bearer " + token } });
+        if (res.status === 401) { logout(); return; }
+        const data = await res.json();
+        const user_id = localStorage.getItem("user_id");
+        const notifs = (data.notificaciones || []).filter(n => String(n.usuario_id) === String(user_id));
+        notifList.innerHTML = "";
+        if (notifs.length === 0) {
+          notifCount.textContent = 0;
+          notifEmpty.style.display = "block";
+          return;
+        }
+        notifCount.textContent = notifs.length;
+        notifEmpty.style.display = "none";
+        notifs.forEach(n => {
+          const div = document.createElement("div");
+          div.className = "px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm border-bottom border-gray-200";
+          div.innerHTML = `${n.descripcion}<br><small class="text-muted">${new Date(n.fecha).toLocaleString()}</small>`;
+          if (n.link) {
+            div.onclick = () => { window.location.href = n.link; };
+            div.style.cursor = "pointer";
+          }
+          notifList.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error al cargar notificaciones:", err);
+      }
+    }
+
+    function findMenuItemByText(text) {
+      const menuItems = document.querySelectorAll('.menu-item');
+      for (const item of menuItems) {
+        if (item.textContent.trim() === text) {
+          return item;
+        }
+      }
+      return null;
+    }
+
+    function highlightDefaultMenuItem() {
+      const defaultMenuItem = findMenuItemByText('Crear Cliente (CRM)');
+      if (defaultMenuItem) {
+        selectMenu(defaultMenuItem);
+        const parentContainer = defaultMenuItem.closest('.menu-container');
+        if (parentContainer) {
+          const toggleButton = parentContainer.querySelector('button[onclick^="toggleMenu"]');
+          const menuContent = parentContainer.querySelector('.space-y-1');
+          if (toggleButton && menuContent && menuContent.classList.contains('hidden')) {
+            toggleButton.click();
+          }
+        }
+      }
+    }
+
+    (async () => {
+      await cargarPerfilSidebar();
+      await renderSidebar();
+      await cargarNotificaciones();
+      setInterval(cargarNotificaciones, 30000);
+      highlightDefaultMenuItem();
+    })();
+
+    async function verMiPerfil() {
+      const token = localStorage.getItem("token");
+      if (!token) { alert("No hay sesión iniciada"); return; }
+      let user_id = localStorage.getItem("user_id");
+      if (!user_id) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          user_id = payload.user_id;
+        } catch (e) {
+          console.error("Error decodificando token:", e);
+        }
+      }
+      const path = window.location.pathname;
+      const currentRole = path.split('/')[2] || 'superadmin';
+      if (user_id) {
+        window.location.href = `/r/${currentRole}/perfil/index.html?user_id=${user_id}`;
+      } else {
+        alert("No se pudo obtener el ID de usuario");
+      }
+    }
+
+    // --- WIDGET DE CHAT (Lógica) ---
+    const chatWidget = document.getElementById('chatWidget');
+    const chatWidgetToggle = document.getElementById('chatWidgetToggle');
+    const chatBox = document.getElementById("chatBoxWidget");
+    const KEY = "chat_historial";
+    
+    chatWidgetToggle.addEventListener('click', () => {
+      chatWidget.classList.toggle('opened');
+      if (chatWidget.classList.contains('opened')) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      chatBox.innerHTML = localStorage.getItem(KEY) || `<div class="chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-600">💬 Hola, soy tu Asistente Inteligente. ¿En qué puedo ayudarte hoy?</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    function convertMarkdownToHtml(text) {
+      let htmlText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      htmlText = htmlText.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+      htmlText = htmlText.replace(/\n/g, '<br>');
+      return htmlText;
+    }
+
+    function appendBubble(originalTxt, who = "IA") {
+      const d = document.createElement("div");
+      d.className = who === "Tú" ? "chat-bubble bg-indigo-100 p-3 rounded-lg text-sm text-gray-800" : "chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-800 relative border border-gray-100";
+      const id = `respuesta-${Date.now()}`;
+      const textoParaMostrar = convertMarkdownToHtml(originalTxt);
+      const contenido = `<strong>${who}:</strong> <span id="${id}">${textoParaMostrar}</span>`;
+      d.innerHTML = contenido;
+      
+      if (who === "IA") {
+        const btnCopy = document.createElement("button");
+        btnCopy.textContent = "📋 Copiar";
+        btnCopy.title = "Copiar al portapapeles";
+        btnCopy.className = "ml-2 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors";
+        btnCopy.onclick = () => copiarTexto(id);
+        
+        const btnSpeak = document.createElement("button");
+        btnSpeak.innerHTML = "🔊 Escuchar";
+        btnSpeak.title = "Escuchar esta respuesta";
+        btnSpeak.className = "ml-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors";
+        btnSpeak.onclick = () => speakText(originalTxt, btnSpeak);
+        
+        const buttonsContainer = document.createElement("div");
+        buttonsContainer.className = "mt-2 pt-2 border-t border-gray-100 flex items-center";
+        buttonsContainer.appendChild(btnCopy);
+        buttonsContainer.appendChild(btnSpeak);
+        d.appendChild(buttonsContainer);
+      }
+      
+      chatBox.appendChild(d);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      
+      const copia = chatBox.cloneNode(true);
+      copia.querySelectorAll("button").forEach(b => b.remove());
+      localStorage.setItem(KEY, copia.innerHTML);
+    }
+
+    async function enviarMensaje() {
+      const msg = document.getElementById("chatInput").value.trim();
+      if (!msg) return;
+      
+      appendBubble(msg, "Tú");
+      document.getElementById("chatInput").value = "";
+      
+      const t = document.createElement("div");
+      t.id = "typing";
+      t.className = "chat-bubble bg-gray-50 p-3 rounded-lg italic text-gray-500 text-sm flex items-center gap-2";
+      t.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Procesando respuesta...`;
+      chatBox.appendChild(t);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      
+      const mdl = "gemini";
+      
+      try {
+        const r = await fetch(`${API}/chat/${mdl}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ prompt: msg, mensaje: msg }) 
+        });
+        const { respuesta } = await r.json();
+        appendBubble(respuesta, "IA");
+      } catch {
+        appendBubble("❌ Error de red al contactar al motor de Inteligencia Artificial.", "IA");
+      } finally {
+        document.getElementById("typing")?.remove();
+      }
+    }
+
+    function copiarTexto(id) {
+      const texto = document.getElementById(id)?.innerText;
+      if (texto) {
+        navigator.clipboard.writeText(texto)
+          .then(() => alert("✅ Texto copiado al portapapeles"))
+          .catch(() => alert("❌ No se pudo copiar"));
+      }
+    }
+
+    // --- Síntesis de Voz (Text to Speech) ---
+    function sanitizeTextForSpeech(text) {
+      let cleanedText = text.replace(/\*\*(.*?)\*\*/g, '$1');
+      cleanedText = cleanedText.replace(/\*(.*?)\*/g, '$1');
+      cleanedText = cleanedText.replace(/[\#\>\-]/g, '');
+      cleanedText = cleanedText.replace(/\n/g, ' ').replace(/\s{2,}/g, ' ');
+      return cleanedText.trim();
+    }
+
+    function updateSpeakButtonState(button, state) {
+      if (button) {
+        button.disabled = state === 'disabled';
+        button.style.opacity = state === 'disabled' ? 0.5 : 1;
+        button.style.cursor = state === 'disabled' ? 'not-allowed' : 'pointer';
+        button.textContent = state === 'disabled' ? '🔊 Leyendo...' : '🔊 Escuchar';
+      }
+    }
+
+    function speakText(text, button) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const cleanedText = sanitizeTextForSpeech(text);
+        const utterance = new SpeechSynthesisUtterance(cleanedText);
+        utterance.lang = 'es-ES';
+        utterance.rate = 1.1;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        updateSpeakButtonState(button, 'disabled');
+        
+        utterance.onend = function () { updateSpeakButtonState(button, 'enabled'); };
+        utterance.onerror = function (event) {
+          console.error('Error en síntesis de voz:', event);
+          updateSpeakButtonState(button, 'enabled');
+        };
+        
+        setTimeout(() => { window.speechSynthesis.speak(utterance); }, 100);
+      } else {
+        alert('Tu navegador no soporta la síntesis de voz nativa.');
+      }
+    }
+
+    // --- NUEVA INTEGRACIÓN WHISPER IA (GRABACIÓN .OGG) ---
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const micButton = document.getElementById('micButton');
+      if (micButton) {
+        micButton.addEventListener('click', toggleAudioRecording);
+      }
+    });
+
+    async function toggleAudioRecording() {
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
+            await enviarAudioAWhisper(audioBlob);
+            stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          document.getElementById('chatInput').value = '🎙️ Grabando audio... (Haz clic para detener)';
+          updateMicButtonVisuals();
+
+        } catch (error) {
+          console.error("Error accediendo al micrófono:", error);
+          alert("❌ Permiso denegado. Verifica que tu navegador pueda acceder al micrófono.");
+        }
+      } else {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+        isRecording = false;
+        updateMicButtonVisuals();
+      }
+    }
+
+    async function procesarComandosDeVoz(textoDescifrado) {
+        const texto = textoDescifrado.toLowerCase();
+        
+        if (texto.includes("abrir") || texto.includes("ir a") || texto.includes("muéstrame") || texto.includes("crear")) {
+            for (const sectionId in menuMapping) {
+                const section = menuMapping[sectionId];
+                if (section.url && texto.includes(section.label.toLowerCase())) {
+                    cargarVista(section.url);
+                    return true;
+                } 
+                else if (section.items) {
+                    for (const item of section.items) {
+                        if (texto.includes(item.label.toLowerCase())) {
+                            cargarVista(item.url);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    async function enviarAudioAWhisper(audioBlob) {
+      const chatInput = document.getElementById('chatInput');
+      chatInput.value = '⏳ El motor Whisper IA está transcribiendo...';
+      
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "grabacion.ogg");
+
+      try {
+        const respuesta = await fetch(`${API}/whisper/transcribir`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!respuesta.ok) {
+           const errData = await respuesta.json();
+           throw new Error(errData.detail || "Fallo en el servidor.");
+        }
+
+        const data = await respuesta.json();
+        const textoTranscrito = data.texto;
+        chatInput.value = textoTranscrito;
+
+        const esComandoEjecutado = await procesarComandosDeVoz(textoTranscrito);
+        
+        if (esComandoEjecutado) {
+           appendBubble(`🗣️ Comando detectado: Te redirijo a la vista solicitada...`, "IA");
+           chatInput.value = ""; 
+        }
+        
+      } catch (error) {
+        console.error("Error Whisper:", error);
+        chatInput.value = '';
+        alert(`❌ Error al procesar audio: ${error.message}`);
+      }
+    }
+
+    function updateMicButtonVisuals() {
+      const micButton = document.getElementById('micButton');
+      if (micButton) {
+        if (isRecording) {
+          micButton.innerHTML = `<svg class="w-5 h-5 text-red-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd"></path></svg>`;
+          micButton.title = 'Detener grabación';
+          micButton.classList.replace('bg-gray-200', 'bg-red-50');
+        } else {
+          micButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>`;
+          micButton.title = 'Iniciar grabación de voz';
+          micButton.classList.replace('bg-red-50', 'bg-transparent');
+        }
+      }
+    }
+
+    // Funciones de Accesibilidad (Mantenidas de tu original)
+    const toggleBtn = document.getElementById('accessibilityToggle');
+    const panel = document.getElementById('accessibilityControls');
+    const wrap = document.getElementById('accessibilityMenu');
+    
+    toggleBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      panel.classList.toggle('visible');
+    });
+    
+    window.addEventListener('click', function(e) {
+      if (panel.classList.contains('visible') && !wrap.contains(e.target)) {
+        panel.classList.remove('visible');
+      }
+    });
+    
+    if (mainFrame) {
+      mainFrame.addEventListener('load', function() {
+        try {
+          mainFrame.contentWindow.addEventListener('click', function() {
+            panel.classList.remove('visible');
+          });
+        } catch(e) {}
+      });
+    }
+    
+    panel.querySelectorAll('input[type="checkbox"][data-act]').forEach(b => {
+      b.addEventListener('change', () => document.body.classList.toggle(b.getAttribute('data-act')) );
+    });
+    
+    const screenReaderToggle = document.getElementById('screenReaderToggle');
+    let screenReaderActive = false;
+    let lastHoveredElement = null;
+    let hoverTimeout = null;
+    
+    function speakTextSR(text) {
+      if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.2;
+        utterance.pitch = 1;
+        setTimeout(() => speechSynthesis.speak(utterance), 100);
+      }
+    }
+    
+    function getReadableText(el) {
+      let text = el.innerText || el.textContent || '';
+      if (!text || text.trim().length < 2) {
+        const img = el.querySelector('img');
+        if (img) text = img.alt || '';
+        if (!text) {
+          const input = el.querySelector('input, select, textarea');
+          if (input) text = input.placeholder || input.value || input.type || '';
+        }
+      }
+      return text.trim().substring(0, 200);
+    }
+    
+    function activateScreenReader() {
+      screenReaderActive = true;
+      document.body.classList.add('screen-reader');
+      speakTextSR('Lector de pantalla activado. Pase el cursor sobre los elementos para escucharlos.');
+      document.querySelectorAll('a, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, span, div, img, li, td, th, label').forEach(el => {
+        el.addEventListener('mouseenter', handleHover);
+        el.addEventListener('mouseleave', () => {
+          if (hoverTimeout) clearTimeout(hoverTimeout);
+        });
+      });
+    }
+    
+    function deactivateScreenReader() {
+      screenReaderActive = false;
+      document.body.classList.remove('screen-reader');
+      speakTextSR('Lector de pantalla desactivado.');
+      document.querySelectorAll('a, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, span, div, img, li, td, th, label').forEach(el => {
+        el.removeEventListener('mouseenter', handleHover);
+      });
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+    }
+    
+    function handleHover(e) {
+      if (hoverTimeout) clearTimeout(hoverTimeout);
+      hoverTimeout = setTimeout(() => {
+        const text = getReadableText(e.target);
+        if (text && text.length > 1 && !text.includes('undefined')) speakTextSR(text);
+      }, 300);
+    }
+    
+    screenReaderToggle.addEventListener('change', () => {
+      if (screenReaderToggle.checked) activateScreenReader();
+      else deactivateScreenReader();
+    });
+    
+    document.getElementById('resetAccessibility').addEventListener('click', () => {
+      ['contrast', 'large-text', 'grayscale', 'dyslexia', 'reduce-motion', 'dark-mode', 'large-cursor', 'highlight-links', 'reading-guide', 'paragraph-spacing', 'no-flashing', 'focus-highlight', 'show-keys', 'screen-reader'].forEach(c => {
+        document.body.classList.remove(c);
+        panel.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      });
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+    });
+
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement(
+        { pageLanguage: 'es', layout: google.translate.TranslateElement.InlineLayout.SIMPLE },
+        'google_translate_element'
+      );
+    }
+    
+    // --- Voice Navigation Widget (Comandos Globales Flotantes) usando Whisper ---
+    (function() {
+      const toggle = document.getElementById('voiceNavToggle');
+      const panel = document.getElementById('voiceNavPanel');
+      const status = document.getElementById('voiceNavStatus');
+      
+      let navMediaRecorder;
+      let navAudioChunks = [];
+      let isNavRecording = false;
+      let isProcessing = false;
+      
+      if (!toggle) return;
+      
+      async function toggleNavVoice() {
+        if (isProcessing) return; 
+
+        if (!isNavRecording) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            navMediaRecorder = new MediaRecorder(stream);
+            navAudioChunks = [];
+
+            navMediaRecorder.ondataavailable = (event) => {
+              if (event.data.size > 0) navAudioChunks.push(event.data);
+            };
+
+            navMediaRecorder.onstop = async () => {
+              isProcessing = true;
+              status.innerHTML = '⏳ <b>Procesando con IA...</b>';
+              toggle.classList.remove('listening');
+              
+              const audioBlob = new Blob(navAudioChunks, { type: 'audio/ogg' });
+              await procesarAudioNavegacion(audioBlob);
+              
+              stream.getTracks().forEach(track => track.stop());
+              isProcessing = false;
+            };
+
+            navMediaRecorder.start();
+            isNavRecording = true;
+            panel.classList.add('opened');
+            status.innerHTML = '🎤 <b>Escuchando... (Clic para procesar)</b>';
+            toggle.classList.add('listening');
+
+          } catch (error) {
+            console.error("Error micrófono navegación:", error);
+            status.innerHTML = '❌ <b>Micrófono bloqueado</b>';
+          }
+        } else {
+          if (navMediaRecorder && navMediaRecorder.state !== 'inactive') {
+            navMediaRecorder.stop();
+          }
+          isNavRecording = false;
+        }
+      }
+
+      async function procesarAudioNavegacion(audioBlob) {
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "nav_grabacion.ogg");
+
+        try {
+          const respuesta = await fetch(`${API}/whisper/transcribir`, {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!respuesta.ok) throw new Error("Fallo en el servidor.");
+
+          const data = await respuesta.json();
+          const transcript = data.texto.toLowerCase().trim();
+          status.innerHTML = '📝 "' + transcript + '"';
+          
+          ejecutarComandoNav(transcript);
+
+        } catch (error) {
+          console.error("Error Whisper Nav:", error);
+          status.innerHTML = '❌ <b>Error al transcribir</b>';
+        }
+      }
+
+      function ejecutarComandoNav(txt) {
+          if (txt.includes('proyecto')) {
+            cargarVista('projects/');
+            status.innerHTML = '✓ <b>Proyectos</b>';
+          } else if (txt.includes('documento')) {
+            cargarVista('documentos/');
+            status.innerHTML = '✓ <b>Documentos</b>';
+          } else if (txt.includes('bibliotec')) {
+            cargarVista('https://gestordecursos.pegui.edu.co/biblioteca/');
+            status.innerHTML = '✓ <b>Biblioteca</b>';
+          } else if (txt.includes('drive') || txt.includes('archivo')) {
+            cargarVista('https://gestordecursos.pegui.edu.co/drive/personal/');
+            status.innerHTML = '✓ <b>Drive</b>';
+          } else if (txt.includes('podcast') || txt.includes('audio')) {
+            cargarVista('podcast');
+            status.innerHTML = '✓ <b>Podcast</b>';
+          } else if (txt.includes('chat') || txt.includes('video')) {
+            cargarVista('https://gestordecursos.pegui.edu.co/chat/');
+            status.innerHTML = '✓ <b>Chat</b>';
+          } else if (txt.includes('tarea')) {
+            cargarVista('tasks/');
+            status.innerHTML = '✓ <b>Tareas</b>';
+          } else if (txt.includes('inicio') || txt.includes('casa')) {
+            cargarVista('tutorial/index.html');
+            status.innerHTML = '✓ <b>Inicio</b>';
+          } else if (txt.includes('cerrar') || txt.includes('ocultar')) {
+            panel.classList.remove('opened');
+            status.innerHTML = '🎤 <b>Di un comando...</b>';
+          } else {
+            status.innerHTML = '❓ No reconocido: ' + txt.substring(0, 15) + '...';
+          }
+      }
+      
+      toggle.addEventListener('click', function() {
+        toggleNavVoice();
+      });
+    })();
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  <script src="/js/roles.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const path = window.location.pathname;
+      const isSuperadmin = path.includes('/r/superadmin/');
+      const isAdmin = path.includes('/r/admin/');
+      const isCoordinador = path.includes('/r/coordinador/');
+      const isCliente = path.includes('/r/cliente/');
+      const isDisInst = path.includes('/r/disenador-instruccional/');
+      const isAutor = path.includes('/r/autor/');
+      const isRevisor = path.includes('/r/revisor-qa/');
+      const isEditor = path.includes('/r/editor/');
+      const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+      const isAbogado = path.includes('/r/abogado/');
+      const isDisGraf = path.includes('/r/disenador-grafico/');
+      const isAnim2d = path.includes('/r/animador-2d/');
+      const isAnim3d = path.includes('/r/animador-3d/');
+      const isVideo = path.includes('/r/video/');
+      const isCorrector = path.includes('/r/corrector-de-estilo/');
+      const isIngeniero = path.includes('/r/ingeniero-lms/');
+      const isRegistrado = path.includes('/r/registrado/');
+
+      const allowedRoles = [];
+      if (isSuperadmin) allowedRoles.push('superadmin');
+      if (isAdmin) allowedRoles.push('admin');
+      if (isCoordinador) allowedRoles.push('coordinador');
+      if (isCliente) allowedRoles.push('cliente');
+      if (isDisInst) allowedRoles.push('disenador-instruccional');
+      if (isAutor) allowedRoles.push('autor');
+      if (isRevisor) allowedRoles.push('revisor-qa');
+      if (isEditor) allowedRoles.push('editor');
+      if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+      if (isAbogado) allowedRoles.push('abogado');
+      if (isDisGraf) allowedRoles.push('disenador-grafico');
+      if (isAnim2d) allowedRoles.push('animador-2d');
+      if (isAnim3d) allowedRoles.push('animador-3d');
+      if (isVideo) allowedRoles.push('video');
+      if (isCorrector) allowedRoles.push('corrector-de-estilo');
+      if (isIngeniero) allowedRoles.push('ingeniero-lms');
+      if (isRegistrado) allowedRoles.push('registrado');
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/';
+        return;
+      }
+      
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+          window.location.href = '/';
+          return;
+        }
+      } catch(e) {
+        window.location.href = '/';
+      }
+    });
+  </script>
+</body>
+</html>

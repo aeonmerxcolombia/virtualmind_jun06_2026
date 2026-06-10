@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestión de Usuarios - VirtualMind</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/assets/logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'inter': ['Inter', 'sans-serif'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.4s ease-out',
+            'slide-up': 'slideUp 0.3s ease-out',
+            'pulse-soft': 'pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          colors: {
+            slate: {
+              850: '#151f32',
+              900: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #0f172a;
+    }
+    
+    /* Scrollbar Personalizado para una mejor UX */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+    /* Efectos Glassmorphism Optimizados */
+    .glass-header { 
+      background: rgba(15, 23, 42, 0.7); 
+      backdrop-filter: blur(12px); 
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
+    }
+    .glass-card { 
+      background: rgba(30, 41, 59, 0.6); 
+      backdrop-filter: blur(16px); 
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08); 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .modal-bg { 
+      background: rgba(2, 6, 23, 0.85); 
+      backdrop-filter: blur(8px); 
+      -webkit-backdrop-filter: blur(8px);
+    }
+    
+    /* Inputs y Selects */
+    .form-input {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      transition: all 0.2s ease;
+    }
+    .form-input:focus {
+      background: rgba(15, 23, 42, 0.9);
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+      outline: none;
+    }
+
+    /* Botones de acción en tabla */
+    .action-btn { 
+      cursor: pointer; 
+      transition: all 0.2s ease; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      width: 32px; 
+      height: 32px; 
+      border-radius: 8px; 
+    }
+    .action-btn:hover { 
+      transform: translateY(-2px); 
+    }
+
+    /* Animaciones */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+    
+    /* Filas de tabla */
+    .table-row { transition: background-color 0.2s ease; }
+    .table-row:hover { background: rgba(99, 102, 241, 0.08); }
+    
+    /* Badges de estado */
+    .status-badge { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 0.375rem; 
+      padding: 0.25rem 0.6rem; 
+      border-radius: 9999px; 
+      font-size: 0.7rem; 
+      font-weight: 600; 
+      letter-spacing: 0.025em;
+      text-transform: uppercase;
+    }
+    .status-active { background: rgba(34, 197, 94, 0.15); color: rgb(74, 222, 128); border: 1px solid rgba(34, 197, 94, 0.2); }
+    .status-inactive { background: rgba(239, 68, 68, 0.15); color: rgb(248, 113, 113); border: 1px solid rgba(239, 68, 68, 0.2); }
+  </style>
+</head>
+<body class="bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-indigo-950 to-slate-900 min-h-screen font-inter text-slate-200">
+  
+  <header class="glass-header sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <div class="flex items-center gap-4">
+          <div class="relative">
+            <!-- Asumiendo que el logo existe, le damos un fallback por si acaso -->
+            <img src="/assets/logo.png" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGI1Y2Y2IiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik0xMiAyTDIgN2wxMCA1IDEwLTVtLTEwIDZ2MTAiLz48L3N2Zz4='" class="w-11 h-11 rounded-xl shadow-lg ring-1 ring-white/20 bg-slate-800 p-1" alt="VirtualMind Logo"/>
+            <div class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-slate-900 animate-pulse-soft"></div>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-white tracking-tight">VirtualMind</h1>
+            <p class="text-xs text-indigo-300 font-medium tracking-wide uppercase">Gestión de Usuarios</p>
+          </div>
+        </div>
+        <div class="hidden sm:flex items-center gap-2 text-slate-400 text-sm bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700/50">
+          <div class="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+          <span class="font-medium">Sistema Seguro Activo</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in">
+      
+      <!-- Encabezado de la tarjeta -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 mb-8">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mb-1">Usuarios del Sistema</h2>
+          <p class="text-slate-400 text-sm sm:text-base">Administra identidades, roles y accesos de VirtualMind.</p>
+        </div>
+        <button id="btnCreate" class="hidden shrink-0 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/30 transition-all duration-200 transform hover:-translate-y-0.5 border border-indigo-400/20">
+          <span class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            Nuevo Usuario
+          </span>
+        </button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="relative">
+          <input id="filtroTexto" type="text" placeholder="Buscar por nombre, email o documento..." class="form-input w-full pl-11 pr-4 py-2.5 rounded-xl text-sm placeholder-slate-500" title="Buscar usuarios por nombre, email o documento">
+          <svg class="absolute left-4 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <div class="relative">
+          <select id="filtroRol" class="form-input w-full pl-4 pr-10 py-2.5 rounded-xl text-sm appearance-none cursor-pointer" title="Filtrar por rol del usuario">
+            <option value="" class="bg-slate-800 text-white">Todos los roles</option>
+          </select>
+          <svg class="absolute right-4 top-3 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="relative">
+          <select id="filtroEstado" class="form-input w-full pl-4 pr-10 py-2.5 rounded-xl text-sm appearance-none cursor-pointer" title="Filtrar por estado del usuario">
+            <option value="todos" class="bg-slate-800 text-white">Todos los estados</option>
+            <option value="activo" class="bg-slate-800 text-white">Solo Activos</option>
+            <option value="inactivo" class="bg-slate-800 text-white">Solo Inactivos</option>
+          </select>
+          <svg class="absolute right-4 top-3 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+      </div>
+
+      <!-- Alertas de Mensaje -->
+      <div id="msg" class="mb-4 empty:hidden transition-all"></div>
+
+      <!-- Tabla de Usuarios -->
+      <div class="overflow-hidden rounded-xl border border-slate-700/50 bg-slate-800/20">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse whitespace-nowrap">
+            <thead class="bg-slate-800/60 border-b border-slate-700/50 text-slate-300">
+              <tr>
+                <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wider">Usuario</th>
+                <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wider">Documento</th>
+                <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wider">Email</th>
+                <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wider w-1/4">Roles</th>
+                <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody" class="divide-y divide-slate-700/50">
+              <!-- Content rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Crear -->
+  <div id="modalCreate" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50 p-4 opacity-0 transition-opacity duration-300" style="opacity: 1;">
+    <div class="glass-card rounded-2xl w-full max-w-2xl p-6 sm:p-8 animate-slide-up relative overflow-hidden">
+      <!-- Elemento decorativo -->
+      <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-bl-full -z-10 blur-2xl"></div>
+      
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-indigo-500/20 text-indigo-400 rounded-lg flex items-center justify-center border border-indigo-500/30">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-white">Nuevo Usuario</h3>
+            <p class="text-xs text-slate-400">Registra una nueva identidad en el sistema</p>
+          </div>
+        </div>
+        <button type="button" class="closeCreateModalBtn text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 p-2 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="userCreateForm" class="space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Nombre Completo</label>
+            <input name="nombre" placeholder="Ej. William Andrés" class="form-input w-full px-4 py-2.5 rounded-lg text-sm" required title="Nombre completo del usuario"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Tipo de Documento</label>
+            <div class="relative">
+              <select name="tipo_documento" class="form-input w-full px-4 py-2.5 rounded-lg text-sm appearance-none" required title="Tipo de documento de identidad">
+                  <option value="" class="bg-slate-800">Seleccionar...</option>
+                  <!-- Opciones llenadas por JS -->
+              </select>
+              <svg class="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Número de Doc.</label>
+            <input name="documento" placeholder="123456789" class="form-input w-full px-4 py-2.5 rounded-lg text-sm" required title="Número de documento de identidad"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Correo Electrónico</label>
+            <input name="email" type="email" placeholder="usuario@virtualmind.com" class="form-input w-full px-4 py-2.5 rounded-lg text-sm" required title="Correo electrónico del usuario"/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Contraseña Segura</label>
+          <input name="password" type="password" placeholder="••••••••" class="form-input w-full px-4 py-2.5 rounded-lg text-sm" required title="Contraseña del usuario"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Asignación de Roles</label>
+          <div class="flex items-center gap-3 mb-2">
+            <label class="flex items-center gap-2 cursor-pointer text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
+              <input type="checkbox" id="selectAllRolesCreate" class="w-4 h-4 rounded bg-slate-800 border-slate-600 text-indigo-500 focus:ring-indigo-500/50" title="Seleccionar todos los roles">
+              <span class="font-medium">Seleccionar Todos</span>
+            </label>
+          </div>
+          <select name="role_ids" id="createRoleSelect" multiple class="form-input w-full px-3 py-2 rounded-lg text-sm h-28 focus:ring-0" title="Roles para asignar al usuario"></select>
+          <p class="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Usa <kbd class="bg-slate-800 border border-slate-700 px-1 rounded mx-0.5 text-slate-300">Ctrl</kbd> o <kbd class="bg-slate-800 border border-slate-700 px-1 rounded mx-0.5 text-slate-300">Cmd</kbd> para selección múltiple
+          </p>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-700/50 mt-6">
+          <button type="button" class="closeCreateModalBtn px-5 py-2 text-sm text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors">Cancelar</button>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-lg shadow-indigo-500/20 transition-all transform hover:-translate-y-0.5">Guardar Usuario</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Editar -->
+  <div id="modalEdit" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50 p-4 opacity-0 transition-opacity duration-300" style="opacity: 1;">
+    <div class="glass-card rounded-2xl w-full max-w-2xl p-6 sm:p-8 animate-slide-up relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-bl-full -z-10 blur-2xl"></div>
+      
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-amber-500/20 text-amber-400 rounded-lg flex items-center justify-center border border-amber-500/30">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-white">Editar Identidad</h3>
+            <p class="text-xs text-slate-400">Modifica los datos o permisos del usuario</p>
+          </div>
+        </div>
+        <button type="button" class="closeEditModalBtn text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 p-2 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="userEditForm" data-uid="" class="space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Nombre Completo</label>
+            <input id="edit_nombre" name="nombre" class="form-input w-full px-4 py-2.5 rounded-lg text-sm" required title="Nombre completo del usuario"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Tipo de Documento</label>
+            <div class="relative">
+              <select id="edit_tipo_documento" name="tipo_documento" class="form-input w-full px-4 py-2.5 rounded-lg text-sm appearance-none" required title="Tipo de documento de identidad">
+                  <!-- Opciones llenadas por JS -->
+              </select>
+              <svg class="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Número de Doc.</label>
+            <input id="edit_documento" name="documento" class="form-input w-full px-4 py-2.5 rounded-lg text-sm" required title="Número de documento de identidad"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Correo Electrónico</label>
+            <input id="edit_email" name="email" type="email" class="form-input w-full px-4 py-2.5 rounded-lg text-sm" required title="Correo electrónico del usuario"/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide flex justify-between items-center">
+            <span>Nueva Contraseña</span>
+            <span class="text-slate-500 normal-case text-[10px] bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Opcional</span>
+          </label>
+          <input id="edit_password" name="password" type="password" placeholder="Dejar en blanco para conservar actual" class="form-input w-full px-4 py-2.5 rounded-lg text-sm placeholder-slate-600" title="Nueva contraseña (opcional)"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5 uppercase tracking-wide">Asignación de Roles</label>
+          <div class="flex items-center gap-3 mb-2">
+            <label class="flex items-center gap-2 cursor-pointer text-sm text-amber-400 hover:text-amber-300 transition-colors">
+              <input type="checkbox" id="selectAllRolesEdit" class="w-4 h-4 rounded bg-slate-800 border-slate-600 text-amber-500 focus:ring-amber-500/50" title="Seleccionar todos los roles">
+              <span class="font-medium">Seleccionar Todos</span>
+            </label>
+          </div>
+          <select name="role_ids" id="editRoleSelect" multiple class="form-input w-full px-3 py-2 rounded-lg text-sm h-28 focus:ring-amber-500/50" title="Roles asignados al usuario"></select>
+        </div>
+        <div class="bg-slate-800/50 border border-slate-700 p-4 rounded-lg flex items-center justify-between">
+          <div>
+            <label class="block text-sm font-medium text-white mb-0.5">Estado de la cuenta</label>
+            <p class="text-xs text-slate-400">Las cuentas inactivas no podrán iniciar sesión.</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="edit_estado" name="estado" class="sr-only peer" title="Activar o desactivar la cuenta">
+            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+          </label>
+        </div>
+        
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-700/50 mt-6">
+          <button type="button" class="closeEditModalBtn px-5 py-2 text-sm text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors">Cancelar</button>
+          <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-lg shadow-amber-500/20 transition-all transform hover:-translate-y-0.5">Aplicar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Ver -->
+  <div id="modalView" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50 p-4 opacity-0 transition-opacity duration-300" style="opacity: 1;">
+    <div class="glass-card rounded-2xl w-full max-w-lg p-6 sm:p-8 animate-slide-up relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-full -z-10 blur-2xl"></div>
+      
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center border border-emerald-500/30">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-white">Detalle de Identidad</h3>
+            <p class="text-xs text-slate-400">Información en solo lectura</p>
+          </div>
+        </div>
+        <button type="button" class="closeViewModalBtn text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 p-2 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="bg-slate-800/40 rounded-xl p-3.5 border border-slate-700/50 flex justify-between items-center">
+          <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">UID del Sistema</label>
+          <p class="text-slate-300 font-mono text-xs bg-slate-900 px-2 py-1 rounded" id="view_uid"></p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="bg-slate-800/40 rounded-xl p-3.5 border border-slate-700/50">
+            <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Nombre Completo</label>
+            <p class="text-white text-sm font-medium" id="view_nombre"></p>
+          </div>
+          <div class="bg-slate-800/40 rounded-xl p-3.5 border border-slate-700/50">
+            <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Identificación</label>
+            <p class="text-white text-sm font-medium" id="view_documento"></p>
+          </div>
+        </div>
+        <div class="bg-slate-800/40 rounded-xl p-3.5 border border-slate-700/50">
+          <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Correo Electrónico</label>
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <p class="text-white text-sm" id="view_email"></p>
+          </div>
+        </div>
+        <div class="bg-slate-800/40 rounded-xl p-3.5 border border-slate-700/50">
+          <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Roles Asignados</label>
+          <div class="flex flex-wrap gap-1.5" id="view_roles"></div>
+        </div>
+        <div class="bg-slate-800/40 rounded-xl p-3.5 border border-slate-700/50 flex justify-between items-center">
+          <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Estado de Acceso</label>
+          <div id="view_estado"></div>
+        </div>
+      </div>
+      <div class="flex justify-end mt-6 pt-4 border-t border-slate-700/50">
+        <button class="closeViewModalBtn bg-slate-700 hover:bg-slate-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow transition-colors">Cerrar Detalles</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TTS Button -->
+  <div class="fixed bottom-6 right-6 z-40">
+    <button id="controlLectura" class="bg-indigo-600 hover:bg-indigo-500 text-white p-3.5 rounded-full shadow-[0_10px_25px_-5px_rgba(79,70,229,0.5)] transition-all duration-300 transform hover:scale-105 border border-indigo-400/30 group">
+      <svg class="w-6 h-6 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 14.142M8.464 8.464A5 5 0 1115.536 15.536M5.636 5.636a9 9 0 0012.728 12.728"/></svg>
+    </button>
+  </div>
+
+  <script>
+    // --- VARIABLES Y CONFIGURACIÓN ---
+    const API_USERS = "https://gestordecursos.pegui.edu.co:8000/users";
+    const API_ROLES = "https://gestordecursos.pegui.edu.co:8000/roles";
+    const token = localStorage.getItem("token");
+    if (!token) location.href = "/index.html";
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const rolesJwt = payload.roles || [payload.role];
+    let perms = payload.permissions || [];
+    if (rolesJwt.includes("superadmin")) perms.push("user:read", "user:create", "user:update", "user:delete");
+
+    const canRead = perms.includes("user:read");
+    const canCreate = perms.includes("user:create");
+    const canUpdate = perms.includes("user:update");
+    const canDelete = perms.includes("user:delete");
+
+    if (!canRead) { alert("Sin permiso"); logout(); }
+    if (canCreate) document.getElementById("btnCreate").classList.remove("hidden");
+
+    let todosLosUsuarios = [];
+
+    // --- HELPERS CORE ---
+    async function parseApiError(res) {
+        let msg = `Error ${res.status} ${res.statusText}`;
+        try {
+            const data = await res.json();
+            if (Array.isArray(data?.detail)) {
+                msg = data.detail.map(d => {
+                    const loc = Array.isArray(d.loc) ? d.loc.join('.') : '';
+                    return `${loc} — ${d.msg || JSON.stringify(d)}${d.type ? ` (${d.type})` : ''}`;
+                }).join(' | ');
+            } else if (data?.detail) {
+                msg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+            } else { msg = JSON.stringify(data); }
+        } catch { try { msg = await res.text() || msg; } catch {} }
+        return msg;
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      location.href = "/index.html";
+    }
+
+    function mostrarMensaje(texto, tipo = "exito") {
+      const icon = tipo === "exito" 
+        ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
+        : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>';
+      const colorCls = tipo === "exito" ? "bg-green-500/20 border-green-500/30 text-green-400" : "bg-red-500/20 border-red-500/30 text-red-400";
+      
+      document.getElementById("msg").innerHTML = `
+        <div class="flex items-center gap-3 p-3.5 ${colorCls} border rounded-xl shadow-lg animate-fade-in">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icon}</svg>
+          <span class="font-medium text-sm">${texto}</span>
+        </div>`;
+      setTimeout(() => document.getElementById("msg").innerHTML = "", 4000);
+    }
+
+    // --- MEJORA UI: FORMATO DE ROLES COMPACTO ---
+    // Soluciona el problema del espacio vertical excesivo generado por muchos roles
+    function formatearRolesHtml(rolesArray) {
+        if (!Array.isArray(rolesArray) || rolesArray.length === 0) {
+            return `<span class="text-slate-500 italic text-xs">Sin roles</span>`;
+        }
+        
+        const MAX_VISIBLES = 2; // Número de roles visibles antes de agruparlos
+        const visibles = rolesArray.slice(0, MAX_VISIBLES);
+        const ocultos = rolesArray.slice(MAX_VISIBLES);
+        
+        let html = visibles.map(rol => 
+            `<span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-300 text-[11px] font-medium rounded border border-indigo-500/20">${rol}</span>`
+        ).join('');
+
+        if (ocultos.length > 0) {
+            html += `<span class="px-2 py-0.5 bg-slate-700/50 text-slate-300 text-[11px] font-medium rounded border border-slate-600 cursor-help transition-colors hover:bg-slate-600/50" title="${ocultos.join(', ')}">+${ocultos.length} más</span>`;
+        }
+        return `<div class="flex flex-wrap gap-1.5 items-center">${html}</div>`;
+    }
+
+    // --- FETCH & RENDER ---
+    async function fetchUsers() {
+      try {
+        const res = await fetch(API_USERS, { headers: { "Authorization": "Bearer " + token } });
+        if (!res.ok) throw new Error(await parseApiError(res));
+        todosLosUsuarios = await res.json();
+        renderizarUsuarios();
+      } catch (err) { console.error("Error cargando usuarios:", err); }
+    }
+    
+    function renderizarUsuarios() {
+        const texto = document.getElementById("filtroTexto").value.toLowerCase();
+        const rol = document.getElementById("filtroRol").value;
+        const estado = document.getElementById("filtroEstado").value;
+        const tbody = document.getElementById("userTableBody");
+        tbody.innerHTML = "";
+
+        const usuariosFiltrados = todosLosUsuarios.filter(u => {
+            const mt = (u.nombre || '').toLowerCase().includes(texto) || 
+                       (u.email || '').toLowerCase().includes(texto) || 
+                       String(u.documento ?? '').toLowerCase().includes(texto);
+            const mr = rol === "" || (Array.isArray(u.roles) && u.roles.includes(rol));
+            const me = estado === "todos" || (estado === "activo" && u.estado) || (estado === "inactivo" && !u.estado);
+            return mt && mr && me;
+        });
+
+        if (usuariosFiltrados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="px-5 py-8 text-center text-slate-500 text-sm italic">No se encontraron usuarios que coincidan con la búsqueda.</td></tr>`;
+            return;
+        }
+
+        usuariosFiltrados.forEach(u => {
+            let acciones = "";
+            if (canRead) acciones += `<button class="action-btn view-btn bg-slate-700/50 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-400 border border-slate-600 hover:border-emerald-500/30" data-uid="${u.uid}" title="Ver detalles"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>`;
+            if (canUpdate) acciones += `<button class="action-btn edit-btn bg-slate-700/50 hover:bg-amber-500/20 text-slate-300 hover:text-amber-400 border border-slate-600 hover:border-amber-500/30" data-uid="${u.uid}" title="Editar identidad"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>`;
+            if (canDelete) acciones += `<button class="action-btn delete-btn bg-slate-700/50 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-600 hover:border-red-500/30" data-uid="${u.uid}" title="Cambiar estado"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636M18.364 18.364l-12.728-12.728"/></svg></button>`;
+
+            const estadoBadge = u.estado 
+              ? '<span class="status-badge status-active"><div class="w-1.5 h-1.5 bg-green-400 rounded-full"></div>Activo</span>' 
+              : '<span class="status-badge status-inactive"><div class="w-1.5 h-1.5 bg-red-400 rounded-full"></div>Inactivo</span>';
+
+            const rolesHTML = formatearRolesHtml(u.roles);
+            const inicial = (u.nombre || '?').charAt(0).toUpperCase();
+
+            tbody.innerHTML += `
+              <tr class="table-row">
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-indigo-900/50 border border-indigo-500/30 rounded-lg flex items-center justify-center text-indigo-300 font-bold shadow-inner shrink-0">${inicial}</div>
+                    <div class="flex flex-col min-w-0">
+                      <span class="font-medium text-white text-sm truncate max-w-[200px]" title="${u.nombre || ''}">${u.nombre || ''}</span>
+                      <div class="mt-0.5">${estadoBadge}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-5 py-3">
+                  <div class="text-xs font-semibold text-slate-400">${u.tipo_documento || 'N/A'}</div>
+                  <div class="text-sm text-slate-200">${u.documento || ''}</div>
+                </td>
+                <td class="px-5 py-3">
+                  <div class="text-sm text-slate-300 truncate max-w-[200px]" title="${u.email || ''}">${u.email || ''}</div>
+                </td>
+                <td class="px-5 py-3 whitespace-normal min-w-[150px]">
+                  ${rolesHTML}
+                </td>
+                <td class="px-5 py-3 text-right">
+                  <div class="flex items-center gap-1.5 justify-end">${acciones}</div>
+                </td>
+              </tr>`;
+        });
+
+        // Binding eventos
+        tbody.querySelectorAll('.edit-btn').forEach(b => b.addEventListener('click', function() { openEditModal(this.getAttribute('data-uid')); }));
+        tbody.querySelectorAll('.delete-btn').forEach(b => b.addEventListener('click', function() { deactivateUser(this.getAttribute('data-uid')); }));
+        tbody.querySelectorAll('.view-btn').forEach(b => b.addEventListener('click', function() { openViewModal(this.getAttribute('data-uid')); }));
+    }
+
+    async function fetchRoles() {
+      try {
+        const res = await fetch(API_ROLES, { headers: { "Authorization": "Bearer " + token } });
+        if (!res.ok) throw new Error(await parseApiError(res));
+        const roles = await res.json();
+        
+        ["createRoleSelect", "editRoleSelect"].forEach(id => {
+          const sel = document.getElementById(id);
+          sel.innerHTML = "";
+          roles.forEach(r => {
+            const opt = document.createElement("option");
+            opt.value = r.id;
+            opt.text = r.name;
+            opt.className = "bg-slate-800 text-slate-200 py-1 px-2 mb-0.5 rounded";
+            sel.appendChild(opt);
+          });
+        });
+        
+        document.getElementById("selectAllRolesCreate")?.addEventListener("change", function() {
+          const select = document.getElementById("createRoleSelect");
+          for (let i = 0; i < select.options.length; i++) {
+            select.options[i].selected = this.checked;
+          }
+        });
+        
+        document.getElementById("selectAllRolesEdit")?.addEventListener("change", function() {
+          const select = document.getElementById("editRoleSelect");
+          for (let i = 0; i < select.options.length; i++) {
+            select.options[i].selected = this.checked;
+          }
+        });
+        
+        const filtroRol = document.getElementById("filtroRol");
+        roles.forEach(r => {
+          const opt = document.createElement("option");
+          opt.value = r.name;
+          opt.text = r.name;
+          opt.className = "bg-slate-800 text-white";
+          filtroRol.appendChild(opt);
+        });
+      } catch(err) { console.error("Error roles:", err); }
+    }
+
+    function llenarSelectTipoDocumento() {
+        const tipos = [
+            { value: "CC", text: "Cédula de Ciudadanía (CC)" },
+            { value: "TI", text: "Tarjeta de Identidad (TI)" },
+            { value: "CE", text: "Cédula de Extranjería (CE)" },
+            { value: "NIT", text: "Número de Identificación Tributaria (NIT)" },
+            { value: "PPN", text: "Pasaporte (PPN)" },
+            { value: "OTH", text: "Otro (OTH)" }
+        ];
+
+        document.querySelectorAll('select[name="tipo_documento"]').forEach(select => {
+            const htmlBase = '<option value="" class="bg-slate-800 text-slate-400">Seleccionar...</option>';
+            select.innerHTML = select.id === "edit_tipo_documento" ? "" : htmlBase;
+            
+            tipos.forEach(tipo => {
+                const opt = document.createElement("option");
+                opt.value = tipo.value;
+                opt.text = tipo.text;
+                opt.className = "bg-slate-800 text-white";
+                select.appendChild(opt);
+            });
+        });
+    }
+
+    async function deactivateUser(uid) {
+      if (!confirm("¿Deseas cambiar el estado de este usuario (Activado/Desactivado)?")) return;
+      try {
+        const res = await fetch(`${API_USERS}/${uid}`, { method: "DELETE", headers: { "Authorization": "Bearer " + token } });
+        if (!res.ok) throw new Error(await parseApiError(res));
+        mostrarMensaje("Estado del usuario modificado con éxito");
+        fetchUsers();
+      } catch(err) { alert(err.message); }
+    }
+
+    // --- MANEJO DE MODALES ---
+    function toggleModal(id, show) {
+        const modal = document.getElementById(id);
+        if (show) {
+            modal.classList.remove("hidden");
+            // Pequeño delay para la animación css de opacidad
+            setTimeout(() => modal.style.opacity = "1", 10);
+        } else {
+            modal.style.opacity = "0";
+            setTimeout(() => modal.classList.add("hidden"), 300); // tiempo de transición CSS
+        }
+    }
+
+    // Modal Crear
+    document.getElementById("btnCreate")?.addEventListener("click", () => toggleModal("modalCreate", true));
+    document.querySelectorAll(".closeCreateModalBtn").forEach(btn => btn.addEventListener("click", () => toggleModal("modalCreate", false)));
+
+    document.getElementById("userCreateForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const f = e.target;
+      const nuevo = {
+        nombre: f.nombre.value.trim(),
+        tipo_documento: f.tipo_documento.value,
+        documento: f.documento.value.trim(),
+        email: f.email.value.trim(),
+        password: f.password.value,
+        role_ids: Array.from(f.role_ids.selectedOptions).map(o => Number(o.value)).filter(Number.isFinite)
+      };
+
+      try {
+        const res = await fetch(API_USERS, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+            body: JSON.stringify(nuevo)
+        });
+        if (!res.ok) throw new Error(await parseApiError(res));
+        
+        mostrarMensaje("Identidad creada exitosamente en el sistema");
+        toggleModal("modalCreate", false);
+        f.reset();
+        fetchUsers();
+      } catch(err) { alert(err.message); }
+    });
+
+    // Modal Editar
+    document.querySelectorAll(".closeEditModalBtn").forEach(btn => btn.addEventListener("click", () => toggleModal("modalEdit", false)));
+
+    async function openEditModal(uid) {
+      try {
+        const res = await fetch(`${API_USERS}/${uid}`, { headers: { "Authorization": "Bearer " + token } });
+        if (!res.ok) throw new Error(await parseApiError(res));
+        const u = await res.json();
+        
+        const f = document.getElementById("userEditForm");
+        f.dataset.uid = uid;
+        f.nombre.value = u.nombre || '';
+        if (document.getElementById("edit_tipo_documento")) document.getElementById("edit_tipo_documento").value = u.tipo_documento || '';
+        f.documento.value = u.documento || '';
+        f.email.value = u.email || '';
+        f.password.value = "";
+        if (document.getElementById("edit_estado")) document.getElementById("edit_estado").checked = !!u.estado;
+
+        const sel = document.getElementById("editRoleSelect");
+        if (sel) {
+            Array.from(sel.options).forEach(opt => {
+                opt.selected = Array.isArray(u.roles) && u.roles.includes(opt.text);
+            });
+        }
+        toggleModal("modalEdit", true);
+      } catch(err) { alert(err.message); }
+    }
+
+    document.getElementById("userEditForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const f = e.target;
+      const upd = {
+        nombre: f.nombre.value.trim(),
+        tipo_documento: f.tipo_documento.value,
+        documento: f.documento.value.trim(),
+        email: f.email.value.trim(),
+        estado: document.getElementById('edit_estado').checked,
+        password: f.password.value.trim() !== '' ? f.password.value : null,
+        ...(Array.from(f.role_ids.selectedOptions).length ? { role_ids: Array.from(f.role_ids.selectedOptions).map(o => Number(o.value)).filter(Number.isFinite) } : {})
+      };
+
+      try {
+        const res = await fetch(`${API_USERS}/${f.dataset.uid}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+            body: JSON.stringify(upd)
+        });
+        if (!res.ok) throw new Error(await parseApiError(res));
+        
+        mostrarMensaje("Datos de identidad actualizados correctamente");
+        toggleModal("modalEdit", false);
+        fetchUsers();
+      } catch(err) { alert(err.message); }
+    });
+
+    // Modal Ver
+    document.querySelectorAll(".closeViewModalBtn").forEach(btn => btn.addEventListener("click", () => toggleModal("modalView", false)));
+
+    async function openViewModal(uid) {
+      try {
+        const res = await fetch(`${API_USERS}/${uid}`, { headers: { "Authorization": "Bearer " + token } });
+        if (!res.ok) throw new Error(await parseApiError(res));
+        const u = await res.json();
+
+        document.getElementById("view_uid").innerText = u.uid || 'N/A';
+        document.getElementById("view_nombre").innerText = u.nombre || 'Sin nombre';
+        document.getElementById("view_documento").innerText = `${u.tipo_documento || ''} ${u.documento || ''}`.trim();
+        document.getElementById("view_email").innerText = u.email || 'Sin correo';
+        
+        // Usar la función de roles formateada pero sin truncar para la vista de detalles
+        const rolesList = Array.isArray(u.roles) ? u.roles.map(r => `<span class="px-2.5 py-1 bg-indigo-500/20 text-indigo-300 text-xs rounded border border-indigo-500/30">${r}</span>`).join('') : '<span class="text-slate-500 italic text-sm">Sin roles</span>';
+        document.getElementById("view_roles").innerHTML = rolesList;
+        
+        const badgeClass = u.estado ? 'status-active' : 'status-inactive';
+        const badgeColor = u.estado ? 'bg-green-400' : 'bg-red-400';
+        const badgeText = u.estado ? 'Activo' : 'Inactivo';
+        document.getElementById("view_estado").innerHTML = `<span class="status-badge ${badgeClass}"><div class="w-1.5 h-1.5 ${badgeColor} rounded-full"></div>${badgeText}</span>`;
+        
+        toggleModal("modalView", true);
+      } catch(err) { alert(err.message); }
+    }
+
+    // --- EVENTOS DE BÚSQUEDA Y FILTRO ---
+    document.getElementById("filtroTexto").addEventListener("input", renderizarUsuarios);
+    document.getElementById("filtroRol").addEventListener("change", renderizarUsuarios);
+    document.getElementById("filtroEstado").addEventListener("change", renderizarUsuarios);
+
+    // --- INICIALIZADOR ---
+    (async function init() {
+      await fetchRoles();
+      llenarSelectTipoDocumento();
+      await fetchUsers();
+
+      // Auto-abrir detalle si viene desde el buscador global
+      const urlParams = new URLSearchParams(window.location.search);
+      const uid = urlParams.get('uid');
+      if (uid && typeof openViewModal === 'function') {
+        setTimeout(() => openViewModal(uid), 500);
+      }
+    })();
+
+    // --- LECTURA POR VOZ (TTS) ---
+    let lecturaHabilitada = false;
+    let ultimaLectura = "";
+    
+    function controlarLectura() {
+      const boton = document.getElementById("controlLectura");
+      if (lecturaHabilitada) {
+        boton.innerHTML = '<svg class="w-6 h-6 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 14.142M8.464 8.464A5 5 0 1115.536 15.536M5.636 5.636a9 9 0 0012.728 12.728"/></svg>';
+        boton.title = "Activar Asistente de Voz";
+        boton.classList.replace('bg-red-500', 'bg-indigo-600');
+        boton.classList.replace('hover:bg-red-600', 'hover:bg-indigo-500');
+        speechSynthesis.cancel();
+      } else {
+        boton.innerHTML = '<svg class="w-6 h-6 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-3a1 1 0 011-1h1.586l4.707-4.707C10.923 4.663 12 5.109 12 6v12c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>';
+        boton.title = "Desactivar Asistente de Voz";
+        boton.classList.replace('bg-indigo-600', 'bg-red-500');
+        boton.classList.replace('hover:bg-indigo-500', 'hover:bg-red-600');
+      }
+      lecturaHabilitada = !lecturaHabilitada;
+    }
+    
+    document.getElementById("controlLectura").addEventListener("click", controlarLectura);
+    
+    document.addEventListener("mouseover", (e) => {
+      const texto = e.target.innerText || e.target.textContent;
+      // Solo lee si la lectura está activa y si el texto no es el mismo que acaba de leer
+      if (texto && texto.trim().length > 3 && texto.trim().length < 150) {
+        if (!lecturaHabilitada || texto === ultimaLectura) return;
+        speechSynthesis.cancel();
+        ultimaLectura = texto;
+        const mensaje = new SpeechSynthesisUtterance(texto.trim());
+        mensaje.lang = "es-ES";
+        mensaje.rate = 1.1; // Ligeramente más rápido
+        speechSynthesis.speak(mensaje);
+      }
+    });
+
+  </script>
+
+  <!-- Mantenemos intactos tus scripts de control de enrutamiento y permisos -->
+  <script src="/js/roles.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+      const path = window.location.pathname;
+      const isSuperadmin = path.includes('/r/superadmin/');
+      const isAdmin = path.includes('/r/admin/');
+      const isCoordinador = path.includes('/r/coordinador/');
+      const isCliente = path.includes('/r/cliente/');
+      const isDisInst = path.includes('/r/disenador-instruccional/');
+      const isAutor = path.includes('/r/autor/');
+      const isRevisor = path.includes('/r/revisor-qa/');
+      const isEditor = path.includes('/r/editor/');
+      const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+      const isAbogado = path.includes('/r/abogado/');
+      const isDisGraf = path.includes('/r/disenador-grafico/');
+      const isAnim2d = path.includes('/r/animador-2d/');
+      const isAnim3d = path.includes('/r/animador-3d/');
+      const isVideo = path.includes('/r/video/');
+      const isCorrector = path.includes('/r/corrector-de-estilo/');
+      const isIngeniero = path.includes('/r/ingeniero-lms/');
+      const isRegistrado = path.includes('/r/registrado/');
+
+      const allowedRoles = [];
+      if (isSuperadmin) allowedRoles.push('superadmin');
+      if (isAdmin) allowedRoles.push('admin');
+      if (isCoordinador) allowedRoles.push('coordinador');
+      if (isCliente) allowedRoles.push('cliente');
+      if (isDisInst) allowedRoles.push('disenador-instruccional');
+      if (isAutor) allowedRoles.push('autor');
+      if (isRevisor) allowedRoles.push('revisor-qa');
+      if (isEditor) allowedRoles.push('editor');
+      if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+      if (isAbogado) allowedRoles.push('abogado');
+      if (isDisGraf) allowedRoles.push('disenador-grafico');
+      if (isAnim2d) allowedRoles.push('animador-2d');
+      if (isAnim3d) allowedRoles.push('animador-3d');
+      if (isVideo) allowedRoles.push('video');
+      if (isCorrector) allowedRoles.push('corrector-de-estilo');
+      if (isIngeniero) allowedRoles.push('ingeniero-lms');
+      if (isRegistrado) allowedRoles.push('registrado');
+
+      const token = localStorage.getItem('token');
+      if (!token) { return; }
+          
+      try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const userRoles = payload.roles || [payload.role].filter(Boolean);
+          // Si allowedRoles tiene algo, verificamos si el usuario cumple
+          if (allowedRoles.length > 0 && !userRoles.some(r => allowedRoles.includes(r))) {
+              window.location.href = '/';
+          }
+      } catch(e) { window.location.href = '/'; }
+  });
+  </script>
+
+  <script>
+  // ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+  (function() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+          
+      try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const permissions = payload.permissions || [];
+                  
+          const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+                  
+          const menuPermissions = {
+              'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+              'menu-crear-proyecto': ['proyectos_crear'],
+              'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+              'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+              'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+              'menu-crear-plan': ['diseno_instruccional_crear'],
+              'menu-cursos': ['proyectos_cursos_listar'],
+              'menu-crear-curso': ['autor_crear'],
+              'menu-modulos': ['proyectos_modulos_listar'],
+              'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+              'menu-unidades': ['proyectos_unidades_listar'],
+              'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+              'menu-tareas': ['proyectos_tareas_listar'],
+              'menu-crear-tarea': ['autor_crear'],
+              'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+              'menu-crear-evaluacion': ['autor_crear'],
+              'menu-fases': ['proyectos_fases_etapas_gestionar'],
+              'menu-cronogramas': ['proyectos_cronogramas_crear'],
+              'menu-calendario': ['proyectos_calendario_ver'],
+              'menu-usuarios': ['usuarios_crear'],
+              'menu-clientes': ['usuarios_crear'],
+              'menu-crm': ['usuarios_crear'],
+              'menu-roles': ['roles_permisos_gestionar'],
+              'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+              'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+              'menu-canvas': ['herramientas_canvas_usar'],
+              'menu-powerpoint': ['herramientas_powerpoint_usar'],
+              'menu-auditoria': ['seguridad_auditoria_ver'],
+              'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+              'menu-estadisticas': ['reportes_estadisticas_ver'],
+              'menu-metricas': ['reportes_metricas_ver'],
+              'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+              'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+              'menu-microcursos': ['capacitacion_microcursos_ver'],
+              'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+              'menu-faq': ['capacitacion_faq_ver'],
+          };
+                  
+          Object.entries(menuPermissions).forEach(([id, required]) => {
+              const el = document.getElementById(id);
+              if (el && !hasAnyPermission(required)) {
+                  el.style.display = 'none';
+              }
+          });
+      } catch(e) {}
+  })();
+  </script>
+</body>
+</html>

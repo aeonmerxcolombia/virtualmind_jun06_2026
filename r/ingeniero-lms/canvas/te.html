@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editor Canvas con Fabric.js</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
+    .toolbar {
+      margin-bottom: 10px;
+    }
+    .toolbar button, .toolbar input {
+      margin-right: 10px;
+      padding: 6px 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🖌️ Editor Canvas con Fabric.js</h1>
+
+  <div class="toolbar">
+    <button onclick="agregarRect()">➕ Rectángulo</button>
+    <button onclick="agregarCirculo()">⚪ Círculo</button>
+    <button onclick="agregarTexto()">🅰️ Texto</button>
+    <input type="color" id="colorPicker" value="#ff0000" onchange="cambiarColor()" />
+    <button onclick="eliminarSeleccionado()">🗑️ Eliminar</button>
+    <button onclick="descargarImagen()">💾 Descargar PNG</button>
+  </div>
+
+  <canvas id="lienzo" width="900" height="500"></canvas>
+
+  <script>
+    const canvas = new fabric.Canvas('lienzo');
+
+    function agregarRect() {
+      const rect = new fabric.Rect({
+        left: 100,
+        top: 100,
+        fill: '#ff0000',
+        width: 120,
+        height: 80,
+        selectable: true
+      });
+      canvas.add(rect).setActiveObject(rect);
+    }
+
+    function agregarCirculo() {
+      const circle = new fabric.Circle({
+        left: 150,
+        top: 150,
+        fill: '#00aaff',
+        radius: 50,
+        selectable: true
+      });
+      canvas.add(circle).setActiveObject(circle);
+    }
+
+    function agregarTexto() {
+      const text = new fabric.IText('Texto editable', {
+        left: 200,
+        top: 200,
+        fill: '#333',
+        fontSize: 24,
+        selectable: true
+      });
+      canvas.add(text).setActiveObject(text);
+    }
+
+    function cambiarColor() {
+      const color = document.getElementById("colorPicker").value;
+      const obj = canvas.getActiveObject();
+      if (obj) {
+        obj.set("fill", color);
+        canvas.renderAll();
+      }
+    }
+
+    function eliminarSeleccionado() {
+      const obj = canvas.getActiveObject();
+      if (obj) {
+        canvas.remove(obj);
+      }
+    }
+
+    function descargarImagen() {
+      const dataURL = canvas.toDataURL({
+        format: 'png',
+        quality: 1
+      });
+      const link = document.createElement('a');
+      link.download = 'canvas.png';
+      link.href = dataURL;
+      link.click();
+    }
+  </script>
+
+</body>
+</html>
+

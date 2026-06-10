@@ -1,0 +1,2135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editor Avanzado con IA Integrada</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/47.6.1/ckeditor5.css" crossorigin>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 3s ease-in-out infinite',
+            'gradient': 'gradient 15s ease infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' }
+            },
+            gradient: {
+              '0%, 100%': { backgroundPosition: '0% 50%' },
+              '50%': { backgroundPosition: '100% 50%' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    body { font-family: 'Lato', sans-serif; }
+    
+    .gradient-bg {
+      background: black ;
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .hover-lift {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .hover-lift:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    
+    .glow {
+      box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .typing::after {
+      content: '|';
+      animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    :root {
+        --ck-content-font-family: 'Lato', sans-serif;
+        --ck-editor-height: 600px;
+    }
+
+    .editor-container_document-editor {
+        border: 1px solid var(--ck-color-base-border);
+        background: var(--ck-color-base-foreground);
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .editor-container_document-editor .editor-container__toolbar {
+        display: flex;
+        position: relative;
+        box-shadow: 0 2px 3px hsla(0, 0%, 0%, 0.078);
+        z-index: 2;
+    }
+
+    .editor-container_document-editor .editor-container__toolbar > .ck.ck-toolbar,
+    .editor-container_document-editor .editor-container__menu-bar > .ck.ck-menu-bar {
+        border-radius: 0;
+        border: none;
+    }
+
+    .editor-container_document-editor .editor-container__editor-wrapper {
+        max-height: var(--ck-editor-height);
+        min-height: var(--ck-editor-height);
+        overflow-y: auto;
+        background: #f3f4f6;
+        display: flex;
+        justify-content: center;
+    }
+
+    .editor-container_document-editor .editor-container__editor {
+        margin-top: 28px;
+        margin-bottom: 28px;
+    }
+
+    .editor-container_document-editor .editor-container__editor .ck.ck-editor__editable {
+        box-sizing: border-box;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 20mm 12mm;
+        border: 1px hsl(0, 0%, 82.7%) solid;
+        background: hsl(0, 0%, 100%);
+        box-shadow: 0 2px 3px hsla(0, 0%, 0%, 0.078);
+    }
+    
+    @media (max-width: 800px) {
+        .editor-container_document-editor .editor-container__editor .ck.ck-editor__editable {
+            width: 100%;
+            min-height: auto;
+            margin: 0;
+        }
+        .editor-container_document-editor .editor-container__editor-wrapper {
+            padding: 1rem;
+        }
+    }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen">
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-1/4 left-1/4 w-4 h-4 bg-white rounded-full opacity-20 animate-float"></div>
+    <div class="absolute top-1/3 right-1/4 w-6 h-6 bg-purple-300 rounded-full opacity-30 animate-float" style="animation-delay: 2s;"></div>
+    <div class="absolute bottom-1/3 left-1/3 w-3 h-3 bg-blue-300 rounded-full opacity-25 animate-float" style="animation-delay: 4s;"></div>
+  </div>
+
+  <div class="container mx-auto p-6 max-w-6xl relative z-10">
+    <div class="text-center mb-12">
+      <h1 class="text-6xl font-black text-white mb-4 drop-shadow-2xl">
+        <span class="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+          Editor Avanzado
+        </span>
+      </h1>
+      <h2 class="text-2xl font-light text-white/80 mb-6">
+        Potenciado por Agentes de Inteligencia Artificial
+      </h2>
+      <div class="w-24 h-1 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto rounded-full"></div>
+    </div>
+
+    <div class="space-y-6">
+      <div class="glass rounded-3xl p-6 hover-lift glow">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-white flex items-center">
+            <svg class="w-6 h-6 mr-2 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+            </svg>
+            Editor de Texto
+          </h3>
+          <div class="flex space-x-2">
+            <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+            <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+            <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+          </div>
+        </div>
+        
+        <div class="editor-container editor-container_document-editor shadow-inner">
+            <div class="editor-container__menu-bar" id="editor-menu-bar"></div>
+            <div class="editor-container__toolbar" id="editor-toolbar"></div>
+            <div class="editor-container__editor-wrapper">
+                <div class="editor-container__editor">
+                    <div id="editor"></div>
+                </div>
+            </div>
+            <div id="autosave-indicator" class="hidden absolute top-2 right-2 bg-green-500/80 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                ✓ Guardado
+            </div>
+        </div>
+      </div>
+
+      <div class="glass rounded-3xl p-6 hover-lift">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-white flex items-center">
+            <svg class="w-6 h-6 mr-2 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+            </svg>
+            Prompt para IA
+          </h3>
+          <div class="flex items-center gap-3">
+            <select id="modoIA" class="bg-indigo-900/50 backdrop-blur-sm border border-indigo-400/50 rounded-lg px-3 py-2 text-white text-sm font-medium cursor-pointer hover:bg-indigo-800/50 focus:outline-none focus:ring-2 focus:ring-indigo-400" onchange="actualizarPlaceholder()">
+              <option value="prompt" class="bg-gray-800">Solo Prompt</option>
+              <option value="editor" class="bg-gray-800">Procesar Editor + Prompt</option>
+            </select>
+            <select id="tipoEntidadIA" class="bg-indigo-900/50 backdrop-blur-sm border border-indigo-400/50 rounded-lg px-3 py-2 text-white text-sm font-medium cursor-pointer hover:bg-indigo-800/50 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+              <option value="" class="bg-gray-800">Seleccionar tipo...</option>
+              <option value="modulo" class="bg-gray-800">Módulo</option>
+              <option value="study_plan" class="bg-gray-800">Plan de Estudio</option>
+              <option value="project" class="bg-gray-800">Proyecto</option>
+            </select>
+            <button onclick="handleAgentRequest('ia')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/>
+              </svg>
+              Procesar con IA
+            </button>
+            <button onclick="limpiarPrompt()" class="text-xs text-white/60 hover:text-white bg-white/10 px-2 py-1 rounded">
+              Limpiar
+            </button>
+          </div>
+        </div>
+        <textarea id="promptInput" rows="4" class="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-white placeholder-white/50 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400" placeholder="Escribe tu prompt o instrucción para la IA aquí..."></textarea>
+        <p id="hintTexto" class="text-xs text-white/50 mt-2">Escribe aquí el texto que quieres enviar a los agentes de IA</p>
+      </div>
+
+      <div class="glass rounded-3xl p-6 hover-lift">
+        <h3 class="text-xl font-bold text-white mb-4 text-center flex items-center justify-center">
+          <svg class="w-6 h-6 mr-2 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+          </svg>
+          Acciones sobre el Editor
+        </h3>
+        <div class="flex flex-wrap justify-center gap-3">
+          <button onclick="copiarEditor()" class="bg-blue-500/30 hover:bg-blue-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-blue-400/30 flex items-center">
+            📋 Copiar Editor
+          </button>
+          <button onclick="pegarEnEditor()" class="bg-cyan-500/30 hover:bg-cyan-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-cyan-400/30 flex items-center">
+            📥 Pegar en Editor
+          </button>
+          <button onclick="limpiarEditor()" class="bg-red-500/30 hover:bg-red-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-red-400/30 flex items-center">
+            🗑️ Limpiar Editor
+          </button>
+          <button onclick="descargarEditorHTML()" class="bg-orange-500/30 hover:bg-orange-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-orange-400/30 flex items-center">
+            📄 Descargar HTML
+          </button>
+          <button onclick="insertarSaltoLinea()" class="bg-gray-500/30 hover:bg-gray-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-gray-400/30 flex items-center">
+            ➖ Insertar Línea
+          </button>
+          <button onclick="duplicarResultadoEditor()" class="bg-purple-500/30 hover:bg-purple-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-purple-400/30 flex items-center">
+            📋 Duplicar a Prompt
+          </button>
+          <button onclick="abrirModalImagenIA()" class="bg-gradient-to-r from-pink-500/30 to-purple-500/30 hover:from-pink-500/50 hover:to-purple-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-pink-400/30 flex items-center">
+            🎨 Generar Imagen con IA
+          </button>
+        </div>
+      </div>
+
+      <div class="glass rounded-3xl p-6 hover-lift">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-white flex items-center">
+            <svg class="w-6 h-6 mr-2 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+              <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a3 3 0 003 3h2a3 3 0 003-3V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm8 5a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+            </svg>
+            Resultado de IA
+          </h3>
+          <div class="flex items-center gap-2">
+            <button onclick="copiarResultado()" class="text-xs text-white/60 hover:text-white bg-white/10 px-2 py-1 rounded">
+              📋 Copiar
+            </button>
+            <button onclick="limpiarResultado()" class="text-xs text-white/60 hover:text-white bg-white/10 px-2 py-1 rounded">
+              🗑️ Limpiar
+            </button>
+          </div>
+        </div>
+        <textarea id="resultInput" rows="10" class="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-white placeholder-white/50 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 font-mono text-sm" placeholder="El resultado de la IA aparecerá aquí..."></textarea>
+      </div>
+
+      <div class="glass rounded-3xl p-6 hover-lift">
+        <h3 class="text-xl font-bold text-white mb-4 text-center flex items-center justify-center">
+          <svg class="w-6 h-6 mr-2 text-indigo-300" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z"/>
+          </svg>
+          Acciones sobre el Resultado
+        </h3>
+        
+        <div class="flex flex-wrap justify-center gap-3 mb-3">
+          <button onclick="copiarResultado()" class="bg-blue-500/30 hover:bg-blue-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-blue-400/30 flex items-center">
+            📋 Copiar
+          </button>
+          <button onclick="descargarPDF()" class="bg-red-500/30 hover:bg-red-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-red-400/30 flex items-center">
+            📄 PDF
+          </button>
+          <button onclick="descargarWord()" class="bg-blue-500/30 hover:bg-blue-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-blue-400/30 flex items-center">
+            📝 Word
+          </button>
+          <button onclick="descargarTXT()" class="bg-gray-500/30 hover:bg-gray-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-gray-400/30 flex items-center">
+            📃 TXT
+          </button>
+          <button onclick="enviarPorEmail()" class="bg-yellow-500/30 hover:bg-yellow-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-yellow-400/30 flex items-center">
+            ✉️ Enviar Email
+          </button>
+        </div>
+        
+        <div class="flex flex-wrap justify-center gap-3 mb-3">
+          <button onclick="subirDrivePersonal()" class="bg-green-500/30 hover:bg-green-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-green-400/30 flex items-center">
+            ☁️ Drive Personal
+          </button>
+          <button onclick="subirDriveGlobal()" class="bg-purple-500/30 hover:bg-purple-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-purple-400/30 flex items-center">
+            🌍 Drive Global
+          </button>
+          <button onclick="insertarAlEditor()" class="bg-indigo-500/30 hover:bg-indigo-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-indigo-400/30 flex items-center">
+            📝 Insertar al Editor
+          </button>
+          <button onclick="reemplazarEnEditor()" class="bg-cyan-500/30 hover:bg-cyan-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-cyan-400/30 flex items-center">
+            🔄 Reemplazar Editor
+          </button>
+        </div>
+        
+        <div class="flex flex-wrap justify-center gap-3">
+          <button onclick="importarEntidad()" class="bg-teal-500/30 hover:bg-teal-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-teal-400/30 flex items-center">
+            📥 Importar Entidad
+          </button>
+          <button onclick="mostrarEntidades()" class="bg-yellow-500/30 hover:bg-yellow-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-yellow-400/30 flex items-center">
+            📚 Guardar en Entidad
+          </button>
+          <button onclick="enviarAPrompt()" class="bg-orange-500/30 hover:bg-orange-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-orange-400/30 flex items-center">
+            🔄 Enviar a Prompt
+          </button>
+          <button onclick="compartirWhatsApp()" class="bg-emerald-500/30 hover:bg-emerald-500/50 text-white px-5 py-2 rounded-lg transition-all duration-300 border border-emerald-400/30 flex items-center">
+            📱 WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-12 text-white/60">
+      <p class="text-sm">✨ Potenciado por tecnología de vanguardia en IA</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.ckeditor.com/ckeditor5/47.6.1/ckeditor5.umd.js" crossorigin></script>
+  <script src="https://cdn.ckeditor.com/ckeditor5/47.6.1/translations/es.umd.js" crossorigin></script>
+
+  <script>
+    // Configuración y variables
+    let editorInstance = null;
+    let iaDatosJSON = null;
+    let iaTipoEntidad = null;
+    
+    const {
+        DecoupledEditor, Autosave, Essentials, Paragraph, ImageUtils, ImageEditing,
+        Mention, Bold, Italic, Underline, Markdown, MediaEmbed, Strikethrough, Code,
+        Subscript, Superscript, FontBackgroundColor, FontColor, FontFamily, FontSize,
+        RemoveFormat, Highlight, Heading, Link, AutoLink, BlockQuote, HorizontalLine,
+        CodeBlock, Indent, IndentBlock, Alignment, List, TodoList, ImageInsertViaUrl,
+        ImageBlock, ImageToolbar, AutoImage, BalloonToolbar
+    } = window.CKEDITOR;
+
+    const LICENSE_KEY = 'eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NzQ0ODMxOTksImp0aSI6ImRiZGMwN2U0LTBmOTctNGQ3MS05NzA1LWQ4ZWRjMzQ4NjNhZiIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6ImNjZDM3NmU2In0.56Ya4P-DOgQuKVRx9i6QWlE0vcje7V8GLb3C8NHfa-6-uFBBxCf--nSyrfXARbEfgMBK4Om3OYFDqJ4e4_rw0Q';
+    
+    const editorConfig = {
+        toolbar: {
+            items: [
+                'undo', 'redo', '|', 'heading', '|', 'fontSize', 'fontFamily', 'fontColor',
+                'fontBackgroundColor', '|', 'bold', 'italic', 'underline', '|', 'link',
+                'insertImageViaUrl', 'highlight', 'blockQuote', 'codeBlock', '|',
+                'alignment', '|', 'bulletedList', 'numberedList', 'todoList', 'outdent', 'indent'
+            ],
+            shouldNotGroupWhenFull: false
+        },
+        plugins: [
+            Alignment, AutoImage, AutoLink, Autosave, BalloonToolbar, BlockQuote, Bold,
+            Code, CodeBlock, Essentials, FontBackgroundColor, FontColor, FontFamily,
+            FontSize, Heading, Highlight, HorizontalLine, ImageBlock, ImageEditing,
+            ImageInsertViaUrl, ImageToolbar, ImageUtils, Indent, IndentBlock, Italic,
+            Link, List, Markdown, MediaEmbed, Mention, Paragraph, RemoveFormat,
+            Strikethrough, Subscript, Superscript, TodoList, Underline
+        ],
+        balloonToolbar: ['bold', 'italic', '|', 'link', '|', 'bulletedList', 'numberedList'],
+        fontFamily: { 
+            supportAllValues: true,
+            options: [
+                { title: 'Default (Lato)', model: 'Lato, sans-serif' },
+                { title: 'Roboto', model: 'Roboto, sans-serif' },
+                { title: 'Open Sans', model: 'Open Sans, sans-serif' },
+                { title: 'Montserrat', model: 'Montserrat, sans-serif' },
+                { title: 'Playfair Display', model: 'Playfair Display, serif' }
+            ]
+        },
+        fontSize: {
+            options: [10, 12, 14, 'default', 18, 20, 22],
+            supportAllValues: true
+        },
+        heading: {
+            options: [
+                { model: 'paragraph', title: 'Párrafo', class: 'ck-heading_paragraph' },
+                { model: 'heading1', view: 'h1', title: 'Título 1', class: 'ck-heading_heading1' },
+                { model: 'heading2', view: 'h2', title: 'Título 2', class: 'ck-heading_heading2' },
+                { model: 'heading3', view: 'h3', title: 'Título 3', class: 'ck-heading_heading3' }
+            ]
+        },
+        language: 'es',
+        licenseKey: LICENSE_KEY,
+        placeholder: '¡Escribe o pega tu contenido aquí!'
+    };
+
+    const AUTOSAVE_KEY = 'ckeditor_autosave_content';
+    const AUTOSAVE_INTERVAL = 30000;
+    let autosaveTimer = null;
+
+    function autoSaveContent() {
+      if (window.editorInstance) {
+        const content = window.editorInstance.getData();
+        if (content && content.trim() !== '' && content !== '<p>&nbsp;</p>') {
+          localStorage.setItem(AUTOSAVE_KEY, content);
+          const timestamp = new Date().toLocaleTimeString('es-ES');
+          const saveIndicator = document.getElementById('autosave-indicator');
+          if (saveIndicator) {
+            saveIndicator.textContent = '✓ Guardado ' + timestamp;
+            saveIndicator.classList.remove('hidden');
+            setTimeout(() => {
+              saveIndicator.classList.add('hidden');
+            }, 3000);
+          }
+        }
+      }
+    }
+
+    function restoreSavedContent() {
+      const savedContent = localStorage.getItem(AUTOSAVE_KEY);
+      if (savedContent && savedContent.trim() !== '' && savedContent !== '<p>&nbsp;</p>') {
+        if (window.confirm('¿Restaurar contenido guardado automáticamente?')) {
+          window.editorInstance.setData(savedContent);
+          showNotification('Contenido restaurado del auto-guardado', 'success');
+        } else {
+          localStorage.removeItem(AUTOSAVE_KEY);
+        }
+      }
+    }
+
+    DecoupledEditor.create(document.querySelector('#editor'), editorConfig)
+        .then(editor => {
+            document.querySelector('#editor-toolbar').appendChild(editor.ui.view.toolbar.element);
+            document.querySelector('#editor-menu-bar').appendChild(editor.ui.view.menuBarView.element);
+            
+            window.editorInstance = editor; 
+            console.log('CKEditor 5 Decoupled listo en español.');
+
+            editor.model.document.on('change:data', () => {
+              clearTimeout(autosaveTimer);
+              autosaveTimer = setTimeout(autoSaveContent, AUTOSAVE_INTERVAL);
+            });
+
+            setTimeout(restoreSavedContent, 500);
+        })
+        .catch(error => {
+            console.error('Error al inicializar CKEditor 5:', error);
+        });
+
+    function formatTextToHTML(text) {
+      if (!text) return text;
+      
+      let formattedText = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-blue-200">$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em class="italic text-purple-200">$1</em>')
+        .replace(/^\* (.+)$/gm, '<li class="ml-4 mb-1 text-gray-100">• $1</li>')
+        .replace(/\n\n/g, '</p><p class="mb-4 text-gray-100 leading-relaxed">')
+        .replace(/\n/g, '<br>')
+        .replace(/<strong class="font-bold text-blue-200">([^<]+):<\/strong>/g,
+            '<h3 class="text-xl font-bold text-yellow-300 mb-3 mt-6 border-b border-white/20 pb-2">$1:</h3>')
+        .replace(/(\d+\.\s)/g, '<span class="font-bold text-green-300">$1</span>');
+
+      if (!formattedText.includes('<li>') && !formattedText.includes('<h3>')) {
+        formattedText = '<p class="mb-4 text-gray-100 leading-relaxed">' + formattedText + '</p>';
+      }
+
+      if (formattedText.includes('<li>')) {
+        formattedText = formattedText.replace(/(<li>.*?<\/li>)/gs, '<ul class="space-y-2 mb-4">$1</ul>');
+      }
+
+      return formattedText;
+    }
+
+    async function sendRequest(endpoint, body) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+
+        const textResponse = await response.text();
+        try {
+          const data = JSON.parse(textResponse);
+          const rawText = data.mensaje || data.result || data.respuesta || JSON.stringify(data);
+          return formatTextToHTML(rawText);
+        } catch {
+          return formatTextToHTML(textResponse);
+        }
+      } catch (e) {
+        console.error(e);
+        return `<div class="text-red-300 p-4 bg-red-500/20 rounded-lg border border-red-400/30">
+          <div class="flex items-center mb-2">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+            </svg>
+            <span class="font-semibold">Error de Conexión</span>
+          </div>
+          <p class="text-sm">${e.message}</p>
+        </div>`;
+      }
+    }
+
+    function actualizarPlaceholder() {
+      const modo = document.getElementById('modoIA').value;
+      const hint = document.getElementById('hintTexto');
+      if (modo === 'editor') {
+        document.getElementById('promptInput').placeholder = 'Agrega instrucciones adicionales para la IA sobre el contenido del editor...';
+        hint.textContent = 'El contenido del CKEditor se incluirá automáticamente como contexto. Agrega instrucciones adicionales si lo deseas.';
+      } else {
+        document.getElementById('promptInput').placeholder = 'Escribe tu prompt o instrucción para la IA aquí...';
+        hint.textContent = 'Escribe aquí el texto que quieres enviar a los agentes de IA';
+      }
+    }
+
+    async function handleAgentRequest(agent) {
+      const modo = document.getElementById('modoIA').value;
+      const promptText = document.getElementById('promptInput').value.trim();
+      
+      let textoParaIA = '';
+      
+      if (modo === 'editor') {
+        const editorData = window.editorInstance ? window.editorInstance.getData() : '';
+        
+        if (editorData && editorData.trim()) {
+          textoParaIA = editorData;
+          if (promptText) {
+            textoParaIA += '\n\n---\nINSTRUCCIONES ADICIONALES:\n' + promptText;
+          }
+        } else if (promptText) {
+          textoParaIA = promptText;
+        } else {
+          showNotification('Escribe un prompt o ingresa contenido en el editor.', 'warning');
+          return;
+        }
+      } else {
+        if (!promptText) {
+          showNotification('Por favor, escribe un prompt en el área de texto.', 'warning');
+          return;
+        }
+        textoParaIA = promptText;
+      }
+
+      const tipoEntidad = document.getElementById('tipoEntidadIA').value;
+      let instruccionFormatos = '';
+      
+      if (tipoEntidad === 'modulo') {
+        instruccionFormatos = `\n\nIMPORTANTE: Devuelve el resultado en formato JSON con estos campos EXACTOS para crear un nuevo MÓDULO:{  "nombre_del_modulo": "Nombre del módulo",  "objetivo_general": "Objetivo general del módulo",  "objetivos_especificos": "Objetivos específicos (separados por saltos de línea)",  "publico_objetivo": "Público objetivo",  "duracion_estimada": "Duración estimada (ej: 8 horas)",  "requisitos_previos": "Requisitos previos",  "criterios_de_logro": "Criterios de logro"}`;
+      } else if (tipoEntidad === 'study_plan') {
+        instruccionFormatos = `\n\nIMPORTANTE: Devuelve el resultado en formato JSON con estos campos EXACTOS para crear un nuevo PLAN DE ESTUDIO:{  "name": "Nombre del plan",  "description": "Descripción general",  "modalidad": "Modalidad (Presencial/Virtual/Híbrida)",  "objetivo_general": "Objetivo general",  "objetivos_especificos": ["Objetivo 1", "Objetivo 2", "Objetivo 3"],  "resultados_aprendizaje": "Resultados de aprendizaje esperados",  "recursos_libros": "Recursos bibliográficos",  "recursos_materiales": "Materiales de apoyo"}`;
+      } else if (tipoEntidad === 'project') {
+        instruccionFormatos = `\n\nIMPORTANTE: Devuelve el resultado en formato JSON con estos campos EXACTOS para crear un nuevo PROYECTO:{  "name": "Nombre del proyecto",  "description": "Descripción del proyecto",  "tipo_proyecto": "Tipo de proyecto",  "publico_objetivo": ["Grupo 1", "Grupo 2"],  "horas_curso": 40,  "observaciones": "Observaciones adicionales"}`;
+      }
+      
+      const promptCompleto = textoParaIA + instruccionFormatos;
+
+      const agents = [
+        { name: 'Gemini', endpoint: 'https://gestordecursos.pegui.edu.co:8000/chat/gemini', body: { prompt: promptCompleto }, color: 'green' },
+        { name: 'ChatGPT', endpoint: 'https://gestordecursos.pegui.edu.co:8000/chat/openai', body: { mensaje: promptCompleto }, color: 'emerald' },
+        { name: 'Kimi', endpoint: 'https://gestordecursos.pegui.edu.co:8000/chat/kimi', body: { mensaje: promptCompleto }, color: 'blue' }
+      ];
+
+      iaTipoEntidad = tipoEntidad;
+      let lastError = '';
+      
+      for (let i = 0; i < agents.length; i++) {
+        const currentAgent = agents[i];
+        document.getElementById('resultInput').value = 'Intentando con ' + currentAgent.name + '...';
+        
+        try {
+          const result = await sendRequestRaw(currentAgent.endpoint, currentAgent.body);
+          document.getElementById('resultInput').value = result.text;
+          iaDatosJSON = result.jsonData;
+          if (iaDatosJSON) {
+            showNotification('Resultado de ' + currentAgent.name + ' (JSON detectado)', 'success');
+          } else {
+            showNotification('Resultado de ' + currentAgent.name + ' (guarda manualmente)', 'warning');
+          }
+          return;
+        } catch (e) {
+          lastError = e.message;
+          console.warn('Error con ' + currentAgent.name + ':', e.message);
+          if (i < agents.length - 1) {
+            showNotification(currentAgent.name + ' falló, intentando con ' + agents[i+1].name + '...', 'warning');
+          }
+        }
+      }
+      
+      document.getElementById('resultInput').value = 'Error: ' + lastError;
+      showNotification('Todos los agentes fallaron: ' + lastError, 'error');
+    }
+
+    async function sendRequestRaw(endpoint, body) {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+      const textResponse = await response.text();
+      
+      let jsonData = null;
+      let textoLimpio = textResponse;
+      
+      try {
+        const data = JSON.parse(textResponse);
+        textoLimpio = data.mensaje || data.result || data.respuesta || textResponse;
+        
+        if (typeof textoLimpio === 'string') {
+          const jsonMatch = textoLimpio.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              jsonData = JSON.parse(jsonMatch[0]);
+            } catch {}
+          }
+        }
+      } catch {
+        const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            jsonData = JSON.parse(jsonMatch[0]);
+            textoLimpio = JSON.stringify(jsonData, null, 2);
+          } catch {
+            textoLimpio = textResponse;
+          }
+        }
+      }
+      
+      return { text: textoLimpio, jsonData: jsonData };
+    }
+
+    function showNotification(message, type) {
+      const notification = document.createElement('div');
+      const colors = {
+        warning: 'bg-yellow-500',
+        error: 'bg-red-500',
+        success: 'bg-green-500'
+      };
+      
+      notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+      
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    window.insertarAlEditor = function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay resultado para insertar', 'warning');
+        return;
+      }
+      if (window.editorInstance) {
+        const currentContent = window.editorInstance.getData();
+        window.editorInstance.setData(currentContent + '<hr><p>' + resultText.replace(/\n/g, '<br>') + '</p>');
+        showNotification('Resultado insertado en el editor', 'success');
+      } else {
+        showNotification('Editor no disponible', 'error');
+      }
+    };
+
+    window.copiarResultado = function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay resultado para copiar', 'warning');
+        return;
+      }
+      navigator.clipboard.writeText(resultText).then(() => {
+        showNotification('Resultado copiado al portapapeles', 'success');
+      }).catch(() => {
+        showNotification('Error al copiar', 'error');
+      });
+    };
+
+    window.limpiarPrompt = function() {
+      document.getElementById('promptInput').value = '';
+      showNotification('Prompt limpiado', 'success');
+    };
+
+    window.limpiarResultado = function() {
+      document.getElementById('resultInput').value = '';
+      showNotification('Resultado limpiado', 'success');
+    };
+
+    window.copiarEditor = function() {
+      if (window.editorInstance) {
+        const editorContent = window.editorInstance.getData();
+        if (!editorContent || editorContent.trim() === '') {
+          showNotification('El editor está vacío', 'warning');
+          return;
+        }
+        const plainText = editorContent.replace(/<[^>]*>/g, '');
+        navigator.clipboard.writeText(plainText).then(() => {
+          showNotification('Contenido del editor copiado', 'success');
+        }).catch(() => {
+          showNotification('Error al copiar', 'error');
+        });
+      } else {
+        showNotification('Editor no disponible', 'error');
+      }
+    };
+
+    window.pegarEnEditor = async function() {
+      if (window.editorInstance) {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            const currentContent = window.editorInstance.getData();
+            window.editorInstance.setData(currentContent + '<p>' + text.replace(/\n/g, '<br>') + '</p>');
+            showNotification('Texto pegado en el editor', 'success');
+          } else {
+            showNotification('Portapapeles vacío', 'warning');
+          }
+        } catch (e) {
+          showNotification('Error al pegar: ' + e.message, 'error');
+        }
+      } else {
+        showNotification('Editor no disponible', 'error');
+      }
+    };
+
+    window.limpiarEditor = function() {
+      if (window.editorInstance) {
+        window.editorInstance.setData('');
+        showNotification('Editor limpiado', 'success');
+      } else {
+        showNotification('Editor no disponible', 'error');
+      }
+    };
+
+    window.descargarEditorHTML = function() {
+      if (window.editorInstance) {
+        const editorContent = window.editorInstance.getData();
+        if (!editorContent || editorContent.trim() === '') {
+          showNotification('El editor está vacío', 'warning');
+          return;
+        }
+        const fullHTML = `<!DOCTYPE html><html><head>  <meta charset="UTF-8">  <title>Documento del Editor</title>  <style>    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }  </style></head><body>${editorContent}</body></html>`;
+        const blob = new Blob([fullHTML], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'documento_editor.html';
+        a.click();
+        URL.revokeObjectURL(url);
+        showNotification('HTML del editor descargado', 'success');
+      } else {
+        showNotification('Editor no disponible', 'error');
+      }
+    };
+
+    window.insertarSaltoLinea = function() {
+      if (window.editorInstance) {
+        const currentContent = window.editorInstance.getData();
+        window.editorInstance.setData(currentContent + '<hr>');
+        showNotification('Línea separadora insertada', 'success');
+      } else {
+        showNotification('Editor no disponible', 'error');
+      }
+    };
+
+    window.duplicarResultadoEditor = function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay resultado para duplicar', 'warning');
+        return;
+      }
+      const promptInput = document.getElementById('promptInput');
+      if (promptInput.value) {
+        promptInput.value += '\n\n--- DUPLICADO DEL RESULTADO ---\n' + resultText;
+      } else {
+        promptInput.value = '--- DUPLICADO DEL RESULTADO ---\n' + resultText;
+      }
+      showNotification('Resultado duplicado al prompt', 'success');
+    };
+
+    window.descargarTXT = function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay contenido para descargar', 'warning');
+        return;
+      }
+      const blob = new Blob([resultText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'resultado_ia.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+      showNotification('TXT descargado', 'success');
+    };
+
+    window.enviarPorEmail = function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay contenido para enviar', 'warning');
+        return;
+      }
+      const subject = encodeURIComponent('Resultado IA - Editor');
+      const body = encodeURIComponent(resultText);
+      window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+      showNotification('Abriendo cliente de email...', 'success');
+    };
+
+    window.reemplazarEnEditor = function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay resultado para insertar', 'warning');
+        return;
+      }
+      if (window.editorInstance) {
+        window.editorInstance.setData('<p>' + resultText.replace(/\n/g, '<br>') + '</p>');
+        showNotification('Editor reemplazado con el resultado', 'success');
+      } else {
+        showNotification('Editor no disponible', 'error');
+      }
+    };
+
+    window.enviarAPrompt = function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay resultado para enviar', 'warning');
+        return;
+      }
+      const promptInput = document.getElementById('promptInput');
+      if (promptInput.value) {
+        promptInput.value += '\n\n--- CONTEXTO DE RESULTADO ANTERIOR ---\n' + resultText;
+      } else {
+        promptInput.value = '--- CONTEXTO DE RESULTADO ANTERIOR ---\n' + resultText;
+      }
+      showNotification('Resultado enviado al prompt', 'success');
+    };
+
+    window.compartirWhatsApp = function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay contenido para compartir', 'warning');
+        return;
+      }
+      const truncatedText = resultText.substring(0, 1000);
+      const whatsappURL = `https://wa.me/?text=${encodeURIComponent(truncatedText)}`;
+      window.open(whatsappURL, '_blank');
+      showNotification('Abriendo WhatsApp...', 'success');
+    };
+
+    window.descargarPDF = function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay contenido para descargar', 'warning');
+        return;
+      }
+      
+      const { jsPDF } = window.jspdf;
+      if (!jsPDF) {
+        showNotification('Cargando librería PDF...', 'warning');
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.onload = () => window.descargarPDF();
+        document.head.appendChild(script);
+        return;
+      }
+      
+      const doc = new jsPDF();
+      const lines = doc.splitTextToSize(resultText, 180);
+      doc.text(lines, 10, 10);
+      doc.save('resultado_ia.pdf');
+      showNotification('PDF descargado', 'success');
+    };
+
+    window.descargarWord = function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay contenido para descargar', 'warning');
+        return;
+      }
+      
+      const header = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Resultado IA</title></head><body>';
+      const footer = '</body></html>';
+      const sourceHTML = header + resultText.replace(/\n/g, '<br>') + footer;
+      
+      const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+      const fileDownload = document.createElement('a');
+      document.body.appendChild(fileDownload);
+      fileDownload.href = source;
+      fileDownload.download = 'resultado_ia.doc';
+      fileDownload.click();
+      document.body.removeChild(fileDownload);
+      showNotification('Word descargado', 'success');
+    };
+
+    window.subirDrivePersonal = async function() {
+      const contenidoIA = document.getElementById('resultInput').value;
+      let contenidoEditor = '';
+      if (window.editorInstance) {
+        contenidoEditor = window.editorInstance.getData();
+      }
+      
+      if (!contenidoIA && !contenidoEditor) {
+        showNotification('No hay contenido para subir', 'warning');
+        return;
+      }
+      
+      const opciones = [];
+      if (contenidoIA) opciones.push('Resultado de IA');
+      if (contenidoEditor) opciones.push('Contenido del Editor');
+      
+      const modal = document.createElement('div');
+      modal.id = 'modalSubirDrive';
+      modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+      
+      const opcionesHTML = opciones.map((op, i) => `<label class="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50"><input type="radio" name="tipoSubida" value="${i}" ${i===0?'checked':''}> ${op}</label>`).join('');
+      
+      modal.innerHTML = `
+        <div class="bg-white rounded-2xl p-6 w-full max-w-lg mx-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800">☁️ Subir a Drive Personal</h3>
+            <button onclick="cerrarModalDrive()" class="text-gray-500 hover:text-gray-700">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">¿Qué deseas subir?</label>
+              <div class="space-y-2">${opcionesHTML}</div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del archivo</label>
+              <input type="text" id="driveFileName" class="w-full border rounded-lg p-2" placeholder="documento">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Carpeta de destino</label>
+              <div id="carpetasDrivePersonal" class="max-h-40 overflow-y-auto border rounded-lg p-2">
+                <div class="text-gray-500 text-sm">Cargando carpetas...</div>
+              </div>
+            </div>
+            
+            <div class="flex gap-2">
+              <button onclick="crearCarpetaDrive('personal')" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                ➕ Nueva Carpeta
+              </button>
+              <button onclick="subirArchivoDrive('personal')" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                📤 Subir
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      cargarCarpetasDrive('personal');
+    };
+
+    window.subirDriveGlobal = async function() {
+      const contenidoIA = document.getElementById('resultInput').value;
+      let contenidoEditor = '';
+      if (window.editorInstance) {
+        contenidoEditor = window.editorInstance.getData();
+      }
+      
+      if (!contenidoIA && !contenidoEditor) {
+        showNotification('No hay contenido para subir', 'warning');
+        return;
+      }
+      
+      const opciones = [];
+      if (contenidoIA) opciones.push('Resultado de IA');
+      if (contenidoEditor) opciones.push('Contenido del Editor');
+      
+      const modal = document.createElement('div');
+      modal.id = 'modalSubirDriveGlobal';
+      modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+      
+      const opcionesHTML = opciones.map((op, i) => `<label class="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50"><input type="radio" name="tipoSubidaGlobal" value="${i}" ${i===0?'checked':''}> ${op}</label>`).join('');
+      
+      modal.innerHTML = `
+        <div class="bg-white rounded-2xl p-6 w-full max-w-lg mx-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800">🌍 Subir a Drive Global</h3>
+            <button onclick="cerrarModalDriveGlobal()" class="text-gray-500 hover:text-gray-700">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">¿Qué deseas subir?</label>
+              <div class="space-y-2">${opcionesHTML}</div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del archivo</label>
+              <input type="text" id="driveFileNameGlobal" class="w-full border rounded-lg p-2" placeholder="documento">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Carpeta de destino</label>
+              <div id="carpetasDriveGlobal" class="max-h-40 overflow-y-auto border rounded-lg p-2">
+                <div class="text-gray-500 text-sm">Cargando carpetas...</div>
+              </div>
+            </div>
+            
+            <div class="flex gap-2">
+              <button onclick="crearCarpetaDrive('global')" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                ➕ Nueva Carpeta
+              </button>
+              <button onclick="subirArchivoDrive('global')" class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                📤 Subir
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      cargarCarpetasDrive('global');
+    };
+
+    window.cerrarModalDrive = function() {
+      const modal = document.getElementById('modalSubirDrive');
+      if (modal) modal.remove();
+    };
+
+    window.cerrarModalDriveGlobal = function() {
+      const modal = document.getElementById('modalSubirDriveGlobal');
+      if (modal) modal.remove();
+    };
+
+    window.cargarCarpetasDrive = async function(tipo) {
+      const containerId = tipo === 'personal' ? 'carpetasDrivePersonal' : 'carpetasDriveGlobal';
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      
+      try {
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        const includeGeneral = tipo === 'global' ? 'true' : 'false';
+        const res = await fetch(`${API}/folders?include_general=${includeGeneral}`);
+        const carpetas = await res.json();
+        
+        if (carpetas.length === 0) {
+          container.innerHTML = '<div class="text-gray-500 text-sm p-2">No hay carpetas. Crea una nueva.</div>';
+          return;
+        }
+        
+        container.innerHTML = '<label class="flex items-center gap-2 p-1 cursor-pointer"><input type="radio" name="carpetaDrive" value="" checked> 📁 Raíz</label>';
+        carpetas.forEach(carpeta => {
+          container.innerHTML += `<label class="flex items-center gap-2 p-1 cursor-pointer"><input type="radio" name="carpetaDrive" value="${carpeta.id}"> 📁 ${carpeta.nombre}</label>`;
+        });
+      } catch (e) {
+        container.innerHTML = '<div class="text-red-500 text-sm p-2">Error al cargar carpetas</div>';
+      }
+    };
+
+    window.crearCarpetaDrive = async function(tipo) {
+      const nombre = prompt('Nombre de la nueva carpeta:');
+      if (!nombre) return;
+      
+      try {
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        const includeGeneral = tipo === 'global' ? 'true' : 'false';
+        const res = await fetch(`${API}/folders/?include_general=${includeGeneral}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre: nombre, descripcion: 'Creado desde editor IA' })
+        });
+        
+        if (res.ok) {
+          showNotification('Carpeta creada', 'success');
+          cargarCarpetasDrive(tipo);
+        } else {
+          showNotification('Error al crear carpeta', 'error');
+        }
+      } catch (e) {
+        showNotification('Error: ' + e.message, 'error');
+      }
+    };
+
+    window.subirArchivoDrive = async function(tipo) {
+      const contenidoIA = document.getElementById('resultInput').value;
+      let contenidoEditor = '';
+      if (window.editorInstance) {
+        contenidoEditor = window.editorInstance.getData();
+      }
+      
+      const tipoSubida = document.querySelector(`input[name="tipoSubida${tipo === 'global' ? 'Global' : ''}"]:checked`);
+      const tipoSeleccionado = tipoSubida ? parseInt(tipoSubida.value) : 0;
+      
+      let contenido = '';
+      const opciones = [];
+      if (contenidoIA) opciones.push('ia');
+      if (contenidoEditor) opciones.push('editor');
+      
+      contenido = opciones[tipoSeleccionado] === 'ia' ? contenidoIA : contenidoEditor.replace(/<[^>]*>/g, '');
+      
+      const fileNameInput = tipo === 'personal' ? document.getElementById('driveFileName') : document.getElementById('driveFileNameGlobal');
+      const fileName = fileNameInput.value || 'documento';
+      
+      const carpetaSeleccionada = document.querySelector('input[name="carpetaDrive"]:checked');
+      const folderId = carpetaSeleccionada ? carpetaSeleccionada.value : '';
+      
+      try {
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        const TOKEN = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+        
+        const formData = new FormData();
+        const blob = new Blob([contenido], { type: 'text/plain' });
+        formData.append('file', blob, fileName + '.txt');
+        formData.append('nombre_archivo', fileName);
+        if (folderId) formData.append('folder_id', folderId);
+        if (tipo === 'global') formData.append('include_general', 'true');
+        
+        const res = await fetch(API + '/archivos/', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + TOKEN },
+          body: formData
+        });
+        
+        if (res.ok) {
+          showNotification(`Archivo subido a Drive ${tipo === 'personal' ? 'Personal' : 'Global'}`, 'success');
+          if (tipo === 'personal') cerrarModalDrive();
+          else cerrarModalDriveGlobal();
+        } else {
+          const error = await res.json();
+          showNotification('Error: ' + (error.detail || res.status), 'error');
+        }
+      } catch (e) {
+        showNotification('Error: ' + e.message, 'error');
+      }
+    };
+
+    window.mostrarEntidades = async function() {
+      const resultText = document.getElementById('resultInput').value;
+      if (!resultText) {
+        showNotification('No hay contenido para guardar', 'warning');
+        return;
+      }
+      
+      let tipoInicial = iaTipoEntidad || '';
+      
+      const modal = document.createElement('div');
+      modal.id = 'modalEntidades';
+      modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+      
+      if (iaDatosJSON && iaTipoEntidad) {
+        let contenedorExtra = '';
+        
+        if (iaTipoEntidad === 'modulo') {
+          contenedorExtra = `
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Autor Responsable</label>
+              <select id="autorSelect" class="w-full border rounded-lg p-2"></select>
+            </div>
+          `;
+        } else if (iaTipoEntidad === 'project') {
+          contenedorExtra = `
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+              <select id="clienteSelect" class="w-full border rounded-lg p-2"></select>
+            </div>
+          `;
+        }
+        
+        modal.innerHTML = `
+          <div class="bg-white rounded-2xl p-6 w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-bold text-gray-800">Crear ${iaTipoEntidad === 'modulo' ? 'Módulo' : iaTipoEntidad === 'study_plan' ? 'Plan de Estudio' : 'Proyecto'}</h3>
+              <button onclick="cerrarModalEntidades()" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+              <p class="text-sm text-green-700">JSON detectado de la IA. Revisa los campos antes de guardar.</p>
+            </div>
+            
+            <div id="jsonPreview" class="bg-gray-50 border rounded-lg p-4 mb-4 max-h-60 overflow-y-auto text-sm font-mono"></div>
+            
+            ${contenedorExtra}
+            
+            <div id="contenedorEntidad" class="hidden mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" id="labelEntidad">Entidad padre</label>
+              <select id="entidadSelect" class="w-full border rounded-lg p-2"></select>
+            </div>
+            
+            <button onclick="crearDesdeJSON()" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 mt-2">
+              ✅ Crear ${iaTipoEntidad === 'modulo' ? 'Módulo' : iaTipoEntidad === 'study_plan' ? 'Plan de Estudio' : 'Proyecto'}
+            </button>
+            
+            <button onclick="mostrarFormularioManual()" class="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 mt-2">
+              Editar manualmente
+            </button>
+          </div>
+        `;
+        
+        document.body.appendChild(modal);
+        document.getElementById('jsonPreview').textContent = JSON.stringify(iaDatosJSON, null, 2);
+        
+        if (iaTipoEntidad === 'modulo') {
+          document.getElementById('contenedorEntidad').classList.remove('hidden');
+          document.getElementById('labelEntidad').textContent = 'Plan de Estudio padre';
+          await cargarEntidadesSelect('study_plan', 'entidadSelect');
+          await cargarAutoresSelect('autorSelect');
+        } else if (iaTipoEntidad === 'study_plan') {
+          document.getElementById('contenedorEntidad').classList.remove('hidden');
+          document.getElementById('labelEntidad').textContent = 'Proyecto padre';
+          await cargarEntidadesSelect('project', 'entidadSelect');
+        } else if (iaTipoEntidad === 'project') {
+          await cargarClientesSelect('clienteSelect');
+        }
+      } else {
+        modal.innerHTML = `
+          <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-bold text-gray-800">Guardar en Entidad</h3>
+              <button onclick="cerrarModalEntidades()" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Entidad a crear</label>
+                <select id="tipoEntidad" class="w-full border rounded-lg p-2">
+                  <option value="">Selecciona...</option>
+                  <option value="modulo">Módulo</option>
+                  <option value="study_plan">Plan de Estudio</option>
+                  <option value="project">Proyecto</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <input type="text" id="nombreContenido" class="w-full border rounded-lg p-2" placeholder="Nombre de la entidad">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Contenido/Descripción</label>
+                <textarea id="contenidoManual" class="w-full border rounded-lg p-2" rows="4" placeholder="Contenido o descripción"></textarea>
+              </div>
+              
+              <button onclick="crearEntidadManual()" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                Crear
+              </button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+      }
+    };
+
+    window.mostrarFormularioManual = function() {
+      const modal = document.getElementById('modalEntidades');
+      if (modal) modal.remove();
+      mostrarEntidades();
+    };
+
+    window.cargarEntidadesSelect = async function(tipo, selectId) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      
+      try {
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        let url = '';
+        
+        if (tipo === 'study_plan') url = API + '/study_plans/';
+        else if (tipo === 'project') url = API + '/projects/';
+        else if (tipo === 'modulo') url = API + '/modules/';
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        select.innerHTML = '<option value="">Selecciona...</option>';
+        data.forEach(item => {
+          const name = item.nombre_del_modulo || item.name || item.titulo || 'Sin nombre';
+          select.innerHTML += `<option value="${item.id}">${name}</option>`;
+        });
+      } catch (e) {
+        console.error('Error cargando entidades:', e);
+      }
+    };
+
+    window.cargarAutoresSelect = async function(selectId) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      
+      try {
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        const TOKEN = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+        
+        const res = await fetch(API + '/users/', {
+          headers: { 'Authorization': 'Bearer ' + TOKEN }
+        });
+        const data = await res.json();
+        
+        select.innerHTML = '<option value="">Selecciona autor...</option>';
+        data.forEach(user => {
+          const name = user.name || user.email || 'Usuario ' + user.id;
+          select.innerHTML += `<option value="${name}">${name}</option>`;
+        });
+      } catch (e) {
+        select.innerHTML = '<option value="">Error al cargar</option>';
+      }
+    };
+
+    window.cargarClientesSelect = async function(selectId) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      
+      try {
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        const res = await fetch(API + '/clients/');
+        const data = await res.json();
+        
+        select.innerHTML = '<option value="">Selecciona cliente...</option>';
+        data.forEach(client => {
+          const name = client.nombre || 'Cliente ' + client.uid;
+          select.innerHTML += `<option value="${client.uid}">${name}</option>`;
+        });
+      } catch (e) {
+        select.innerHTML = '<option value="">Error al cargar</option>';
+      }
+    };
+
+    window.cerrarModalEntidades = function() {
+      const modal = document.getElementById('modalEntidades');
+      if (modal) modal.remove();
+    };
+
+    window.cargarEntidadesRelacionadas = async function() {
+      const tipo = document.getElementById('tipoEntidad').value;
+      const contenedor = document.getElementById('contenedorEntidad');
+      const select = document.getElementById('entidadSelect');
+      const label = document.getElementById('labelEntidad');
+      
+      if (!tipo) {
+        contenedor.classList.add('hidden');
+        return;
+      }
+      
+      contenedor.classList.remove('hidden');
+      
+      try {
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        let url = '';
+        
+        if (tipo === 'modulo') {
+          url = API + '/modules/';
+          label.textContent = 'Seleccionar Módulo';
+        } else if (tipo === 'study_plan') {
+          url = API + '/study_plans/';
+          label.textContent = 'Seleccionar Plan de Estudio';
+        }
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        select.innerHTML = '<option value="">Selecciona...</option>';
+        data.forEach(item => {
+          const name = item.nombre_del_modulo || item.name || item.titulo || 'Sin nombre';
+          select.innerHTML += `<option value="${item.id}">${name}</option>`;
+        });
+      } catch (e) {
+        select.innerHTML = '<option value="">Error al cargar</option>';
+      }
+    };
+
+    window.crearDesdeJSON = async function() {
+      if (!iaDatosJSON || !iaTipoEntidad) {
+        showNotification('No hay datos JSON de la IA', 'warning');
+        return;
+      }
+      
+      try {
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        const TOKEN = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+        
+        let url = '';
+        let payload = { ...iaDatosJSON };
+        
+        if (iaTipoEntidad === 'modulo') {
+          const entidadId = document.getElementById('entidadSelect').value;
+          const autorSelect = document.getElementById('autorSelect').value;
+          if (!entidadId) {
+            showNotification('Selecciona un Plan de Estudio padre', 'warning');
+            return;
+          }
+          payload.study_plan_id = parseInt(entidadId);
+          if (autorSelect) {
+            payload.autor_responsable = autorSelect;
+          }
+          url = API + '/modules/';
+        } else if (iaTipoEntidad === 'study_plan') {
+          const entidadId = document.getElementById('entidadSelect').value;
+          if (!entidadId) {
+            showNotification('Selecciona un Proyecto padre', 'warning');
+            return;
+          }
+          payload.project_id = parseInt(entidadId);
+          url = API + '/study_plans/';
+        } else if (iaTipoEntidad === 'project') {
+          const clienteSelect = document.getElementById('clienteSelect');
+          if (clienteSelect && clienteSelect.value) {
+            payload.client_id = clienteSelect.value;
+          }
+          url = API + '/projects/';
+        }
+        
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + TOKEN 
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          showNotification(`${iaTipoEntidad === 'modulo' ? 'Módulo' : iaTipoEntidad === 'study_plan' ? 'Plan de Estudio' : 'Proyecto'} creado (ID: ${data.id})`, 'success');
+          iaDatosJSON = null;
+          iaTipoEntidad = null;
+          cerrarModalEntidades();
+        } else {
+          const error = await res.json().catch(() => ({ detail: res.statusText }));
+          showNotification('Error: ' + (error.detail || res.status), 'error');
+        }
+      } catch (e) {
+        showNotification('Error: ' + e.message, 'error');
+      }
+    };
+
+    window.crearEntidadManual = async function() {
+      const tipo = document.getElementById('tipoEntidad').value;
+      const nombre = document.getElementById('nombreContenido').value;
+      const contenido = document.getElementById('contenidoManual').value;
+      
+      if (!tipo || !nombre) {
+        showNotification('Completa el tipo y nombre', 'warning');
+        return;
+      }
+      
+      try {
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        const TOKEN = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+        
+        let url = '';
+        let payload = {};
+        
+        if (tipo === 'modulo') {
+          payload = {
+            nombre_del_modulo: nombre,
+            objetivo_general: contenido
+          };
+          const plans = await fetch(API + '/study_plans/').then(r => r.json());
+          if (plans.length > 0) {
+            payload.study_plan_id = plans[0].id;
+          }
+          url = API + '/modules/';
+        } else if (tipo === 'study_plan') {
+          payload = {
+            name: nombre,
+            description: contenido
+          };
+          const projects = await fetch(API + '/projects/').then(r => r.json());
+          if (projects.length > 0) {
+            payload.project_id = projects[0].id;
+          }
+          url = API + '/study_plans/';
+        } else if (tipo === 'project') {
+          payload = {
+            name: nombre,
+            description: contenido,
+            client_id: 'manual'
+          };
+          url = API + '/projects/';
+        }
+        
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + TOKEN 
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          showNotification(`${tipo} creado (ID: ${data.id})`, 'success');
+          cerrarModalEntidades();
+        } else {
+          const error = await res.json().catch(() => ({ detail: res.statusText }));
+          showNotification('Error: ' + (error.detail || res.status), 'error');
+        }
+      } catch (e) {
+        showNotification('Error: ' + e.message, 'error');
+      }
+    };
+
+    window.importarEntidad = async function() {
+      const modal = document.createElement('div');
+      modal.id = 'modalImportarEntidad';
+      modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+      modal.innerHTML = `
+        <div class="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800">Importar Entidad</h3>
+            <button onclick="cerrarModalImportar()" class="text-gray-500 hover:text-gray-700">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Entidad</label>
+              <select id="tipoImportar" class="w-full border rounded-lg p-2" onchange="cargarEntidadesImportar()">
+                <option value="">Selecciona...</option>
+                <option value="project">Proyecto</option>
+                <option value="study_plan">Plan de Estudio</option>
+                <option value="modulo">Módulo</option>
+                <option value="unidad">Unidad</option>
+              </select>
+            </div>
+            
+            <div id="contenedorImportar" class="hidden">
+              <label class="block text-sm font-medium text-gray-700 mb-1" id="labelImportar">Seleccionar</label>
+              <select id="entidadImportarSelect" class="w-full border rounded-lg p-2" onchange="mostrarVistaPrevia()">
+                <option value="">Cargando...</option>
+              </select>
+            </div>
+            
+            <div id="vistaPrevia" class="hidden">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Vista Previa</label>
+              <div id="contenidoPrevia" class="bg-gray-50 border rounded-lg p-4 max-h-60 overflow-y-auto text-sm"></div>
+            </div>
+            
+            <button onclick="insertarEntidadEnEditor()" class="w-full bg-cyan-600 text-white py-2 rounded-lg hover:bg-cyan-700">
+              Insertar en Editor
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    };
+
+    window.cerrarModalImportar = function() {
+      const modal = document.getElementById('modalImportarEntidad');
+      if (modal) modal.remove();
+    };
+
+    window.cargarEntidadesImportar = async function() {
+      const tipo = document.getElementById('tipoImportar').value;
+      const contenedor = document.getElementById('contenedorImportar');
+      const select = document.getElementById('entidadImportarSelect');
+      const label = document.getElementById('labelImportar');
+      const vistaPrevia = document.getElementById('vistaPrevia');
+      
+      if (!tipo) {
+        contenedor.classList.add('hidden');
+        vistaPrevia.classList.add('hidden');
+        return;
+      }
+      
+      contenedor.classList.remove('hidden');
+      vistaPrevia.classList.add('hidden');
+      
+      try {
+        const API = 'https://gestordecursos.pegui.edu.co:8000';
+        let url = '';
+        
+        switch(tipo) {
+          case 'project':
+            url = API + '/projects/';
+            label.textContent = 'Seleccionar Proyecto';
+            break;
+          case 'study_plan':
+            url = API + '/study_plans/';
+            label.textContent = 'Seleccionar Plan de Estudio';
+            break;
+          case 'modulo':
+            url = API + '/modules/';
+            label.textContent = 'Seleccionar Módulo';
+            break;
+          case 'unidad':
+            url = API + '/units/';
+            label.textContent = 'Seleccionar Unidad';
+            break;
+        }
+        
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        select.innerHTML = '<option value="">Selecciona...</option>';
+        data.forEach(item => {
+          const name = item.nombre_del_modulo || item.name || item.titulo || item.title || 'Sin nombre';
+          select.innerHTML += `<option value="${item.id}" data-obj='${JSON.stringify(item).replace(/'/g, "&#39;")}'>${name} (ID: ${item.id})</option>`;
+        });
+      } catch (e) {
+        select.innerHTML = '<option value="">Error al cargar</option>';
+        showNotification('Error: ' + e.message, 'error');
+      }
+    };
+
+    window.mostrarVistaPrevia = function() {
+      const select = document.getElementById('entidadImportarSelect');
+      const vistaPrevia = document.getElementById('vistaPrevia');
+      const contenido = document.getElementById('contenidoPrevia');
+      
+      if (!select.value) {
+        vistaPrevia.classList.add('hidden');
+        return;
+      }
+      
+      const option = select.options[select.selectedIndex];
+      const obj = JSON.parse(option.dataset.obj.replace(/&#39;/g, "'"));
+      
+      let html = '<strong>ID:</strong> ' + obj.id + '<br><br>';
+      
+      for (const key in obj) {
+        if (obj[key] && typeof obj[key] !== 'object') {
+          html += `<strong>${key.replace(/_/g, ' ')}:</strong> ${obj[key]}<br>`;
+        } else if (obj[key] && Array.isArray(obj[key])) {
+          html += `<strong>${key.replace(/_/g, ' ')}:</strong> ${obj[key].length} elementos<br>`;
+        }
+      }
+      
+      contenido.innerHTML = html;
+      vistaPrevia.classList.remove('hidden');
+    };
+
+    window.insertarEntidadEnEditor = function() {
+      const select = document.getElementById('entidadImportarSelect');
+      const tipo = document.getElementById('tipoImportar').value;
+      
+      if (!select.value) {
+        showNotification('Selecciona una entidad', 'warning');
+        return;
+      }
+      
+      const option = select.options[select.selectedIndex];
+      const obj = JSON.parse(option.dataset.obj.replace(/&#39;/g, "'"));
+      
+      let titulo = '';
+      let camposImportantes = [];
+      
+      if (tipo === 'project') {
+        titulo = 'PROYECTO';
+        camposImportantes = [
+          { label: 'Nombre', valor: obj.name || obj.titulo },
+          { label: 'Descripción', valor: obj.description || obj.descripcion },
+          { label: 'Estado', valor: obj.status || obj.estado },
+          { label: 'Objetivo', valor: obj.objetivo || obj.goal },
+          { label: 'Duración', valor: obj.duracion },
+          { label: 'Horas', valor: obj.horas },
+          { label: 'Modalidad', valor: obj.modalidad },
+          { label: 'Instructor', valor: obj.instructor || obj.autor }
+        ];
+      } else if (tipo === 'study_plan') {
+        titulo = 'PLAN DE ESTUDIO';
+        let objEspecificos = obj.objetivos_especificos;
+        if (Array.isArray(objEspecificos)) {
+          objEspecificos = objEspecificos.map((o, i) => `${i+1}. ${o}`).join('\n');
+        }
+        camposImportantes = [
+          { label: 'Nombre', valor: obj.name || obj.titulo },
+          { label: 'Descripción', valor: obj.description || obj.descripcion },
+          { label: 'Modalidad', valor: obj.modalidad },
+          { label: 'Sincronía', valor: obj.sincronia },
+          { label: 'Duración (horas)', valor: obj.duracion },
+          { label: 'Horas de Estudio', valor: obj.horas_estudio },
+          { label: 'Objetivo General', valor: obj.objetivo_general },
+          { label: 'Objetivos Específicos', valor: objEspecificos },
+          { label: 'Resultados de Aprendizaje', valor: obj.resultados_aprendizaje },
+          { label: 'Recursos - Libros', valor: obj.recursos_libros },
+          { label: 'Recursos - Artículos', valor: obj.recursos_articulos },
+          { label: 'Recursos - Materiales', valor: obj.recursos_materiales },
+          { label: 'Evaluaciones - Cuestionarios', valor: obj.evaluaciones_cuestionarios },
+          { label: 'Evaluaciones - Exámenes', valor: obj.evaluaciones_examenes },
+          { label: 'Evaluaciones - Tareas', valor: obj.evaluaciones_tareas }
+        ];
+      } else if (tipo === 'modulo') {
+        titulo = 'MÓDULO';
+        let objEspecificos = obj.objetivos_especificos;
+        if (Array.isArray(objEspecificos)) {
+          objEspecificos = objEspecificos.map((o, i) => `${i+1}. ${o}`).join('\n');
+        }
+        camposImportantes = [
+          { label: 'Nombre del Módulo', valor: obj.nombre_del_modulo },
+          { label: 'Nombre Corto', valor: obj.nombre_corto_del_modulo },
+          { label: 'Código', valor: obj.codigo_id_del_modulo },
+          { label: 'Versión', valor: obj.version },
+          { label: 'Palabras Clave', valor: Array.isArray(obj.palabras_clave) ? obj.palabras_clave.join(', ') : obj.palabras_clave },
+          { label: 'Autor Responsable', valor: obj.autor_responsable },
+          { label: 'Organización', valor: obj.organizacion_institucion },
+          { label: 'Objetivo General', valor: obj.objetivo_general },
+          { label: 'Objetivos Específicos', valor: objEspecificos },
+          { label: 'Público Objetivo', valor: obj.publico_objetivo },
+          { label: 'Duración Estimada', valor: obj.duracion_estimada },
+          { label: 'Requisitos Previos', valor: obj.requisitos_previos },
+          { label: 'Criterios de Logro', valor: obj.criterios_de_logro },
+          { label: 'Número de Unidades', valor: obj.numero_unidades },
+          { label: 'Tipo de Letra', valor: obj.tipo_letra },
+          { label: 'Tamaño de Letra', valor: obj.tamano_letra },
+          { label: 'Tiene Portada', valor: obj.tiene_portada ? 'Sí' : 'No' },
+          { label: 'Tipo de Portada', valor: obj.tipo_portada },
+          { label: 'Infografías Estáticas', valor: obj.infografias_estaticas },
+          { label: 'Infografías Animadas', valor: obj.infografias_animadas },
+          { label: 'Videos', valor: obj.videos },
+          { label: 'Audios', valor: obj.audios },
+          { label: 'Animaciones', valor: obj.animaciones },
+          { label: 'Storytelling', valor: obj.storytelling ? 'Sí' : 'No' },
+          { label: 'Presentaciones Interactivas', valor: obj.presentaciones_interactivas ? 'Sí' : 'No' },
+          { label: 'Gamificación', valor: obj.gamificacion ? 'Sí' : 'No' },
+          { label: 'Simulaciones', valor: obj.simulaciones ? 'Sí' : 'No' },
+          { label: 'Realidad Aumentada', valor: obj.realidad_aumentada ? 'Sí' : 'No' },
+          { label: 'Líneas de Tiempo Interactivas', valor: obj.lineas_tiempo_interactivas ? 'Sí' : 'No' },
+          { label: 'Mapas Interactivos', valor: obj.mapas_interactivos ? 'Sí' : 'No' },
+          { label: 'Galerías de Imágenes', valor: obj.galerias_imagenes ? 'Sí' : 'No' },
+          { label: 'Nota Mínima de Aprobación', valor: obj.nota_minima_aprobacion },
+          { label: 'Intentos Permitidos', valor: obj.intentos_permitidos },
+          { label: 'Tiempo Límite', valor: obj.tiempo_limite },
+          { label: 'Subtítulos de Videos', valor: obj.subtitulos_videos ? 'Sí' : 'No' },
+          { label: 'Idiomas Disponibles', valor: obj.idiomas_disponibles },
+          { label: 'Plataforma Destino', valor: obj.plataforma_destino }
+        ];
+      } else if (tipo === 'unidad') {
+        titulo = 'UNIDAD';
+        camposImportantes = [
+          { label: 'Nombre', valor: obj.nombre_de_la_unidad || obj.name },
+          { label: 'Descripción', valor: obj.descripcion },
+          { label: 'Duración', valor: obj.duracion },
+          { label: 'Objetivo', valor: obj.objetivo },
+          { label: 'Contenido', valor: obj.contenido },
+          { label: 'Actividades', valor: obj.actividades }
+        ];
+      }
+      
+      let contenidoHTML = `<h1>${titulo}</h1>`;
+      camposImportantes.forEach(campo => {
+        if (campo.valor !== undefined && campo.valor !== null && campo.valor !== '') {
+          contenidoHTML += `<p><strong>${campo.label}:</strong> ${campo.valor}</p>`;
+        }
+      });
+      contenidoHTML += '<hr>';
+      
+      if (window.editorInstance) {
+        const currentContent = window.editorInstance.getData();
+        window.editorInstance.setData(currentContent + contenidoHTML);
+        showNotification('Entidad insertada en el editor', 'success');
+      } else {
+        const promptInput = document.getElementById('promptInput');
+        promptInput.value += '\n\n' + contenidoHTML.replace(/<[^>]*>/g, '');
+        showNotification('Entidad insertada en el prompt', 'success');
+      }
+      
+      cerrarModalImportar();
+    };
+
+    // ==================== GENERADOR DE IMÁGENES CON IA Y PROGRESO ====================
+    const API_IMAGE_BASE = "https://ia.pegui.edu.co/sdapi/v1";
+    let isGeneratingImage = false;
+    let generatedImageBase64 = null;
+    let progressInterval = null;
+
+    window.abrirModalImagenIA = function() {
+      const modal = document.createElement('div');
+      modal.id = 'modalImagenIA';
+      modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4';
+      
+      // CAMBIO IMPORTANTE: Se agregó la UI de la barra de progreso dentro de "imagenLoading"
+      modal.innerHTML = `
+        <div class="glass rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-white flex items-center">
+              <svg class="w-7 h-7 mr-3 text-pink-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+              </svg>
+              Generar Imagen con IA
+            </h3>
+            <button onclick="cerrarModalImagenIA()" class="text-white/60 hover:text-white text-2xl">&times;</button>
+          </div>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-white/80 mb-2">Prompt Positivo</label>
+              <textarea id="imagenPrompt" rows="3" class="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white placeholder-white/50 focus:outline-none focus:border-pink-400" placeholder="Describe la imagen que quieres generar..."></textarea>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-white/80 mb-2">Prompt Negativo</label>
+              <textarea id="imagenNegativePrompt" rows="2" class="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white placeholder-white/50 focus:outline-none focus:border-pink-400 text-sm" placeholder="Lo que NO quieres en la imagen..."></textarea>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-white/80 mb-2">Pasos</label>
+                <input type="number" id="imagenSteps" value="20" min="1" max="50" class="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white focus:outline-none focus:border-pink-400">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-white/80 mb-2">CFG Scale</label>
+                <input type="number" id="imagenCfg" value="7" min="1" max="20" class="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white focus:outline-none focus:border-pink-400">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-white/80 mb-2">Dimensiones</label>
+                <select id="imagenDimensions" class="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white focus:outline-none focus:border-pink-400">
+                  <option value="512x512">512x512</option>
+                  <option value="512x768">512x768</option>
+                  <option value="768x512">768x512</option>
+                </select>
+              </div>
+            </div>
+            
+            <div id="imagenPreviewContainer" class="hidden">
+              <label class="block text-sm font-medium text-white/80 mb-2">Vista Previa</label>
+              <div class="relative bg-black/30 rounded-xl p-4 flex items-center justify-center min-h-[200px]">
+                <img id="imagenPreview" class="max-w-full max-h-[300px] rounded-lg" alt="Preview">
+                
+                <div id="imagenLoading" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 rounded-xl hidden px-8">
+                  <div class="animate-spin w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p id="imagenLoadingText" class="text-white font-semibold text-sm mb-2">Generando imagen...</p>
+                  <div class="w-full bg-gray-700 rounded-full h-2.5">
+                    <div id="imagenProgressBar" class="bg-gradient-to-r from-pink-500 to-purple-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                  </div>
+                  <p id="imagenProgressText" class="text-white/80 text-xs mt-2 font-mono">0%</p>
+                </div>
+                
+              </div>
+            </div>
+            
+            <div class="flex gap-3 pt-4">
+              <button onclick="generarImagenIA()" id="btnGenerarImagen" class="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                </svg>
+                Generar Imagen
+              </button>
+              <button onclick="insertarImagenEnEditor()" id="btnInsertarImagen" class="flex-1 bg-green-500/30 hover:bg-green-500/50 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border border-green-400/30 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                Insertar en Editor
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    };
+
+    window.cerrarModalImagenIA = function() {
+      const modal = document.getElementById('modalImagenIA');
+      if (modal) {
+        modal.remove();
+      }
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
+      generatedImageBase64 = null;
+      isGeneratingImage = false;
+    };
+
+    // CAMBIO IMPORTANTE: Polling de la API de progreso integrado
+    window.generarImagenIA = async function() {
+      if (isGeneratingImage) return;
+      
+      const prompt = document.getElementById('imagenPrompt').value.trim();
+      if (!prompt) {
+        showNotification('Escribe un prompt primero', 'warning');
+        return;
+      }
+
+      isGeneratingImage = true;
+      const btnGenerar = document.getElementById('btnGenerarImagen');
+      const btnInsertar = document.getElementById('btnInsertarImagen');
+      const previewContainer = document.getElementById('imagenPreviewContainer');
+      const loading = document.getElementById('imagenLoading');
+      const progressBar = document.getElementById('imagenProgressBar');
+      const progressText = document.getElementById('imagenProgressText');
+      const preview = document.getElementById('imagenPreview');
+      
+      btnGenerar.disabled = true;
+      btnGenerar.innerHTML = '<div class="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div> Generando...';
+      
+      // Reseteamos UI de progreso
+      progressBar.style.width = '0%';
+      progressText.innerText = '0%';
+      previewContainer.classList.remove('hidden');
+      loading.classList.remove('hidden');
+
+      const dims = document.getElementById('imagenDimensions').value.split('x');
+      const payload = {
+        prompt: prompt,
+        negative_prompt: document.getElementById('imagenNegativePrompt').value || 'blurry, bad quality, distorted',
+        steps: parseInt(document.getElementById('imagenSteps').value),
+        cfg_scale: parseInt(document.getElementById('imagenCfg').value),
+        width: parseInt(dims[0]),
+        height: parseInt(dims[1]),
+        sampler_name: "Euler a",
+        restore_faces: true
+      };
+
+      // Lanzar el polling del progreso mientras el fetch principal hace su trabajo
+      progressInterval = setInterval(async () => {
+        if (!isGeneratingImage) {
+          clearInterval(progressInterval);
+          return;
+        }
+        try {
+          const res = await fetch(`${API_IMAGE_BASE}/progress?skip_current_image=false`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.progress !== undefined) {
+              const percentage = Math.round(data.progress * 100);
+              progressBar.style.width = percentage + '%';
+              progressText.innerText = percentage + '%';
+              
+              // Si la API arroja un fotograma intermedio, lo mostramos
+              if (data.current_image) {
+                preview.src = `data:image/png;base64,${data.current_image}`;
+              }
+            }
+          }
+        } catch (e) {
+          // Ignoramos errores silenciosamente en el polling para no ensuciar la consola
+        }
+      }, 500); // Polling cada medio segundo
+
+      try {
+        // Petición principal que bloquea hasta terminar
+        const response = await fetch(`${API_IMAGE_BASE}/txt2img`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error('Error en la generación');
+
+        const data = await response.json();
+        generatedImageBase64 = data.images[0];
+        
+        // Al terminar, forzamos la UI al 100% y mostramos la imagen final
+        progressBar.style.width = '100%';
+        progressText.innerText = '100%';
+        preview.src = `data:image/png;base64,${generatedImageBase64}`;
+        
+        loading.classList.add('hidden');
+        btnInsertar.disabled = false;
+        
+        showNotification('Imagen generada exitosamente', 'success');
+      } catch (error) {
+        console.error('Error:', error);
+        showNotification('Error al generar imagen: ' + error.message, 'error');
+        previewContainer.classList.add('hidden');
+      } finally {
+        isGeneratingImage = false;
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
+        btnGenerar.disabled = false;
+        btnGenerar.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg> Generar Imagen`;
+      }
+    };
+
+    window.insertarImagenEnEditor = function() {
+      if (!generatedImageBase64) {
+        showNotification('Primero genera una imagen', 'warning');
+        return;
+      }
+
+      if (!window.editorInstance) {
+        showNotification('Editor no disponible', 'error');
+        return;
+      }
+
+      const imageUrl = `data:image/png;base64,${generatedImageBase64}`;
+      
+      window.editorInstance.model.change(writer => {
+        const imageElement = writer.createElement('imageBlock', {
+          src: imageUrl
+        });
+        window.editorInstance.model.insertContent(imageElement);
+      });
+
+      showNotification('Imagen insertada en el editor', 'success');
+      cerrarModalImagenIA();
+    };
+  </script>
+
+  <script src="/js/roles.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const path = window.location.pathname;
+        const isSuperadmin = path.includes('/r/superadmin/');
+        const isAdmin = path.includes('/r/admin/');
+        const isCoordinador = path.includes('/r/coordinador/');
+        const isCliente = path.includes('/r/cliente/');
+        const isDisInst = path.includes('/r/disenador-instruccional/');
+        const isAutor = path.includes('/r/autor/');
+        const isRevisor = path.includes('/r/revisor-qa/');
+        const isEditor = path.includes('/r/editor/');
+        const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+        const isAbogado = path.includes('/r/abogado/');
+        const isDisGraf = path.includes('/r/disenador-grafico/');
+        const isAnim2d = path.includes('/r/animador-2d/');
+        const isAnim3d = path.includes('/r/animador-3d/');
+        const isVideo = path.includes('/r/video/');
+        const isCorrector = path.includes('/r/corrector-de-estilo/');
+        const isIngeniero = path.includes('/r/ingeniero-lms/');
+        const isRegistrado = path.includes('/r/registrado/');
+
+        const allowedRoles = [];
+        if (isSuperadmin) allowedRoles.push('superadmin');
+        if (isAdmin) allowedRoles.push('admin');
+        if (isCoordinador) allowedRoles.push('coordinador');
+        if (isCliente) allowedRoles.push('cliente');
+        if (isDisInst) allowedRoles.push('disenador-instruccional');
+        if (isAutor) allowedRoles.push('autor');
+        if (isRevisor) allowedRoles.push('revisor-qa');
+        if (isEditor) allowedRoles.push('editor');
+        if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+        if (isAbogado) allowedRoles.push('abogado');
+        if (isDisGraf) allowedRoles.push('disenador-grafico');
+        if (isAnim2d) allowedRoles.push('animador-2d');
+        if (isAnim3d) allowedRoles.push('animador-3d');
+        if (isVideo) allowedRoles.push('video');
+        if (isCorrector) allowedRoles.push('corrector-de-estilo');
+        if (isIngeniero) allowedRoles.push('ingeniero-lms');
+        if (isRegistrado) allowedRoles.push('registrado');
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+        
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const userRoles = payload.roles || [payload.role].filter(Boolean);
+            if (!userRoles.some(r => allowedRoles.includes(r))) {
+                window.location.href = '/';
+                return;
+            }
+        } catch(e) {
+            window.location.href = '/';
+        }
+    });
+
+    (function() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const permissions = payload.permissions || [];
+            
+            const hasPermission = (perm) => permissions.includes(perm);
+            const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+            
+            const menuPermissions = {
+                'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+                'menu-crear-proyecto': ['proyectos_crear'],
+                'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+                'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+                'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+                'menu-crear-plan': ['diseno_instruccional_crear'],
+                'menu-cursos': ['proyectos_cursos_listar'],
+                'menu-crear-curso': ['autor_crear'],
+                'menu-modulos': ['proyectos_modulos_listar'],
+                'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+                'menu-unidades': ['proyectos_unidades_listar'],
+                'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+                'menu-tareas': ['proyectos_tareas_listar'],
+                'menu-crear-tarea': ['autor_crear'],
+                'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+                'menu-crear-evaluacion': ['autor_crear'],
+                'menu-fases': ['proyectos_fases_etapas_gestionar'],
+                'menu-cronogramas': ['proyectos_cronogramas_crear'],
+                'menu-calendario': ['proyectos_calendario_ver'],
+                'menu-usuarios': ['usuarios_crear'],
+                'menu-clientes': ['usuarios_crear'],
+                'menu-crm': ['usuarios_crear'],
+                'menu-roles': ['roles_permisos_gestionar'],
+                'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+                'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+                'menu-canvas': ['herramientas_canvas_usar'],
+                'menu-powerpoint': ['herramientas_powerpoint_usar'],
+                'menu-auditoria': ['seguridad_auditoria_ver'],
+                'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+                'menu-estadisticas': ['reportes_estadisticas_ver'],
+                'menu-metricas': ['reportes_metricas_ver'],
+                'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+                'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+                'menu-microcursos': ['capacitacion_microcursos_ver'],
+                'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+                'menu-faq': ['capacitacion_faq_ver'],
+            };
+            
+            Object.entries(menuPermissions).forEach(([id, required]) => {
+                const el = document.getElementById(id);
+                if (el && !hasAnyPermission(required)) {
+                    el.style.display = 'none';
+                }
+            });
+        } catch(e) {}
+    })();
+  </script>
+</body>
+</html>

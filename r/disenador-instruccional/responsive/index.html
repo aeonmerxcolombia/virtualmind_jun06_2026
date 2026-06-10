@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtualmind – Superadmin</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Animaciones y scrollbar oculto -->
+  <style>
+    .chat-bubble { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    iframe { width: 100%; height: 100%; border: none; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Chat optimizado para móvil */
+    #chatBox {
+      min-height: 200px;
+      max-height: 300px;
+    }
+    .chat-bubble {
+      max-width: 100%;
+      word-wrap: break-word;
+      line-height: 1.5;
+    }
+
+    /* Sidebar móvil */
+    .mobile-sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+    }
+    .mobile-sidebar.open {
+      transform: translateX(0);
+    }
+    
+    /* Overlay para sidebar */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 40;
+    }
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    /* Chat móvil */
+    .mobile-chat {
+      transform: translateY(100%);
+      transition: transform 0.3s ease-in-out;
+    }
+    .mobile-chat.open {
+      transform: translateY(0);
+    }
+
+    /* Responsive iframe */
+    #mainFrame {
+      min-height: calc(100vh - 120px);
+    }
+  </style>
+
+  <!-- Fuente OpenDyslexic -->
+  <link href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.css" rel="stylesheet">
+
+  <!-- Modos de accesibilidad -->
+  <style>
+    body.contrast { filter: invert(1) hue-rotate(180deg); }
+    body.large-text { font-size: 1.15rem !important; line-height: 1.6 !important; }
+    body.grayscale { filter: grayscale(1); }
+    body.dyslexia { font-family: 'OpenDyslexic', sans-serif !important; }
+    body.reduce-motion * { animation: none !important; transition: none !important; }
+
+    /* Widget de accesibilidad para móvil */
+    #accessibilityMenu {
+      position: fixed;
+      bottom: 80px;
+      right: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1000;
+    }
+    #accessibilityToggle {
+      background-color: #4F46E5;
+      color: white;
+      padding: 0.75rem;
+      border-radius: 9999px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-size: 1.25rem;
+      transition: background-color 0.2s;
+    }
+    #accessibilityToggle:hover {
+      background-color: #4338CA;
+    }
+    #accessibilityControls {
+      display: none;
+      flex-direction: column;
+      width: 12rem;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(4px);
+      border: 1px solid #E5E7EB;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      padding: 0.5rem;
+      gap: 0.25rem;
+      margin-bottom: 0.5rem;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    #accessibilityMenu.opened #accessibilityControls {
+      display: flex;
+    }
+    #accessibilityControls button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      border-radius: 0.375rem;
+      transition: background-color 0.2s;
+    }
+    #accessibilityControls button:hover {
+      background-color: #F3F4F6;
+    }
+    #accessibilityControls button.reset {
+      color: #DC2626;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen font-[Inter] bg-gray-100">
+
+  <!-- Navbar móvil -->
+  <header class="sticky top-0 z-30 bg-white shadow">
+    <!-- Top bar -->
+    <div class="flex items-center justify-between px-4 py-3">
+      <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100">
+        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+      
+      <div class="flex items-center space-x-2">
+        <img src="/assets/logo.png" alt="Logo" class="h-8 w-8 rounded-full object-cover">
+        <h1 class="text-lg font-bold text-gray-800">Virtualmind</h1>
+      </div>
+      
+      <button onclick="toggleMobileChat()" class="p-2 rounded-lg hover:bg-gray-100">
+        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Role selector (collapsible) -->
+    <div class="border-t border-gray-200 px-4 py-2">
+      <div class="flex items-center space-x-2">
+        <label for="roleSelect" class="text-xs font-medium text-gray-700 flex-shrink-0">Rol:</label>
+        <select id="roleSelect" class="flex-1 border border-gray-300 px-2 py-1 rounded bg-gray-50 text-sm text-gray-800 focus:outline-none focus:ring focus:ring-indigo-300">
+          <option value="">Cargando...</option>
+        </select>
+        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded">
+          Salir
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Overlay para sidebar -->
+  <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar móvil -->
+  <aside id="mobileSidebar" class="mobile-sidebar fixed top-0 left-0 bg-[#21232a] w-80 max-w-[85vw] h-full z-50 flex flex-col">
+    <!-- Header del sidebar -->
+    <div class="flex items-center justify-between p-4 border-b border-gray-700">
+      <span class="text-white font-semibold text-lg">Menú</span>
+      <button onclick="closeSidebar()" class="text-white p-2 rounded hover:bg-[#282c37]">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Perfil compacto -->
+    <div class="flex items-center p-4 bg-[#23262f] border-b border-gray-700">
+      <div class="bg-white rounded-full w-12 h-12 flex items-center justify-center mr-3">
+        <img id="sidebarAvatar" src="" alt="Perfil" class="w-10 h-10 rounded-full object-cover"
+             onerror="this.onerror=null;this.src='/assets/default_avatar.png';">
+      </div>
+      <div class="flex-1">
+        <span id="sidebarName" class="text-white font-semibold text-sm block">Perfil</span>
+        <button onclick="verMiPerfil()" class="text-indigo-300 text-xs hover:underline">Ver perfil</button>
+      </div>
+    </div>
+    
+    <!-- Menú navegación -->
+    <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto scrollbar-hide">
+      <!-- Gestión diaria -->
+      <div>
+        <button onclick="toggleMenu('gestionDiaria')" class="flex items-center w-full text-white py-3 px-3 rounded hover:bg-[#282c37] transition">
+          <span class="mr-3">🗂️</span>
+          <span class="flex-1 text-left font-semibold text-sm">Proyectos</span>
+          <svg id="icon-gestionDiaria" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="gestionDiaria" class="ml-6 mt-1 space-y-1 hidden">
+          <a href="#" onclick="cargarVistaYCerrar('https://gestordecursos.pegui.edu.co/r/superadmin/projects/create.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Crear Proyecto</a>
+          <a href="#" onclick="cargarVistaYCerrar('https://gestordecursos.pegui.edu.co/r/superadmin/projects/index.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Consultar Proyectos</a>
+          <a href="#" onclick="cargarVistaYCerrar('https://gestordecursos.pegui.edu.co/r/superadmin/studyplan/listar.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Planes de Formación</a>
+          <a href="#" onclick="cargarVistaYCerrar('https://gestordecursos.pegui.edu.co/r/superadmin/cursos/')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Cursos</a>
+          <a href="#" onclick="cargarVistaYCerrar('https://gestordecursos.pegui.edu.co/r/superadmin/modulos/index.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Módulos</a>
+          <a href="#" onclick="cargarVistaYCerrar('https://gestordecursos.pegui.edu.co/r/superadmin/unidades/')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Unidades y Actividades</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/tasks/')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Tareas</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/evaluaciones/crear.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Evaluaciones</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/etapas')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Fases y Etapas</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/cronograma/')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Crear Cronograma</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/calendario/')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Calendario</a>
+        </div>
+      </div>
+
+      <!-- Gestión de usuarios -->
+      <div>
+        <button onclick="toggleMenu('gestionUsuarios')" class="flex items-center w-full text-white py-3 px-3 rounded hover:bg-[#282c37] transition">
+          <span class="mr-3">👥</span>
+          <span class="flex-1 text-left font-semibold text-sm">Usuarios y permisos</span>
+          <svg id="icon-gestionUsuarios" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="gestionUsuarios" class="ml-6 mt-1 space-y-1 hidden">
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/usuarios/index.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Crear Usuarios</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/roles/index.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Cargos, roles y permisos</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/usuarios/masivos.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Carga masiva de usuarios</a>
+        </div>
+      </div>
+
+      <!-- Gestión de archivos -->
+      <div>
+        <button onclick="toggleMenu('gestionArchivos')" class="flex items-center w-full text-white py-3 px-3 rounded hover:bg-[#282c37] transition">
+          <span class="mr-3">📁</span>
+          <span class="flex-1 text-left font-semibold text-sm">Gestión de archivos</span>
+          <svg id="icon-gestionArchivos" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="gestionArchivos" class="ml-6 mt-1 space-y-1 hidden">
+          <a href="#" onclick="cargarVistaYCerrar('/drive/')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Drive Personal</a>
+          <a href="#" onclick="cargarVistaYCerrar('/drive/global/')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Drive Global</a>
+        </div>
+      </div>
+
+      <!-- Utilidades -->
+      <div>
+        <button onclick="toggleMenu('utilidades')" class="flex items-center w-full text-white py-3 px-3 rounded hover:bg-[#282c37] transition">
+          <span class="mr-3">🛠️</span>
+          <span class="flex-1 text-left font-semibold text-sm">Utilidades</span>
+          <svg id="icon-utilidades" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="utilidades" class="ml-6 mt-1 space-y-1 hidden">
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/crearimagen')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Producción de Imagen IA</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/generaraudio')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Producción de Audio IA</a>
+          <a href="#" onclick="cargarVistaYCerrar('/chat/')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Chat y Videoconferencia</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/i.a')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">IA Lingüística</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/podcast')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Crear Podcast</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/videocast')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Crear Video-Podcast</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/canvas/index.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Canvas</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/animaciones3d/index.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Crear Animación 3D</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/powerpoint/index.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">PowerPoint</a>
+        </div>
+      </div>
+
+      <!-- Seguridad -->
+      <div>
+        <button onclick="toggleMenu('adminSeguridad')" class="flex items-center w-full text-white py-3 px-3 rounded hover:bg-[#282c37] transition">
+          <span class="mr-3">🔒</span>
+          <span class="flex-1 text-left font-semibold text-sm">Administración y seguridad</span>
+          <svg id="icon-adminSeguridad" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="adminSeguridad" class="ml-6 mt-1 space-y-1 hidden">
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/logs')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Auditoría</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/logs')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Acceso por rol</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/firmadigital')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Firma Digital</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/logs')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Bitácora de Actividad</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/logs')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Bloqueo por Fase</a>
+        </div>
+      </div>
+
+      <!-- Reportes -->
+      <div>
+        <button onclick="toggleMenu('reportes')" class="flex items-center w-full text-white py-3 px-3 rounded hover:bg-[#282c37] transition">
+          <span class="mr-3">📊</span>
+          <span class="flex-1 text-left font-semibold text-sm">Reportes</span>
+          <svg id="icon-reportes" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="reportes" class="ml-6 mt-1 space-y-1 hidden">
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/estadisticas.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Estadísticas</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/cambiarfondo.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Cambiar Fondo Login</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/logs')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Panel de métricas</a>
+        </div>
+      </div>
+
+      <!-- Zona de Capacitación -->
+      <div>
+        <button onclick="toggleMenu('zona_capacitacion')" class="flex items-center w-full text-white py-3 px-3 rounded hover:bg-[#282c37] transition">
+          <span class="mr-3">🎓</span>
+          <span class="flex-1 text-left font-semibold text-sm">Zona de Capacitación</span>
+          <svg id="icon-zona_capacitacion" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div id="zona_capacitacion" class="ml-6 mt-1 space-y-1 hidden">
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/estadisticas.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Microcursos</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/cambiarfondo.html')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Buenas prácticas</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/logs')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Tutoriales en Video</a>
+          <a href="#" onclick="cargarVistaYCerrar('/r/superadmin/logs')" class="block text-gray-300 hover:text-indigo-300 py-2 text-sm">Preguntas Frecuentes</a>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Contenido principal -->
+  <main class="min-h-[calc(100vh-120px)]">
+    <div class="bg-white shadow-lg h-full w-full overflow-hidden">
+      <iframe id="mainFrame" src=""></iframe>
+    </div>
+  </main>
+
+  <!-- Chat IA móvil -->
+  <div id="mobileChat" class="mobile-chat fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 max-h-[70vh]">
+    <!-- Header del chat -->
+    <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+      <h2 class="text-lg font-bold text-gray-800">Asistente Virtual</h2>
+      <button onclick="closeMobileChat()" class="text-gray-600 p-1">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Chat box -->
+    <div id="chatBox" class="bg-gray-100 p-4 overflow-y-auto space-y-2 scrollbar-hide" style="height: 250px;"></div>
+    
+    <!-- Input area -->
+    <div class="p-4 space-y-2 bg-white">
+      <div class="flex space-x-2">
+        <input id="chatInput" type="text" placeholder="Escribe tu mensaje..." 
+               class="flex-1 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"/>
+        <button onclick="enviarMensaje()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg">
+          Enviar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Widget de Accesibilidad -->
+  <div id="accessibilityMenu">
+    <button id="accessibilityToggle" aria-expanded="false" aria-label="Opciones de accesibilidad">🧑‍🦯</button>
+    <div id="accessibilityControls">
+      <button data-act="contrast"><span>🌗</span><span>Alto contraste</span></button>
+      <button data-act="large-text"><span>🔠</span><span>Texto más grande</span></button>
+      <button data-act="grayscale"><span>⚫️⚪️</span><span>Escala de grises</span></button>
+      <button data-act="dyslexia"><span>📖</span><span>Fuente disléxica</span></button>
+      <button data-act="reduce-motion"><span>🚫💨</span><span>Reducir animaciones</span></button>
+      <button id="resetAccessibility" class="reset">🔄 Restablecer todo</button>
+    </div>
+  </div>
+
+  <script>
+    // Variables globales
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "/index.html";
+
+    // Funciones del sidebar móvil
+    function toggleSidebar() {
+      const sidebar = document.getElementById('mobileSidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.add('open');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      const sidebar = document.getElementById('mobileSidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    // Funciones del chat móvil
+    function toggleMobileChat() {
+      const chat = document.getElementById('mobileChat');
+      chat.classList.toggle('open');
+    }
+
+    function closeMobileChat() {
+      const chat = document.getElementById('mobileChat');
+      chat.classList.remove('open');
+    }
+
+    // Función para cargar vista y cerrar sidebar
+    function cargarVistaYCerrar(url) {
+      cargarVista(url);
+      closeSidebar();
+    }
+
+    function toggleMenu(id) {
+      const menu = document.getElementById(id);
+      const icon = document.getElementById('icon-' + id);
+      menu.classList.toggle('hidden');
+      icon.classList.toggle('rotate-180');
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "/index.html";
+    }
+
+    function cargarVista(url) {
+      document.getElementById("mainFrame").src = url;
+    }
+
+    async function cargarPerfilSidebar() {
+      if (!token) return;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const user_id = payload.user_id;
+      localStorage.setItem("user_id", user_id);
+
+      try {
+        const res = await fetch(`${API}/users/${user_id}`, {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const { roles } = await res.json();
+        const sel = document.getElementById("roleSelect");
+        sel.innerHTML = "";
+        roles.forEach(r => {
+          const o = document.createElement("option");
+          o.value = r; 
+          o.textContent = r.charAt(0).toUpperCase()+r.slice(1);
+          sel.appendChild(o);
+        });
+        sel.addEventListener("change", () => sel.value && (window.location.href = `/r/${sel.value}/`));
+      } catch {}
+
+      try {
+        const res2 = await fetch(`${API}/profiles/${user_id}`, {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const p = await res2.json();
+        document.getElementById("sidebarAvatar").src = p.foto_url || "/assets/default_avatar.png";
+        document.getElementById("sidebarName").textContent = p.nombre || "Perfil";
+      } catch {}
+    }
+    cargarPerfilSidebar();
+
+    function verMiPerfil() {
+      const u = localStorage.getItem("user_id");
+      if (u) {
+        cargarVista(`/r/superadmin/perfil/?user_id=${u}`);
+        closeSidebar();
+      } else {
+        alert("No hay sesión iniciada");
+      }
+    }
+
+    // Chat IA
+    const box = document.getElementById("chatBox"), KEY = "chat_historial";
+    
+    window.addEventListener("DOMContentLoaded", () => {
+      box.innerHTML = localStorage.getItem(KEY) ||
+        `<div class="chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-600">💬 Hola, ¿en qué puedo ayudarte hoy?</div>`;
+      box.scrollTop = box.scrollHeight;
+    });
+
+    function appendBubble(txt, who = "IA") {
+      const d = document.createElement("div");
+      d.className = who === "Tú"
+        ? "chat-bubble bg-indigo-100 p-3 rounded-lg text-sm text-gray-800"
+        : "chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-800 relative";
+
+      const id = `respuesta-${Date.now()}`;
+      const contenido = `<strong>${who}:</strong> <span id="${id}">${txt}</span>`;
+      d.innerHTML = contenido;
+
+      if (who === "IA") {
+        const btn = document.createElement("button");
+        btn.textContent = "📋";
+        btn.title = "Copiar al portapapeles";
+        btn.className = "ml-2 text-xs text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded";
+        btn.onclick = () => copiarTexto(id);
+        d.appendChild(btn);
+      }
+
+      box.appendChild(d);
+      box.scrollTop = box.scrollHeight;
+
+      // Guardar sin botones para evitar errores
+      const copia = box.cloneNode(true);
+      copia.querySelectorAll("button").forEach(b => b.remove());
+      localStorage.setItem(KEY, copia.innerHTML);
+    }
+
+    async function enviarMensaje() {
+      const msg = document.getElementById("chatInput").value.trim();
+      if (!msg) return;
+      
+      appendBubble(msg,"Tú");
+      document.getElementById("chatInput").value = "";
+      
+      const t = document.createElement("div");
+      t.id="typing";
+      t.className="chat-bubble bg-gray-100 p-3 rounded-lg italic text-gray-500 text-sm";
+      t.innerText="💬 IA está escribiendo...";
+      box.appendChild(t); 
+      box.scrollTop=box.scrollHeight;
+
+      const mdl = "gemini";
+      try {
+        if (mdl==="openai") {
+          const res = await fetch(`${API}/chat/openai`, {
+            method:"POST", 
+            headers:{"Content-Type":"application/json"}, 
+            body:JSON.stringify({mensaje:msg})
+          });
+          const rdr = res.body.getReader(), dec = new TextDecoder();
+          const iaDiv = document.createElement("div");
+          iaDiv.className="chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-800";
+          iaDiv.innerHTML="<strong>IA:</strong> "; 
+          box.appendChild(iaDiv);
+          let txt="";
+          while(true) {
+            const {value,done} = await rdr.read();
+            if(done) break;
+            txt+=dec.decode(value);
+            iaDiv.innerHTML=`<strong>IA:</strong> ${txt}`; 
+            box.scrollTop=box.scrollHeight;
+          }
+          
+          // Agregar botón de copiar después del streaming
+          const btn = document.createElement("button");
+          btn.textContent = "📋";
+          btn.title = "Copiar al portapapeles";
+          btn.className = "ml-2 text-xs text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded";
+          const spanId = `respuesta-${Date.now()}`;
+          iaDiv.innerHTML = `<strong>IA:</strong> <span id="${spanId}">${txt}</span>`;
+          btn.onclick = () => copiarTexto(spanId);
+          iaDiv.appendChild(btn);
+          
+          localStorage.setItem(KEY, box.innerHTML);
+        } else {
+          const r = await fetch(`${API}/chat/kimi`, {
+            method:"POST", 
+            headers:{"Content-Type":"application/json"}, 
+            body:JSON.stringify({mensaje:msg})
+          });
+          const {respuesta} = await r.json();
+          appendBubble(respuesta,"IA");
+        }
+      } catch {
+        appendBubble("❌ Error al contactar IA.","IA");
+      } finally {
+        document.getElementById("typing")?.remove();
+      }
+    }
+
+    // Función para copiar texto
+    function copiarTexto(id) {
+      const texto = document.getElementById(id)?.innerText;
+      if (texto) {
+        navigator.clipboard.writeText(texto)
+          .then(() => {
+            console.log("Texto copiado:", texto);
+            // Mostrar feedback visual más discreto en móvil
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = "✅";
+            btn.style.background = "#10B981";
+            btn.style.color = "white";
+            setTimeout(() => {
+              btn.textContent = originalText;
+              btn.style.background = "";
+              btn.style.color = "";
+            }, 1500);
+          })
+          .catch(() => alert("❌ No se pudo copiar"));
+      }
+    }
+
+    // Accesibilidad
+    const toggleBtn = document.getElementById('accessibilityToggle'),
+          panel     = document.getElementById('accessibilityControls'),
+          wrap      = document.getElementById('accessibilityMenu');
+    
+    toggleBtn.addEventListener('click', ()=>{
+      const exp = toggleBtn.getAttribute('aria-expanded')==='true';
+      toggleBtn.setAttribute('aria-expanded', String(!exp));
+      wrap.classList.toggle('opened');
+    });
+    
+    panel.querySelectorAll('button[data-act]').forEach(b=>{
+      b.addEventListener('click', ()=> {
+        document.body.classList.toggle(b.getAttribute('data-act'));
+        // Feedback visual
+        b.style.background = "#10B981";
+        b.style.color = "white";
+        setTimeout(() => {
+          b.style.background = "";
+          b.style.color = "";
+        }, 1000);
+      });
+    });
+    
+    document.getElementById('resetAccessibility').addEventListener('click', ()=>{
+      ['contrast','large-text','grayscale','dyslexia','reduce-motion'].forEach(c=>document.body.classList.remove(c));
+      // Feedback visual
+      const btn = document.getElementById('resetAccessibility');
+      btn.style.background = "#DC2626";
+      btn.style.color = "white";
+      setTimeout(() => {
+        btn.style.background = "";
+        btn.style.color = "";
+      }, 1000);
+    });
+
+    // Cerrar sidebar al hacer clic fuera en móvil
+    document.addEventListener('click', (e) => {
+      const sidebar = document.getElementById('mobileSidebar');
+      const sidebarBtn = e.target.closest('[onclick*="toggleSidebar"]');
+      
+      if (!sidebar.contains(e.target) && !sidebarBtn && sidebar.classList.contains('open')) {
+        closeSidebar();
+      }
+    });
+
+    // Cerrar chat al hacer clic fuera en móvil
+    document.addEventListener('click', (e) => {
+      const chat = document.getElementById('mobileChat');
+      const chatBtn = e.target.closest('[onclick*="toggleMobileChat"]');
+      
+      if (!chat.contains(e.target) && !chatBtn && chat.classList.contains('open')) {
+        closeMobileChat();
+      }
+    });
+
+    // Enter para enviar mensaje
+    document.getElementById('chatInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        enviarMensaje();
+      }
+    });
+
+    // Prevenir zoom al hacer doble tap en botones
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+
+    // Ocultar dirección URL en móvil
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        document.querySelector('header').style.transform = 'translateY(-100%)';
+      } else {
+        document.querySelector('header').style.transform = 'translateY(0)';
+      }
+    });
+  </script>
+</body>
+</html>

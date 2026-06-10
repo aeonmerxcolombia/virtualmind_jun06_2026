@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Documentos al Proyecto</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/tooltips.js"></script>
+</head>
+<body class="bg-gray-100">
+
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">Subir Documentos al Proyecto</h1>
+
+    <!-- Formulario de carga de documentos -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <form id="document-form" enctype="multipart/form-data" class="space-y-4">
+            <!-- El project_id se toma de la URL -->
+            <input type="hidden" id="project_id" name="project_id" value="">
+
+            <!-- Campo dinámico para la carga de archivo -->
+            <div id="dynamic-field" class="space-y-4">
+                <!-- Aquí se añadirá el campo de carga del archivo dinámicamente -->
+            </div>
+
+            <!-- Botón de Submit -->
+            <div class="flex justify-end">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md" id="submit-button" disabled title="Subir el documento seleccionado">Subir Documento</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Listado de documentos existentes -->
+    <div id="documents-list" class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Documentos Asociados</h2>
+        <ul id="documents-ul" class="space-y-2">
+            <!-- Lista de documentos se llenará con JavaScript -->
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Obtener el project_id de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('project_id');
+
+    if (!projectId) {
+        alert('El project_id no está presente en la URL. Redirigiendo...');
+        window.location.href = '/projects';  // Cambia esta URL por la de tu lista de proyectos
+    } else {
+        // Asignar project_id al formulario oculto
+        document.getElementById('project_id').value = projectId;
+        // Consultar los detalles del proyecto
+        fetchProjectConfig(projectId);
+    }
+
+    // Obtener documentos existentes del proyecto
+    document.addEventListener("DOMContentLoaded", () => {
+        getDocuments(projectId);
+    });
+
+    // Consultar la configuración del proyecto
+    function fetchProjectConfig(projectId) {
+        axios.get(`https://gestordecursos.pegui.edu.co:8000/projects/${projectId}`)
+            .then(response => {
+                const projectData = response.data;
+                const dynamicFieldDiv = document.getElementById('dynamic-field');
+                const submitButton = document.getElementById('submit-button');
+
+                // Limpiar los campos dinámicos existentes
+                dynamicFieldDiv.innerHTML = '';
+
+                // Mostrar el primer campo de acuerdo con los documentos habilitados
+                let firstField = false;
+
+                // Crear un campo de carga por cada documento habilitado
+                if (projectData.cesion_derechos) {
+                    addFileField(dynamicFieldDiv, 'cesion_derechos', 'Cesión de derechos');
+                    if (!firstField) {
+                        firstField = true;
+                    }
+                }
+                if (projectData.derechos_patrimoniales_autor) {
+                    addFileField(dynamicFieldDiv, 'derechos_patrimoniales_autor', 'Derechos patrimoniales de autor');
+                    if (!firstField) {
+                        firstField = true;
+                    }
+                }
+                if (projectData.acuerdo_confidencialidad) {
+                    addFileField(dynamicFieldDiv, 'acuerdo_confidencialidad', 'Acuerdo de confidencialidad');
+                    if (!firstField) {
+                        firstField = true;
+                    }
+                }
+                if (projectData.entrega_fuentes) {
+                    addFileField(dynamicFieldDiv, 'entrega_fuentes', 'Entrega de fuentes');
+                    if (!firstField) {
+                        firstField = true;
+                    }
+                }
+
+                // Habilitar el primer campo de subida
+                if (firstField) {
+                    submitButton.disabled = false;
+                } else {
+                    submitButton.disabled = true;
+                    alert('No hay documentos para cargar en este proyecto.');
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener la configuración del proyecto:', error);
+            });
+    }
+
+    // Función para agregar un campo de archivo al formulario
+    function addFileField(container, fieldId, label) {
+        const fieldHTML = `
+            <div class="mb-4">
+                <label for="${fieldId}" class="block text-sm font-medium text-gray-700">${label}</label>
+                <input type="text" id="${fieldId}_name" name="document_name" placeholder="Nombre del documento" required class="mt-2 p-2 w-full border border-gray-300 rounded-md">
+                <input type="file" id="${fieldId}" name="file" required class="mt-2 p-2 w-full border border-gray-300 rounded-md" onchange="updateDocumentType('${fieldId}')">
+                <input type="hidden" id="${fieldId}_type" name="document_type">
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', fieldHTML);
+    }
+
+    // Función para actualizar el tipo de documento según la extensión del archivo
+    function updateDocumentType(fieldId) {
+        const fileInput = document.getElementById(fieldId);
+        const fileName = fileInput.value;
+        const documentTypeInput = document.getElementById(`${fieldId}_type`);
+
+        // Obtenemos la extensión del archivo
+        const extension = fileName.split('.').pop().toLowerCase();
+        let documentType = '';
+
+        // Determinar el tipo de documento por la extensión
+        if (['pdf'].includes(extension)) {
+            documentType = 'PDF';
+        } else if (['docx', 'doc'].includes(extension)) {
+            documentType = 'Word';
+        } else if (['pptx', 'ppt'].includes(extension)) {
+            documentType = 'PowerPoint';
+        } else {
+            documentType = 'Archivo';
+        }
+
+        documentTypeInput.value = documentType;  // Asignamos el tipo al campo oculto
+    }
+
+    // Obtener documentos del proyecto
+    function getDocuments(projectId) {
+        axios.get(`https://gestordecursos.pegui.edu.co:8000/documents?project_id=${projectId}`)
+            .then(response => {
+                const documents = response.data;
+                const documentsList = document.getElementById('documents-ul');
+                documentsList.innerHTML = ''; // Limpiar lista antes de agregar
+
+                if (documents.length === 0) {
+                    documentsList.innerHTML = '<li>No hay documentos asociados a este proyecto.</li>';
+                } else {
+                    documents.forEach(document => {
+                        const li = document.createElement('li');
+                        li.classList.add('text-gray-800');
+                        li.innerHTML = `
+                            <strong>${document.document_name}</strong> - ${document.document_type}
+                            <br>
+                            <a href="${document.document_url}" class="text-blue-500" target="_blank">Ver Documento</a>
+                        `;
+                        documentsList.appendChild(li);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener los documentos:', error);
+            });
+    }
+
+    // Manejo del envío del formulario
+    document.getElementById('document-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+        const submitButton = document.getElementById('submit-button');
+        submitButton.disabled = true;
+
+        try {
+            // Enviar el formulario con Axios
+            const response = await axios.post('https://gestordecursos.pegui.edu.co:8000/documents', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            console.log('Documento subido:', response.data);
+
+            // Limpiar el formulario después de subir
+            event.target.reset();
+
+            // Refrescar la lista de documentos
+            getDocuments(projectId);
+
+            // Recargar la configuración del proyecto para el siguiente archivo
+            fetchProjectConfig(projectId);
+
+            // Habilitar el botón si queda algún documento pendiente
+            submitButton.disabled = false;
+
+        } catch (error) {
+            console.error('Error al subir el documento:', error);
+            submitButton.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>
+

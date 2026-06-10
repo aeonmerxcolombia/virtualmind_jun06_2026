@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear Evaluación Inteligente</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+<div class="max-w-3xl mx-auto bg-white rounded-xl shadow-xl p-8 border">
+
+  <h2 class="text-3xl font-bold text-center mb-8 text-emerald-800">Crear Evaluación Inteligente</h2>
+  <form id="evalForm" class="space-y-4">
+
+    <div>
+      <label class="font-semibold block mb-1">Título</label>
+      <input type="text" name="titulo" id="titulo" required class="w-full p-3 border rounded"/>
+    </div>
+
+    <div>
+      <label class="font-semibold block mb-1">Descripción</label>
+      <textarea name="descripcion" id="descripcion" rows="2" required class="w-full p-3 border rounded"></textarea>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="font-semibold block mb-1">Fecha límite</label>
+        <input type="datetime-local" name="fecha_limite" id="fecha_limite" class="w-full p-3 border rounded"/>
+      </div>
+      <div>
+        <label class="font-semibold block mb-1">Cantidad de preguntas</label>
+        <input type="number" min="1" max="50" name="cantidad" id="cantidad" value="5" required class="w-full p-3 border rounded"/>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="font-semibold block mb-1">Duración (minutos)</label>
+        <input type="number" min="1" max="360" name="duracion" id="duracion" value="40" required class="w-full p-3 border rounded"/>
+      </div>
+      <div>
+        <label class="font-semibold block mb-1">Intentos permitidos</label>
+        <input type="number" min="1" max="10" name="intentos" id="intentos" value="1" required class="w-full p-3 border rounded"/>
+      </div>
+    </div>
+
+    <div>
+      <label class="font-semibold block mb-1">Área / Asignatura</label>
+      <input type="text" name="area" id="area" required class="w-full p-3 border rounded"/>
+    </div>
+
+    <div>
+      <label class="font-semibold block mb-1">Nivel educativo</label>
+      <input type="text" name="nivel" id="nivel" required class="w-full p-3 border rounded"/>
+    </div>
+
+    <div>
+      <label class="font-semibold block mb-1">Temas clave (separados por coma)</label>
+      <input type="text" name="temas" id="temas" required class="w-full p-3 border rounded"/>
+    </div>
+
+    <div>
+      <label class="font-semibold block mb-1">Competencias (separadas por coma)</label>
+      <input type="text" name="competencias" id="competencias" required class="w-full p-3 border rounded"/>
+    </div>
+
+    <div>
+      <label class="font-semibold block mb-1">Dificultad</label>
+      <select name="dificultad" id="dificultad" class="w-full p-3 border rounded">
+        <option value="Baja">Baja</option>
+        <option value="Media" selected>Media</option>
+        <option value="Alta">Alta</option>
+      </select>
+    </div>
+
+    <!-- Tipos de pregunta -->
+    <div>
+      <label class="font-semibold block mb-1">Tipo(s) de preguntas</label>
+      <div class="flex gap-4 flex-wrap">
+        <label><input type="checkbox" name="tipo_pregunta" value="opcion_multiple" checked> Opción múltiple</label>
+        <label><input type="checkbox" name="tipo_pregunta" value="verdadero_falso"> Verdadero/Falso</label>
+        <label><input type="checkbox" name="tipo_pregunta" value="abierta"> Abierta</label>
+        <label><input type="checkbox" name="tipo_pregunta" value="relacionar_columnas"> Relacionar columnas</label>
+        <label><input type="checkbox" name="tipo_pregunta" value="seleccion_multiple"> Selección múltiple</label>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4 mt-6">
+      <button type="button" id="btnGenIA" class="bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-2 rounded shadow">
+        Generar con IA
+      </button>
+      <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded shadow">
+        Guardar manualmente
+      </button>
+      <span id="cargandoIA" class="text-emerald-700 hidden">⌛ Consultando IA...</span>
+    </div>
+
+    <div id="respuesta" class="text-center mt-2 text-sm"></div>
+  </form>
+</div>
+
+<!-- Modal Preview IA -->
+<div id="modalPreview" class="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center hidden">
+  <div class="bg-white max-w-4xl w-full rounded-xl shadow-xl p-8 relative">
+    <button onclick="cerrarPreview()" class="absolute top-4 right-6 text-2xl text-gray-400 hover:text-red-600">×</button>
+    <h3 class="text-2xl font-bold text-emerald-700 mb-5">Vista previa de Preguntas generadas por IA</h3>
+    <div id="tablaPreview"></div>
+    <div class="flex gap-4 justify-end mt-6">
+      <button onclick="cerrarPreview()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded">Editar</button>
+      <button id="guardarEvaluacionIA" class="bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-2 rounded font-bold">Guardar evaluación</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_GEMINI = "https://gestordecursos.pegui.edu.co:8000/chat/gemini";
+const API_EVAL = "https://gestordecursos.pegui.edu.co:8000/evaluaciones/";
+let preguntasIA = [];
+let lastPayload = {};
+
+function getUserId() {
+  // Simulación: extrae el uid del usuario desde el token localStorage (ajusta según tu backend)
+  return localStorage.getItem("uid") || "add801fe-c357-4cee-bc13-0bb7a7ba16fd";
+}
+
+// ------------ Prompt dinámico para Gemini -------------
+function armarPromptIA() {
+  const titulo = document.getElementById("titulo").value;
+  const descripcion = document.getElementById("descripcion").value;
+  const area = document.getElementById("area").value;
+  const nivel = document.getElementById("nivel").value;
+  const cantidad = document.getElementById("cantidad").value;
+  const duracion = document.getElementById("duracion").value;
+  const intentos = document.getElementById("intentos").value;
+  const tiposArr = Array.from(document.querySelectorAll('input[name="tipo_pregunta"]:checked')).map(el=>el.value);
+  const temas = document.getElementById("temas").value;
+  const competencias = document.getElementById("competencias").value;
+  const dificultad = document.getElementById("dificultad").value;
+
+  return `Genera una evaluación con las siguientes características:
+Nombre: ${titulo}
+Descripción: ${descripcion}
+Área/Asignatura: ${area}
+Nivel educativo: ${nivel}
+Cantidad de preguntas: ${cantidad}
+Duración: ${duracion} min
+Intentos permitidos: ${intentos}
+Tipos de pregunta: ${tiposArr.join(', ')}
+Temas clave: ${temas}
+Competencias: ${competencias}
+Dificultad: ${dificultad}
+Devuelve un JSON con un array llamado preguntas, donde cada elemento debe tener:
+- "pregunta" (string),
+- "tipo" (string),
+- "opciones" (array, puede ser vacío para abiertas),
+- "respuesta" (string o array).
+No escribas nada fuera del JSON.`;
+}
+
+document.getElementById("btnGenIA").onclick = async function() {
+  document.getElementById("cargandoIA").classList.remove("hidden");
+  preguntasIA = [];
+  document.getElementById("respuesta").innerHTML = "";
+  try {
+    const prompt = armarPromptIA();
+    const res = await fetch(API_GEMINI, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({prompt})
+    });
+    const data = await res.json();
+    let raw = data.respuesta || data.resultado || data.text || "";
+    let obj;
+    try {
+      if (typeof raw !== "string") obj = raw;
+      else obj = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || raw);
+    } catch(e) {
+      obj = { preguntas: [] };
+    }
+
+    preguntasIA = obj.preguntas || [];
+    if (preguntasIA.length === 0) {
+      document.getElementById("respuesta").innerHTML = `<span class="text-red-600">❌ La IA no generó preguntas.<br>Prueba mejorar los datos o el prompt.</span>`;
+      document.getElementById("cargandoIA").classList.add("hidden");
+      return;
+    }
+    mostrarPreviewIA();
+  } catch(e) {
+    document.getElementById("respuesta").innerHTML = `<span class="text-red-600">❌ Error llamando a Gemini: ${e}</span>`;
+  }
+  document.getElementById("cargandoIA").classList.add("hidden");
+};
+
+// ---- Renderizado de modal preview IA ---
+function mostrarPreviewIA() {
+  let html = `<table class="w-full border text-xs md:text-sm">
+    <thead><tr class="bg-emerald-100">
+      <th class="border px-2">#</th>
+      <th class="border px-2">Pregunta</th>
+      <th class="border px-2">Tipo</th>
+      <th class="border px-2">Opciones</th>
+      <th class="border px-2">Respuesta</th>
+    </tr></thead><tbody>`;
+  preguntasIA.forEach((p, i) => {
+    html += `<tr>
+      <td class="border px-2 py-1">${i+1}</td>
+      <td class="border px-2 py-1">${p.pregunta || p.texto || ""}</td>
+      <td class="border px-2 py-1">${p.tipo || ""}</td>
+      <td class="border px-2 py-1">${(p.opciones || []).join("<br>")}</td>
+      <td class="border px-2 py-1">${Array.isArray(p.respuesta) ? p.respuesta.join(", ") : (p.respuesta || "")}</td>
+    </tr>`;
+  });
+  html += "</tbody></table>";
+  document.getElementById("tablaPreview").innerHTML = html;
+  document.getElementById("modalPreview").classList.remove("hidden");
+}
+
+function cerrarPreview() {
+  document.getElementById("modalPreview").classList.add("hidden");
+}
+
+// ---- Guardar evaluación generada por IA ----
+document.getElementById("guardarEvaluacionIA").onclick = async function() {
+  document.getElementById("respuesta").innerHTML = "";
+  cerrarPreview();
+
+  // Arma los datos principales
+  const tiposArr = Array.from(document.querySelectorAll('input[name="tipo_pregunta"]:checked')).map(el=>el.value);
+  const parametros = {
+    area: document.getElementById("area").value,
+    nivel: document.getElementById("nivel").value,
+    temas: document.getElementById("temas").value,
+    competencias: document.getElementById("competencias").value,
+    dificultad: document.getElementById("dificultad").value,
+    duracion: Number(document.getElementById("duracion").value),
+    intentos: Number(document.getElementById("intentos").value),
+    mostrar_resultados: "Sí",
+    permitir_reevaluacion: "No",
+    preguntas: preguntasIA    // 👈 AQUI SE GUARDA EL ARRAY DE PREGUNTAS IA
+  };
+  lastPayload = {
+    titulo: document.getElementById("titulo").value,
+    descripcion: document.getElementById("descripcion").value,
+    fecha_limite: document.getElementById("fecha_limite").value || null,
+    creador_id: getUserId(),
+    tipos_pregunta: tiposArr,
+    parametros: parametros,
+    generada_ia: 1
+  };
+
+  try {
+    const res = await fetch(API_EVAL, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(lastPayload)
+    });
+    if (res.ok) {
+      document.getElementById("respuesta").innerHTML = `<span class="text-green-700">✅ Evaluación guardada exitosamente.</span>`;
+      document.getElementById("evalForm").reset();
+    } else {
+      const data = await res.json();
+      document.getElementById("respuesta").innerHTML = `<span class="text-red-700">❌ Error al guardar: ${JSON.stringify(data.detail)}</span>`;
+    }
+  } catch(e) {
+    document.getElementById("respuesta").innerHTML = `<span class="text-red-700">❌ Error al guardar: ${e}</span>`;
+  }
+};
+
+// ----- Guardar manual (sin IA, solo metadatos) -----
+document.getElementById("evalForm").onsubmit = async function(e) {
+  e.preventDefault();
+  document.getElementById("respuesta").innerHTML = "";
+  const tiposArr = Array.from(document.querySelectorAll('input[name="tipo_pregunta"]:checked')).map(el=>el.value);
+  const parametros = {
+    area: document.getElementById("area").value,
+    nivel: document.getElementById("nivel").value,
+    temas: document.getElementById("temas").value,
+    competencias: document.getElementById("competencias").value,
+    dificultad: document.getElementById("dificultad").value,
+    duracion: Number(document.getElementById("duracion").value),
+    intentos: Number(document.getElementById("intentos").value)
+  };
+  let payload = {
+    titulo: document.getElementById("titulo").value,
+    descripcion: document.getElementById("descripcion").value,
+    fecha_limite: document.getElementById("fecha_limite").value || null,
+    creador_id: getUserId(),
+    tipos_pregunta: tiposArr,
+    parametros: parametros,
+    generada_ia: 0
+  };
+
+  try {
+    const res = await fetch(API_EVAL, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      document.getElementById("respuesta").innerHTML = `<span class="text-green-700">✅ Evaluación guardada manualmente. Puedes editar preguntas después.</span>`;
+      document.getElementById("evalForm").reset();
+    } else {
+      const data = await res.json();
+      document.getElementById("respuesta").innerHTML = `<span class="text-red-700">❌ Error: ${JSON.stringify(data.detail)}</span>`;
+    }
+  } catch(e) {
+    document.getElementById("respuesta").innerHTML = `<span class="text-red-700">❌ Error: ${e}</span>`;
+  }
+};
+</script>
+</body>
+</html>
+

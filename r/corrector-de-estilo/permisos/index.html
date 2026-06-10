@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Permisos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 font-sans">
+  <div class="max-w-3xl mx-auto bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold mb-4">🔐 Gestión de Permisos</h1>
+
+    <!-- Crear permiso -->
+    <form id="formCrear" class="flex gap-4 mb-6">
+      <input type="text" id="permisoNombre" placeholder="Nombre del permiso" class="flex-1 border rounded px-4 py-2">
+      <button type="submit" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">Crear</button>
+    </form>
+
+    <!-- Lista -->
+    <table class="w-full table-auto border rounded shadow text-sm">
+      <thead class="bg-indigo-100 text-left">
+        <tr><th class="px-4 py-2">ID</th><th class="px-4 py-2">Nombre</th><th class="px-4 py-2">Acciones</th></tr>
+      </thead>
+      <tbody id="listaPermisos"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token");
+    const headers = { "Authorization": "Bearer " + token, "Content-Type": "application/json" };
+
+    async function cargarPermisos() {
+      const res = await fetch(`${API}/permissions`, { headers });
+      const permisos = await res.json();
+      const tbody = document.getElementById("listaPermisos");
+      tbody.innerHTML = "";
+      permisos.forEach(p => {
+        tbody.innerHTML += `
+          <tr class="border-t">
+            <td class="px-4 py-2">${p.id}</td>
+            <td class="px-4 py-2">${p.name}</td>
+            <td class="px-4 py-2">
+              <button onclick="eliminar(${p.id})" class="text-red-500 hover:underline">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function crearPermiso(nombre) {
+      await fetch(`${API}/permissions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ name: nombre })
+      });
+      cargarPermisos();
+    }
+
+    async function eliminar(id) {
+      if (!confirm("¿Eliminar este permiso?")) return;
+      await fetch(`${API}/permissions/${id}`, {
+        method: "DELETE",
+        headers
+      });
+      cargarPermisos();
+    }
+
+    document.getElementById("formCrear").onsubmit = e => {
+      e.preventDefault();
+      const nombre = document.getElementById("permisoNombre").value.trim();
+      if (nombre) crearPermiso(nombre);
+      document.getElementById("permisoNombre").value = "";
+    }
+
+    cargarPermisos();
+  </script>
+</body>
+</html>
+

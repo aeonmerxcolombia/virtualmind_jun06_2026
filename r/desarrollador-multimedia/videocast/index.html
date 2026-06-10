@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Videocast Studio PRO - Fix Render</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{--bg:#0b1220;--panel:#0f1724;--muted:#9aa4b2;--accent:#38bdf8;--danger:#f87171}
+*{box-sizing:border-box} body{margin:0;height:100vh;background:var(--bg);color:#e6eef8;font-family:Inter,system-ui;padding:12px;display:flex;gap:12px}
+.left{width:360px;background:var(--panel);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.main{flex:1;display:flex;flex-direction:column;gap:12px}
+video#preview{width:100%;height:220px;background:#000;border-radius:6px;object-fit:cover}
+.controls{display:flex;gap:8px}
+.gallery{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:280px;overflow:auto}
+.clip-card{background:#071022;border-radius:8px;padding:6px;position:relative;cursor:grab;display:flex;flex-direction:column}
+.clip-card img{width:100%;height:84px;object-fit:cover;border-radius:6px}
+.delete-btn{position:absolute;right:6px;top:6px;background:rgba(0,0,0,0.5);border-radius:50%;width:28px;height:28px;border:0;color:#fff}
+.preview-panel{background:#000;border-radius:8px;padding:10px;display:flex;align-items:center;justify-content:center;min-height:240px}
+video#player{max-width:100%;max-height:520px;border-radius:6px;display:none}
+.timeline{background:var(--panel);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px}
+#timelineStrip{background:linear-gradient(90deg,#071022,#08102a);border-radius:6px;padding:8px;min-height:84px;display:flex;gap:8px;overflow:auto}
+.timeline-clip{background:linear-gradient(180deg,#144457,#0b2230);min-width:120px;border-radius:6px;padding:6px;color:#dcecff;position:relative}
+.trim-handle{position:absolute;top:0;bottom:0;width:8px;background:#facf2f;cursor:ew-resize}
+.toast{position:fixed;right:18px;bottom:18px;background:#101827;padding:10px 14px;border-radius:8px;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+.small{font-size:13px;color:var(--muted)}
+.progress{height:8px;background:#071427;border-radius:6px;overflow:hidden}
+.progress > div{height:100%;width:0;background:var(--accent)}
+</style>
+</head>
+<body>
+  <div class="left">
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center"><h3><i class="fa-solid fa-gear"></i> Controles</h3><div class="small">Videocast Studio</div></div>
+      <video id="preview" autoplay muted playsinline></video>
+      <div class="controls" style="margin-top:8px">
+        <button id="camBtn"><i class="fa-solid fa-camera"></i> Cámara</button>
+        <button id="screenBtn"><i class="fa-solid fa-display"></i> Pantalla</button>
+        <button id="recBtn" style="background:var(--danger);color:#fff" disabled><i class="fa-solid fa-circle-record"></i> Grabar</button>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <button id="downloadAllBtn" style="background:var(--accent);color:#021224;font-weight:700">Descargar Clips</button>
+        <button id="clearAllBtn">Limpiar</button>
+        <button id="publicarBtn" style="background:#10b981;color:#fff;font-weight:700" onclick="mostrarPublicar()"><i class="fa-solid fa-upload"></i> Publicar</button>
+        <button id="iaBtn" style="background:#8b5cf6;color:#fff;font-weight:700" onclick="mostrarIA()"><i class="fa-solid fa-wand-magic-sparkles"></i> IA</button>
+        <button id="libreriaBtn" onclick="mostrarLibreria()"><i class="fa-solid fa-film"></i> Videoteca</button>
+      </div>
+    </div>
+
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3><i class="fa-solid fa-film"></i> Galería</h3><div class="small" id="galleryCount">0 clips</div>
+      </div>
+      <div id="gallery" class="gallery"><div id="galleryEmpty" class="small" style="grid-column:1/-1;text-align:center;color:var(--muted)">Aún no hay grabaciones.</div></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="preview-panel">
+      <div id="playerPlaceholder" class="small">Arrastra un clip a la línea de tiempo para editar.</div>
+      <video id="player" controls playsinline></video>
+    </div>
+
+    <div class="timeline">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3><i class="fa-solid fa-grip-lines"></i> Línea de tiempo</h3>
+        <div style="display:flex;gap:8px"><button id="renderBtn" style="background:var(--accent);color:#021224;font-weight:700"><i class="fa-solid fa-rocket"></i> Renderizar y Descargar</button></div>
+      </div>
+      <div id="timelineStrip" ondragover="event.preventDefault()"></div>
+      <div class="progress" id="renderProgress" style="display:none"><div id="renderProgressFill"></div></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" style="display:none"></div>
+
+  <!-- MODAL: Generar con IA -->
+  <div id="iaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center" onclick="if(event.target===this)cerrarModal('ia')">
+    <div style="background:#0f1724;border-radius:12px;padding:24px;width:90%;max-width:560px;max-height:90vh;overflow:auto;border:1px solid #1e293b">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="margin:0"><i class="fa-solid fa-wand-magic-sparkles" style="color:#8b5cf6"></i> Generar Video con IA</h3>
+        <button onclick="cerrarModal('ia')" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer">&times;</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:4px">Prompt (describe el video)</label>
+          <textarea id="iaPrompt" rows="4" style="width:100%;background:#071022;border:1px solid #1e293b;border-radius:8px;padding:10px;color:#e6eef8;font-family:inherit" placeholder="Ej: Una persona caminando por una playa al atardecer..."></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:4px">Duración (segundos)</label>
+            <select id="iaDuration" style="width:100%;background:#071022;border:1px solid #1e293b;border-radius:8px;padding:10px;color:#e6eef8">
+              <option value="5">5 segundos</option>
+              <option value="10">10 segundos</option>
+              <option value="15">15 segundos</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:4px">Modelo</label>
+            <select id="iaModel" style="width:100%;background:#071022;border:1px solid #1e293b;border-radius:8px;padding:10px;color:#e6eef8">
+              <option value="wan2.6-t2v">WAN 2.6</option>
+            </select>
+          </div>
+        </div>
+        <button id="btnGenerarIA" onclick="generarVideoIA()" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;border:none;border-radius:8px;padding:12px;font-weight:700;cursor:pointer">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Generar Video
+        </button>
+        <div id="iaProgress" style="display:none;text-align:center;color:#38bdf8;font-size:13px">
+          <div class="progress" style="margin-top:8px"><div id="iaProgressFill" style="width:0%"></div></div>
+          <span id="iaProgressText">Iniciando...</span>
+        </div>
+        <div id="iaResult" style="min-height:100px;display:flex;align-items:center;justify-content:center;background:#071022;border-radius:8px;padding:12px">
+          <div class="small" style="color:var(--muted)">El video generado aparecerá aquí</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Publicar Video -->
+  <div id="publicarModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center" onclick="if(event.target===this)cerrarModal('publicar')">
+    <div style="background:#0f1724;border-radius:12px;padding:24px;width:90%;max-width:480px;border:1px solid #1e293b">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="margin:0"><i class="fa-solid fa-upload" style="color:#10b981"></i> Publicar Videocast</h3>
+        <button onclick="cerrarModal('publicar')" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer">&times;</button>
+      </div>
+      <form id="publicarForm" style="display:flex;flex-direction:column;gap:12px" onsubmit="publicarVideo(event)">
+        <div>
+          <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:4px">Título</label>
+          <input type="text" id="pubTitulo" required placeholder="Título del videocast" style="width:100%;background:#071022;border:1px solid #1e293b;border-radius:8px;padding:10px;color:#e6eef8">
+        </div>
+        <div>
+          <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:4px">Descripción</label>
+          <textarea id="pubDesc" rows="3" placeholder="Descripción del videocast" style="width:100%;background:#071022;border:1px solid #1e293b;border-radius:8px;padding:10px;color:#e6eef8;font-family:inherit"></textarea>
+        </div>
+        <div>
+          <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:4px">Archivo de video</label>
+          <input type="file" id="pubFile" accept="video/*" required style="width:100%;background:#071022;border:1px solid #1e293b;border-radius:8px;padding:10px;color:#e6eef8">
+        </div>
+        <button type="submit" style="background:#10b981;color:#fff;border:none;border-radius:8px;padding:12px;font-weight:700;cursor:pointer">
+          <i class="fa-solid fa-cloud-upload-alt"></i> Publicar
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Videoteca -->
+  <div id="libreriaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)cerrarModal('libreria')">
+    <div style="background:#0f1724;border-radius:12px;padding:24px;width:90%;max-width:700px;max-height:90vh;overflow:auto;border:1px solid #1e293b">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="margin:0"><i class="fa-solid fa-film" style="color:#38bdf8"></i> Videoteca</h3>
+        <button onclick="cerrarModal('libreria')" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer">&times;</button>
+      </div>
+      <div id="libreriaList" style="display:flex;flex-direction:column;gap:8px;min-height:100px">
+        <div class="small" style="color:var(--muted);text-align:center;padding:40px">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const App = {
+  dom:{}, db:null, recorder:{stream:null,mediaRecorder:null,chunks:[],isRecording:false},
+  timeline:{clips:[],selected:null,pixelsPerSecond:80},
+
+  init: async function(){
+    this.dom.preview = document.getElementById('preview');
+    this.dom.camBtn = document.getElementById('camBtn');
+    this.dom.screenBtn = document.getElementById('screenBtn');
+    this.dom.recBtn = document.getElementById('recBtn');
+    this.dom.gallery = document.getElementById('gallery');
+    this.dom.galleryEmpty = document.getElementById('galleryEmpty');
+    this.dom.galleryCount = document.getElementById('galleryCount');
+    this.dom.player = document.getElementById('player');
+    this.dom.playerPlaceholder = document.getElementById('playerPlaceholder');
+    this.dom.timelineStrip = document.getElementById('timelineStrip');
+    this.dom.renderBtn = document.getElementById('renderBtn');
+    this.dom.renderProgress = document.getElementById('renderProgress');
+    this.dom.renderProgressFill = document.getElementById('renderProgressFill');
+    this.dom.downloadAllBtn = document.getElementById('downloadAllBtn');
+    this.dom.clearAllBtn = document.getElementById('clearAllBtn');
+
+    await this.initDB();
+    await this.loadClips();
+    this.attachEvents();
+    this.toast('Listo. Interactúa con la página (selecciona cámara/pantalla).',3000);
+    console.log('App inicializada');
+  },
+
+  initDB: function(){ return new Promise((res,rej)=>{
+    const req = indexedDB.open('videocast-fix-v1',1);
+    req.onupgradeneeded = e => { const db = e.target.result; if(!db.objectStoreNames.contains('clips')) db.createObjectStore('clips',{keyPath:'id'}); };
+    req.onsuccess = e => { this.db = e.target.result; res(); };
+    req.onerror = e => rej(e);
+  });},
+
+  dbPut: function(obj){ return new Promise((res,rej)=>{ const tx = this.db.transaction('clips','readwrite'); const s=tx.objectStore('clips'); const r=s.put(obj); tx.oncomplete=()=>res(r.result); tx.onerror=e=>rej(e);});},
+  dbGetAll: function(){ return new Promise((res,rej)=>{ const tx=this.db.transaction('clips','readonly'); const s=tx.objectStore('clips'); const r=s.getAll(); r.onsuccess=()=>res(r.result); r.onerror=e=>rej(e); }); },
+  dbGet: function(id){ return new Promise((res,rej)=>{ const tx=this.db.transaction('clips','readonly'); const s=tx.objectStore('clips'); const r=s.get(id); r.onsuccess=()=>res(r.result); r.onerror=e=>rej(e); }); },
+  dbDelete: function(id){ return new Promise((res,rej)=>{ const tx=this.db.transaction('clips','readwrite'); const s=tx.objectStore('clips'); const r=s.delete(id); tx.oncomplete=()=>res(); tx.onerror=e=>rej(e); }); },
+
+  attachEvents: function(){
+    this.dom.camBtn.addEventListener('click', ()=>this.setSource('camera'));
+    this.dom.screenBtn.addEventListener('click', ()=>this.setSource('screen'));
+    this.dom.recBtn.addEventListener('click', ()=>this.toggleRecording());
+    this.dom.renderBtn.addEventListener('click', ()=>this.renderTimelineToFile());
+    this.dom.timelineStrip.addEventListener('drop', (e)=>this.onDropTimeline(e));
+    this.dom.downloadAllBtn.addEventListener('click', ()=>this.downloadAllClips());
+    this.dom.clearAllBtn.addEventListener('click', ()=>this.clearAllClips());
+  },
+
+  toast: function(msg, t=2500){ const el=document.getElementById('toast'); el.textContent=msg; el.style.display='block'; clearTimeout(this._toastTO); this._toastTO=setTimeout(()=>el.style.display='none', t); },
+
+  setSource: async function(type){
+    try{
+      if(this.recorder.stream) this.recorder.stream.getTracks().forEach(t=>t.stop());
+      const constraints = type==='camera' ? {video:{facingMode:'user'}, audio:true} : {video:true, audio:true};
+      this.recorder.stream = type==='camera' ? await navigator.mediaDevices.getUserMedia(constraints) : await navigator.mediaDevices.getDisplayMedia(constraints);
+      this.dom.preview.srcObject = this.recorder.stream;
+      this.dom.recBtn.disabled = false;
+      this.toast(`${type==='camera'?'Cámara':'Pantalla'} lista`);
+      console.log('Fuente activa, tracks:', this.recorder.stream.getTracks());
+    } catch(e){ console.error(e); this.toast('Error fuente: ' + e.message); }
+  },
+
+  toggleRecording: function(){ if(this.recorder.isRecording) this.stopRecording(); else this.startRecording(); },
+
+  startRecording: function(){
+    if(!this.recorder.stream){ this.toast('Activa cámara o pantalla primero.'); return; }
+    this.recorder.chunks = [];
+    let options = this.getSupportedMime();
+    try{ this.recorder.mediaRecorder = new MediaRecorder(this.recorder.stream, options); }
+    catch(e){ console.warn('MediaRecorder options fail, fallback', e); this.recorder.mediaRecorder = new MediaRecorder(this.recorder.stream); }
+    this.recorder.mediaRecorder.ondataavailable = (ev)=>{ if(ev.data && ev.data.size) this.recorder.chunks.push(ev.data); };
+    this.recorder.mediaRecorder.onstop = ()=> this.onRecordingStop();
+    this.recorder.mediaRecorder.start();
+    this.recorder.isRecording = true;
+    this.dom.recBtn.textContent = 'Detener';
+    this.toast('Grabando...');
+    console.log('Grabación iniciada, mime:', options);
+  },
+
+  stopRecording: function(){ if(this.recorder.mediaRecorder && this.recorder.isRecording) this.recorder.mediaRecorder.stop(); this.recorder.isRecording=false; this.dom.recBtn.textContent='Grabar'; this.toast('Deteniendo...'); },
+
+  getSupportedMime: function(){
+    const opts = ['video/webm;codecs=vp8,opus','video/webm;codecs=vp9,opus','video/webm'];
+    for(const m of opts) if(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) return {mimeType:m};
+    return {};
+  },
+
+  onRecordingStop: async function(){
+    try{
+      const blob = new Blob(this.recorder.chunks, {type:'video/webm'});
+      if(blob.size < 200){ this.toast('Grabación muy corta'); return; }
+      const id = Date.now();
+      const duration = await this.getDuration(blob);
+      const thumbnail = await this.createThumbnail(blob);
+      const clip = {id,blob,duration,thumbnail,created:new Date().toISOString()};
+      await this.dbPut(clip);
+      this.addClipCard(clip);
+      this.toast('Clip guardado.');
+      console.log('Clip guardado', clip);
+    } catch(e){ console.error(e); this.toast('Error guardar clip: '+e.message); }
+  },
+
+  getDuration: function(blob){ return new Promise((res,rej)=>{ const v=document.createElement('video'); v.preload='metadata'; v.src=URL.createObjectURL(blob); v.onloadedmetadata=()=>{ const d=v.duration; URL.revokeObjectURL(v.src); res(d); }; v.onerror=e=>rej(e); }); },
+  createThumbnail: function(blob){ return new Promise((res,rej)=>{ const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.src=URL.createObjectURL(blob); v.onloadeddata=()=>{ v.currentTime = Math.min(0.1, (v.duration||0)/10); }; v.onseeked=()=>{ const c=document.createElement('canvas'); c.width=320; c.height=180; const ctx=c.getContext('2d'); try{ ctx.drawImage(v,0,0,c.width,c.height); }catch(e){} URL.revokeObjectURL(v.src); res(c.toDataURL()); }; v.onerror=()=>{ URL.revokeObjectURL(v.src); rej(new Error('thumbnail error')); }; }); },
+
+  loadClips: async function(){
+    const clips = await this.dbGetAll();
+    if(!clips || clips.length===0){ this.dom.galleryEmpty.style.display='block'; this.updateGalleryCount(); return; }
+    clips.sort((a,b)=>b.id-a.id);
+    clips.forEach(c=>this.addClipCard(c));
+    this.dom.galleryEmpty.style.display='none';
+    this.updateGalleryCount();
+  },
+
+  updateGalleryCount: function(){ const c=this.dom.gallery.querySelectorAll('.clip-card').length; this.dom.galleryCount.textContent=`${c} clip${c!==1?'s':''}`; },
+
+  addClipCard: function(clip){
+    const card=document.createElement('div'); card.className='clip-card'; card.draggable=true; card.dataset.id=clip.id;
+    card.innerHTML = `<button class="delete-btn" title="Eliminar">&times;</button><img src="${clip.thumbnail||''}" alt="thumb"><div style="display:flex;justify-content:space-between;margin-top:6px;font-size:13px;color:var(--muted)"><div>${(clip.duration||0).toFixed(1)}s</div><div class="small">${new Date(clip.created).toLocaleString()}</div></div>`;
+    card.addEventListener('dragstart', e=> e.dataTransfer.setData('text/plain', clip.id));
+    card.querySelector('.delete-btn').addEventListener('click', async (ev)=>{ ev.stopPropagation(); await this.dbDelete(clip.id); card.remove(); this.updateGalleryCount(); this.timeline.clips=this.timeline.clips.filter(t=>t.sourceId!==clip.id); this.renderTimeline(); });
+    card.addEventListener('click', async ()=>{ const full = await this.dbGet(clip.id); const url=URL.createObjectURL(full.blob); this.dom.player.src=url; this.dom.player.style.display='block'; this.dom.playerPlaceholder.style.display='none'; });
+    if(this.dom.galleryEmpty.parentNode) this.dom.galleryEmpty.style.display='none';
+    this.dom.gallery.appendChild(card);
+    this.updateGalleryCount();
+  },
+
+  onDropTimeline: async function(e){
+    e.preventDefault();
+    const id = Number(e.dataTransfer.getData('text/plain'));
+    const clip = await this.dbGet(id);
+    if(!clip) return;
+    const timelineClip = { instanceId: Date.now()+Math.floor(Math.random()*1000), sourceId: clip.id, trimStart:0, trimEnd:clip.duration||0, sourceDuration:clip.duration||0 };
+    this.timeline.clips.push(timelineClip);
+    this.renderTimeline();
+  },
+
+  renderTimeline: function(){
+    this.dom.timelineStrip.innerHTML='';
+    if(this.timeline.clips.length===0){ this.dom.timelineStrip.innerHTML='<div class="small" style="padding:8px;color:var(--muted)">Arrastra clips aquí</div>'; return; }
+    this.timeline.clips.forEach(clip=>{
+      const el=document.createElement('div'); el.className='timeline-clip'; el.dataset.instance=clip.instanceId;
+      const width = Math.max(80, Math.round((clip.trimEnd-clip.trimStart)*this.timeline.pixelsPerSecond));
+      el.style.minWidth = width + 'px';
+      el.innerHTML = `<div style="font-weight:700;font-size:13px">Clip ${clip.sourceId}</div><div class="small">${clip.trimStart.toFixed(2)}s — ${clip.trimEnd.toFixed(2)}s</div><div class="trim-handle left"></div><div class="trim-handle right"></div>`;
+      el.addEventListener('click', ()=> this.selectTimelineClip(clip));
+      el.querySelector('.trim-handle.left').addEventListener('mousedown', (ev)=> this.startTrim(ev,clip,'left'));
+      el.querySelector('.trim-handle.right').addEventListener('mousedown', (ev)=> this.startTrim(ev,clip,'right'));
+      el.addEventListener('contextmenu', (ev)=>{ ev.preventDefault(); this.timeline.clips=this.timeline.clips.filter(c=>c.instanceId!==clip.instanceId); this.renderTimeline(); });
+      this.dom.timelineStrip.appendChild(el);
+    });
+  },
+
+  selectTimelineClip: async function(clip){
+    this.timeline.selected = clip.instanceId;
+    this.renderTimeline();
+    const src = await this.dbGet(clip.sourceId);
+    if(!src) return;
+    const url = URL.createObjectURL(src.blob);
+    this.dom.player.src = `${url}#t=${clip.trimStart},${clip.trimEnd}`;
+    this.dom.player.style.display='block'; this.dom.playerPlaceholder.style.display='none';
+  },
+
+  startTrim: function(ev, clip, handle){
+    ev.preventDefault(); ev.stopPropagation();
+    const startX = ev.clientX, sStart = clip.trimStart, sEnd = clip.trimEnd;
+    const onMove = (e)=>{
+      const dx = e.clientX - startX; const dt = dx / this.timeline.pixelsPerSecond;
+      if(handle==='left'){ let ns = Math.max(0, sStart + dt); ns = Math.min(ns, clip.trimEnd - 0.1); clip.trimStart = ns; }
+      else { let ne = Math.min(clip.sourceDuration, sEnd + dt); ne = Math.max(ne, clip.trimStart + 0.1); clip.trimEnd = ne; }
+      this.renderTimeline();
+    };
+    const onUp = ()=>{ window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+  },
+
+  // ===== Render robusto con fixes =====
+  renderTimelineToFile: async function(){
+    if(this.timeline.clips.length===0){ this.toast('No hay clips en la línea de tiempo'); return; }
+    this.dom.renderBtn.disabled = true;
+    this.dom.renderProgress.style.display = 'block';
+    this.dom.renderProgressFill.style.width = '0%';
+    this.toast('Preparando renderizado... (consulta consola si se queda)');
+
+    console.log('Render: inicio. Clips totales:', this.timeline.clips.length);
+    const width = 1280, height = 720;
+    const canvas = document.createElement('canvas'); canvas.width=width; canvas.height=height;
+    const ctx = canvas.getContext('2d');
+
+    const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    try{ await audioCtx.resume(); console.log('audioCtx resumed'); } catch(e){ console.warn('audioCtx resume fail', e); }
+
+    const dest = audioCtx.createMediaStreamDestination();
+
+    // Si no hay pista de audio en la mezcla final, creamos un oscilador en 0Hz (silencio) para asegurar que MediaRecorder tenga pista
+    let silenceOsc = null;
+    const ensureAudioTrack = () => {
+      if(dest.stream.getAudioTracks().length === 0){
+        silenceOsc = audioCtx.createOscillator();
+        const g = audioCtx.createGain(); g.gain.value = 0; silenceOsc.connect(g).connect(dest);
+        silenceOsc.start();
+        console.log('Silencio creado para track de audio (fallback).');
+      }
+    };
+
+    // canvas stream + audio track (si existe)
+    const canvasStream = canvas.captureStream(30);
+    // If audio track available, add it
+    if(dest.stream.getAudioTracks().length>0) canvasStream.addTrack(dest.stream.getAudioTracks()[0]);
+
+    const mime = (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) ? 'video/webm;codecs=vp8,opus' : 'video/webm';
+    let recorder;
+    try {
+      // Ensure an audio track exists before starting recorder
+      ensureAudioTrack();
+      if(dest.stream.getAudioTracks().length>0) canvasStream.addTrack(dest.stream.getAudioTracks()[0]);
+      recorder = new MediaRecorder(canvasStream, { mimeType: mime });
+    } catch(e) {
+      console.error('Error creando MediaRecorder canvas:', e);
+      this.toast('No se puede crear MediaRecorder para el canvas: ' + e.message);
+      this.dom.renderBtn.disabled = false; this.dom.renderProgress.style.display='none'; return;
+    }
+
+    const outChunks = [];
+    recorder.ondataavailable = (ev)=> { if(ev.data && ev.data.size) outChunks.push(ev.data); };
+    const waitRecorderStop = ()=> new Promise(r=> { recorder.onstop = r; });
+
+    recorder.start();
+    console.log('Recorder canvas started, mime:', mime);
+
+    // Helper: dibujar y reproducir un clip en canvas y en audioCtx
+    const playAndDrawClip = (clip, idx) => new Promise(async (resolve) => {
+      console.log(`Play clip idx ${idx} src ${clip.sourceId} trim ${clip.trimStart}-${clip.trimEnd}`);
+      try {
+        const stored = await this.dbGet(clip.sourceId);
+        if(!stored){ console.warn('Clip no encontrado en DB:', clip.sourceId); return resolve(); }
+        const url = URL.createObjectURL(stored.blob);
+        const v = document.createElement('video'); v.src = url; v.playsInline = true; v.crossOrigin = 'anonymous';
+        v.muted = true; // permite autoplay; audio se captura por MediaElementSource
+        await new Promise(r=> v.addEventListener('loadedmetadata', r, {once:true}));
+        const start = Math.max(0, Math.min(clip.trimStart, v.duration||0));
+        const end = Math.max(start + 0.05, Math.min(clip.trimEnd, v.duration||0));
+        v.currentTime = start;
+
+        // conectar audio del elemento a audioCtx (captura aunque el elemento esté muted)
+        const srcNode = audioCtx.createMediaElementSource(v);
+        const gain = audioCtx.createGain(); gain.gain.value = 1.0;
+        srcNode.connect(gain).connect(dest);
+
+        // ensure audio track exists
+        ensureAudioTrack();
+
+        // play with robust handling (autoplay policies)
+        try { await v.play(); } catch(playErr){
+          console.warn('v.play() falló, intentando silenciar y reproducir:', playErr);
+          v.muted = true;
+          try { await v.play(); } catch(err){ console.error('No fue posible reproducir el clip:', err); }
+        }
+
+        // draw loop: requestVideoFrameCallback preferred
+        let stopped = false;
+        const drawOnce = () => {
+          try{
+            ctx.fillStyle = '#000'; ctx.fillRect(0,0,width,height);
+            if(v.videoWidth && v.videoHeight){
+              const ar = v.videoWidth / v.videoHeight;
+              let dw = width, dh = Math.round(dw / ar);
+              if(dh > height){ dh = height; dw = Math.round(dh * ar); }
+              const dx = Math.round((width - dw)/2), dy = Math.round((height - dh)/2);
+              ctx.drawImage(v, dx, dy, dw, dh);
+            }
+          } catch(e){ console.warn('drawImage failed', e); }
+        };
+
+        // fallback frame loop
+        const maxTimeout = Math.max(5000, Math.round((end - start) * 1000) + 5000); // seguridad
+        let finished = false;
+        const timeoutId = setTimeout(()=> {
+          if(!finished){ console.warn('Clip timeout, forzando resolver'); finished=true; cleanup(); resolve(); }
+        }, maxTimeout);
+
+        const cleanup = () => {
+          stopped = true;
+          try{ v.pause(); } catch(e){}
+          try{ srcNode.disconnect(); } catch(e){}
+          try{ URL.revokeObjectURL(url); } catch(e){}
+          clearTimeout(timeoutId);
+        };
+
+        // frame loop using requestVideoFrameCallback when available
+        if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+          const loop = (now, metadata) => {
+            if(stopped) return;
+            drawOnce();
+            // if reached end or beyond trim end
+            if(v.currentTime >= end - 0.03 || v.ended) { finished=true; cleanup(); resolve(); return; }
+            v.requestVideoFrameCallback(loop);
+          };
+          v.requestVideoFrameCallback(loop);
+        } else {
+          // fallback 30fps
+          const loop2 = async ()=>{
+            if(stopped) return;
+            drawOnce();
+            if(v.currentTime >= end - 0.03 || v.ended){ finished=true; cleanup(); resolve(); return; }
+            setTimeout(loop2, 33);
+          };
+          loop2();
+        }
+      } catch(e){
+        console.error('Error en playAndDrawClip:', e);
+        resolve();
+      }
+    });
+
+    // Reproducir todos los clips secuencialmente
+    for(let i=0;i<this.timeline.clips.length;i++){
+      const clip = this.timeline.clips[i];
+      this.dom.renderProgressFill.style.width = Math.round((i / this.timeline.clips.length) * 100) + '%';
+      console.log(`Render: procesando clip ${i+1}/${this.timeline.clips.length}`);
+      await playAndDrawClip(clip, i);
+    }
+
+    // small wait to capture final audio tail
+    await new Promise(r=> setTimeout(r, 300));
+    recorder.stop();
+    console.log('Recorder stopped, esperando onstop...');
+    await waitRecorderStop();
+    console.log('Recorder onstop fired.');
+
+    // stop silence oscillator if created
+    try{ if(silenceOsc){ silenceOsc.stop(); silenceOsc.disconnect(); silenceOsc = null; console.log('Oscillator de silencio detenido'); } } catch(e){}
+
+    // juntar blob y disparar descarga
+    const finalBlob = new Blob(outChunks, { type: mime });
+    const url = URL.createObjectURL(finalBlob);
+    const a = document.createElement('a'); a.href = url; a.download = `videocast_${Date.now()}.webm`; a.click();
+    URL.revokeObjectURL(url);
+
+    this.dom.renderProgressFill.style.width = '100%';
+    await new Promise(r=> setTimeout(r, 600));
+    this.dom.renderProgress.style.display = 'none';
+    this.toast('Render completado y descargado.', 4000);
+
+    this.dom.renderBtn.disabled = false;
+    console.log('Render finalizado y descargado, outChunks:', outChunks.length);
+  },
+
+  // utilitaires
+  downloadAllClips: async function(){ const clips = await this.dbGetAll(); if(!clips||clips.length===0){ this.toast('No hay clips'); return; } clips.forEach(c=>{ const url=URL.createObjectURL(c.blob); const a=document.createElement('a'); a.href=url; a.download=`clip_${c.id}.webm`; a.click(); URL.revokeObjectURL(url); }); this.toast('Descargas iniciadas'); },
+
+  clearAllClips: async function(){ if(!confirm('Eliminar TODOS los clips?')) return; const tx=this.db.transaction('clips','readwrite'); tx.objectStore('clips').clear(); tx.oncomplete=()=>{ this.dom.gallery.querySelectorAll('.clip-card').forEach(n=>n.remove()); this.dom.galleryEmpty.style.display='block'; this.updateGalleryCount(); this.toast('Galería vaciada'); }; },
+
+};
+
+document.addEventListener('DOMContentLoaded', ()=> App.init());
+
+function mostrarModal(id) {
+  document.querySelectorAll('[id$="Modal"]').forEach(m => m.style.display = 'none');
+  document.getElementById(id).style.display = 'flex';
+}
+function cerrarModal(tipo) {
+  document.getElementById(tipo + 'Modal').style.display = 'none';
+}
+
+const API_VIDEO = 'https://gestordecursos.pegui.edu.co:8000';
+
+function mostrarIA() { mostrarModal('iaModal'); }
+function mostrarPublicar() { mostrarModal('publicarModal'); }
+async function mostrarLibreria() {
+  mostrarModal('libreriaModal');
+  try {
+    const res = await fetch(API_VIDEO + '/videocast/', {
+      headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+    });
+    const items = await res.json();
+    const list = document.getElementById('libreriaList');
+    if (items.length === 0) {
+      list.innerHTML = '<div class="small" style="color:var(--muted);text-align:center;padding:40px">No hay videocasts publicados</div>';
+      return;
+    }
+    list.innerHTML = items.map(v => `
+      <div style="display:flex;gap:12px;background:#071022;border-radius:8px;padding:12px;align-items:center">
+        <video src="${v.archivo_url}" style="width:160px;height:90px;border-radius:6px;object-fit:cover" controls></video>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;color:#e6eef8">${v.titulo}</div>
+          <div class="small" style="color:var(--muted)">${v.descripcion || ''}</div>
+          <div class="small" style="color:var(--muted);font-size:11px">${v.fecha_creacion ? new Date(v.fecha_creacion).toLocaleString() : ''}</div>
+        </div>
+        <button onclick="eliminarVideocast(${v.id})" style="background:var(--danger);color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('libreriaList').innerHTML = '<div class="small" style="color:var(--danger);text-align:center;padding:40px">Error al cargar</div>';
+  }
+}
+
+async function eliminarVideocast(id) {
+  if (!confirm('¿Eliminar este videocast?')) return;
+  try {
+    await fetch(API_VIDEO + '/videocast/' + id, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+    });
+    mostrarLibreria();
+  } catch(e) { alert('Error'); }
+}
+
+async function publicarVideo(e) {
+  e.preventDefault();
+  const file = document.getElementById('pubFile').files[0];
+  if (!file) return alert('Selecciona un archivo de video');
+  const fd = new FormData();
+  fd.append('titulo', document.getElementById('pubTitulo').value.trim());
+  fd.append('descripcion', document.getElementById('pubDesc').value.trim());
+  fd.append('file', file);
+  const btn = e.target.querySelector('button');
+  btn.disabled = true; btn.textContent = 'Publicando...';
+  try {
+    const res = await fetch(API_VIDEO + '/videocast/', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + localStorage.getItem('token') },
+      body: fd,
+    });
+    if (res.ok) {
+      alert('✅ Videocast publicado');
+      cerrarModal('publicar');
+      e.target.reset();
+    } else {
+      const err = await res.json();
+      alert('Error: ' + (err.detail || 'desconocido'));
+    }
+  } catch(e) { alert('Error de conexión'); }
+  btn.disabled = false; btn.textContent = 'Publicar';
+}
+
+async function generarVideoIA() {
+  const prompt = document.getElementById('iaPrompt').value.trim();
+  if (!prompt) return alert('Escribe un prompt primero');
+  const btn = document.getElementById('btnGenerarIA');
+  const progress = document.getElementById('iaProgress');
+  const progressFill = document.getElementById('iaProgressFill');
+  const progressText = document.getElementById('iaProgressText');
+  const result = document.getElementById('iaResult');
+  btn.disabled = true;
+  progress.style.display = 'block';
+  progressFill.style.width = '0%';
+  progressText.textContent = 'Iniciando generación...';
+  result.innerHTML = '<div class="small" style="color:var(--muted)">Generando...</div>';
+  try {
+    const translateRes = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(prompt) + '&langpair=es|en');
+    const translateData = await translateRes.json();
+    const englishPrompt = translateData.responseData?.translatedText || prompt;
+    const initRes = await fetch(API_VIDEO + '/ai/generate-video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('token') },
+      body: JSON.stringify({ prompt: englishPrompt, model: document.getElementById('iaModel').value, duration: parseInt(document.getElementById('iaDuration').value) || 5 })
+    });
+    const initData = await initRes.json();
+    const taskId = initData.task_id;
+    if (!taskId) { result.innerHTML = '<div style="color:var(--danger)">Error: No se obtuvo task_id</div>'; btn.disabled = false; progress.style.display = 'none'; return; }
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      progressFill.style.width = Math.min(80, attempts * 5) + '%';
+      progressText.textContent = 'Procesando... (' + (attempts * 5) + 's)';
+      try {
+        const statusRes = await fetch(API_VIDEO + '/ai/status/' + taskId, { headers: { Authorization: 'Bearer ' + localStorage.getItem('token') } });
+        const statusData = await statusRes.json();
+        if (statusData.status === 'SUCCEEDED' && statusData.video_url) {
+          clearInterval(poll);
+          progressFill.style.width = '100%';
+          progressText.textContent = 'Completado';
+          result.innerHTML = '<video controls autoplay style="max-width:100%;max-height:400px;border-radius:8px"><source src="' + statusData.video_url + '" type="video/mp4"></video>';
+          btn.disabled = false;
+          setTimeout(() => { progress.style.display = 'none'; }, 1000);
+        } else if (statusData.status === 'FAILED') {
+          clearInterval(poll);
+          result.innerHTML = '<div style="color:var(--danger)">Error: ' + (statusData.error || 'Falló la generación') + '</div>';
+          btn.disabled = false;
+          progress.style.display = 'none';
+        }
+      } catch (e) {
+        if (attempts > 120) { clearInterval(poll); result.innerHTML = '<div style="color:var(--danger)">Tiempo de espera agotado</div>'; btn.disabled = false; progress.style.display = 'none'; }
+      }
+    }, 5000);
+  } catch (e) {
+    result.innerHTML = '<div style="color:var(--danger)">Error: ' + e.message + '</div>';
+    btn.disabled = false;
+    progress.style.display = 'none';
+  }
+}
+</script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

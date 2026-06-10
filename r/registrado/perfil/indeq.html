@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ver/Editar Perfil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans p-8">
+
+  <div class="max-w-xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-2xl font-bold mb-4 text-center">Perfil de Usuario</h2>
+
+    <div id="preview" class="flex justify-center mb-4 hidden">
+      <img id="foto_actual" src="" alt="Foto de perfil"
+        class="w-32 h-32 object-cover rounded-full border-2 border-gray-300 shadow" />
+    </div>
+
+    <form id="profileForm" enctype="multipart/form-data" class="space-y-4">
+      <div>
+        <label for="user_id" class="block font-semibold">ID de Usuario</label>
+        <input type="text" id="user_id" name="user_id" readonly
+          class="w-full border p-2 rounded bg-gray-100 text-gray-700" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="nombre" class="block font-semibold">Nombre</label>
+          <input type="text" id="nombre" name="nombre" class="w-full border p-2 rounded" />
+        </div>
+        <div>
+          <label for="apellidos" class="block font-semibold">Apellidos</label>
+          <input type="text" id="apellidos" name="apellidos" class="w-full border p-2 rounded" />
+        </div>
+      </div>
+
+      <div>
+        <label for="telefono" class="block font-semibold">Teléfono</label>
+        <input type="text" id="telefono" name="telefono" class="w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label for="celular" class="block font-semibold">Celular</label>
+        <input type="text" id="celular" name="celular" class="w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label for="direccion" class="block font-semibold">Dirección</label>
+        <input type="text" id="direccion" name="direccion" class="w-full border p-2 rounded" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="ciudad" class="block font-semibold">Ciudad</label>
+          <input type="text" id="ciudad" name="ciudad" class="w-full border p-2 rounded" />
+        </div>
+        <div>
+          <label for="pais" class="block font-semibold">País</label>
+          <input type="text" id="pais" name="pais" class="w-full border p-2 rounded" />
+        </div>
+      </div>
+
+      <div>
+        <label for="cargo" class="block font-semibold">Cargo</label>
+        <input type="text" id="cargo" name="cargo" class="w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label for="empresa" class="block font-semibold">Empresa</label>
+        <input type="text" id="empresa" name="empresa" class="w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label for="biografia" class="block font-semibold">Biografía</label>
+        <textarea id="biografia" name="biografia" rows="3" class="w-full border p-2 rounded"></textarea>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label for="linkedin" class="block font-semibold">LinkedIn</label>
+          <input type="text" id="linkedin" name="linkedin" class="w-full border p-2 rounded" />
+        </div>
+        <div>
+          <label for="twitter" class="block font-semibold">Twitter</label>
+          <input type="text" id="twitter" name="twitter" class="w-full border p-2 rounded" />
+        </div>
+        <div>
+          <label for="facebook" class="block font-semibold">Facebook</label>
+          <input type="text" id="facebook" name="facebook" class="w-full border p-2 rounded" />
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-4 mt-4">
+        <label class="flex items-center">
+          <input type="checkbox" id="notificaciones_email" name="notificaciones_email" class="mr-2" checked />
+          Notificaciones por correo
+        </label>
+        <label class="flex items-center">
+          <input type="checkbox" id="notificaciones_virtualmind" name="notificaciones_virtualmind" class="mr-2" checked />
+          Notificaciones en Virtualmind
+        </label>
+      </div>
+
+      <div>
+        <label for="privacidad_perfil" class="block font-semibold">Privacidad</label>
+        <select id="privacidad_perfil" name="privacidad_perfil" class="w-full border p-2 rounded">
+          <option value="privado">Privado</option>
+          <option value="publico">Público</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="foto" class="block font-semibold">Actualizar Foto de Perfil</label>
+        <input type="file" id="foto" name="foto" accept="image/*" class="w-full border p-2 rounded" />
+      </div>
+
+      <div class="flex justify-between mt-6">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          Guardar Cambios
+        </button>
+        <button type="button" onclick="eliminarPerfil()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+          Eliminar Perfil
+        </button>
+      </div>
+    </form>
+
+    <div id="respuesta" class="mt-4 text-sm"></div>
+  </div>
+
+<script>
+const API_URL = "https://gestordecursos.pegui.edu.co:8000/profiles";
+
+function getQueryParam(name) {
+  const url = new URL(window.location.href);
+  return url.searchParams.get(name);
+}
+
+function redirigirSegunRol() {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Token no encontrado. Inicia sesión.");
+    return;
+  }
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const rol = payload.rol || (Array.isArray(payload.roles) ? payload.roles[0] : null);
+    if (!rol) {
+      alert("No se pudo determinar el rol del usuario.");
+      return;
+    }
+    window.location.href = `/r/${rol}/`;
+  } catch (e) {
+    console.error("Error al leer el rol:", e);
+    alert("Error en el token. Vuelve a iniciar sesión.");
+  }
+}
+
+async function cargarPerfil(userId) {
+  try {
+    const res = await fetch(`${API_URL}/${userId}`);
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('nombre').value = data.nombre || '';
+      document.getElementById('apellidos').value = data.apellidos || '';
+      document.getElementById('telefono').value = data.telefono || '';
+      document.getElementById('celular').value = data.celular || '';
+      document.getElementById('direccion').value = data.direccion || '';
+      document.getElementById('ciudad').value = data.ciudad || '';
+      document.getElementById('pais').value = data.pais || '';
+      document.getElementById('cargo').value = data.cargo || '';
+      document.getElementById('empresa').value = data.empresa || '';
+      document.getElementById('biografia').value = data.biografia || '';
+      document.getElementById('linkedin').value = data.linkedin || '';
+      document.getElementById('twitter').value = data.twitter || '';
+      document.getElementById('facebook').value = data.facebook || '';
+      document.getElementById('notificaciones_email').checked = data.notificaciones_email;
+      document.getElementById('notificaciones_virtualmind').checked = data.notificaciones_virtualmind;
+      document.getElementById('privacidad_perfil').value = data.privacidad_perfil || 'privado';
+
+      document.getElementById('profileForm').setAttribute('data-existe', 'true');
+
+      if (data.foto_url) {
+        document.getElementById('foto_actual').src = data.foto_url;
+        document.getElementById('preview').classList.remove('hidden');
+      } else {
+        document.getElementById('preview').classList.add('hidden');
+      }
+    } else {
+      document.getElementById('profileForm').setAttribute('data-existe', 'false');
+      document.getElementById('preview').classList.add('hidden');
+    }
+  } catch (error) {
+    console.error("Error cargando perfil:", error);
+    document.getElementById('respuesta').innerHTML = '<span class="text-red-600">⚠️ Error de red</span>';
+  }
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const userId = getQueryParam("user_id");
+  if (userId) {
+    document.getElementById("user_id").value = userId;
+    await cargarPerfil(userId);
+  } else {
+    document.getElementById('respuesta').innerHTML = '<span class="text-red-600">❌ No se proporcionó user_id en la URL.</span>';
+  }
+});
+
+document.getElementById('profileForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const form = e.target;
+  const formData = new FormData(form);
+  const userId = form.user_id.value.trim();
+  const existe = form.getAttribute('data-existe') === 'true';
+
+  formData.set("notificaciones_email", document.getElementById('notificaciones_email').checked);
+  formData.set("notificaciones_virtualmind", document.getElementById('notificaciones_virtualmind').checked);
+
+  const url = existe ? `${API_URL}/${userId}` : `${API_URL}/`;
+  const method = existe ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      document.getElementById('respuesta').innerHTML = '<span class="text-green-600">✅ Perfil guardado correctamente.</span>';
+      setTimeout(redirigirSegunRol, 1500);
+    } else {
+      document.getElementById('respuesta').innerHTML = `<span class="text-red-600">❌ Error: ${data.detail || 'fallo en la solicitud'}</span>`;
+    }
+  } catch (error) {
+    document.getElementById('respuesta').innerHTML = `<span class="text-red-600">⚠️ Error de red: ${error.message}</span>`;
+  }
+});
+
+async function eliminarPerfil() {
+  const userId = document.getElementById('user_id').value.trim();
+  if (!userId) {
+    document.getElementById('respuesta').innerHTML = '<span class="text-red-600">❌ No hay un ID de usuario cargado.</span>';
+    return;
+  }
+
+  if (!confirm(`¿Eliminar el perfil del usuario ${userId}? Esta acción es irreversible.`)) return;
+
+  try {
+    const res = await fetch(`${API_URL}/${userId}`, { method: 'DELETE' });
+
+    if (res.ok) {
+      document.getElementById('respuesta').innerHTML = '<span class="text-green-600">🗑️ Perfil eliminado. Redirigiendo...</span>';
+      setTimeout(redirigirSegunRol, 1500);
+    } else {
+      const data = await res.json();
+      document.getElementById('respuesta').innerHTML = `<span class="text-red-600">❌ Error al eliminar: ${data.detail || 'fallo desconocido'}</span>`;
+    }
+  } catch (error) {
+    document.getElementById('respuesta').innerHTML = `<span class="text-red-600">⚠️ Error de red: ${error.message}</span>`;
+  }
+}
+</script>
+
+</body>
+</html>
+

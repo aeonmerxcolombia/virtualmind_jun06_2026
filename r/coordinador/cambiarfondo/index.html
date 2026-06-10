@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cambiar fondo del login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8 font-sans">
+
+  <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-center mb-6 text-indigo-700">Cambiar Imagen de Fondo del Login</h1>
+
+    <div class="mb-6 text-center">
+      <p class="mb-2 text-gray-600">Vista previa actual:</p>
+      <img src="/assets/login-bg.jpg" alt="Fondo actual" class="rounded shadow w-full max-h-64 object-cover border border-gray-300">
+    </div>
+
+    <form id="formFondo" enctype="multipart/form-data" class="space-y-4">
+      <input type="file" name="image" accept=".jpg,.jpeg,.png" required class="block w-full border p-2 rounded">
+      <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded w-full font-semibold">
+        Subir nueva imagen
+      </button>
+    </form>
+
+    <div id="mensaje" class="mt-4 text-center text-sm"></div>
+  </div>
+
+  <script>
+    document.getElementById("formFondo").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const mensaje = document.getElementById("mensaje");
+
+      try {
+        const res = await fetch("https://gestordecursos.pegui.edu.co:8000/config/login-bg", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          mensaje.innerHTML = "✅ Imagen actualizada correctamente. Recarga el login para verla.";
+          mensaje.className = "mt-4 text-green-600 text-center text-sm";
+        } else {
+          mensaje.innerHTML = "❌ Error: " + (data.detail || "Error desconocido.");
+          mensaje.className = "mt-4 text-red-600 text-center text-sm";
+        }
+      } catch (error) {
+        mensaje.innerHTML = "❌ Error de conexión con el servidor.";
+        mensaje.className = "mt-4 text-red-600 text-center text-sm";
+      }
+    });
+  </script>
+
+</body>
+</html>
+

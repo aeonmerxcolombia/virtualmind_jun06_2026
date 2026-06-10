@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registro - Virtualmind</title>
+  <!-- CDN TailwindCSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-image: url('/assets/login-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+    }
+    .bg-blur {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(7px);
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+  <div class="bg-blur rounded-xl shadow-2xl max-w-md w-full p-8 mx-2 mt-8">
+    <div class="flex flex-col items-center mb-6">
+      <img src="https://gestordecursos.pegui.edu.co/assets/logo.png" alt="Logo Virtualmind" class="w-24 h-24 mb-4 rounded-full shadow-lg border-2 border-indigo-400 bg-white" />
+      <h1 class="text-3xl font-bold text-gray-800">Registro en Virtualmind</h1>
+      <p class="text-sm text-gray-600 mt-1">Completa los campos para crear tu cuenta</p>
+    </div>
+
+    <form id="registerForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+        <input type="text" id="nombre" required autocomplete="name" class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de documento</label>
+        <select id="tipo_documento" class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition">
+          <option value="CC">Cédula de ciudadanía</option>
+          <option value="TI">Tarjeta de identidad</option>
+          <option value="CE">Cédula extranjera</option>
+          <option value="NA">No aplica</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Número de documento</label>
+        <input type="text" id="documento" required autocomplete="off" class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+        <input type="email" id="email" required autocomplete="email" class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+        <input type="password" id="password" required autocomplete="new-password" class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 transition">
+      </div>
+
+      <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-semibold py-2 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition">
+        Registrarme
+      </button>
+    </form>
+
+    <div id="errorMsg" class="text-red-500 text-sm mt-4 text-center hidden">Error al registrarse. Intenta nuevamente.</div>
+    <div id="successMsg" class="text-green-600 text-sm mt-4 text-center hidden">¡Registro exitoso! Redirigiendo...</div>
+
+    <div class="text-sm text-center text-gray-600 mt-6">
+      ¿Ya tienes una cuenta?
+      <a href="https://gestordecursos.pegui.edu.co" class="text-indigo-600 hover:underline font-medium">Inicia sesión</a>
+    </div>
+  </div>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+
+    function getToken() { return localStorage.getItem('token'); }
+    function headers() {
+      const t = getToken();
+      return t ? { 'Authorization': `Bearer ${t}` } : {};
+    }
+
+    // Pre-fill from HV data if coming from RRHH
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const hvData = params.get('hv_data');
+      if (hvData) {
+        try {
+          const data = JSON.parse(decodeURIComponent(hvData));
+          if (data.nombre) document.getElementById('nombre').value = data.nombre;
+          if (data.email) document.getElementById('email').value = data.email;
+        } catch(e) {}
+      }
+    });
+
+    // Check if email already has HojaVida
+    let hvCheckTimeout = null;
+    document.getElementById('email').addEventListener('input', () => {
+      clearTimeout(hvCheckTimeout);
+      hvCheckTimeout = setTimeout(verificarEmailHV, 600);
+    });
+    document.getElementById('email').addEventListener('blur', verificarEmailHV);
+
+    async function verificarEmailHV() {
+      const email = document.getElementById('email').value.trim();
+      const alertEl = document.getElementById('hvAlert');
+      if (!email || !email.includes('@')) {
+        if (alertEl) alertEl.remove();
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/rrhh/check-email?email=${encodeURIComponent(email)}`, { headers: headers() });
+        if (!res.ok) return;
+        const data = await res.json();
+        const oldAlert = document.getElementById('hvAlert');
+        if (oldAlert) oldAlert.remove();
+
+        if (data.hv_existe && !data.usuario_existente) {
+          const div = document.createElement('div');
+          div.id = 'hvAlert';
+          div.className = 'p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800';
+          div.innerHTML = `📄 Encontramos tu hoja de vida en RRHH. Tus datos se precargarán al registrarte.`;
+          document.getElementById('registerForm').insertBefore(div, document.getElementById('registerForm').querySelector('button'));
+          if (data.hv.nombre_completo && !document.getElementById('nombre').value) {
+            document.getElementById('nombre').value = data.hv.nombre_completo;
+          }
+        } else if (data.usuario_existente) {
+          const div = document.createElement('div');
+          div.id = 'hvAlert';
+          div.className = 'p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-800';
+          div.innerHTML = `⚠️ El usuario <strong>${data.usuario.nombre}</strong> ya está registrado. Si continúas, se actualizarán sus datos con la nueva información.`;
+          document.getElementById('registerForm').insertBefore(div, document.getElementById('registerForm').querySelector('button'));
+        }
+      } catch(e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(verificarEmailHV, 500);
+    });
+
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const nombre = document.getElementById("nombre").value.trim();
+      const tipo_documento = document.getElementById("tipo_documento").value;
+      const documento = document.getElementById("documento").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      const payload = {
+        nombre,
+        tipo_documento,
+        documento,
+        email,
+        password,
+        role_ids: [15]  // ID del rol 'registrado'
+      };
+
+      try {
+        const res = await fetch(`${API}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          document.getElementById("errorMsg").textContent = err.detail || 'Error al registrarse';
+          document.getElementById("errorMsg").classList.remove("hidden");
+          document.getElementById("successMsg").classList.add("hidden");
+          return;
+        }
+
+        const result = await res.json();
+        document.getElementById("errorMsg").classList.add("hidden");
+        document.getElementById("successMsg").classList.remove("hidden");
+
+        // If there was an existing HV, link it to the new user
+        try {
+          const checkRes = await fetch(`${API}/rrhh/check-email?email=${encodeURIComponent(email)}`, { headers: headers() });
+          const checkData = await checkRes.json();
+          if (checkData.hv_existe && checkData.hv) {
+            await fetch(`${API}/rrhh/hoja-vida/${checkData.hv.id}/vincular-usuario`, {
+              method: 'PUT',
+              headers: { ...headers(), 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({ user_id: result.uid || result.user_id })
+            });
+          }
+        } catch(e) {}
+
+        setTimeout(() => {
+          window.location.href = "https://gestordecursos.pegui.edu.co/r/registrado/#";
+        }, 1500);
+
+      } catch (err) {
+        console.error("Error en registro:", err);
+        document.getElementById("errorMsg").classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
+

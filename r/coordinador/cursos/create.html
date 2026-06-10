@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear Curso</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+  <div class="max-w-xl mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8">
+    <h1 class="text-2xl font-bold mb-6 text-center">Crear Nuevo Curso</h1>
+
+    <form id="courseForm" class="space-y-4">
+      <div>
+        <label class="block text-gray-700 font-bold mb-2" for="name">Nombre del curso</label>
+        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="name" name="name" type="text" required>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-bold mb-2" for="description">Descripción</label>
+        <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="description" name="description" rows="3" required></textarea>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-bold mb-2" for="study_plan_id">Plan de estudio</label>
+        <select class="shadow border rounded w-full py-2 px-3 text-gray-700" id="study_plan_id" name="study_plan_id" required>
+          <option value="">Cargando...</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="inline-flex items-center">
+          <input type="checkbox" id="soyAutor" class="form-checkbox h-5 w-5 text-blue-600">
+          <span class="ml-2 text-gray-700">El curso lo hago yo</span>
+        </label>
+      </div>
+
+      <div id="autorDiv">
+        <label class="block text-gray-700 font-bold mb-2" for="author">Autor</label>
+        <select class="shadow border rounded w-full py-2 px-3 text-gray-700" id="author" name="author">
+          <option value="">Seleccione un usuario</option>
+        </select>
+      </div>
+
+      <div class="text-center">
+        <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" type="submit">
+          Crear Curso
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const token = localStorage.token || sessionStorage.token;
+    const autorDiv = document.getElementById('autorDiv');
+    const selectAutor = document.getElementById('author');
+
+    // Oculta o muestra select según checkbox
+    document.getElementById('soyAutor').addEventListener('change', async function () {
+      if (this.checked) {
+        // Decodificar token para extraer el campo 'sub'
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        selectAutor.innerHTML = `<option value="${payload.sub}" selected>${payload.sub}</option>`;
+        selectAutor.disabled = true;
+      } else {
+        selectAutor.disabled = false;
+        await cargarUsuarios();
+      }
+    });
+
+    async function cargarPlanes() {
+      const select = document.getElementById('study_plan_id');
+      try {
+        const res = await fetch('https://gestordecursos.pegui.edu.co:8000/study_plans');
+        const planes = await res.json();
+        select.innerHTML = '<option value="">Seleccione un plan</option>';
+        planes.forEach(plan => {
+          const option = document.createElement('option');
+          option.value = plan.id;
+          option.textContent = plan.name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar planes</option>';
+      }
+    }
+
+    async function cargarUsuarios() {
+      try {
+        const res = await fetch('https://gestordecursos.pegui.edu.co:8000/users', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("No autorizado");
+
+        const usuarios = await res.json();
+        selectAutor.innerHTML = '<option value="">Seleccione un usuario</option>';
+        usuarios.forEach(u => {
+          const option = document.createElement('option');
+          option.value = u.email || u.id || u.username;
+          option.textContent = u.email || u.username;
+          selectAutor.appendChild(option);
+        });
+      } catch (err) {
+        selectAutor.innerHTML = '<option value="">Error al cargar usuarios</option>';
+        console.error(err);
+      }
+    }
+
+    cargarPlanes();
+    cargarUsuarios();
+
+    document.getElementById('courseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const data = {
+        name: e.target.name.value,
+        description: e.target.description.value,
+        study_plan_id: parseInt(e.target.study_plan_id.value),
+        author: e.target.author.value
+      };
+
+      try {
+        const res = await fetch('https://gestordecursos.pegui.edu.co:8000/courses', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          window.location.href = "/r/superadmin/cursos/";
+        } else {
+          const error = await res.text();
+          alert("Error al crear: " + error);
+        }
+      } catch (err) {
+        alert("Error de red: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
+

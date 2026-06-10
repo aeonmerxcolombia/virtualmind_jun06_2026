@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Cronogramas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.6s ease-out',
+            'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-10"></div>
+    <div class="relative p-6">
+      <div class="max-w-6xl mx-auto flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <i class="fas fa-calendar-alt text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl md:text-4xl font-bold">Cronogramas</h1>
+            <p class="text-indigo-100 mt-1">Gestiona todos tus cronogramas de proyectos</p>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center space-x-4">
+          <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center">
+            <i class="fas fa-clock mr-2"></i>
+            <span id="currentTime" class="text-sm font-medium"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="p-6 animate-fade-in">
+    <div class="max-w-6xl mx-auto">
+      
+      <!-- Actions Bar -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100 animate-slide-up">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div class="flex flex-col sm:flex-row gap-4 flex-1">
+            <!-- Search -->
+            <div class="relative flex-1 max-w-md">
+              <input 
+                type="text" 
+                id="searchInput"
+                placeholder="Buscar por proyecto..."
+                class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition shadow-sm"
+              >
+              <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+            
+            <!-- Filter by Responsible -->
+            <div class="relative">
+              <select id="responsibleFilter" class="pl-12 pr-8 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition shadow-sm appearance-none bg-white">
+                <option value="">Todos los responsables</option>
+              </select>
+              <i class="fas fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+          </div>
+          
+          <!-- Actions -->
+          <div class="flex gap-3">
+            <button onclick="refreshList()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-colors flex items-center">
+              <i class="fas fa-sync-alt mr-2"></i>
+              Actualizar
+            </button>
+            <a href="https://gestordecursos.pegui.edu.co/r/superadmin/cronograma" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition-all transform hover:scale-105 flex items-center">
+              <i class="fas fa-plus mr-2"></i>
+              Nuevo Cronograma
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 animate-slide-up" style="animation-delay: 0.1s">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-600 font-medium">Total</p>
+              <p class="text-3xl font-bold text-gray-800" id="totalCount">0</p>
+            </div>
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+              <i class="fas fa-calendar text-indigo-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 animate-slide-up" style="animation-delay: 0.2s">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-600 font-medium">Proyectos Únicos</p>
+              <p class="text-3xl font-bold text-blue-600" id="uniqueProjectsCount">0</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <i class="fas fa-project-diagram text-blue-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 animate-slide-up" style="animation-delay: 0.3s">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-600 font-medium">Responsables</p>
+              <p class="text-3xl font-bold text-green-600" id="responsiblesCount">0</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <i class="fas fa-users text-green-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p class="mt-4 text-gray-600 font-medium">Cargando cronogramas...</p>
+      </div>
+
+      <!-- Cronograms List -->
+      <div id="cronogramasList" class="space-y-6 opacity-0 transition-opacity duration-500"></div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden text-center py-16 animate-fade-in">
+        <div class="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 max-w-md mx-auto">
+          <div class="text-6xl mb-6">📅</div>
+          <h3 class="text-2xl font-bold text-gray-800 mb-4">No hay cronogramas</h3>
+          <p class="text-gray-600 mb-8">Aún no tienes cronogramas creados. ¡Crea tu primer cronograma!</p>
+          <a href="/seleccionar-proyecto.html" class="inline-block bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
+            <i class="fas fa-plus mr-2"></i>Crear Cronograma
+          </a>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" class="hidden text-center py-16 animate-fade-in">
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-12 max-w-md mx-auto">
+          <div class="text-red-500 text-5xl mb-6">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-red-800 mb-4">Error de conexión</h3>
+          <p class="text-red-600 mb-8">No se pudieron cargar los cronogramas. Verifica tu conexión.</p>
+          <button onclick="loadCronogramas()" class="bg-red-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-red-700 transition-colors">
+            <i class="fas fa-redo mr-2"></i>Reintentar
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-trash text-2xl text-red-600"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">¿Eliminar Cronograma?</h3>
+        <p class="text-gray-600 mb-6">Esta acción no se puede deshacer. ¿Estás seguro?</p>
+        <div class="flex gap-3">
+          <button onclick="closeDeleteModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold transition-colors">
+            Cancelar
+          </button>
+          <button onclick="confirmDelete()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold transition-colors">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token");
+    
+    let cronogramasData = [];
+    let usersData = [];
+    let deleteId = null;
+
+    // Elements
+    const loadingState = document.getElementById("loadingState");
+    const cronogramasList = document.getElementById("cronogramasList");
+    const emptyState = document.getElementById("emptyState");
+    const errorState = document.getElementById("errorState");
+    const searchInput = document.getElementById("searchInput");
+    const responsibleFilter = document.getElementById("responsibleFilter");
+
+    // Update time
+    function updateTime() {
+      const now = new Date();
+      document.getElementById("currentTime").textContent = now.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // Show states
+    function showState(state) {
+      loadingState.style.display = state === 'loading' ? 'block' : 'none';
+      cronogramasList.style.opacity = state === 'success' ? '1' : '0';
+      emptyState.style.display = state === 'empty' ? 'block' : 'none';
+      errorState.style.display = state === 'error' ? 'block' : 'none';
+    }
+
+    // Get project name
+    function getProjectName(project) {
+      if (typeof project === 'string') return project;
+      return project?.nombre || project?.name || project?.title || `Proyecto ${project?.id || 'Sin ID'}`;
+    }
+
+    // Get user name by ID
+    function getUserName(userId) {
+      if (!userId) return 'Sin asignar';
+      
+      // Debug: verificar qué datos tenemos
+      console.log('Buscando usuario con ID:', userId, 'Tipo:', typeof userId);
+      
+      // Convertir userId a string para comparación con uid
+      const stringUserId = userId.toString();
+      const user = usersData.find(u => {
+        // Comparar tanto con uid (string) como con id (si existe)
+        return u.uid === stringUserId || u.uid === userId || 
+               (u.id && (u.id.toString() === stringUserId || u.id === userId));
+      });
+      
+      if (user) {
+        console.log('Usuario encontrado:', user);
+        
+        // Usar el campo 'nombre' que es el que devuelve la API
+        if (user.nombre && user.nombre.trim()) {
+          return user.nombre.trim();
+        } else if (user.email) {
+          return user.email;
+        }
+      }
+      
+      console.log('Usuario no encontrado para ID:', userId);
+      return `Usuario ${userId}`;
+    }
+
+    // Format date
+    function formatPhaseDate(mes, diaInicio, diaFin) {
+      if (!mes) return 'No definido';
+      const mesCapitalized = mes.charAt(0).toUpperCase() + mes.slice(1);
+      if (diaInicio && diaFin) {
+        return `${diaInicio}-${diaFin} ${mesCapitalized}`;
+      } else if (diaInicio) {
+        return `${diaInicio} ${mesCapitalized}`;
+      }
+      return mesCapitalized;
+    }
+
+    // Create cronograma card
+    function createCronogramaCard(cronograma, index) {
+      const projectName = getProjectName(cronograma.project || cronograma.proyecto || cronograma.project_name);
+      
+      const card = document.createElement('div');
+      card.className = 'bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 animate-slide-up';
+      card.style.animationDelay = `${index * 0.1}s`;
+
+      const fases = [
+        { key: 'inicio', name: 'Inicio', icon: 'fa-play-circle', color: 'text-green-600' },
+        { key: 'planificacion', name: 'Planificación', icon: 'fa-clipboard-list', color: 'text-blue-600' },
+        { key: 'diseno_instruccional', name: 'D. Instruccional', icon: 'fa-graduation-cap', color: 'text-purple-600' },
+        { key: 'diseno_grafico', name: 'D. Gráfico', icon: 'fa-palette', color: 'text-pink-600' },
+        { key: 'produccion', name: 'Producción', icon: 'fa-cogs', color: 'text-orange-600' },
+        { key: 'virtualizacion', name: 'Virtualización', icon: 'fa-cloud', color: 'text-cyan-600' },
+        { key: 'validacion', name: 'Validación', icon: 'fa-check-double', color: 'text-teal-600' },
+        { key: 'cierre', name: 'Cierre', icon: 'fa-flag-checkered', color: 'text-red-600' }
+      ];
+
+      const fasesHtml = fases.map(fase => {
+        const responsableId = cronograma[`responsable_${fase.key}`];
+        const responsableName = getUserName(responsableId);
+        const mes = cronograma[`mes_${fase.key}`] || '';
+        const diaInicio = cronograma[`dia_inicio_${fase.key}`] || '';
+        const diaFin = cronograma[`dia_fin_${fase.key}`] || '';
+        const fechaStr = formatPhaseDate(mes, diaInicio, diaFin);
+        
+        return `
+          <div class="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors">
+            <div class="flex items-center space-x-3">
+              <i class="fas ${fase.icon} ${fase.color}"></i>
+              <span class="font-medium text-sm">${fase.name}</span>
+            </div>
+            <div class="text-xs text-gray-600">
+              <div class="font-medium">${responsableName}</div>
+              <div class="text-gray-500">${fechaStr}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="p-6">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center space-x-4">
+              <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white shadow-lg">
+                <i class="fas fa-calendar-alt text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-800 mb-1">${projectName}</h3>
+                <div class="flex items-center space-x-2">
+                  <span class="text-gray-500 text-sm">ID: ${cronograma.id || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="viewCronograma(${cronograma.id})" 
+                class="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-lg transition-colors" 
+                title="Ver detalles">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button onclick="editCronograma(${cronograma.id})" 
+                class="bg-yellow-100 hover:bg-yellow-200 text-yellow-600 p-2 rounded-lg transition-colors"
+                title="Editar">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button onclick="deleteCronograma(${cronograma.id})" 
+                class="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-lg transition-colors"
+                title="Eliminar">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="border-t border-gray-100 pt-4">
+            <h4 class="font-semibold text-gray-700 mb-3 flex items-center">
+              <i class="fas fa-tasks mr-2 text-indigo-500"></i>
+              Fases del Proyecto
+            </h4>
+            <div class="space-y-1">
+              ${fasesHtml}
+            </div>
+          </div>
+        </div>
+      `;
+
+      return card;
+    }
+
+    // Update stats
+    function updateStats(cronogramas) {
+      const uniqueProjects = new Set(cronogramas.map(c => getProjectName(c.project || c.proyecto || c.project_name))).size;
+      
+      // Obtener todos los responsables únicos
+      const allResponsibles = new Set();
+      cronogramas.forEach(cronograma => {
+        const fases = ['inicio', 'planificacion', 'diseno_instruccional', 'diseno_grafico', 'produccion', 'virtualizacion', 'validacion', 'cierre'];
+        fases.forEach(fase => {
+          const responsableId = cronograma[`responsable_${fase}`];
+          if (responsableId) {
+            allResponsibles.add(responsableId);
+          }
+        });
+      });
+
+      document.getElementById('totalCount').textContent = cronogramas.length;
+      document.getElementById('uniqueProjectsCount').textContent = uniqueProjects;
+      document.getElementById('responsiblesCount').textContent = allResponsibles.size;
+    }
+
+    // Populate responsible filter
+    function populateResponsibleFilter() {
+      const allResponsibles = new Set();
+      
+      cronogramasData.forEach(cronograma => {
+        const fases = ['inicio', 'planificacion', 'diseno_instruccional', 'diseno_grafico', 'produccion', 'virtualizacion', 'validacion', 'cierre'];
+        fases.forEach(fase => {
+          const responsableId = cronograma[`responsable_${fase}`];
+          if (responsableId) {
+            allResponsibles.add(responsableId);
+          }
+        });
+      });
+
+      const sortedResponsibles = Array.from(allResponsibles).sort((a, b) => {
+        const nameA = getUserName(a);
+        const nameB = getUserName(b);
+        return nameA.localeCompare(nameB);
+      });
+
+      responsibleFilter.innerHTML = '<option value="">Todos los responsables</option>';
+      sortedResponsibles.forEach(userId => {
+        const option = document.createElement('option');
+        option.value = userId;
+        option.textContent = getUserName(userId);
+        responsibleFilter.appendChild(option);
+      });
+    }
+
+    // Render cronogramas
+    function renderCronogramas(cronogramas = cronogramasData) {
+      cronogramasList.innerHTML = '';
+      
+      if (cronogramas.length === 0) {
+        showState('empty');
+        return;
+      }
+
+      cronogramas.forEach((cronograma, index) => {
+        const card = createCronogramaCard(cronograma, index);
+        cronogramasList.appendChild(card);
+      });
+
+      updateStats(cronogramas);
+      showState('success');
+    }
+
+    // Filter cronogramas
+    function filterCronogramas() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const responsibleFilterValue = responsibleFilter.value;
+
+      const filtered = cronogramasData.filter(cronograma => {
+        const projectName = getProjectName(cronograma.project || cronograma.proyecto || cronograma.project_name).toLowerCase();
+        const matchesSearch = projectName.includes(searchTerm) || cronograma.id.toString().includes(searchTerm);
+        
+        if (!responsibleFilterValue) return matchesSearch;
+        
+        // Verificar si el responsable seleccionado está en alguna fase del cronograma
+        const fases = ['inicio', 'planificacion', 'diseno_instruccional', 'diseno_grafico', 'produccion', 'virtualizacion', 'validacion', 'cierre'];
+        const hasResponsible = fases.some(fase => cronograma[`responsable_${fase}`] == responsibleFilterValue);
+        
+        return matchesSearch && hasResponsible;
+      });
+
+      renderCronogramas(filtered);
+    }
+
+    // Load users
+    async function loadUsers() {
+      try {
+        console.log('Cargando usuarios...');
+        const response = await fetch(`${API_BASE}/users/`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          usersData = await response.json();
+          console.log('Usuarios cargados:', usersData.length);
+          console.log('Ejemplo de usuario:', usersData[0]);
+        } else {
+          console.warn("No se pudieron cargar los usuarios, status:", response.status);
+          usersData = [];
+        }
+      } catch (error) {
+        console.error("Error loading users:", error);
+        usersData = [];
+      }
+    }
+
+    // Load cronogramas
+    async function loadCronogramas() {
+      showState('loading');
+      
+      try {
+        // Cargar usuarios primero
+        await loadUsers();
+        
+        console.log('Cargando cronogramas...');
+        const response = await fetch(`${API_BASE}/cronogramas/`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        cronogramasData = await response.json();
+        console.log('Cronogramas cargados:', cronogramasData.length);
+        console.log('Ejemplo de cronograma:', cronogramasData[0]);
+        
+        // Simular delay para mejor UX
+        setTimeout(() => {
+          populateResponsibleFilter();
+          renderCronogramas();
+        }, 500);
+        
+      } catch (error) {
+        console.error("Error loading cronogramas:", error);
+        showState('error');
+      }
+    }
+
+    // Actions
+    function refreshList() {
+      loadCronogramas();
+    }
+
+    function viewCronograma(id) {
+      // Implementar vista detallada
+      window.location.href = `https://gestordecursos.pegui.edu.co/r/superadmin/cronograma/vercronograma.html?project_id=${id}`;
+    }
+
+    function editCronograma(id) {
+      // Implementar edición
+      window.location.href = `https://gestordecursos.pegui.edu.co/r/superadmin/cronograma/editarcronograma.html?project_id=${id}`;
+    }
+
+    function deleteCronograma(id) {
+      deleteId = id;
+      document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+      deleteId = null;
+      document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    async function confirmDelete() {
+      if (!deleteId) return;
+      
+      try {
+        const response = await fetch(`${API_BASE}/cronogramas/${deleteId}`, {
+          method: 'DELETE',
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          cronogramasData = cronogramasData.filter(c => c.id !== deleteId);
+          populateResponsibleFilter();
+          renderCronogramas();
+          closeDeleteModal();
+        } else {
+          alert('Error al eliminar el cronograma');
+        }
+      } catch (error) {
+        console.error('Error deleting:', error);
+        alert('Error al eliminar el cronograma');
+      }
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', filterCronogramas);
+    responsibleFilter.addEventListener('change', filterCronogramas);
+
+    // Initialize
+    loadCronogramas();
+  </script>
+</body>
+</html>

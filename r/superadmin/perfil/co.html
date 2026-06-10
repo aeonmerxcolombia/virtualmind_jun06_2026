@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Perfil de Usuario</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-emerald-50 min-h-screen flex items-center justify-center p-6">
+
+  <div class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+
+    <!-- Encabezado -->
+    <div class="bg-gradient-to-r from-blue-600 to-emerald-600 p-6 text-center">
+      <h2 class="text-3xl font-bold text-white">Perfil de Usuario</h2>
+    </div>
+
+    <!-- Contenido -->
+    <div class="p-8">
+
+      <!-- Foto actual -->
+      <div id="preview" class="flex justify-center mb-6 hidden">
+        <img id="foto_actual" src="" alt="Foto de perfil"
+          class="w-32 h-32 object-cover rounded-full border-4 border-white shadow-lg" />
+      </div>
+      <div class="mb-6">
+        <label for="foto" class="block font-semibold text-blue-700 mb-1">Actualizar Foto de Perfil</label>
+        <input type="file" id="foto" name="foto" accept="image/*"
+          class="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 cursor-pointer" />
+      </div>
+
+      <!-- Formulario de perfil -->
+      <form id="profileForm" enctype="multipart/form-data" class="space-y-6">
+
+        <div>
+          <label for="user_id" class="block font-semibold text-blue-700">ID de Usuario</label>
+          <input type="text" id="user_id" name="user_id" readonly
+            class="w-full border border-gray-300 p-3 rounded-lg bg-gray-100 text-gray-700" />
+        </div>
+
+        <!-- Nombre / Apellidos -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="nombre" class="block font-semibold text-blue-700">Nombre</label>
+            <input type="text" id="nombre" name="nombre" class="w-full border p-3 rounded-lg" />
+          </div>
+          <div>
+            <label for="apellidos" class="block font-semibold text-blue-700">Apellidos</label>
+            <input type="text" id="apellidos" name="apellidos" class="w-full border p-3 rounded-lg" />
+          </div>
+        </div>
+
+        <!-- Teléfono / Celular -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="telefono" class="block font-semibold text-blue-700">Teléfono</label>
+            <input type="text" id="telefono" name="telefono" class="w-full border p-3 rounded-lg" />
+          </div>
+          <div>
+            <label for="celular" class="block font-semibold text-blue-700">Celular</label>
+            <input type="text" id="celular" name="celular" class="w-full border p-3 rounded-lg" />
+          </div>
+        </div>
+
+        <!-- Dirección -->
+        <div>
+          <label for="direccion" class="block font-semibold text-blue-700">Dirección</label>
+          <input type="text" id="direccion" name="direccion" class="w-full border p-3 rounded-lg" />
+        </div>
+
+        <!-- Ciudad / País -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="ciudad" class="block font-semibold text-blue-700">Ciudad</label>
+            <input type="text" id="ciudad" name="ciudad" class="w-full border p-3 rounded-lg" />
+          </div>
+          <div>
+            <label for="pais" class="block font-semibold text-blue-700">País</label>
+            <input type="text" id="pais" name="pais" class="w-full border p-3 rounded-lg" />
+          </div>
+        </div>
+
+        <!-- Cargo / Empresa -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="cargo" class="block font-semibold text-blue-700">Cargo</label>
+            <input type="text" id="cargo" name="cargo" class="w-full border p-3 rounded-lg" />
+          </div>
+          <div>
+            <label for="empresa" class="block font-semibold text-blue-700">Empresa</label>
+            <input type="text" id="empresa" name="empresa" class="w-full border p-3 rounded-lg" />
+          </div>
+        </div>
+
+        <!-- Biografía -->
+        <div>
+          <label for="biografia" class="block font-semibold text-blue-700">Biografía</label>
+          <textarea id="biografia" name="biografia" rows="3"
+            class="w-full border p-3 rounded-lg"></textarea>
+        </div>
+
+        <!-- Redes -->
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label for="linkedin" class="block font-semibold text-blue-700">LinkedIn</label>
+            <input type="text" id="linkedin" name="linkedin" class="w-full border p-3 rounded-lg" />
+          </div>
+          <div>
+            <label for="twitter" class="block font-semibold text-blue-700">Twitter</label>
+            <input type="text" id="twitter" name="twitter" class="w-full border p-3 rounded-lg" />
+          </div>
+          <div>
+            <label for="facebook" class="block font-semibold text-blue-700">Facebook</label>
+            <input type="text" id="facebook" name="facebook" class="w-full border p-3 rounded-lg" />
+          </div>
+        </div>
+
+        <!-- Competencias -->
+        <div class="border border-emerald-300 rounded-xl p-4 mt-4 bg-emerald-50">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-bold text-emerald-700">Competencias / Habilidades</h3>
+            <button type="button" id="btnEditarCompetencias"
+              class="text-sm bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition">
+              Editar
+            </button>
+          </div>
+          <div id="skillsView" class="flex flex-wrap gap-2 mb-2"></div>
+          <div id="langsView" class="flex flex-wrap gap-2 mb-2"></div>
+          <p class="text-sm text-gray-600">
+            <span id="nivelAcademicoView"></span>
+            <span id="areaConocimientoView"></span>
+            <span id="aniosExperienciaView"></span>
+          </p>
+          <p class="text-sm text-gray-600" id="perfilamientoView"></p>
+        </div>
+
+        <!-- Botón guardar -->
+        <div class="flex justify-end">
+          <button type="submit"
+            class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-6 py-2 rounded-lg shadow hover:opacity-90 transition">
+            Guardar Cambios
+          </button>
+        </div>
+      </form>
+      <div id="respuesta" class="mt-4 text-sm"></div>
+    </div>
+  </div>
+
+  <!-- Modal competencias (puedes mantener el mismo modal que ya tienes implementado) -->
+
+  <script>
+    let competenciasActual = {};
+    let fotoActualUrl = null;
+
+    // Previsualizar nueva foto
+    document.getElementById("foto").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          document.getElementById("foto_actual").src = ev.target.result;
+          document.getElementById("preview").classList.remove("hidden");
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Render competencias
+    function renderCompetenciasView() {
+      document.getElementById('skillsView').innerHTML =
+        (competenciasActual.habilidades || []).map(
+          h => `<span class="bg-emerald-200 text-emerald-800 rounded-full px-3 py-1 text-xs font-medium">${h}</span>`
+        ).join('');
+      document.getElementById('langsView').innerHTML =
+        (competenciasActual.idiomas || []).map(
+          l => `<span class="bg-blue-200 text-blue-800 rounded-full px-3 py-1 text-xs font-medium">${l}</span>`
+        ).join('');
+      document.getElementById('nivelAcademicoView').innerText =
+        competenciasActual.nivel_academico ? `Nivel: ${competenciasActual.nivel_academico}` : "";
+      document.getElementById('areaConocimientoView').innerText =
+        competenciasActual.area_conocimiento ? ` | Área: ${competenciasActual.area_conocimiento}` : "";
+      document.getElementById('aniosExperienciaView').innerText =
+        competenciasActual.anios_experiencia ? ` | Experiencia: ${competenciasActual.anios_experiencia} años` : "";
+      document.getElementById('perfilamientoView').innerText =
+        competenciasActual.perfilamiento ? `Sobre mí: ${competenciasActual.perfilamiento}` : "";
+    }
+
+    // Cargar competencias
+    async function cargarCompetencias(userId) {
+      try {
+        const res = await fetch(`https://gestordecursos.pegui.edu.co:8000/competencias/usuario/${userId}`);
+        competenciasActual = res.ok ? await res.json() : {};
+        renderCompetenciasView();
+      } catch {
+        competenciasActual = {};
+        renderCompetenciasView();
+      }
+    }
+
+    // Cargar perfil
+    async function cargarPerfil(userId) {
+      try {
+        const res = await fetch(`https://gestordecursos.pegui.edu.co:8000/profiles/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+
+          fotoActualUrl = data.foto_url || null;
+          if (fotoActualUrl) {
+            document.getElementById("foto_actual").src = fotoActualUrl;
+            document.getElementById("preview").classList.remove("hidden");
+          }
+
+          document.getElementById('nombre').value = data.nombre || '';
+          document.getElementById('apellidos').value = data.apellidos || '';
+          document.getElementById('telefono').value = data.telefono || '';
+          document.getElementById('celular').value = data.celular || '';
+          document.getElementById('direccion').value = data.direccion || '';
+          document.getElementById('ciudad').value = data.ciudad || '';
+          document.getElementById('pais').value = data.pais || '';
+          document.getElementById('cargo').value = data.cargo || '';
+          document.getElementById('empresa').value = data.empresa || '';
+          document.getElementById('biografia').value = data.biografia || '';
+
+          await cargarCompetencias(userId);
+        }
+      } catch (err) {
+        console.error("Error cargando perfil", err);
+      }
+    }
+
+    // Guardar perfil
+    document.getElementById('profileForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const formData = new FormData();
+
+      ["nombre", "apellidos", "telefono", "celular", "direccion", "ciudad", "pais", "cargo", "empresa", "biografia"].forEach(id => {
+        formData.append(id, document.getElementById(id).value);
+      });
+
+      const file = document.getElementById("foto").files[0];
+      if (file) {
+        formData.append("foto", file);
+      }
+
+      const userId = document.getElementById("user_id").value.trim();
+      const API_URL = "https://gestordecursos.pegui.edu.co:8000/profiles";
+      const url = `${API_URL}/${userId}`;
+      const method = 'PUT';
+
+      try {
+        const res = await fetch(url, { method, body: formData });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('respuesta').innerHTML =
+            '<span class="text-green-600">✅ Perfil guardado correctamente.</span>';
+
+          if (data.foto_url) {
+            fotoActualUrl = data.foto_url;
+            document.getElementById("foto_actual").src = fotoActualUrl;
+            document.getElementById("preview").classList.remove("hidden");
+          }
+
+          // Obtener rol desde la URL y redirigir
+          const pathParts = window.location.pathname.split("/");
+          const rol = pathParts[2]; // ej. "superadmin"
+          if (rol) {
+            setTimeout(() => {
+              window.location.href = `https://gestordecursos.pegui.edu.co/r/${rol}/`;
+            }, 1000);
+          }
+        } else {
+          document.getElementById('respuesta').innerHTML =
+            `<span class="text-red-600">❌ Error: ${data.detail || 'fallo en la solicitud'}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('respuesta').innerHTML =
+          `<span class="text-red-600">⚠️ Error de red: ${error.message}</span>`;
+      }
+    });
+
+    // Inicializar
+    window.addEventListener("DOMContentLoaded", async () => {
+      const url = new URL(window.location.href);
+      const userId = url.searchParams.get("user_id");
+      if (userId) {
+        document.getElementById("user_id").value = userId;
+        await cargarPerfil(userId);
+      }
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

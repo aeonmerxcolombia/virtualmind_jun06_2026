@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Perfil de Usuario</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.10/build/css/intlTelInput.css">
+  <style>
+    .iti { width: 100%; }
+    .iti__country-list { z-index: 100; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-emerald-50 min-h-screen flex items-center justify-center p-4 sm:p-6">
+  <div class="w-full max-w-6xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+    <div class="bg-gradient-to-r from-blue-600 to-emerald-600 p-6 flex justify-between items-center">
+      <h2 class="text-3xl font-bold text-white">Perfil de Usuario</h2>
+      <div class="flex items-center gap-4">
+        <a href="https://gestordecursos.pegui.edu.co/r/superadmin/" class="flex items-center gap-2 text-white text-sm font-medium opacity-80 hover:opacity-100 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          <span>Volver al Inicio</span>
+        </a>
+        <a href="#" onclick="history.back(); return false;" class="flex items-center gap-2 text-white text-sm font-medium opacity-80 hover:opacity-100 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          <span>Cerrar</span>
+        </a>
+      </div>
+    </div>
+    <div class="p-8">
+      <div id="preview" class="flex justify-center mb-6 hidden">
+        <img id="foto_actual" src="" alt="Foto de perfil"
+             class="w-32 h-32 object-cover rounded-full border-4 border-white shadow-lg" />
+      </div>
+      <div class="mb-6 max-w-md mx-auto">
+        <label for="foto" class="block font-semibold text-blue-700 mb-1">Actualizar Foto de Perfil</label>
+        <input type="file" id="foto" name="foto" accept="image/*"
+               class="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 cursor-pointer text-sm" />
+      </div>
+      <form id="profileForm" enctype="multipart/form-data" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="md:col-span-2"> <label for="user_id" class="block font-semibold text-blue-700">ID de Usuario</label> <input type="text" id="user_id" name="user_id" readonly class="w-full border border-gray-300 p-3 rounded-lg bg-gray-100 text-gray-700" /> </div>
+          <div> <label for="nombre" class="block font-semibold text-blue-700">Nombre</label> <input type="text" id="nombre" name="nombre" class="w-full border p-3 rounded-lg" /> </div>
+          <div> <label for="apellidos" class="block font-semibold text-blue-700">Apellidos</label> <input type="text" id="apellidos" name="apellidos" class="w-full border p-3 rounded-lg" /> </div>
+          <div> <label for="email" class="block font-semibold text-blue-700">Correo Electrónico</label> <input type="email" id="email" name="email" required class="w-full border border-gray-300 p-3 rounded-lg bg-white text-gray-900" /> </div>
+          <div> <label for="telefono" class="block font-semibold text-blue-700">Teléfono</label> <input type="tel" id="telefono" name="telefono" class="w-full border p-3 rounded-lg" /> </div>
+          <div> <label for="celular" class="block font-semibold text-blue-700">Celular</label> <input type="tel" id="celular" name="celular" class="w-full border p-3 rounded-lg" /> </div>
+          <div class="md:col-span-2"> <label for="direccion" class="block font-semibold text-blue-700">Dirección</label> <input type="text" id="direccion" name="direccion" class="w-full border p-3 rounded-lg" /> </div>
+          <div> <label for="ciudad" class="block font-semibold text-blue-700">Ciudad</label> <input type="text" id="ciudad" name="ciudad" class="w-full border p-3 rounded-lg" /> </div>
+          <div> <label for="pais" class="block font-semibold text-blue-700">País</label> <input type="text" id="pais" name="pais" class="w-full border p-3 rounded-lg" /> </div>
+          <div> <label for="empresa" class="block font-semibold text-blue-700">Empresa</label> <input type="text" id="empresa" name="empresa" class="w-full border p-3 rounded-lg" /> </div>
+          <div> <label for="cargo" class="block font-semibold text-blue-700">Cargo</label> <input type="text" id="cargo" name="cargo" class="w-full border p-3 rounded-lg" /> </div>
+          <div class="md:col-span-2"> <label for="biografia" class="block font-semibold text-blue-700">Biografía</label> <textarea id="biografia" name="biografia" rows="3" class="w-full border p-3 rounded-lg"></textarea> </div>
+          <div class="md:col-span-2"> <h3 class="text-lg font-semibold text-blue-800 border-b pb-2 mb-4">Redes Sociales</h3> <div class="grid grid-cols-1 md:grid-cols-3 gap-4"> <div><label for="linkedin" class="block font-semibold text-blue-700">LinkedIn</label><input type="url" id="linkedin" name="linkedin" class="w-full border p-3 rounded-lg" placeholder="https://linkedin.com/in/..."/></div> <div><label for="twitter" class="block font-semibold text-blue-700">Twitter</label><input type="url" id="twitter" name="twitter" class="w-full border p-3 rounded-lg" placeholder="https://twitter.com/..."/></div> <div><label for="facebook" class="block font-semibold text-blue-700">Facebook</label><input type="url" id="facebook" name="facebook" class="w-full border p-3 rounded-lg" placeholder="https://facebook.com/..."/></div> </div> </div>
+        </div>
+        <div class="border border-emerald-300 rounded-xl p-4 mt-4 bg-emerald-50"> <div class="flex items-center justify-between mb-3"> <h3 class="text-lg font-bold text-emerald-700">Competencias / Habilidades</h3> <button type="button" id="btnEditarCompetencias" class="text-sm bg-blue-600 text-white px-4 py-1 rounded-lg shadow-md hover:bg-blue-700 transition-transform hover:scale-105">Editar</button> </div> <div id="skillsView" class="flex flex-wrap gap-2 mb-2"></div> <div id="langsView" class="flex flex-wrap gap-2 mb-2"></div> <p class="text-sm text-gray-600"><span id="nivelAcademicoView"></span><span id="areaConocimientoView"></span><span id="aniosExperienciaView"></span></p> <p class="text-sm text-gray-600" id="perfilamientoView"></p> </div>
+        <div class="flex justify-end pt-4"> <button type="submit" id="btnGuardarPerfil" class="bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-8 py-3 rounded-lg shadow-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-wait">Guardar Cambios</button> </div>
+      </form>
+      <div id="respuesta" class="mt-4 text-sm text-center"></div>
+    </div>
+  </div>
+
+  <div id="modalCompetencias" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 m-4">
+      <h3 class="text-2xl font-bold text-blue-700 mb-6">Editar Competencias</h3>
+      <form id="competenciasForm" class="space-y-4">
+        <div><label for="habilidades" class="block font-semibold text-gray-700 mb-1">Habilidades (separadas por coma)</label><input type="text" id="habilidades" name="habilidades" class="w-full border p-3 rounded-lg" placeholder="Ej: Python, Liderazgo, Scrum"></div>
+        <div><label for="idiomas" class="block font-semibold text-gray-700 mb-1">Idiomas (separados por coma)</label><input type="text" id="idiomas" name="idiomas" class="w-full border p-3 rounded-lg" placeholder="Ej: Inglés, Español, Francés"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label for="nivel_academico" class="block font-semibold text-gray-700 mb-1">Nivel Académico</label><select id="nivel_academico" name="nivel_academico" class="w-full border p-3 rounded-lg bg-white"><option value="">No especificado</option><option value="Bachiller">Bachiller</option><option value="Técnico">Técnico</option><option value="Tecnólogo">Tecnólogo</option><option value="Profesional">Profesional</option><option value="Especialización">Especialización</option><option value="Maestría">Maestría</option><option value="Doctorado">Doctorado</option></select></div>
+          <div><label for="anios_experiencia" class="block font-semibold text-gray-700 mb-1">Años de Experiencia</label><input type="number" id="anios_experiencia" name="anios_experiencia" class="w-full border p-3 rounded-lg" min="0" max="50"></div>
+        </div>
+        <div><label for="area_conocimiento" class="block font-semibold text-gray-700 mb-1">Área de Conocimiento Principal</label><input type="text" id="area_conocimiento" name="area_conocimiento" class="w-full border p-3 rounded-lg" placeholder="Ej: Desarrollo de Software"></div>
+        <div><label for="otros_estudios" class="block font-semibold text-gray-700 mb-1">Otros Estudios</label><input type="text" id="otros_estudios" name="otros_estudios" class="w-full border p-3 rounded-lg" placeholder="Ej: Certificación AWS, Coursera..."></div>
+        <div><label for="disponibilidad" class="block font-semibold text-gray-700 mb-1">Disponibilidad</label><input type="text" id="disponibilidad" name="disponibilidad" class="w-full border p-3 rounded-lg" placeholder="Ej: Tiempo completo, Medio tiempo, Por proyecto..."></div>
+        <div><label for="perfilamiento" class="block font-semibold text-gray-700 mb-1">Perfilamiento (breve descripción)</label><textarea id="perfilamiento" name="perfilamiento" rows="3" class="w-full border p-3 rounded-lg"></textarea></div>
+        <div class="flex justify-end gap-4 pt-4"><button type="button" id="btnCancelarCompetencias" class="text-gray-600 hover:text-gray-800 transition">Cancelar</button><button type="submit" class="bg-emerald-600 text-white px-6 py-2 rounded-lg shadow hover:bg-emerald-700 transition">Guardar Competencias</button></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.10/build/js/intlTelInput.min.js"></script>
+  <script>
+    const API_URL = "https://gestordecursos.pegui.edu.co:8000";
+    const $ = (selector) => document.querySelector(selector);
+
+    let competenciasActual = {};
+    let fotoActualUrl = null;
+    let iti_telefono = null;
+    let iti_celular = null;
+    let emailOriginal = null;
+    
+    // --- CAMBIO 1: Variable para saber si el perfil existe ---
+    let perfilExiste = false; // Asumimos 'crear' por defecto
+
+    function renderCompetenciasView() {
+      // (Función sin cambios)
+      $('#skillsView').innerHTML = (competenciasActual.habilidades || []).map(h => `<span class="bg-emerald-200 text-emerald-800 rounded-full px-3 py-1 text-xs font-medium">${h}</span>`).join(' ');
+      $('#langsView').innerHTML = (competenciasActual.idiomas || []).map(l => `<span class="bg-blue-200 text-blue-800 rounded-full px-3 py-1 text-xs font-medium">${l}</span>`).join(' ');
+      $('#nivelAcademicoView').innerText = competenciasActual.nivel_academico ? `Nivel: ${competenciasActual.nivel_academico}` : "";
+      $('#areaConocimientoView').innerText = competenciasActual.area_conocimiento ? ` | Área: ${competenciasActual.area_conocimiento}` : "";
+      $('#aniosExperienciaView').innerText = competenciasActual.anios_experiencia ? ` | Experiencia: ${competenciasActual.anios_experiencia} años` : "";
+      $('#perfilamientoView').innerText = competenciasActual.perfilamiento ? `Sobre mí: ${competenciasActual.perfilamiento}` : "";
+    }
+    
+    function initializePhoneInputs() {
+      // (Función sin cambios)
+      const telInput = $('#telefono'); const celInput = $('#celular');
+      const itiOptions = { utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.10/build/js/utils.js", initialCountry: "auto", geoIpLookup: function(callback) { fetch("https://ipapi.co/json").then(res => res.json()).then(data => callback(data.country_code || "us")).catch(() => callback("us")); }, separateDialCode: true, preferredCountries: ['co', 'us', 'es', 'mx', 'ar'] };
+      if (telInput) iti_telefono = window.intlTelInput(telInput, itiOptions);
+      if (celInput) iti_celular = window.intlTelInput(celInput, itiOptions);
+    }
+
+    async function cargarPerfil(userId) {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        $('#respuesta').innerHTML = '<span class="text-red-600">⚠️ Sesión inválida. Recargue la página o inicie sesión.</span>';
+        $('#btnGuardarPerfil').disabled = true;
+        return;
+      }
+
+      try {
+        // --- Cargar Perfil ---
+        const profileRes = await fetch(`${API_URL}/profiles/${userId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        // --- CAMBIO 2: Establecer si el perfil existe ---
+        if (profileRes.ok) {
+          perfilExiste = true; // ¡El perfil SÍ existe! Estamos en modo "Actualizar" (PUT)
+          const profileData = await profileRes.json();
+          fotoActualUrl = profileData.foto_url || null;
+          if (fotoActualUrl) { $("#foto_actual").src = fotoActualUrl; $("#preview").classList.remove("hidden"); }
+          ['nombre', 'apellidos', 'direccion', 'ciudad', 'pais', 'cargo', 'empresa', 'biografia', 'linkedin', 'twitter', 'facebook'].forEach(id => {
+            if (profileData[id]) $(`#${id}`).value = profileData[id];
+          });
+          if (profileData.telefono && iti_telefono) iti_telefono.setNumber(profileData.telefono);
+          if (profileData.celular && iti_celular) iti_celular.setNumber(profileData.celular);
+        
+        } else if (profileRes.status === 404) {
+          perfilExiste = false; // El perfil NO existe. Estamos en modo "Crear" (POST)
+          console.warn("No se encontró perfil (404). Entrando en modo de creación.");
+          $('#respuesta').innerHTML = `<span class="text-blue-600">ℹ️ Estás creando un nuevo perfil para este usuario.</span>`;
+        } else {
+           // Otro error
+           console.error(`Error ${profileRes.status} al cargar perfil`);
+           $('#respuesta').innerHTML = `<span class="text-orange-600">⚠️ No se pudo cargar el perfil.</span>`;
+        }
+        
+        // --- Cargar Usuario (Email) ---
+        try {
+            const userRes = await fetch(`${API_URL}/users/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.email) {
+                    $('#email').value = userData.email;
+                    emailOriginal = userData.email; 
+                } else {
+                     $('#email').value = ''; emailOriginal = null;
+                }
+            } else {
+                 console.error(`Error ${userRes.status} al cargar usuario`);
+                 $('#email').value = 'Error al cargar'; emailOriginal = null;
+                 if (userRes.status === 401) logout();
+            }
+        } catch(userErr) {
+            console.error("Error de red cargando usuario", userErr);
+            $('#email').value = 'Error de red'; emailOriginal = null;
+        }
+
+        await cargarCompetencias(userId);
+      } catch (err) {
+        console.error("Error general en cargarPerfil", err);
+        $('#respuesta').innerHTML = '<span class="text-red-600">⚠️ Error de red al cargar datos.</span>';
+      }
+    }
+
+    async function cargarCompetencias(userId) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_URL}/competencias/usuario/${userId}`, {
+           headers: { 'Authorization': `Bearer ${token}` }
+        });
+        competenciasActual = res.ok ? await res.json() : {};
+      } catch {
+        competenciasActual = {};
+      }
+      renderCompetenciasView();
+    }
+
+    function openSkillsModal() {
+      // (Función sin cambios)
+      $('#habilidades').value = (competenciasActual.habilidades || []).join(', ');
+      $('#idiomas').value = (competenciasActual.idiomas || []).join(', ');
+      $('#nivel_academico').value = competenciasActual.nivel_academico || '';
+      $('#area_conocimiento').value = competenciasActual.area_conocimiento || '';
+      $('#anios_experiencia').value = competenciasActual.anios_experiencia || '';
+      $('#perfilamiento').value = competenciasActual.perfilamiento || '';
+      $('#otros_estudios').value = competenciasActual.otros_estudios || '';
+      $('#disponibilidad').value = competenciasActual.disponibilidad || '';
+      $('#modalCompetencias').classList.remove('hidden');
+    }
+    
+    function closeSkillsModal() {
+      // (Función sin cambios)
+      $('#modalCompetencias').classList.add('hidden');
+    }
+
+    // --- CAMBIO 3: Modal de Habilidades (Corregido) ---
+    async function saveSkills(e) {
+       e.preventDefault();
+       const userId = $("#user_id").value.trim();
+       if (!userId) return;
+       const token = localStorage.getItem('token'); 
+       if(!token) { alert('Sesión inválida'); return; }
+
+       const newSkillsPayload = {
+          user_id: userId, // El backend debe saber para quién es
+          habilidades: $('#habilidades').value.split(',').map(s => s.trim()).filter(Boolean),
+          idiomas: $('#idiomas').value.split(',').map(s => s.trim()).filter(Boolean),
+          nivel_academico: $('#nivel_academico').value,
+          area_conocimiento: $('#area_conocimiento').value,
+          anios_experiencia: parseInt($('#anios_experiencia').value, 10) || 0,
+          perfilamiento: $('#perfilamiento').value,
+          otros_estudios: $('#otros_estudios').value,
+          disponibilidad: $('#disponibilidad').value,
+       };
+
+       try {
+         // --- CORRECCIÓN: Usar endpoint /usuario/{userId} y método PUT (o POST si tu API lo prefiere) ---
+         // Usaré PUT asumiendo que es para "reemplazar" las competencias del usuario
+         const res = await fetch(`${API_URL}/competencias/usuario/${userId}`, {
+           method: 'PUT', // PUT es más semántico para "actualizar/reemplazar"
+           headers: { 
+               'Content-Type': 'application/json',
+               'Authorization': `Bearer ${token}` // --- CORRECCIÓN: Faltaba el Token ---
+           },
+           body: JSON.stringify(newSkillsPayload)
+         });
+         
+         if (res.ok) {
+           competenciasActual = await res.json(); // Asumimos que el PUT devuelve las nuevas competencias
+           renderCompetenciasView();
+           closeSkillsModal();
+           $('#respuesta').innerHTML = '<span class="text-green-600">✅ Competencias actualizadas.</span>';
+         } else {
+           const error = await res.json(); 
+           // Si falla con PUT, intentar con POST (si tu API usa POST para upsert)
+           // Por ahora, solo mostramos el error
+           throw new Error(error.detail || 'Error al guardar competencias');
+         }
+       } catch (error) { 
+         alert(`Error al guardar: ${error.message}`); 
+       }
+    }
+    // --- FIN CAMBIO 3 ---
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      // (Función sin cambios)
+      initializePhoneInputs();
+      const url = new URL(window.location.href);
+      const userId = url.searchParams.get("user_id");
+      if (userId) {
+        $("#user_id").value = userId;
+        await cargarPerfil(userId); // Carga perfil, email Y define 'perfilExiste'
+      } else {
+        alert("ID de usuario no encontrado en la URL.");
+        $('#btnGuardarPerfil').disabled = true;
+      }
+    });
+
+    $("#foto").addEventListener("change", function(e) {
+      // (Función sin cambios)
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => { $("#foto_actual").src = ev.target.result; $("#preview").classList.remove("hidden"); };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // --- CAMBIO 4: Lógica de Submit (POST vs PUT) ---
+    $('#profileForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const saveButton = $('#btnGuardarPerfil');
+      saveButton.disabled = true;
+      saveButton.textContent = "Guardando...";
+      $('#respuesta').innerHTML = ''; 
+
+      const userId = $("#user_id").value.trim();
+      const token = localStorage.getItem('token');
+      if (!userId || !token) {
+          $('#respuesta').innerHTML = '<span class="text-red-600">⚠️ Error: Falta ID de usuario o sesión inválida.</span>';
+          saveButton.disabled = false;
+          saveButton.textContent = "Guardar Cambios";
+          return;
+      }
+
+      // 1. Preparar FormData (sin cambios)
+      const profileFormData = new FormData();
+      ['nombre', 'apellidos', 'direccion', 'ciudad', 'pais', 'cargo', 'empresa', 'biografia', 'linkedin', 'twitter', 'facebook'].forEach(id => {
+        profileFormData.append(id, $(`#${id}`).value);
+      });
+      if (iti_telefono && iti_telefono.isValidNumber()) profileFormData.append('telefono', iti_telefono.getNumber());
+      if (iti_celular && iti_celular.isValidNumber()) profileFormData.append('celular', iti_celular.getNumber());
+      const file = $("#foto").files[0];
+      if (file) profileFormData.append("foto", file);
+
+      // --- CORRECCIÓN: Lógica POST vs PUT ---
+      // Si es POST, debemos añadir el user_id al FormData para que el backend sepa a quién crearle el perfil
+      if (!perfilExiste) {
+          profileFormData.append("user_id", userId);
+      }
+      
+      const httpMethod = perfilExiste ? 'PUT' : 'POST';
+      const fetchUrl = perfilExiste ? `${API_URL}/profiles/${userId}` : `${API_URL}/profiles/`;
+      // --- FIN CORRECCIÓN ---
+
+      let profileUpdateSuccess = false;
+      try {
+        // 2. Guardar Perfil (usando método y URL dinámicos)
+        const profileRes = await fetch(fetchUrl, {
+             method: httpMethod, // 'POST' o 'PUT'
+             headers: { 'Authorization': `Bearer ${token}` },
+             body: profileFormData
+        });
+        
+        const profileData = await profileRes.json();
+
+        if (profileRes.ok) {
+          $('#respuesta').innerHTML = '<span class="text-green-600">✅ Perfil guardado correctamente.</span>';
+          if (profileData.foto_url) {
+            fotoActualUrl = profileData.foto_url;
+            $("#foto_actual").src = fotoActualUrl;
+            $("#preview").classList.remove("hidden");
+          }
+          profileUpdateSuccess = true;
+          perfilExiste = true; // ¡Importante! Marcar que ya existe para el próximo guardado
+        } else {
+          $('#respuesta').innerHTML = `<span class="text-red-600">❌ Error al guardar perfil: ${profileData.detail || 'Fallo en la solicitud'}</span>`;
+        }
+      } catch (error) {
+        $('#respuesta').innerHTML = `<span class="text-red-600">⚠️ Error de red guardando perfil: ${error.message}</span>`;
+      }
+
+      // 3. Guardar Email (sin cambios, solo se ejecuta si el perfil se guardó bien)
+      const nuevoEmail = $('#email').value.trim();
+      let emailUpdateMessage = '';
+      if (profileUpdateSuccess && nuevoEmail && nuevoEmail !== emailOriginal) {
+          try {
+              const emailRes = await fetch(`${API_URL}/users/${userId}/email`, {
+                  method: 'PATCH',
+                  headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: nuevoEmail })
+              });
+              if (emailRes.ok) {
+                  emailUpdateMessage = '<br><span class="text-green-600">✅ Email actualizado correctamente.</span>';
+                  emailOriginal = nuevoEmail;
+              } else {
+                  const errorData = await emailRes.json();
+                  if (emailRes.status === 400) { emailUpdateMessage = `<br><span class="text-red-600">❌ Error al actualizar email: ${errorData.detail || 'Email ya en uso.'}</span>`; }
+                  else { emailUpdateMessage = `<br><span class="text-red-600">❌ Error ${emailRes.status} al actualizar email.</span>`; }
+              }
+          } catch (emailError) {
+              emailUpdateMessage = `<br><span class="text-red-600">⚠️ Error de red actualizando email: ${emailError.message}</span>`;
+          }
+          $('#respuesta').innerHTML += emailUpdateMessage;
+      }
+
+      // 4. Finalizar
+      saveButton.disabled = false;
+      saveButton.textContent = "Guardar Cambios";
+
+      if (profileUpdateSuccess) {
+          const rol = window.location.pathname.split("/")[2];
+          if (rol) {
+            setTimeout(() => { window.location.href = `https://gestordecursos.pegui.edu.co/r/${rol}/`; }, 2500);
+          }
+      }
+    });
+
+    // Event Listeners del Modal (sin cambios)
+    $('#btnEditarCompetencias').addEventListener('click', openSkillsModal);
+    $('#btnCancelarCompetencias').addEventListener('click', closeSkillsModal);
+    $('#competenciasForm').addEventListener('submit', saveSkills);
+    $('#modalCompetencias').addEventListener('click', (e) => { if (e.target === $('#modalCompetencias')) closeSkillsModal(); });
+
+    // Función Logout (sin cambios)
+    function logout() {
+        localStorage.clear();
+        window.location.href = '/index.html';
+    }
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

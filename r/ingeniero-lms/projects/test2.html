@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestión de Proyectos - VirtualMind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .card-glass {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .input-focus {
+      transition: all 0.3s ease;
+    }
+    
+    .input-focus:focus {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section-card {
+      transition: all 0.3s ease;
+    }
+    
+    .section-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .checkbox-custom {
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .checkbox-custom input[type="checkbox"] {
+      opacity: 0;
+      position: absolute;
+    }
+    
+    .checkbox-custom .checkmark {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: #f3f4f6;
+      border: 2px solid #d1d5db;
+      border-radius: 4px;
+      margin-right: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .checkbox-custom input[type="checkbox"]:checked + .checkmark {
+      background: #667eea;
+      border-color: #667eea;
+    }
+    
+    .checkbox-custom input[type="checkbox"]:checked + .checkmark:after {
+      content: "✓";
+      color: white;
+      font-size: 14px;
+      position: absolute;
+      left: 3px;
+      top: 0px;
+    }
+    
+    .radio-custom {
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .radio-custom input[type="radio"] {
+      opacity: 0;
+      position: absolute;
+    }
+    
+    .radio-custom .radiomark {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: #f3f4f6;
+      border: 2px solid #d1d5db;
+      border-radius: 50%;
+      margin-right: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .radio-custom input[type="radio"]:checked + .radiomark {
+      background: #667eea;
+      border-color: #667eea;
+    }
+    
+    .radio-custom input[type="radio"]:checked + .radiomark:after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      position: absolute;
+      left: 6px;
+      top: 6px;
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    <!-- Header -->
+    <div class="text-center mb-8 animate-fade-in">
+      <h1 class="text-4xl font-bold text-white mb-2">VirtualMind</h1>
+      <p class="text-blue-100 text-lg">Gestión Inteligente de Proyectos Educativos</p>
+    </div>
+
+    <div class="card-glass rounded-3xl shadow-2xl p-8 animate-fade-in">
+      <div class="flex items-center mb-8">
+        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+        </div>
+        <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Crear Nuevo Proyecto
+        </h2>
+      </div>
+
+      <form id="formProyecto" class="space-y-8">
+        <!-- Información Básica -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </span>
+            Información Básica del Proyecto
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="name">Nombre del Proyecto</label>
+              <input id="name" name="name" required 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus transition-all" 
+                placeholder="Ingresa el nombre del proyecto"/>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="clienteSelect">Cliente</label>
+              <select id="clienteSelect" required
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Seleccione un cliente...</option>
+              </select>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="clientId">ID Cliente (uid)</label>
+              <input id="clientId" name="client_id" readonly required 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"/>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="codigoReferencia">Código Interno/Referencia</label>
+              <input id="codigoReferencia" name="codigo_referencia" readonly 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"/>
+            </div>
+
+            <div class="space-y-2">
+              <label for="etapa" class="block text-sm font-semibold text-gray-700">Seleccionar Etapa</label>
+              <select id="etapa" name="etapa" 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="" selected disabled>Elige una etapa</option>
+                <option value="1">Etapa 1: Inicio</option>
+                <option value="2">Etapa 2: Desarrollo</option>
+                <option value="3">Etapa 3: Finalización</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="start_date">Fecha de Inicio</label>
+              <input id="start_date" name="start_date" type="date" required 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="end_date">Fecha de Finalización</label>
+              <input id="end_date" name="end_date" type="date" 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="tipoProyecto">Tipo de Proyecto</label>
+              <select id="tipoProyecto" name="tipo_proyecto" required
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Selecciona...</option>
+                <option value="Scorm">Scorm</option>
+                <option value="OVA">OVA</option>
+                <option value="Mooc">Mooc</option>
+                <option value="Curso virtual">Curso virtual</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            
+            <div id="divTipoProyectoPersonalizado" style="display:none;" class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="tipoProyectoPersonalizado">Tipo de Proyecto Personalizado</label>
+              <input id="tipoProyectoPersonalizado" name="tipo_proyecto_personalizado" 
+                placeholder="Especifique el tipo de proyecto" 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="estado">Estado</label>
+              <select id="estado" name="estado" required
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="Planificado">Planificado</option>
+                <option value="En desarrollo">En desarrollo</option>
+                <option value="Aprobado">Aprobado</option>
+                <option value="Aplazado">Aplazado</option>
+                <option value="Finalizado">Finalizado</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-6 space-y-2">
+            <label class="block text-sm font-semibold text-gray-700" for="description">Descripción resumen del proyecto</label>
+            <textarea id="description" name="description" rows="4"
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus resize-none"
+              placeholder="Describe brevemente el proyecto y sus objetivos..."></textarea>
+          </div>
+        </div>
+
+        <!-- Configuración de Lenguaje -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+              </svg>
+            </span>
+            Configuración de Lenguaje e Inclusión
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Lenguaje Inclusivo -->
+            <div class="space-y-4">
+              <h4 class="font-semibold text-gray-700">Lenguaje Inclusivo</h4>
+              <div class="flex space-x-6">
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="lenguaje_incluyente" value="true" id="incluyenteSi">
+                  <span class="radiomark"></span>
+                  Sí
+                </label>
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="lenguaje_incluyente" value="false" id="incluyenteNo" checked>
+                  <span class="radiomark"></span>
+                  No
+                </label>
+              </div>
+              <select name="lenguaje_inclusivo_tipo" id="tipoLenguajeSelect" disabled
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Selecciona...</option>
+                <option value="Tradicional">Lenguaje tradicional</option>
+                <option value="Doble mención">Doble mención</option>
+                <option value="Neutro">Términos neutros</option>
+                <option value="No binario">No binario</option>
+                <option value="Otro">Otro</option>
+              </select>
+              <input id="otroLenguajeInput" name="lenguaje_inclusivo_otro" disabled
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" 
+                placeholder="Si elegiste Otro, especifica aquí"/>
+            </div>
+
+            <!-- Idioma -->
+            <div class="space-y-4">
+              <h4 class="font-semibold text-gray-700">Idioma</h4>
+              <div class="flex flex-wrap gap-4">
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="idioma" value="Español" checked>
+                  <span class="radiomark"></span>
+                  Español
+                </label>
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="idioma" value="Inglés">
+                  <span class="radiomark"></span>
+                  Inglés
+                </label>
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="idioma" value="Bilingüe">
+                  <span class="radiomark"></span>
+                  Bilingüe
+                </label>
+              </div>
+              <input name="idioma_otro" 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" 
+                placeholder="Otro idioma"/>
+            </div>
+          </div>
+
+          <!-- Inclusión Digital -->
+          <div class="mt-8 space-y-4">
+            <h4 class="font-semibold text-gray-700">Inclusión Digital</h4>
+            <div class="flex space-x-6 mb-4">
+              <label class="radio-custom flex items-center">
+                <input type="radio" name="inclusion_digital" value="true">
+                <span class="radiomark"></span>
+                Sí
+              </label>
+              <label class="radio-custom flex items-center">
+                <input type="radio" name="inclusion_digital" value="false" checked>
+                <span class="radiomark"></span>
+                No
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_web" value="true">
+                <span class="checkmark"></span>
+                Accesibilidad web
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_asistiva" value="true">
+                <span class="checkmark"></span>
+                Tecnología asistiva
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_universal" value="true">
+                <span class="checkmark"></span>
+                Diseño universal
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_educativa" value="true">
+                <span class="checkmark"></span>
+                Educación digital inclusiva
+              </label>
+            </div>
+            <input name="inclusion_digital_otro" 
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" 
+              placeholder="Otro (especificar)"/>
+          </div>
+        </div>
+
+        <!-- Diseño y Tipografía -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+            </span>
+            Diseño Visual y Tipografía
+          </h3>
+
+          <!-- Tipografía de Título -->
+          <div class="space-y-6">
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-4">Tipografía de Título</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <input name="tipografia_titulo_fuente" placeholder="Fuente título" 
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <input name="tipografia_titulo_tamano" placeholder="Tamaño título" 
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_titulo_negrita" value="true">
+                  <span class="checkmark"></span>
+                  Negrita
+                </label>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_titulo_cursiva" value="true">
+                  <span class="checkmark"></span>
+                  Cursiva
+                </label>
+              </div>
+            </div>
+
+            <!-- Tipografía de Subtítulo -->
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-4">Tipografía de Subtítulo</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <input name="tipografia_subtitulo_fuente" placeholder="Fuente subtítulo" 
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <input name="tipografia_subtitulo_tamano" placeholder="Tamaño subtítulo" 
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_subtitulo_negrita" value="true">
+                  <span class="checkmark"></span>
+                  Negrita
+                </label>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_subtitulo_cursiva" value="true">
+                  <span class="checkmark"></span>
+                  Cursiva
+                </label>
+              </div>
+            </div>
+
+            <!-- Tipografía de Párrafo -->
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-4">Tipografía de Párrafo</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <input name="tipografia_parrafo_fuente" placeholder="Fuente párrafo" 
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <input name="tipografia_parrafo_tamano" placeholder="Tamaño párrafo" 
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_parrafo_negrita" value="true">
+                  <span class="checkmark"></span>
+                  Negrita
+                </label>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_parrafo_cursiva" value="true">
+                  <span class="checkmark"></span>
+                  Cursiva
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Diseño Gráfico -->
+          <div class="mt-8 space-y-4">
+            <h4 class="font-semibold text-gray-700">Diseño Gráfico</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <select name="diseno_grafico_tipo" 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Selecciona paleta...</option>
+                <option value="Flat UI Colors">Flat UI Colors</option>
+                <option value="Pasteles suaves">Pasteles suaves</option>
+                <option value="Colores vibrantes">Colores vibrantes</option>
+                <option value="Neutros y tierra">Neutros y tierra</option>
+                <option value="Blanco y negro">Blanco y negro</option>
+                <option value="Paleta personalizada">Paleta personalizada</option>
+              </select>
+              <input name="diseno_grafico_paleta" 
+                placeholder="Especifica el hex o nombre si es personalizada" 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuración de Tiempo -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </span>
+            Configuración de Tiempo de Estudio
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="horas_curso">Total de Horas de Estudio</label>
+              <input id="horas_curso" name="horas_curso" type="number" min="0" step="0.1" 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+            
+            <div class="space-y-2">
+              <label for="horas_autonomo" class="block text-sm font-semibold text-gray-700">Horas de aprendizaje autónomo virtual</label>
+              <input type="number" step="0.1" id="horas_autonomo" name="horas_aprendizaje_autonomo_virtual" 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+
+            <div class="space-y-2">
+              <label for="horas_actividades" class="block text-sm font-semibold text-gray-700">Horas de actividades de aprendizaje</label>
+              <input type="number" step="0.1" id="horas_actividades" name="horas_actividades_aprendizaje" 
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Derechos y Entregables -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+            </span>
+            Derechos y Entregables
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Cesión de derechos</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="cesion_derechos" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="cesion_derechos" value="false" checked>
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Derechos patrimoniales de autor</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="derechos_patrimoniales_autor" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="derechos_patrimoniales_autor" value="false" checked>
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Acuerdo de confidencialidad</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="acuerdo_confidencialidad" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="acuerdo_confidencialidad" value="false" checked>
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Entrega de fuentes</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_fuentes" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_fuentes" value="false" checked>
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Entrega de escrito de autor</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_escrito_autor" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_escrito_autor" value="false" checked>
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Entrega de diseño instruccional</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_diseno_instruccional" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_diseno_instruccional" value="false" checked>
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Público Objetivo -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+            </span>
+            Público Objetivo
+          </h3>
+
+          <div class="space-y-4">
+            <p class="text-sm text-gray-600">¿A quién está dirigido el proyecto?</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto border border-gray-200 rounded-xl p-4 bg-gray-50">
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Primera infancia">
+                <span class="checkmark"></span>
+                Primera infancia (0 a 5 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Niños 6 a 11 años">
+                <span class="checkmark"></span>
+                Niños (6 a 11 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Niñas 6 a 11 años">
+                <span class="checkmark"></span>
+                Niñas (6 a 11 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Adolescentes 12 a 17 años">
+                <span class="checkmark"></span>
+                Adolescentes (12 a 17 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Jóvenes 18 a 25 años">
+                <span class="checkmark"></span>
+                Jóvenes (18 a 25 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Adultos 26 a 35 años">
+                <span class="checkmark"></span>
+                Adultos jóvenes (26 a 35 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Adultos 36 a 59 años">
+                <span class="checkmark"></span>
+                Adultos (36 a 59 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Personas mayores 60+">
+                <span class="checkmark"></span>
+                Personas mayores (60+)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Familias">
+                <span class="checkmark"></span>
+                Familias
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Docentes">
+                <span class="checkmark"></span>
+                Docentes / educadores
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Empresas">
+                <span class="checkmark"></span>
+                Empresas / equipos de trabajo
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Instituciones educativas">
+                <span class="checkmark"></span>
+                Instituciones educativas
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Público en general">
+                <span class="checkmark"></span>
+                Público en general
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Agricultores">
+                <span class="checkmark"></span>
+                Agricultores
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Migración">
+                <span class="checkmark"></span>
+                Migración
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Población nativa">
+                <span class="checkmark"></span>
+                Población nativa (indígenas)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Población afro">
+                <span class="checkmark"></span>
+                Población afro
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Género">
+                <span class="checkmark"></span>
+                Género
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Otro">
+                <span class="checkmark"></span>
+                Otro
+              </label>
+            </div>
+            <input name="publico_objetivo_otro" 
+              placeholder="Otro (especificar)" 
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+          </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </span>
+            Observaciones Adicionales
+          </h3>
+          
+          <div class="space-y-2">
+            <label for="observaciones" class="block text-sm font-semibold text-gray-700">Observaciones</label>
+            <textarea id="observaciones" name="observaciones" rows="4"
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus resize-none"
+              placeholder="Agrega cualquier observación, requisito especial o comentario adicional sobre el proyecto..."></textarea>
+          </div>
+        </div>
+
+        <!-- Botón de Envío -->
+        <div class="text-center">
+          <button type="submit" 
+            class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-blue-200">
+            <span class="relative z-10 flex items-center">
+              <svg class="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              Crear Proyecto
+            </span>
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-700 to-purple-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+
+    const tipoProyectoSelect = document.getElementById('tipoProyecto');
+    const divTipoPersonalizado = document.getElementById('divTipoProyectoPersonalizado');
+    const inputTipoPersonalizado = document.getElementById('tipoProyectoPersonalizado');
+
+    tipoProyectoSelect.addEventListener('change', () => {
+      if (tipoProyectoSelect.value === 'Otro') {
+        divTipoPersonalizado.style.display = 'block';
+        inputTipoPersonalizado.required = true;
+      } else {
+        divTipoPersonalizado.style.display = 'none';
+        inputTipoPersonalizado.required = false;
+        inputTipoPersonalizado.value = '';
+      }
+    });
+
+    // Lógica Lenguaje Inclusivo
+    const tipoLenguajeSelect = document.getElementById('tipoLenguajeSelect');
+    const otroLenguajeInput = document.getElementById('otroLenguajeInput');
+    document.getElementById('incluyenteSi').addEventListener('change', () => {
+      tipoLenguajeSelect.disabled = false;
+      if (tipoLenguajeSelect.value === "Otro") {
+        otroLenguajeInput.disabled = false;
+      }
+    });
+    document.getElementById('incluyenteNo').addEventListener('change', () => {
+      tipoLenguajeSelect.disabled = true;
+      tipoLenguajeSelect.value = "";
+      otroLenguajeInput.disabled = true;
+      otroLenguajeInput.value = "";
+    });
+    tipoLenguajeSelect.addEventListener('change', function () {
+      if (this.value === "Otro") {
+        otroLenguajeInput.disabled = false;
+      } else {
+        otroLenguajeInput.disabled = true;
+        otroLenguajeInput.value = "";
+      }
+    });
+
+    // Lógica Inclusión Digital
+    const radioInclusionDigitalSi = document.querySelector('input[name="inclusion_digital"][value="true"]');
+    const radioInclusionDigitalNo = document.querySelector('input[name="inclusion_digital"][value="false"]');
+    const checkboxesInclusion = document.querySelectorAll('input[type="checkbox"][name^="inclusion_digital_"]');
+    const inputInclusionOtro = document.querySelector('input[name="inclusion_digital_otro"]');
+
+    function setInclusionDigitalEnabled(enabled) {
+      checkboxesInclusion.forEach(chk => {
+        chk.disabled = !enabled;
+        if (!enabled) chk.checked = false;
+      });
+      inputInclusionOtro.disabled = !enabled;
+      if (!enabled) inputInclusionOtro.value = '';
+    }
+
+    radioInclusionDigitalSi.addEventListener('change', () => {
+      if (radioInclusionDigitalSi.checked) setInclusionDigitalEnabled(true);
+    });
+    radioInclusionDigitalNo.addEventListener('change', () => {
+      if (radioInclusionDigitalNo.checked) setInclusionDigitalEnabled(false);
+    });
+
+    window.addEventListener('load', () => {
+      setInclusionDigitalEnabled(radioInclusionDigitalSi.checked);
+      loadClients();
+    });
+
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+
+    async function loadClients() {
+      const token = getToken();
+      if (!token) {
+        alert("No has iniciado sesión. Haz login primero.");
+        window.location.href = '/login.html';
+        return;
+      }
+      try {
+        const res = await fetch(`${API_URL}/users/`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error('No autorizado o backend caído');
+        const users = await res.json();
+        const clientes = users.filter(u => Array.isArray(u.roles) && u.roles.includes('cliente') && u.estado);
+        const select = document.getElementById('clienteSelect');
+        select.innerHTML = `<option value="">Seleccione un cliente...</option>`;
+        clientes.forEach(cliente => {
+          select.innerHTML += `<option value="${cliente.uid}">${cliente.nombre} (${cliente.email})</option>`;
+        });
+        select.addEventListener('change', e => {
+          document.getElementById('clientId').value = e.target.value;
+          document.getElementById('codigoReferencia').value = e.target.value;
+        });
+      } catch (e) {
+        alert("Error al cargar usuarios clientes: " + e);
+      }
+    }
+
+    document.getElementById('formProyecto').onsubmit = async function (e) {
+      e.preventDefault();
+
+      const token = getToken();
+      if (!token) {
+        alert("No has iniciado sesión. Haz login primero.");
+        window.location.href = '/login.html';
+        return;
+      }
+
+      const form = e.target;
+
+      // Construir array para público objetivo
+      const publicoArray = Array.from(form.querySelectorAll('input[name="publico_objetivo"]:checked')).map(c => c.value);
+
+      // Construir objeto con todos los datos para enviar
+      const data = {
+        name: form.name.value,
+        client_id: form.client_id.value,
+        codigo_referencia: form.codigo_referencia.value,
+        etapa: form.etapa.value,
+        start_date: form.start_date.value,
+        end_date: form.end_date.value || null,
+        tipo_proyecto: form.tipo_proyecto.value || null,
+        tipo_proyecto_personalizado: form.tipo_proyecto_personalizado.value || null,
+        estado: form.estado.value || "Planificado",
+        description: form.description.value || null,
+        lenguaje_incluyente: form.lenguaje_incluyente.value === "true",
+        lenguaje_inclusivo_tipo: form.lenguaje_inclusivo_tipo.value || null,
+        lenguaje_inclusivo_otro: form.lenguaje_inclusivo_otro.value || null,
+        inclusion_digital: form.inclusion_digital.value === "true",
+        inclusion_digital_web: form.inclusion_digital_web.checked,
+        inclusion_digital_asistiva: form.inclusion_digital_asistiva.checked,
+        inclusion_digital_universal: form.inclusion_digital_universal.checked,
+        inclusion_digital_educativa: form.inclusion_digital_educativa.checked,
+        inclusion_digital_otro: form.inclusion_digital_otro.value || null,
+        idioma: form.idioma.value || null,
+        tipografia_titulo_fuente: form.tipografia_titulo_fuente.value || null,
+        tipografia_titulo_tamano: form.tipografia_titulo_tamano.value || null,
+        tipografia_titulo_negrita: form.tipografia_titulo_negrita.checked,
+        tipografia_titulo_cursiva: form.tipografia_titulo_cursiva.checked,
+        tipografia_subtitulo_fuente: form.tipografia_subtitulo_fuente.value || null,
+        tipografia_subtitulo_tamano: form.tipografia_subtitulo_tamano.value || null,
+        tipografia_subtitulo_negrita: form.tipografia_subtitulo_negrita.checked,
+        tipografia_subtitulo_cursiva: form.tipografia_subtitulo_cursiva.checked,
+        tipografia_parrafo_fuente: form.tipografia_parrafo_fuente.value || null,
+        tipografia_parrafo_tamano: form.tipografia_parrafo_tamano.value || null,
+        tipografia_parrafo_negrita: form.tipografia_parrafo_negrita.checked,
+        tipografia_parrafo_cursiva: form.tipografia_parrafo_cursiva.checked,
+        horas_curso: form.horas_curso.value ? parseFloat(form.horas_curso.value) : null,
+        horas_aprendizaje_autonomo_virtual: parseFloat(document.getElementById("horas_autonomo").value) || null,
+        horas_actividades_aprendizaje: parseFloat(document.getElementById("horas_actividades").value) || null,
+        observaciones: document.getElementById("observaciones").value || null,
+        diseno_grafico_tipo: form.diseno_grafico_tipo.value || null,
+        diseno_grafico_paleta: form.diseno_grafico_paleta.value || null,
+        cesion_derechos: form.cesion_derechos.value === "true",
+        derechos_patrimoniales_autor: form.derechos_patrimoniales_autor.value === "true",
+        acuerdo_confidencialidad: form.acuerdo_confidencialidad.value === "true",
+        entrega_fuentes: form.entrega_fuentes.value === "true",
+        entrega_escrito_autor: form.entrega_escrito_autor.value === "true",
+        entrega_diseno_instruccional: form.entrega_diseno_instruccional.value === "true",
+        publico_objetivo: publicoArray,
+        publico_objetivo_otro: form.publico_objetivo_otro.value || null
+      };
+
+      try {
+        const res = await fetch(`${API_URL}/projects/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          alert("Error al crear proyecto:\n" + errText);
+          console.error("Error response:", errText);
+          return;
+        }
+
+        const proyectoCreado = await res.json();
+        
+        // Obtener los datos completos del proyecto recién creado
+        const proyectoId = proyectoCreado.id || proyectoCreado.uid;
+        window.location.href = `https://gestordecursos.pegui.edu.co/r/superadmin/projects/read.html/?id=${proyectoId}`;
+        
+      } catch (error) {
+        alert("Error en la solicitud: " + error);
+        console.error("Error catch:", error);
+      }
+    };
+
+    
+    // Función para llenar el formulario con los datos del proyecto creado
+    function fillFormWithProjectData(proyecto) {
+      const form = document.getElementById('formProyecto');
+      
+      // Cambiar el título para indicar que es un proyecto guardado
+      const titleElement = document.querySelector('h2');
+      titleElement.innerHTML = `
+        <span class="flex items-center">
+          <svg class="w-8 h-8 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Proyecto Creado: ${proyecto.name}
+        </span>
+      `;
+      titleElement.className = 'text-3xl font-bold text-green-600 mb-8';
+      
+      // Agregar información del ID del proyecto
+      const projectInfo = document.createElement('div');
+      projectInfo.className = 'bg-green-50 border border-green-200 rounded-xl p-4 mb-6';
+      projectInfo.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-semibold text-green-800">ID del Proyecto:</p>
+            <p class="text-green-600 font-mono">${proyecto.id || proyecto.uid}</p>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-green-800">Estado:</p>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              ${proyecto.estado || 'Creado'}
+            </span>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-green-800">Fecha de Creación:</p>
+            <p class="text-green-600">${new Date().toLocaleDateString('es-ES')}</p>
+          </div>
+        </div>
+      `;
+      
+      // Insertar la información del proyecto después del título
+      titleElement.parentNode.insertBefore(projectInfo, form);
+      
+      // Llenar campos básicos
+      if (proyecto.name) form.name.value = proyecto.name;
+      if (proyecto.client_id) {
+        document.getElementById('clientId').value = proyecto.client_id;
+        document.getElementById('clienteSelect').value = proyecto.client_id;
+        document.getElementById('codigoReferencia').value = proyecto.codigo_referencia || proyecto.client_id;
+      }
+      if (proyecto.etapa) form.etapa.value = proyecto.etapa;
+      if (proyecto.start_date) form.start_date.value = proyecto.start_date;
+      if (proyecto.end_date) form.end_date.value = proyecto.end_date;
+      if (proyecto.tipo_proyecto) {
+        form.tipo_proyecto.value = proyecto.tipo_proyecto;
+        if (proyecto.tipo_proyecto === 'Otro') {
+          document.getElementById('divTipoProyectoPersonalizado').style.display = 'block';
+          if (proyecto.tipo_proyecto_personalizado) {
+            form.tipo_proyecto_personalizado.value = proyecto.tipo_proyecto_personalizado;
+          }
+        }
+      }
+      if (proyecto.estado) form.estado.value = proyecto.estado;
+      if (proyecto.description) form.description.value = proyecto.description;
+      
+      // Llenar campos de lenguaje inclusivo
+      if (proyecto.lenguaje_incluyente !== undefined) {
+        const radioSi = document.getElementById('incluyenteSi');
+        const radioNo = document.getElementById('incluyenteNo');
+        if (proyecto.lenguaje_incluyente) {
+          radioSi.checked = true;
+          document.getElementById('tipoLenguajeSelect').disabled = false;
+          if (proyecto.lenguaje_inclusivo_tipo) {
+            form.lenguaje_inclusivo_tipo.value = proyecto.lenguaje_inclusivo_tipo;
+            if (proyecto.lenguaje_inclusivo_tipo === 'Otro') {
+              document.getElementById('otroLenguajeInput').disabled = false;
+              if (proyecto.lenguaje_inclusivo_otro) {
+                form.lenguaje_inclusivo_otro.value = proyecto.lenguaje_inclusivo_otro;
+              }
+            }
+          }
+        } else {
+          radioNo.checked = true;
+        }
+      }
+      
+      // Llenar campos de inclusión digital
+      if (proyecto.inclusion_digital !== undefined) {
+        document.querySelector(`input[name="inclusion_digital"][value="${proyecto.inclusion_digital}"]`).checked = true;
+        setInclusionDigitalEnabled(proyecto.inclusion_digital);
+        if (proyecto.inclusion_digital) {
+          if (proyecto.inclusion_digital_web) form.inclusion_digital_web.checked = true;
+          if (proyecto.inclusion_digital_asistiva) form.inclusion_digital_asistiva.checked = true;
+          if (proyecto.inclusion_digital_universal) form.inclusion_digital_universal.checked = true;
+          if (proyecto.inclusion_digital_educativa) form.inclusion_digital_educativa.checked = true;
+          if (proyecto.inclusion_digital_otro) form.inclusion_digital_otro.value = proyecto.inclusion_digital_otro;
+        }
+      }
+      
+      // Llenar campos de idioma
+      if (proyecto.idioma) {
+        const radioIdioma = document.querySelector(`input[name="idioma"][value="${proyecto.idioma}"]`);
+        if (radioIdioma) radioIdioma.checked = true;
+      }
+      if (proyecto.idioma_otro) form.idioma_otro.value = proyecto.idioma_otro;
+      
+      // Llenar campos de tipografía
+      if (proyecto.tipografia_titulo_fuente) form.tipografia_titulo_fuente.value = proyecto.tipografia_titulo_fuente;
+      if (proyecto.tipografia_titulo_tamano) form.tipografia_titulo_tamano.value = proyecto.tipografia_titulo_tamano;
+      if (proyecto.tipografia_titulo_negrita) form.tipografia_titulo_negrita.checked = proyecto.tipografia_titulo_negrita;
+      if (proyecto.tipografia_titulo_cursiva) form.tipografia_titulo_cursiva.checked = proyecto.tipografia_titulo_cursiva;
+      
+      if (proyecto.tipografia_subtitulo_fuente) form.tipografia_subtitulo_fuente.value = proyecto.tipografia_subtitulo_fuente;
+      if (proyecto.tipografia_subtitulo_tamano) form.tipografia_subtitulo_tamano.value = proyecto.tipografia_subtitulo_tamano;
+      if (proyecto.tipografia_subtitulo_negrita) form.tipografia_subtitulo_negrita.checked = proyecto.tipografia_subtitulo_negrita;
+      if (proyecto.tipografia_subtitulo_cursiva) form.tipografia_subtitulo_cursiva.checked = proyecto.tipografia_subtitulo_cursiva;
+      
+      if (proyecto.tipografia_parrafo_fuente) form.tipografia_parrafo_fuente.value = proyecto.tipografia_parrafo_fuente;
+      if (proyecto.tipografia_parrafo_tamano) form.tipografia_parrafo_tamano.value = proyecto.tipografia_parrafo_tamano;
+      if (proyecto.tipografia_parrafo_negrita) form.tipografia_parrafo_negrita.checked = proyecto.tipografia_parrafo_negrita;
+      if (proyecto.tipografia_parrafo_cursiva) form.tipografia_parrafo_cursiva.checked = proyecto.tipografia_parrafo_cursiva;
+      
+      // Llenar campos de tiempo
+      if (proyecto.horas_curso) form.horas_curso.value = proyecto.horas_curso;
+      if (proyecto.horas_aprendizaje_autonomo_virtual) document.getElementById("horas_autonomo").value = proyecto.horas_aprendizaje_autonomo_virtual;
+      if (proyecto.horas_actividades_aprendizaje) document.getElementById("horas_actividades").value = proyecto.horas_actividades_aprendizaje;
+      
+      // Llenar campos de diseño
+      if (proyecto.diseno_grafico_tipo) form.diseno_grafico_tipo.value = proyecto.diseno_grafico_tipo;
+      if (proyecto.diseno_grafico_paleta) form.diseno_grafico_paleta.value = proyecto.diseno_grafico_paleta;
+      
+      // Llenar campos de derechos
+      if (proyecto.cesion_derechos !== undefined) {
+        const radio = document.querySelector(`input[name="cesion_derechos"][value="${proyecto.cesion_derechos}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (proyecto.derechos_patrimoniales_autor !== undefined) {
+        const radio = document.querySelector(`input[name="derechos_patrimoniales_autor"][value="${proyecto.derechos_patrimoniales_autor}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (proyecto.acuerdo_confidencialidad !== undefined) {
+        const radio = document.querySelector(`input[name="acuerdo_confidencialidad"][value="${proyecto.acuerdo_confidencialidad}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (proyecto.entrega_fuentes !== undefined) {
+        const radio = document.querySelector(`input[name="entrega_fuentes"][value="${proyecto.entrega_fuentes}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (proyecto.entrega_escrito_autor !== undefined) {
+        const radio = document.querySelector(`input[name="entrega_escrito_autor"][value="${proyecto.entrega_escrito_autor}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (proyecto.entrega_diseno_instruccional !== undefined) {
+        const radio = document.querySelector(`input[name="entrega_diseno_instruccional"][value="${proyecto.entrega_diseno_instruccional}"]`);
+        if (radio) radio.checked = true;
+      }
+      
+      // Llenar público objetivo
+      if (proyecto.publico_objetivo && Array.isArray(proyecto.publico_objetivo)) {
+        proyecto.publico_objetivo.forEach(publico => {
+          const checkbox = document.querySelector(`input[name="publico_objetivo"][value="${publico}"]`);
+          if (checkbox) checkbox.checked = true;
+        });
+      }
+      if (proyecto.publico_objetivo_otro) form.publico_objetivo_otro.value = proyecto.publico_objetivo_otro;
+      
+      // Llenar observaciones
+      if (proyecto.observaciones) document.getElementById("observaciones").value = proyecto.observaciones;
+      
+      // Cambiar el botón para mostrar opciones de acción
+      const submitBtn = document.querySelector('button[type="submit"]');
+      submitBtn.innerHTML = `
+        <span class="relative z-10 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+          Ver Todos los Proyectos
+        </span>
+      `;
+      submitBtn.className = 'group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-blue-200';
+      submitBtn.type = 'button';
+      
+      // Cambiar la acción del botón para ir a la lista de proyeectos
+      submitBtn.onclick = function() {
+        window.location.href = 'https://gestordecursos.pegui.edu.co/r/superadmin/proyectos';
+      };
+      
+      // Agregar botón para crear otro proyecto
+      const newProjectBtn = document.createElement('button');
+      newProjectBtn.type = 'button';
+      newProjectBtn.className = 'group relative px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-green-200 ml-4';
+      newProjectBtn.innerHTML = `
+        <span class="relative z-10 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          Crear Otro Proyecto
+        </span>
+      `;
+      newProjectBtn.onclick = function() {
+        location.reload();
+      };
+      
+      // Insertar ambos botones
+      const buttonContainer = submitBtn.parentNode;
+      buttonContainer.className = 'text-center flex justify-center items-center';
+      buttonContainer.appendChild(newProjectBtn);
+      
+      // Mostrar mensaje de éxito
+      const successMessage = document.createElement('div');
+      successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-fade-in flex items-center';
+      successMessage.innerHTML = `
+        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        ¡Proyecto "${proyecto.name}" creado exitosamente!
+      `;
+      document.body.appendChild(successMessage);
+      
+      setTimeout(() => {
+        successMessage.remove();
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Nuevo Módulo con Formulario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-section {
+            transition: all 0.3s ease;
+        }
+        .form-section:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: #2563eb;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+        
+        .required::after {
+            content: " *";
+            color: #EF4444;
+        }
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            border-radius: 0.5rem;
+            border: 2px solid #E5E7EB;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background-color: white;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        input[type="text"]:hover, input[type="number"]:hover, textarea:hover, select:hover {
+            border-color: #D1D5DB;
+        }
+        
+        textarea {
+            min-height: 8rem;
+            resize: vertical;
+        }
+        
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5rem 1.5rem;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+        
+        input[type="checkbox"], input[type="radio"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            border: 2px solid #D1D5DB;
+            transition: all 0.2s ease;
+        }
+        
+        input[type="checkbox"]:checked, input[type="radio"]:checked {
+            border-color: #3B82F6;
+            background-color: #3B82F6;
+        }
+        
+        input[type="checkbox"]:focus, input[type="radio"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        input[type="checkbox"]:hover:not(:checked), input[type="radio"]:hover:not(:checked) {
+            border-color: #9CA3AF;
+        }
+        input[type="checkbox"] {
+             width: 1rem;
+             height: 1rem;
+             border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <div class="bg-white shadow-md border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between flex-wrap">
+                <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-plus-circle text-green-600 mr-3"></i>
+                    Crear Nuevo Módulo
+                </h1>
+                <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+                    <a href="index.html" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Volver a la Lista
+                    </a>
+                    <button type="submit" form="createModuleForm" id="saveButton" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                        <i class="fas fa-check mr-2"></i>
+                        Crear Módulo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <form id="createModuleForm" class="space-y-8">
+            
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-book-open text-blue-500 mr-2"></i>Información General</legend>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div><label class="required">Curso al que pertenece</label><select name="course_id" id="courseSelect" required><option value="">Cargando cursos...</option></select></div>
+                    <div><label class="required">Autor/Responsable</label><select name="autor_responsable" id="authorSelect" required><option value="">Cargando autores...</option></select></div>
+                    <div><label class="required">Nombre del Módulo</label><input type="text" name="nombre_del_modulo" required></div>
+                    <div><label>Nombre Corto</label><input type="text" name="nombre_corto_del_modulo"></div>
+                    <div><label>Versión</label><input type="text" name="version" value="1.0"></div>
+                    <div><label>Organización</label><input type="text" name="organizacion_institucion"></div>
+                    <div class="md:col-span-3"><label>Palabras Clave (separadas por coma)</label><input type="text" name="palabras_clave"></div>
+                    <div class="flex items-center gap-2 pt-4"><input type="checkbox" name="derechos_patrimoniales"><label>Derechos Patrimoniales</label></div>
+                    <div class="flex items-center gap-2 pt-4"><input type="checkbox" name="derechos_intelectuales"><label>Derechos Intelectuales</label></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-graduation-cap text-green-500 mr-2"></i>Contenido Pedagógico</legend>
+                <div class="grid grid-cols-1 gap-6">
+                    <div><label>Objetivo General</label><textarea name="objetivo_general" rows="3"></textarea></div>
+                    <div><label>Objetivos Específicos (uno por línea)</label><textarea name="objetivos_especificos" rows="5"></textarea></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label>Público Objetivo</label><input type="text" name="publico_objetivo"></div>
+                        <div><label>Duración Estimada</label><input type="text" name="duracion_estimada"></div>
+                    </div>
+                    <div><label>Requisitos Previos</label><textarea name="requisitos_previos" rows="2"></textarea></div>
+                    <div><label>Criterios de Logro</label><textarea name="criterios_de_logro" rows="2"></textarea></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-sitemap text-purple-500 mr-2"></i>Estructura y Diseño</legend>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div><label>Número de Unidades</label><input type="number" name="numero_unidades"></div>
+                    <div><label>Orden de Unidades</label><input type="text" name="orden_unidades"></div>
+                    <div><label>Tiempo por Unidad</label><input type="text" name="tiempo_estimado_por_unidad"></div>
+                    <div><label>Tipo de Letra</label><input type="text" name="tipo_letra"></div>
+                    <div><label>Tamaño de Letra</label><input type="text" name="tamano_letra"></div>
+                    <div><label>Colores Principales</label><input type="text" name="colores_principales"></div>
+                    <div class="md:col-span-3"><label>Lista de Temas/Unidades (separados por coma)</label><textarea name="lista_unidades_temas" rows="3"></textarea></div>
+                    <div><label>Estilos de Texto</label><input type="text" name="estilos_texto"></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-image text-cyan-500 mr-2"></i>Portada</legend>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div><label>Uso de Logotipo</label><select name="logotipo"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                    <div class="flex items-center pt-6 gap-2"><input type="checkbox" name="tiene_portada"><label>Tiene Portada</label></div>
+                    <div class="flex items-center pt-6 gap-2"><input type="checkbox" name="creditos_en_portada"><label>Créditos en Portada</label></div>
+                    <div><label>Tipo de Portada</label><input type="text" name="tipo_portada"></div>
+                    <div class="md:col-span-2"><label>Texto de Portada (Título/Subtítulo)</label><input type="text" name="texto_de_portada"></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-photo-video text-red-500 mr-2"></i>Recursos Multimedia</legend>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div><label># Infografías Estáticas</label><input type="number" name="infografias_estaticas"></div>
+                    <div><label># Infografías Animadas</label><input type="number" name="infografias_animadas"></div>
+                    <div><label># Imágenes</label><input type="number" name="imagenes"></div>
+                    <div><label># Animaciones</label><input type="number" name="animaciones"></div>
+                    <div class="col-span-2"><label>Videos (Cantidad y Duración)</label><input type="text" name="videos"></div>
+                    <div class="col-span-2"><label>Audios/Podcasts (Cantidad y Duración)</label><input type="text" name="audios"></div>
+                    <div class="col-span-full"><label>Otros Recursos</label><input type="text" name="otros_recursos"></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-cogs text-orange-500 mr-2"></i>Recursos Interactivos</legend>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div class="flex items-center gap-2"><input type="checkbox" name="portada_animada"><label>Portada Animada</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="microvideos_cortos"><label>Microvideos Cortos</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="storytelling"><label>Storytelling</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="presentaciones_interactivas"><label>Presentaciones Interactivas</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="gamificacion"><label>Gamificación</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="simulaciones"><label>Simulaciones</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="realidad_aumentada"><label>Realidad Aumentada/3D</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="lineas_tiempo_interactivas"><label>Líneas de Tiempo</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="mapas_interactivos"><label>Mapas Interactivos</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="galerias_imagenes"><label>Galerías de Imágenes</label></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-tasks text-yellow-500 mr-2"></i>Actividades y Evaluación</legend>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div><label>Tipos de Preguntas</label><input type="text" name="tipos_preguntas"></div>
+                    <div><label># Total de Preguntas</label><input type="number" name="numero_total_preguntas"></div>
+                    <div><label>Nota Mínima Aprobación</label><input type="number" name="nota_minima_aprobacion" step="0.1"></div>
+                    <div><label>Intentos Permitidos</label><input type="number" name="intentos_permitidos"></div>
+                    <div><label>Tiempo Límite (minutos)</label><input type="text" name="tiempo_limite"></div>
+                    <div><label>Retroalimentación</label><input type="text" name="retroalimentacion"></div>
+                </div>
+                <div class="grid grid-cols-1 mt-6 gap-6">
+                    <div><label>Tipos de Actividades</label><textarea name="tipos_actividades" rows="2"></textarea></div>
+                    <div><label>Materiales Descargables (Actividades)</label><textarea name="materiales_descargables" rows="2"></textarea></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <div><label>Elementos Descargables</label><select name="elementos_descargables"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                    <div><label>Actividades por Unidad</label><select name="actividades_aprendizaje_unidad"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                    <div><label>Actividades de Cierre</label><select name="actividades_cierre_modulo"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-universal-access text-teal-500 mr-2"></i>Accesibilidad</legend>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="flex items-center gap-2"><input type="checkbox" name="subtitulos_videos"><label>Subtítulos en Videos</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="transcripciones_audio"><label>Transcripción de Audio</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="navegacion_teclado"><label>Navegación con Teclado</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="lectura_pantalla_compatible"><label>Compatible Lector Pantalla</label></div>
+                    <div class="md:col-span-4"><label>Idiomas Disponibles (separados por coma)</label><input type="text" name="idiomas_disponibles"></div>
+                </div>
+            </fieldset>
+
+             <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-truck-loading text-gray-500 mr-2"></i>Distribución y Entrega</legend>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div><label>Plataforma Destino (LMS)</label><input type="text" name="plataforma_destino"></div>
+                    <div><label>Dispositivos Objetivo</label><input type="text" name="dispositivos_objetivo"></div>
+                    <div><label>Modo de Uso</label><input type="text" name="modo_uso"></div>
+                    <div><label>Tamaño Aproximado (MB)</label><input type="text" name="tamano_aproximado"></div>
+                 </div>
+                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                    <div class="flex items-center gap-2"><input type="checkbox" name="entrega_fuentes"><label>Entregar Fuentes</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="entrega_scorm"><label>Entregar SCORM</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="entrega_multimedia"><label>Entregar Multimedia</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" name="entrega_version_pdf"><label>Entregar PDF</label></div>
+                 </div>
+            </fieldset>
+
+            <fieldset class="bg-white p-6 rounded-xl shadow-lg border form-section"><legend class="text-xl font-semibold px-2 mb-4"><i class="fas fa-sticky-note text-lime-500 mr-2"></i>Notas Adicionales</legend>
+                <div><label>Notas u Observaciones</label><textarea name="notas_adicionales" rows="4"></textarea></div>
+            </fieldset>
+
+        </form>
+    </main>
+    
+    <div id="notification" class="fixed top-24 right-4 z-50"></div>
+
+    <script>
+        const API_BASE = 'https://gestordecursos.pegui.edu.co:8000';
+
+        function showNotification(type, title, message) {
+            const notificationArea = document.getElementById('notification');
+            const colors = { success: 'green', error: 'red' };
+            const icons = { success: 'fa-check-circle', error: 'fa-times-circle' };
+            const notification = document.createElement('div');
+            notification.className = `bg-white rounded-lg shadow-xl border-l-4 border-${colors[type]}-500 p-4 max-w-md mb-4`;
+            notification.innerHTML = `<div class="flex items-center"><div class="mr-3"><i class="fas ${icons[type]} text-${colors[type]}-500 text-xl"></i></div><div><div class="font-semibold">${title}</div><div class="text-sm text-gray-600">${message}</div></div></div>`;
+            notificationArea.appendChild(notification);
+            setTimeout(() => { notification.remove(); }, 5000);
+        }
+
+        async function loadCourses() {
+            const select = document.getElementById('courseSelect');
+            try {
+                const response = await fetch(`${API_BASE}/courses/`);
+                const courses = await response.json();
+                select.innerHTML = '<option value="">-- Selecciona un curso --</option>';
+                courses.forEach(course => {
+                    select.innerHTML += `<option value="${course.id}">${course.name}</option>`;
+                });
+            } catch (error) {
+                select.innerHTML = '<option value="">Error al cargar cursos</option>';
+            }
+        }
+        
+        async function loadAuthors() {
+            const select = document.getElementById('authorSelect');
+            const token = localStorage.getItem('token'); 
+
+            if (!token) {
+                select.innerHTML = '<option value="">Error: Token no encontrado</option>';
+                console.error("No se encontró el token de autenticación en localStorage.");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('No se pudo autenticar para cargar los autores.');
+                const users = await response.json();
+                select.innerHTML = '<option value="">-- Selecciona un autor --</option>';
+                users.forEach(user => {
+                    select.innerHTML += `<option value="${user.nombre}">${user.nombre}</option>`;
+                });
+            } catch (error) {
+                select.innerHTML = '<option value="">Error al cargar autores</option>';
+                console.error("Error en loadAuthors:", error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCourses();
+            loadAuthors();
+        });
+
+        document.getElementById('createModuleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const saveButton = document.getElementById('saveButton');
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creando...';
+
+            const form = e.target;
+            const payload = {};
+
+            for (const element of form.elements) {
+                if (element.name) {
+                    if (element.type === 'checkbox') {
+                        payload[element.name] = element.checked;
+                    } else if (element.type === 'number' || element.name === 'course_id' || element.name === 'nota_minima_aprobacion') {
+                        payload[element.name] = parseFloat(element.value) || null;
+                    } else {
+                        payload[element.name] = element.value;
+                    }
+                }
+            }
+            
+            payload.codigo_id_del_modulo = 'ID_' + new Date().getTime();
+            
+            try {
+                const response = await fetch(`${API_BASE}/modules/`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail?.[0]?.msg || errorData.detail || 'Ocurrió un error al crear el módulo.');
+                }
+
+                showNotification('success', 'Éxito', 'El módulo se ha creado correctamente.');
+                form.reset();
+                setTimeout(() => {
+    window.location.href = 'https://gestordecursos.pegui.edu.co/r/superadmin/modulos/'; // Aquí se define la página de destino
+}, 2000); // 2000 milisegundos = 2 segundos
+
+            } catch (error) {
+                showNotification('error', 'Error', `No se pudo crear el módulo: ${error.message}`);
+            } finally {
+                saveButton.disabled = false;
+                saveButton.innerHTML = '<i class="fas fa-check mr-2"></i>Crear Módulo';
+            }
+        });
+    </script>
+</body>
+</html>

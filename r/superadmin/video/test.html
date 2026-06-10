@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>🎬 Generador de Videos (AI Studio)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+
+  <div class="bg-white shadow-xl rounded-xl p-8 w-full max-w-2xl">
+    <h1 class="text-2xl font-bold text-center mb-6">🎬 Generador de Videos (AI Studio)</h1>
+
+    <!-- Formulario -->
+    <form id="videoForm" class="space-y-4">
+      <div>
+        <label class="block text-gray-700">Prompt</label>
+        <textarea id="prompt" class="w-full p-3 border rounded-lg" placeholder="Ej: Un perro robot caminando en Marte"></textarea>
+      </div>
+
+      <div>
+        <label class="block text-gray-700">Duración (segundos)</label>
+        <input id="duration" type="number" value="8" min="5" max="8" class="w-full p-3 border rounded-lg">
+      </div>
+
+      <div>
+        <label class="block text-gray-700">Aspect Ratio</label>
+        <select id="aspect_ratio" class="w-full p-3 border rounded-lg">
+          <option value="16:9">16:9</option>
+          <option value="16:10">16:10</option>
+        </select>
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700">
+        🚀 Generar Video
+      </button>
+    </form>
+
+    <!-- Estado -->
+    <div id="status" class="mt-6 p-4 bg-gray-50 rounded-lg text-sm"></div>
+
+    <!-- Contenedor del video -->
+    <div id="videoContainer" class="mt-6 hidden">
+      <h2 class="text-lg font-semibold mb-2">🎥 Resultado:</h2>
+      <video id="generatedVideo" class="w-full rounded-lg border" controls></video>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+
+    const form = document.getElementById("videoForm");
+    const statusDiv = document.getElementById("status");
+    const videoContainer = document.getElementById("videoContainer");
+    const generatedVideo = document.getElementById("generatedVideo");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      statusDiv.innerHTML = "⏳ Generando video, espera unos segundos...";
+      videoContainer.classList.add("hidden");
+
+      const prompt = document.getElementById("prompt").value;
+      const duration = parseInt(document.getElementById("duration").value);
+      const aspect_ratio = document.getElementById("aspect_ratio").value;
+
+      try {
+        const resp = await fetch(`${API_BASE}/chat/video-ai-studio`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, duration, aspect_ratio })
+        });
+
+        const data = await resp.json();
+        console.log("Respuesta:", data);
+
+        if (data.video_uri) {
+          statusDiv.innerHTML = `🎉 Video generado: <a href="${data.video_uri}" target="_blank" class="text-blue-600 underline">Abrir en nueva pestaña</a>`;
+          generatedVideo.src = data.video_uri;
+          videoContainer.classList.remove("hidden");
+        } else {
+          statusDiv.innerHTML = `❌ Error: ${JSON.stringify(data)}`;
+        }
+
+      } catch (err) {
+        console.error(err);
+        statusDiv.innerHTML = `❌ Error: ${err.message}`;
+      }
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

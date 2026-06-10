@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnóstico del Sistema - VirtualMind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); }
+    .card { transition: all 0.3s ease; }
+    .card:hover { transform: translateY(-2px); }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .blink { animation: blink 1.5s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .status-active { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+    .status-inactive { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.5); }
+    .status-unknown { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+  <header class="gradient-bg text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">🖥️</div>
+          <div>
+            <h1 class="text-2xl font-bold">Diagnóstico del Sistema</h1>
+            <p class="text-blue-200 text-sm" id="headerTimestamp">Monitoreo en vivo</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="cargarDiagnostico()" class="px-4 py-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors text-sm font-semibold flex items-center gap-2">
+            <span>🔄</span> Refrescar
+          </button>
+          <button onclick="iniciarAutoRefresh()" class="px-4 py-2 bg-emerald-500/30 rounded-xl hover:bg-emerald-500/50 transition-colors text-sm font-semibold flex items-center gap-2">
+            <span>📡</span> Auto
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <div id="loading" class="text-center py-20 hidden">
+      <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p class="text-slate-500">Cargando diagnóstico...</p>
+    </div>
+
+    <div id="content" class="hidden space-y-6 fade-in">
+
+      <!-- SERVICIOS -->
+      <div class="bg-white rounded-2xl shadow card">
+        <div class="p-6 border-b flex items-center justify-between">
+          <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span>⚙️</span> Estado de Servicios</h3>
+          <span id="healthSummary" class="text-xs text-slate-400"></span>
+        </div>
+        <div id="servicesGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6"></div>
+      </div>
+
+      <!-- MCP HEALTH -->
+      <div class="bg-white rounded-2xl shadow card">
+        <div class="p-6 border-b">
+          <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span>🧠</span> MCP - Model Context Protocol</h3>
+        </div>
+        <div id="mcpGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 p-6"></div>
+      </div>
+
+      <!-- SISTEMA -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-2xl p-6 shadow card">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-lg">⏱️</div>
+            <h3 class="font-semibold text-slate-700">Uptime</h3>
+          </div>
+          <p id="uptime" class="text-lg font-bold text-slate-800">-</p>
+          <p id="cpuLoad" class="text-xs text-slate-400 mt-1"></p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow card">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-lg">💾</div>
+            <h3 class="font-semibold text-slate-700">RAM</h3>
+          </div>
+          <p id="ramInfo" class="text-lg font-bold text-slate-800">-</p>
+          <div class="w-full bg-slate-200 rounded-full h-2 mt-2 overflow-hidden">
+            <div id="ramFill" class="h-full rounded-full transition-all duration-500" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow card">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-lg">💿</div>
+            <h3 class="font-semibold text-slate-700">Disco</h3>
+          </div>
+          <p id="diskInfo" class="text-lg font-bold text-slate-800">-</p>
+          <p id="diskDetails" class="text-xs text-slate-400 mt-1"></p>
+        </div>
+      </div>
+
+      <!-- SSL + DOCKER -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl p-6 shadow card">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-lg">🔒</div>
+            <div>
+              <h3 class="font-semibold text-slate-700">SSL Certificate</h3>
+              <p id="sslDomain" class="text-xs text-slate-400">gestordecursos.pegui.edu.co</p>
+            </div>
+          </div>
+          <div id="sslInfo" class="text-sm text-slate-600"></div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow card">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-cyan-100 rounded-xl flex items-center justify-center text-lg">🐳</div>
+            <h3 class="font-semibold text-slate-700">Docker Containers</h3>
+          </div>
+          <div id="dockerList" class="text-sm text-slate-600"></div>
+        </div>
+      </div>
+
+      <!-- RED -->
+      <div class="bg-white rounded-2xl p-6 shadow card">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-lg">🌐</div>
+          <h3 class="font-semibold text-slate-700">Red</h3>
+        </div>
+        <p id="networkInfo" class="text-sm text-slate-600 font-mono"></p>
+      </div>
+
+      <!-- ERRORES RECIENTES -->
+      <div class="bg-white rounded-2xl shadow card">
+        <div class="p-6 border-b flex items-center justify-between">
+          <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span>⚠️</span> Errores Recientes (journalctl)</h3>
+          <span id="errorCount" class="text-xs text-slate-400"></span>
+        </div>
+        <div id="errorList" class="p-6 space-y-2"></div>
+      </div>
+    </div>
+
+    <div id="error" class="hidden text-center py-16">
+      <div class="text-5xl mb-4">❌</div>
+      <h3 class="text-xl font-semibold text-slate-700 mb-2">Error al cargar diagnóstico</h3>
+      <p id="errorMsg" class="text-slate-500 mb-4"></p>
+      <button onclick="cargarDiagnostico()" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold">Reintentar</button>
+    </div>
+  </main>
+
+  <script src="/js/fetch-con-token.js"></script>
+  <script>
+    const API = 'https://gestordecursos.pegui.edu.co:8000';
+    let autoRefreshId = null;
+
+    function getToken() {
+      try { return window.parent.localStorage.getItem('token') || localStorage.getItem('token') || ''; } catch(e) { return localStorage.getItem('token') || ''; }
+    }
+
+    function statusDot(s) {
+      if (s === 'active' || s === 'ok') return '<span class="status-dot status-active"></span>';
+      if (s === 'inactive' || s === 'error' || s === 'failed') return '<span class="status-dot status-inactive"></span>';
+      return '<span class="status-dot status-unknown"></span>';
+    }
+
+    function serviceCard(name, s) {
+      const isOk = s === 'active' || s === 'ok';
+      const color = isOk ? 'bg-green-50 border-green-200' : (s === 'unknown' ? 'bg-slate-50 border-slate-200' : 'bg-red-50 border-red-200');
+      return `<div class="${color} border rounded-xl p-4 flex items-center justify-between">
+        <div>
+          <p class="font-semibold text-sm text-slate-700">${name}</p>
+          <p class="text-xs ${isOk ? 'text-green-600' : 'text-red-600'} capitalize">${s}</p>
+        </div>
+        ${s !== 'active' && s !== 'ok' && s !== 'unknown' ? `<button onclick="healService('${name}')" class="px-3 py-1 bg-rose-500/20 text-rose-600 rounded-lg text-xs font-semibold hover:bg-rose-500/30 transition-colors">Revivir</button>` : statusDot(s)}
+      </div>`;
+    }
+
+    async function healService(name) {
+      if (!confirm(`¿Reiniciar servicio "${name}"?`)) return;
+      try {
+        const res = await fetch(`${API}/diagnostico/heal?service=${name}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        const data = await res.json();
+        alert(data.action === 'skipped' ? `✅ ${name} ya está activo` : data.action === 'restarted' ? `✅ ${name} reiniciado exitosamente` : `❌ Error: ${data.output || data.detail}`);
+        cargarDiagnostico();
+      } catch(e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    async function cargarDiagnostico() {
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('content').classList.add('hidden');
+      document.getElementById('error').classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API}/diagnostico/`, {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const d = await res.json();
+
+        document.getElementById('headerTimestamp').textContent = `Actualizado: ${new Date(d.timestamp).toLocaleString('es-CO')}`;
+
+        // Servicios
+        const services = d.servicios || [];
+        const total = services.length;
+        const active = services.filter(s => s.status === 'active').length;
+        document.getElementById('healthSummary').textContent = `${active}/${total} activos`;
+        document.getElementById('servicesGrid').innerHTML = services.map(s =>
+          serviceCard(s.name, s.status)
+        ).join('');
+
+        // MCP
+        const mcp = d.mcp || [];
+        document.getElementById('mcpGrid').innerHTML = mcp.map(m => `
+          <div class="border rounded-xl p-4 ${m.status === 'ok' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}">
+            <div class="flex items-center justify-between mb-2">
+              <p class="font-semibold text-sm text-slate-700">${m.name}</p>
+              ${statusDot(m.status)}
+            </div>
+            <pre class="text-xs text-slate-500 mt-2 overflow-x-auto max-h-24">${JSON.stringify(m.detail || m, null, 2)}</pre>
+          </div>
+        `).join('');
+
+        // CPU / Uptime
+        const cpu = d.cpu || {};
+        document.getElementById('uptime').textContent = cpu.uptime ? cpu.uptime.split('  ')[0] : 'N/A';
+        document.getElementById('cpuLoad').textContent = cpu.load_1min ? `Load: ${cpu.load_1min} (1m) / ${cpu.load_5min} (5m) / ${cpu.load_15min} (15m) — ${cpu.cpus} CPUs` : '';
+
+        // RAM
+        const mem = d.memoria || {};
+        document.getElementById('ramInfo').textContent = mem.total_mb ? `${mem.used_mb} / ${mem.total_mb} MB (${mem.used_percent || 0}%)` : 'N/A';
+        const pct = mem.used_percent || 0;
+        document.getElementById('ramFill').style.width = pct + '%';
+        document.getElementById('ramFill').className = `h-full rounded-full transition-all duration-500 ${pct > 80 ? 'bg-red-500' : pct > 60 ? 'bg-amber-500' : 'bg-green-500'}`;
+
+        // Disco
+        const disk = d.disco || {};
+        document.getElementById('diskInfo').textContent = disk.use_percent ? `${disk.use_percent} usado` : 'N/A';
+        document.getElementById('diskDetails').textContent = disk.size ? `${disk.used} / ${disk.size} (${disk.available} libres)` : '';
+
+        // SSL
+        const ssl = d.ssl || {};
+        if (ssl.days_left !== undefined) {
+          const color = ssl.critical ? 'text-red-600' : ssl.days_left < 60 ? 'text-amber-600' : 'text-green-600';
+          document.getElementById('sslInfo').innerHTML = `
+            <p class="${color} font-semibold">${ssl.days_left} días restantes</p>
+            <p class="text-xs text-slate-400">Expira: ${ssl.expires || 'N/A'}</p>
+          `;
+        } else {
+          document.getElementById('sslInfo').innerHTML = '<p class="text-slate-400">No disponible</p>';
+        }
+
+        // Docker
+        const dockers = d.docker || [];
+        document.getElementById('dockerList').innerHTML = dockers.length && !dockers[0].error
+          ? dockers.map(dk => `<div class="flex items-center justify-between py-1 border-b last:border-0">
+              <span class="font-medium text-xs">${dk.name}</span>
+              <span class="text-xs ${dk.status.includes('Up') ? 'text-green-600' : 'text-red-600'}">${dk.status.split(' ')[0]}</span>
+            </div>`).join('')
+          : '<p class="text-slate-400 text-xs">No hay Docker disponible</p>';
+
+        // Red
+        const net = d.red || {};
+        document.getElementById('networkInfo').textContent = net.ips ? net.ips.join(', ') : 'N/A';
+
+        // Errores
+        const errors = d.errores_recientes || [];
+        const errContainer = document.getElementById('errorList');
+        document.getElementById('errorCount').textContent = `${errors.length} errores`;
+        if (errors.length > 0) {
+          errContainer.innerHTML = errors.map(e =>
+            `<div class="bg-slate-900 text-red-400 text-xs p-3 rounded-xl font-mono overflow-x-auto">${e}</div>`
+          ).join('');
+        } else {
+          errContainer.innerHTML = '<div class="text-green-600 text-sm flex items-center gap-2"><span>✅</span> Sin errores críticos recientes</div>';
+        }
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('content').classList.remove('hidden');
+      } catch(e) {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('error').classList.remove('hidden');
+        document.getElementById('errorMsg').textContent = e.message;
+      }
+    }
+
+    function iniciarAutoRefresh() {
+      if (autoRefreshId) {
+        clearInterval(autoRefreshId);
+        autoRefreshId = null;
+        alert('Auto-refresh desactivado');
+        return;
+      }
+      autoRefreshId = setInterval(cargarDiagnostico, 15000);
+      alert('Auto-refresh activado (cada 15s)');
+    }
+
+    cargarDiagnostico();
+  </script>
+</body>
+</html>

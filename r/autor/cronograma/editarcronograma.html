@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editar Cronograma</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 min-h-screen flex items-center justify-center p-6">
+
+  <div class="bg-white/90 backdrop-blur-lg shadow-2xl rounded-3xl w-full max-w-6xl p-10">
+    <!-- Encabezado -->
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-extrabold text-indigo-700 mb-2">✍️ Editor de Cronograma</h1>
+      <p class="text-gray-500">Actualiza las fases y visualiza estadísticas de tu proyecto</p>
+    </div>
+
+    <form id="cronogramaForm" class="space-y-10">
+      <input type="hidden" id="cronogramaId">
+
+      <!-- Proyecto -->
+      <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-sm">
+        <h2 class="text-xl font-bold text-gray-700 mb-4">📌 Información del Proyecto</h2>
+        <label for="project_id" class="block text-gray-600 font-medium mb-2">ID del Proyecto</label>
+        <input type="text" id="project_id" name="project_id" readonly
+          class="w-full p-3 border rounded-xl bg-gray-100 text-gray-700 font-semibold" />
+      </div>
+
+      <!-- Fase Inicio -->
+      <div class="bg-green-50 rounded-2xl p-6 border border-green-200 shadow">
+        <h2 class="text-xl font-bold text-green-700 mb-4">🚀 Fase Inicio</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Responsables</label>
+            <input type="text" id="responsables_inicio" name="responsables_inicio"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Mes</label>
+            <input type="text" id="mes_inicio" name="mes_inicio"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Día Inicio</label>
+            <input type="number" id="dia_inicio_inicio" name="dia_inicio_inicio" min="1" max="31"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Día Fin</label>
+            <input type="number" id="dia_fin_inicio" name="dia_fin_inicio" min="1" max="31"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-400" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Fase Desarrollo -->
+      <div class="bg-blue-50 rounded-2xl p-6 border border-blue-200 shadow">
+        <h2 class="text-xl font-bold text-blue-700 mb-4">⚙️ Fase Desarrollo</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Responsables</label>
+            <input type="text" id="responsables_desarrollo" name="responsables_desarrollo"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Mes</label>
+            <input type="text" id="mes_desarrollo" name="mes_desarrollo"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Día Inicio</label>
+            <input type="number" id="dia_inicio_desarrollo" name="dia_inicio_desarrollo" min="1" max="31"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Día Fin</label>
+            <input type="number" id="dia_fin_desarrollo" name="dia_fin_desarrollo" min="1" max="31"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Fase Final -->
+      <div class="bg-red-50 rounded-2xl p-6 border border-red-200 shadow">
+        <h2 class="text-xl font-bold text-red-700 mb-4">🏁 Fase Final</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Responsables</label>
+            <input type="text" id="responsables_final" name="responsables_final"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Mes</label>
+            <input type="text" id="mes_final" name="mes_final"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Día Inicio</label>
+            <input type="number" id="dia_inicio_final" name="dia_inicio_final" min="1" max="31"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Día Fin</label>
+            <input type="number" id="dia_fin_final" name="dia_fin_final" min="1" max="31"
+              class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-400" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex justify-between items-center pt-6">
+        <button type="button" id="cancelBtn"
+          class="px-6 py-3 bg-gray-200 rounded-lg hover:bg-gray-300 transition font-semibold">
+          ❌ Cancelar
+        </button>
+        <button type="submit"
+          class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md transition">
+          💾 Guardar Cambios
+        </button>
+      </div>
+    </form>
+
+    <!-- Estadísticas -->
+    <div class="mt-12 bg-white rounded-2xl p-8 shadow-inner border border-gray-200">
+      <h2 class="text-2xl font-bold text-center text-indigo-700 mb-6">📊 Estadísticas del Cronograma</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="h-80">
+          <canvas id="barChart"></canvas>
+        </div>
+        <div class="h-80 flex items-center justify-center">
+          <div class="w-64 h-64">
+            <canvas id="pieChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    let barChart, pieChart;
+
+    function obtenerToken() {
+      return localStorage.getItem("token") || localStorage.getItem("authToken");
+    }
+
+    function getProjectIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("project_id");
+    }
+
+    async function cargarCronograma(projectId) {
+      try {
+        const token = obtenerToken();
+        const res = await fetch(`${API_BASE}/cronogramas/project/${projectId}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          alert("No hay cronograma para este proyecto.");
+          return;
+        }
+        const cronograma = data[0];
+        document.getElementById("cronogramaId").value = cronograma.id;
+        for (let key in cronograma) {
+          if (document.getElementById(key)) {
+            document.getElementById(key).value = cronograma[key];
+          }
+        }
+        actualizarGraficos();
+      } catch (err) {
+        console.error("Error cargando cronograma:", err);
+        alert("Error cargando cronograma");
+      }
+    }
+
+    function calcularDuracion(inicio, fin) {
+      return (fin && inicio) ? (fin - inicio + 1) : 0;
+    }
+
+    function actualizarGraficos() {
+      const durInicio = calcularDuracion(
+        parseInt(document.getElementById("dia_inicio_inicio").value),
+        parseInt(document.getElementById("dia_fin_inicio").value)
+      );
+      const durDesarrollo = calcularDuracion(
+        parseInt(document.getElementById("dia_inicio_desarrollo").value),
+        parseInt(document.getElementById("dia_fin_desarrollo").value)
+      );
+      const durFinal = calcularDuracion(
+        parseInt(document.getElementById("dia_inicio_final").value),
+        parseInt(document.getElementById("dia_fin_final").value)
+      );
+
+      const labels = ["Inicio", "Desarrollo", "Final"];
+      const data = [durInicio, durDesarrollo, durFinal];
+
+      // Gráfico de barras
+      if (barChart) barChart.destroy();
+      barChart = new Chart(document.getElementById("barChart"), {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Duración (días)",
+            data: data,
+            backgroundColor: ["#34d399", "#60a5fa", "#f87171"]
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+      // Gráfico de pastel
+      if (pieChart) pieChart.destroy();
+      pieChart = new Chart(document.getElementById("pieChart"), {
+        type: "pie",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Distribución",
+            data: data,
+            backgroundColor: ["#34d399", "#60a5fa", "#f87171"]
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    document.querySelectorAll("input").forEach(input =>
+      input.addEventListener("input", actualizarGraficos)
+    );
+
+    document.getElementById("cronogramaForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const token = obtenerToken();
+      const id = document.getElementById("cronogramaId").value;
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch(`${API_BASE}/cronogramas/${id}`, {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        alert("✅ Cronograma actualizado correctamente");
+        window.location.href = `vercronograma.html?project_id=${data.project_id}`;
+      } catch (err) {
+        console.error("Error guardando cronograma:", err);
+        alert("❌ Error al guardar cronograma");
+      }
+    });
+
+    document.getElementById("cancelBtn").addEventListener("click", () => {
+      const projectId = document.getElementById("project_id").value;
+      window.location.href = `vercronograma.html?project_id=${projectId}`;
+    });
+
+    const projectId = getProjectIdFromUrl();
+    if (projectId) {
+      document.getElementById("project_id").value = projectId;
+      cargarCronograma(projectId);
+    }
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image Studio Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            secondary: '#8b5cf6',
+            accent: '#06b6d4',
+            dark: '#0f172a',
+            surface: '#1e293b',
+            'surface-light': '#334155'
+          },
+          animation: {
+            'gradient': 'gradient 6s ease infinite',
+            'float': 'float 3s ease-in-out infinite',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'shimmer': 'shimmer 2s linear infinite'
+          },
+          keyframes: {
+            gradient: {
+              '0%, 100%': { 'background-position': '0% 50%' },
+              '50%': { 'background-position': '100% 50%' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' }
+            },
+            shimmer: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(100%)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(-45deg, #0f172a, #1e293b, #334155, #475569);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    
+    .glass-input {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    
+    .glass-input:focus {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(99, 102, 241, 0.5);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .glass-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .btn-gradient {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -12px rgba(99, 102, 241, 0.4);
+    }
+    
+    .btn-gradient::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .btn-gradient:hover::before {
+      left: 100%;
+    }
+    
+    .progress-glow {
+      filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.6));
+    }
+    
+    .floating-orb {
+      position: absolute;
+      border-radius: 50%;
+      background: linear-gradient(45deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3));
+      filter: blur(40px);
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .image-container {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .image-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.5s;
+      z-index: 10;
+    }
+    
+    .image-loading::before {
+      animation: shimmer 2s linear infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-white relative overflow-x-hidden">
+  <!-- Floating Orbs Background -->
+  <div class="floating-orb w-96 h-96 top-10 -left-48" style="animation-delay: -2s;"></div>
+  <div class="floating-orb w-80 h-80 top-1/2 -right-40" style="animation-delay: -4s;"></div>
+  <div class="floating-orb w-72 h-72 bottom-20 left-1/4" style="animation-delay: -1s;"></div>
+
+  <div class="relative z-10 min-h-screen p-4 sm:p-6 lg:p-8">
+    <div class="max-w-6xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-primary to-secondary rounded-2xl mb-6 animate-pulse-slow">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <h1 class="text-5xl sm:text-6xl font-bold bg-gradient-to-r from-white via-primary to-secondary bg-clip-text text-transparent mb-4">
+          AI Image Studio Pro
+        </h1>
+        <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+          Crea, transforma y mejora imágenes con inteligencia artificial de última generación
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Left Panel - Controls -->
+        <div class="space-y-6">
+          <!-- Prompt Section -->
+          <div class="glass-card rounded-2xl p-6">
+            <div class="flex items-center mb-4">
+              <div class="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center mr-3">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </div>
+              <h2 class="text-lg font-semibold text-white">Descripción de la imagen</h2>
+            </div>
+            <textarea 
+              id="prompt" 
+              class="w-full h-24 rounded-xl glass-input p-4 resize-none transition-all duration-200"
+              placeholder="Describe la imagen que quieres crear... Ej: Un paisaje futurista con montañas cristalinas bajo un cielo violeta"
+            ></textarea>
+          </div>
+
+          <!-- Negative Prompt Section -->
+          <div class="glass-card rounded-2xl p-6">
+            <div class="flex items-center mb-4">
+              <div class="w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636"></path>
+                </svg>
+              </div>
+              <h2 class="text-lg font-semibold text-white">Elementos a evitar</h2>
+            </div>
+            <textarea 
+              id="negative_prompt" 
+              class="w-full h-20 rounded-xl glass-input p-4 resize-none transition-all duration-200"
+              placeholder="Elementos que no quieres en la imagen... Ej: borroso, mal iluminado, distorsionado"
+            ></textarea>
+          </div>
+
+          <!-- File Upload -->
+          <div class="glass-card rounded-2xl p-6">
+            <div class="flex items-center mb-4">
+              <div class="w-8 h-8 bg-gradient-to-r from-accent to-cyan-500 rounded-lg flex items-center justify-center mr-3">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+              </div>
+              <h2 class="text-lg font-semibold text-white">Subir imagen</h2>
+            </div>
+            <div class="relative">
+              <input 
+                type="file" 
+                id="image_input" 
+                accept="image/*" 
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              >
+              <div id="dropZone" class="glass-input rounded-xl p-6 text-center border-2 border-dashed border-gray-400 hover:border-primary transition-colors duration-200">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-gray-400">Arrastra una imagen aquí o haz clic para seleccionar</p>
+                <p class="text-sm text-gray-500 mt-2">PNG, JPG, JPEG hasta 10MB</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="grid grid-cols-2 gap-4">
+            <button onclick="text2img()" class="btn-gradient text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+              </svg>
+              <span>Crear Imagen</span>
+            </button>
+            
+            <button onclick="img2img()" class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200 hover:transform hover:scale-105">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <span>Transformar</span>
+            </button>
+            
+            <button onclick="upscaleSingle()" class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200 hover:transform hover:scale-105">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+              </svg>
+              <span>Mejorar Calidad</span>
+            </button>
+            
+            <button onclick="interrogateImage()" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200 hover:transform hover:scale-105">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+              </svg>
+              <span>Analizar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Panel - Results -->
+        <div class="space-y-6">
+          <!-- Progress Section -->
+          <div class="glass-card rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-white">Progreso de generación</h3>
+              <span id="progressText" class="text-sm text-gray-400">0%</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+              <div 
+                id="progressBar" 
+                class="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 progress-glow"
+                style="width: 0%"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Image Display -->
+          <div class="glass-card rounded-2xl p-6">
+            <div class="image-container rounded-xl overflow-hidden bg-gray-800 min-h-96 flex items-center justify-center">
+              <div id="placeholderContent" class="text-center">
+                <div class="w-24 h-24 bg-gradient-to-r from-primary to-secondary rounded-2xl mx-auto mb-6 flex items-center justify-center animate-pulse-slow">
+                  <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <p class="text-gray-400 text-lg mb-2">Tu imagen aparecerá aquí</p>
+                <p class="text-gray-500">Utiliza los controles de la izquierda para generar una imagen</p>
+              </div>
+              <img id="outputImage" class="max-w-full max-h-full rounded-xl hidden" alt="Imagen generada">
+            </div>
+            
+            <!-- Action Buttons for Generated Image -->
+            <div id="imageActions" class="flex justify-center space-x-4 mt-6 hidden">
+              <button id="downloadBtn" onclick="descargarImagen()" class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold py-3 px-6 rounded-xl flex items-center space-x-2 transition-all duration-200 hover:transform hover:scale-105">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Descargar</span>
+              </button>
+              
+              <button id="upscaleGeneratedBtn" onclick="upscaleFromOutput()" class="btn-gradient text-white font-semibold py-3 px-6 rounded-xl flex items-center space-x-2 transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                </svg>
+                <span>Aumentar Tamaño</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Interrogate Results -->
+          <div id="interrogateResult" class="glass-card rounded-2xl p-6 hidden">
+            <div class="flex items-center mb-4">
+              <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-white">Análisis de la imagen</h3>
+            </div>
+            <div class="glass-input rounded-xl p-4">
+              <p id="interrogateText" class="text-gray-300 leading-relaxed"></p>
+            </div>
+            <button onclick="copyToPrompt()" class="mt-4 bg-gradient-to-r from-accent to-cyan-500 hover:from-cyan-500 hover:to-accent text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 hover:transform hover:scale-105">
+              Usar como prompt
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://ia.pegui.edu.co/sdapi/v1";
+    let ultimaImagenGenerada = null;
+    let origenUpscale = false;
+    
+    // Configuración adicional para fetch
+    const fetchConfig = {
+      mode: 'cors',
+      credentials: 'omit',
+      cache: 'no-cache'
+    };
+
+    // File input enhancement
+    const fileInput = document.getElementById('image_input');
+    const dropZone = document.getElementById('dropZone');
+
+    fileInput.addEventListener('change', function(e) {
+      const fileName = e.target.files[0]?.name;
+      if (fileName) {
+        updateDropZoneText(`Archivo seleccionado: ${fileName}`);
+      }
+    });
+
+    // Drag and drop functionality
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+      dropZone.classList.add('border-primary');
+    }
+
+    function unhighlight(e) {
+      dropZone.classList.remove('border-primary');
+    }
+
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      
+      if (files.length > 0) {
+        fileInput.files = files;
+        updateDropZoneText(`Archivo seleccionado: ${files[0].name}`);
+      }
+    }
+
+    function updateDropZoneText(text) {
+      const textElement = dropZone.querySelector('p');
+      textElement.textContent = text;
+    }
+
+    function updateProgress() {
+      fetch(`${API_BASE}/progress`, {
+        ...fetchConfig,
+        method: 'GET'
+      })
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
+        .then(data => {
+          const progress = Math.round(data.progress * 100);
+          document.getElementById("progressBar").style.width = `${progress}%`;
+          document.getElementById("progressText").textContent = `${progress}%`;
+          
+          if (data.progress < 1) {
+            setTimeout(updateProgress, 500);
+          } else {
+            setTimeout(() => {
+              document.getElementById("progressBar").style.width = '0%';
+              document.getElementById("progressText").textContent = '0%';
+            }, 1000);
+          }
+        })
+        .catch(error => {
+          console.error('Error en updateProgress:', error);
+          // Detener el polling si hay error
+          document.getElementById("progressBar").style.width = '0%';
+          document.getElementById("progressText").textContent = 'Error';
+        });
+    }
+
+    function mostrarImagen() {
+      document.getElementById('placeholderContent').classList.add('hidden');
+      document.getElementById('outputImage').classList.remove('hidden');
+      document.getElementById('imageActions').classList.remove('hidden');
+      
+      if (origenUpscale) {
+        document.getElementById('upscaleGeneratedBtn').classList.add('hidden');
+      } else {
+        document.getElementById('upscaleGeneratedBtn').classList.remove('hidden');
+      }
+    }
+
+    function mostrarLoader() {
+      const container = document.querySelector('.image-container');
+      container.classList.add('image-loading');
+      updateProgress();
+    }
+
+    function ocultarLoader() {
+      const container = document.querySelector('.image-container');
+      container.classList.remove('image-loading');
+    }
+
+    // Función auxiliar para convertir archivo a base64
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    async function text2img() {
+      const prompt = document.getElementById('prompt').value.trim();
+      if (!prompt) {
+        mostrarNotificacion("Por favor, ingresa una descripción para la imagen", 'error');
+        return;
+      }
+      
+      const negative = document.getElementById('negative_prompt').value || "";
+      origenUpscale = false;
+      mostrarLoader();
+      
+      console.log('Iniciando text2img con prompt:', prompt);
+      
+      const requestBody = {
+        prompt: prompt,
+        negative_prompt: negative,
+        width: 512,
+        height: 512,
+        steps: 20,
+        cfg_scale: 7,
+        sampler_index: "Euler",
+        restore_faces: true
+      };
+      
+      console.log('Request body:', requestBody);
+      
+      try {
+        const res = await fetch(`${API_BASE}/txt2img`, {
+          ...fetchConfig,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        console.log('Response status:', res.status);
+        console.log('Response headers:', res.headers);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Error response:', errorText);
+          throw new Error(`HTTP ${res.status}: ${errorText}`);
+        }
+        
+        const data = await res.json();
+        console.log('Response data:', data);
+        
+        if (!data.images || !data.images[0]) {
+          throw new Error('No se recibieron imágenes en la respuesta');
+        }
+        
+        ultimaImagenGenerada = `data:image/png;base64,${data.images[0]}`;
+        document.getElementById('outputImage').src = ultimaImagenGenerada;
+        mostrarImagen();
+        mostrarNotificacion('Imagen generada exitosamente', 'success');
+        
+      } catch (error) {
+        console.error('Error completo:', error);
+        mostrarNotificacion(`Error: ${error.message}`, 'error');
+        
+        // Mostrar sugerencias según el tipo de error
+        if (error.message.includes('Failed to fetch')) {
+          mostrarNotificacion('Problema de conexión. Verifica que el servidor esté disponible.', 'error');
+        } else if (error.message.includes('CORS')) {
+          mostrarNotificacion('Error de CORS. El servidor debe permitir peticiones desde este dominio.', 'error');
+        }
+      } finally {
+        ocultarLoader();
+      }
+    }
+
+    async function img2img() {
+      const prompt = document.getElementById('prompt').value.trim();
+      const file = document.getElementById('image_input').files[0];
+      
+      if (!file) {
+        mostrarNotificacion("Por favor, sube una imagen primero", 'error');
+        return;
+      }
+      if (!prompt) {
+        mostrarNotificacion("Por favor, ingresa una descripción para la transformación", 'error');
+        return;
+      }
+      
+      origenUpscale = false;
+      mostrarLoader();
+      
+      try {
+        const base64 = await toBase64(file);
+        const requestBody = {
+          prompt: prompt,
+          negative_prompt: document.getElementById('negative_prompt').value || "",
+          init_images: [base64.split(',')[1]],
+          width: 512,
+          height: 512,
+          denoising_strength: 0.75,
+          steps: 20,
+          cfg_scale: 7,
+          sampler_index: "Euler"
+        };
+        
+        const res = await fetch(`${API_BASE}/img2img`, {
+          ...fetchConfig,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`HTTP ${res.status}: ${errorText}`);
+        }
+        
+        const data = await res.json();
+        if (!data.images || !data.images[0]) {
+          throw new Error('No se recibieron imágenes en la respuesta');
+        }
+        
+        ultimaImagenGenerada = `data:image/png;base64,${data.images[0]}`;
+        document.getElementById('outputImage').src = ultimaImagenGenerada;
+        mostrarImagen();
+        mostrarNotificacion('Imagen transformada exitosamente', 'success');
+        
+      } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion(`Error al transformar: ${error.message}`, 'error');
+      } finally {
+        ocultarLoader();
+      }
+    }
+
+    async function upscaleSingle() {
+      const file = document.getElementById('image_input').files[0];
+      if (!file) {
+        alert("Por favor, sube una imagen primero");
+        return;
+      }
+      
+      origenUpscale = true;
+      mostrarLoader();
+      
+      try {
+        const base64 = await toBase64(file);
+        const res = await fetch(`${API_BASE}/extra-single-image`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            image: base64.split(',')[1],
+            upscaling_resize: 2,
+            upscaler_1: "None"
+          })
+        });
+        
+        if (!res.ok) throw new Error('Error en el upscale');
+        
+        const data = await res.json();
+        ultimaImagenGenerada = `data:image/png;base64,${data.image}`;
+        document.getElementById('outputImage').src = ultimaImagenGenerada;
+        mostrarImagen();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al mejorar la calidad. Inténtalo de nuevo.');
+      } finally {
+        ocultarLoader();
+      }
+    }
+
+    async function upscaleFromOutput() {
+      if (!ultimaImagenGenerada) {
+        alert("No hay imagen generada para mejorar");
+        return;
+      }
+      
+      origenUpscale = true;
+      mostrarLoader();
+      
+      try {
+        const base64 = ultimaImagenGenerada.split(',')[1];
+        const res = await fetch(`${API_BASE}/extra-single-image`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            image: base64,
+            upscaling_resize: 2,
+            upscaler_1: "None"
+          })
+        });
+        
+        if (!res.ok) throw new Error('Error en el upscale');
+        
+        const data = await res.json();
+        ultimaImagenGenerada = `data:image/png;base64,${data.image}`;
+        document.getElementById('outputImage').src = ultimaImagenGenerada;
+        mostrarImagen();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al mejorar la calidad. Inténtalo de nuevo.');
+      } finally {
+        ocultarLoader();
+      }
+    }
+
+    async function interrogateImage() {
+      const file = document.getElementById('image_input').files[0];
+      if (!file) {
+        alert("Por favor, sube una imagen primero");
+        return;
+      }
+      
+      mostrarLoader();
+      
+      try {
+        const base64 = await toBase64(file);
+        const res = await fetch(`${API_BASE}/interrogate`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            image: base64.split(',')[1],
+            model: "clip"
+          })
+        });
+        
+        if (!res.ok) throw new Error('Error en el análisis');
+        
+        const data = await res.json();
+        document.getElementById('interrogateText').textContent = data.caption;
+        document.getElementById('interrogateResult').classList.remove('hidden');
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al analizar la imagen. Inténtalo de nuevo.');
+      } finally {
+        ocultarLoader();
+      }
+    }
+
+    function copyToPrompt() {
+      const interrogateText = document.getElementById('interrogateText').textContent;
+      document.getElementById('prompt').value = interrogateText;
+      
+      // Mostrar feedback visual
+      const button = event.target;
+      const originalText = button.textContent;
+      button.textContent = '¡Copiado!';
+      button.classList.add('bg-green-500');
+      
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('bg-green-500');
+      }, 2000);
+    }
+
+    function descargarImagen() {
+      if (!ultimaImagenGenerada) {
+        alert("No hay imagen para descargar");
+        return;
+      }
+      
+      // Crear un enlace temporal para la descarga
+      const link = document.createElement('a');
+      link.download = `ai-image-${Date.now()}.png`;
+      link.href = ultimaImagenGenerada;
+      
+      // Añadir al DOM, hacer clic y eliminar
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Mostrar feedback visual
+      const button = document.getElementById('downloadBtn');
+      const originalText = button.querySelector('span').textContent;
+      button.querySelector('span').textContent = '¡Descargado!';
+      button.classList.add('from-green-600', 'to-green-700');
+      
+      setTimeout(() => {
+        button.querySelector('span').textContent = originalText;
+        button.classList.remove('from-green-600', 'to-green-700');
+      }, 2000);
+    }
+
+    // Función para probar la conexión con la API
+    async function probarConexion() {
+      mostrarNotificacion('Probando conexión con la API...', 'info');
+      
+      try {
+        // Primero probar un endpoint simple
+        const response = await fetch(`${API_BASE}/progress`, {
+          ...fetchConfig,
+          method: 'GET'
+        });
+        
+        if (response.ok) {
+          mostrarNotificacion('✅ Conexión exitosa con la API', 'success');
+          return true;
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Error de conexión:', error);
+        mostrarNotificacion('❌ No se pudo conectar con la API', 'error');
+        
+        // Mostrar información de debugging
+        const debugInfo = document.createElement('div');
+        debugInfo.className = 'glass-card rounded-lg p-4 mt-4 text-sm';
+        debugInfo.innerHTML = `
+          <h4 class="font-semibold mb-2 text-yellow-400">🔧 Información de Debug:</h4>
+          <p><strong>URL:</strong> ${API_BASE}</p>
+          <p><strong>Error:</strong> ${error.message}</p>
+          <p><strong>Posibles causas:</strong></p>
+          <ul class="list-disc list-inside mt-2 space-y-1 text-gray-300">
+            <li>El servidor no está ejecutándose</li>
+            <li>Problema de CORS (Cross-Origin Resource Sharing)</li>
+            <li>URL incorrecta</li>
+            <li>Firewall bloqueando la conexión</li>
+          </ul>
+          <button onclick="this.parentElement.remove()" class="mt-3 bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm">
+            Cerrar
+          </button>
+        `;
+        
+        // Agregar el debug info después del header
+        const header = document.querySelector('.text-center.mb-12');
+        header.after(debugInfo);
+        
+        return false;
+      }
+    }
+    function mostrarNotificacion(mensaje, tipo = 'info') {
+      const notificacion = document.createElement('div');
+      notificacion.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
+      
+      if (tipo === 'success') {
+        notificacion.classList.add('bg-green-500', 'text-white');
+      } else if (tipo === 'error') {
+        notificacion.classList.add('bg-red-500', 'text-white');
+      } else {
+        notificacion.classList.add('bg-blue-500', 'text-white');
+      }
+      
+      notificacion.textContent = mensaje;
+      document.body.appendChild(notificacion);
+      
+      // Animación de entrada
+      setTimeout(() => {
+        notificacion.classList.remove('translate-x-full');
+      }, 100);
+      
+      // Eliminar después de 3 segundos
+      setTimeout(() => {
+        notificacion.classList.add('translate-x-full');
+        setTimeout(() => {
+          document.body.removeChild(notificacion);
+        }, 300);
+      }, 3000);
+    }
+
+    // Validación de archivos
+    function validarArchivo(file) {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      
+      if (!allowedTypes.includes(file.type)) {
+        mostrarNotificacion('Tipo de archivo no válido. Solo se permiten JPG, JPEG y PNG.', 'error');
+        return false;
+      }
+      
+      if (file.size > maxSize) {
+        mostrarNotificacion('El archivo es demasiado grande. Máximo 10MB.', 'error');
+        return false;
+      }
+      
+      return true;
+    }
+
+    // Mejorar el manejo de archivos
+    fileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file && validarArchivo(file)) {
+        updateDropZoneText(`Archivo seleccionado: ${file.name}`);
+        mostrarNotificacion('Imagen cargada correctamente', 'success');
+      } else if (file) {
+        e.target.value = ''; // Limpiar la selección
+      }
+    });
+
+    // Atajos de teclado
+    document.addEventListener('keydown', function(e) {
+      // Ctrl + Enter para generar imagen
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        const prompt = document.getElementById('prompt').value.trim();
+        if (prompt) {
+          text2img();
+        }
+      }
+      
+      // Ctrl + S para descargar imagen
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        if (ultimaImagenGenerada) {
+          descargarImagen();
+        }
+      }
+    });
+
+    // Inicialización mejorada
+    document.addEventListener('DOMContentLoaded', function() {
+      // Probar conexión al cargar la página
+      setTimeout(probarConexion, 1000);
+      
+      // Establecer texto por defecto en prompts
+      const promptExamples = [
+        "Un paisaje futurista con montañas cristalinas bajo un cielo violeta",
+        "Un gato cyberpunk con ojos brillantes en una ciudad nocturna",
+        "Una casa flotante en el espacio rodeada de nebulosas coloridas",
+        "Un bosque mágico con árboles luminosos y criaturas fantásticas",
+        "Un robot steampunk en un taller lleno de engranajes dorados"
+      ];
+      
+      const randomExample = promptExamples[Math.floor(Math.random() * promptExamples.length)];
+      document.getElementById('prompt').placeholder = `Ej: ${randomExample}`;
+      
+      // Agregar botón de test de conexión
+      const testButton = document.createElement('button');
+      testButton.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>Probar Conexión</span>
+      `;
+      testButton.className = 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center space-x-2 transition-all duration-200 hover:transform hover:scale-105';
+      testButton.onclick = probarConexion;
+      
+      // Agregar el botón antes de los botones principales
+      const buttonGrid = document.querySelector('.grid.grid-cols-2.gap-4');
+      const testContainer = document.createElement('div');
+      testContainer.className = 'col-span-2 flex justify-center mb-4';
+      testContainer.appendChild(testButton);
+      buttonGrid.parentNode.insertBefore(testContainer, buttonGrid);
+    });
+
+    // Función para limpiar formulario
+    function limpiarFormulario() {
+      document.getElementById('prompt').value = '';
+      document.getElementById('negative_prompt').value = '';
+      document.getElementById('image_input').value = '';
+      updateDropZoneText('Arrastra una imagen aquí o haz clic para seleccionar');
+      document.getElementById('interrogateResult').classList.add('hidden');
+    }
+
+    // Agregar botón de limpiar (opcional)
+    function agregarBotonLimpiar() {
+      const clearBtn = document.createElement('button');
+      clearBtn.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+        <span>Limpiar</span>
+      `;
+      clearBtn.className = 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center space-x-2 transition-all duration-200 hover:transform hover:scale-105';
+      clearBtn.onclick = limpiarFormulario;
+      
+      // Agregar el botón al final de los controles
+      const controlsSection = document.querySelector('.space-y-6');
+      const buttonContainer = document.createElement('div');
+      buttonContainer.className = 'flex justify-center';
+      buttonContainer.appendChild(clearBtn);
+      controlsSection.appendChild(buttonContainer);
+    }
+
+    // Llamar la función para agregar el botón de limpiar
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(agregarBotonLimpiar, 100);
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Carga masiva de usuarios</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6 font-sans">
+
+  <div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold text-indigo-700 text-center mb-6">Carga Masiva de Usuarios</h1>
+<!-- Botón para descargar plantilla -->
+    <div class="mb-4 text-center">
+      <a href="https://144.217.76.64:8000/static/uploads/fe53d4d0-f1ac-41e4-9310-0c0444b609ff.xlsx" class="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500">
+        Descargar Plantilla de Referencia
+      </a>
+    </div>
+    <form id="formCargaUsuarios" enctype="multipart/form-data" class="space-y-4">
+      <label class="block font-medium text-gray-700">Selecciona archivo Excel (.xlsx):</label>
+      <input type="file" name="archivo" accept=".xlsx,.xls" required class="block w-full border p-2 rounded">
+
+      <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">
+        Subir y procesar usuarios
+      </button>
+    </form>
+
+    <div id="resultado" class="mt-6 text-sm text-center"></div>
+  </div>
+
+  <script>
+    document.getElementById("formCargaUsuarios").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const resultado = document.getElementById("resultado");
+
+      try {
+        const res = await fetch("https://gestordecursos.pegui.edu.co:8000/bulk/usuarios", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          let html = `<p class="text-green-700 font-medium mb-2">✅ Usuarios creados: ${data.usuarios_creados.length}</p>`;
+          if (data.usuarios_creados.length > 0) {
+            html += `<ul class="mb-4 text-green-600">${data.usuarios_creados.map(u => `<li>${u}</li>`).join("")}</ul>`;
+          }
+
+          if (data.errores.length > 0) {
+            html += `<p class="text-red-600 font-medium">❌ Errores:</p><ul class="text-red-500 text-left max-h-48 overflow-auto">`;
+            data.errores.forEach(err => {
+              html += `<li>Fila ${err.fila}: ${err.error}</li>`;
+            });
+            html += `</ul>`;
+          }
+
+          resultado.innerHTML = html;
+        } else {
+          resultado.innerHTML = `<p class="text-red-600 font-medium">❌ Error: ${data.detail || "Error en el archivo o servidor."}</p>`;
+        }
+
+      } catch (err) {
+        resultado.innerHTML = `<p class="text-red-600">❌ Error de conexión con el servidor.</p>`;
+      }
+    });
+  </script>
+
+</body>
+</html>
+

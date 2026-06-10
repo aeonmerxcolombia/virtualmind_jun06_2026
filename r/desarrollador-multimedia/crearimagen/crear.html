@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Laboratorio de IA - Generador de Imágenes</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Lato', sans-serif; }
+    
+    /* Fondo animado */
+    .bg-animated {
+      background: linear-gradient(-45deg, #0f172a, #1e1b4b, #0f172a, #064e3b);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+    
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    /* Efecto cristal */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-animated min-h-screen text-slate-200 flex flex-col items-center py-10 px-4">
+
+  <div class="max-w-6xl w-full mb-8 text-center">
+    <h1 class="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2">
+      Qwen Image Studio
+    </h1>
+    <p class="text-slate-400 text-lg">Prueba el endpoint de generación de imágenes de Alibaba DashScope</p>
+  </div>
+
+  <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <div class="lg:col-span-5 space-y-6">
+      <div class="glass-panel rounded-2xl p-6 shadow-2xl">
+        <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+          Parámetros
+        </h2>
+
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-slate-300 mb-2">Prompt (Lo que quieres ver)</label>
+          <textarea id="prompt" rows="4" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors" placeholder="Ej: Un zorro cibernético programando en una laptop neon, estilo cyberpunk, 4k..."></textarea>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-slate-300 mb-2">Prompt Negativo (Lo que NO quieres)</label>
+          <textarea id="negative_prompt" rows="2" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors">Low resolution, blurry, distorted, malformed, bad quality, text, watermark</textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label class="block text-sm font-semibold text-slate-300 mb-2">Resolución</label>
+            <select id="size" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+              <option value="2048*2048">2048 x 2048 (1:1)</option>
+              <option value="1536*2688">1536 x 2688 (9:16)</option>
+              <option value="2688*1536">2688 x 1536 (16:9)</option>
+              <option value="1728*2368">1728 x 2368 (3:4)</option>
+              <option value="2368*1728">2368 x 1728 (4:3)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-300 mb-2">Modelo</label>
+            <select id="model" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500">
+              <option value="qwen-image-2.0-pro">Qwen 2.0 Pro</option>
+              <option value="qwen-image-max">Qwen Max</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-8 p-3 bg-slate-900/30 rounded-xl border border-slate-700/50">
+          <span class="text-sm font-semibold text-slate-300">Expansión inteligente (Prompt Extend)</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="prompt_extend" class="sr-only peer" checked>
+            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+          </label>
+        </div>
+
+        <button id="btnGenerar" onclick="generarImagen()" class="w-full bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform transition-all active:scale-95 flex items-center justify-center gap-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+          <span id="btnText">Generar Imagen Ahora</span>
+        </button>
+        
+        <div id="statusMsg" class="mt-4 text-sm text-center font-medium hidden"></div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-7">
+      <div class="glass-panel rounded-2xl p-6 shadow-2xl h-full flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold text-white flex items-center">
+            <svg class="w-6 h-6 mr-2 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            Resultado
+          </h2>
+          <button id="btnDescargar" onclick="descargarImagen()" class="hidden bg-slate-800 hover:bg-slate-700 text-white text-sm py-2 px-4 rounded-lg border border-slate-600 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Descargar
+          </button>
+        </div>
+
+        <div id="imageContainer" class="flex-grow bg-slate-900/50 rounded-xl border border-slate-700 border-dashed flex items-center justify-center relative overflow-hidden min-h-[400px] lg:min-h-[600px]">
+          
+          <div id="initialState" class="text-center text-slate-500 p-6">
+            <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <p>La imagen generada aparecerá aquí.</p>
+          </div>
+
+          <div id="loadingState" class="hidden absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-emerald-500 mb-4"></div>
+            <p class="text-emerald-400 font-semibold animate-pulse">Llamando a los servidores de Alibaba...</p>
+            <p class="text-slate-400 text-sm mt-2 max-w-xs text-center">Este modelo es síncrono y de alta calidad, puede tardar unos segundos.</p>
+          </div>
+
+          <img id="resultImage" class="hidden max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-opacity duration-500" alt="Imagen generada por IA">
+          
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // URL de tu Backend (ajústala si la pruebas en local o en el servidor)
+    const API_URL = "https://gestordecursos.pegui.edu.co:8000/ai/generate-image";
+    // const API_URL = "http://localhost:8000/ai/generate-image"; // Descomenta si pruebas local
+    
+    let currentBase64 = null;
+
+    async function generarImagen() {
+      const prompt = document.getElementById("prompt").value.trim();
+      const negative_prompt = document.getElementById("negative_prompt").value.trim();
+      const size = document.getElementById("size").value;
+      const model = document.getElementById("model").value;
+      const prompt_extend = document.getElementById("prompt_extend").checked;
+
+      const btnGenerar = document.getElementById("btnGenerar");
+      const btnText = document.getElementById("btnText");
+      const statusMsg = document.getElementById("statusMsg");
+      
+      const initialState = document.getElementById("initialState");
+      const loadingState = document.getElementById("loadingState");
+      const resultImage = document.getElementById("resultImage");
+      const btnDescargar = document.getElementById("btnDescargar");
+
+      // Validación simple
+      if (!prompt) {
+        mostrarMensaje("¡Ups! Necesitas escribir un prompt para la IA.", "error");
+        document.getElementById("prompt").focus();
+        return;
+      }
+
+      // Obtener el token de Virtualmind (requerido por tu middleware)
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (!token) {
+        mostrarMensaje("No se encontró token de sesión. Inicia sesión en Virtualmind primero.", "error");
+        return;
+      }
+
+      // Preparar UI para carga
+      btnGenerar.disabled = true;
+      btnGenerar.classList.add("opacity-50", "cursor-not-allowed");
+      btnText.innerText = "Procesando...";
+      statusMsg.classList.add("hidden");
+      
+      initialState.classList.add("hidden");
+      resultImage.classList.add("hidden");
+      btnDescargar.classList.add("hidden");
+      loadingState.classList.remove("hidden");
+
+      // Payload para FastAPI
+      const payload = {
+        prompt: prompt,
+        negative_prompt: negative_prompt,
+        model: model,
+        size: size,
+        prompt_extend: prompt_extend
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` // Token inyectado
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.images && data.images.length > 0) {
+          // Éxito: Mostrar la imagen Base64 devuelta por FastAPI
+          currentBase64 = data.images[0];
+          resultImage.src = `data:image/png;base64,${currentBase64}`;
+          
+          loadingState.classList.add("hidden");
+          resultImage.classList.remove("hidden");
+          btnDescargar.classList.remove("hidden");
+          
+          mostrarMensaje("✨ ¡Imagen generada con éxito!", "success");
+        } else {
+          // Error controlado del backend
+          throw new Error(data.detail || data.message || "Fallo desconocido en el servidor");
+        }
+
+      } catch (error) {
+        console.error("Error:", error);
+        loadingState.classList.add("hidden");
+        initialState.classList.remove("hidden");
+        mostrarMensaje(`❌ Error: ${error.message}`, "error");
+      } finally {
+        // Restaurar botón
+        btnGenerar.disabled = false;
+        btnGenerar.classList.remove("opacity-50", "cursor-not-allowed");
+        btnText.innerText = "Generar Imagen Ahora";
+      }
+    }
+
+    // Función para manejar mensajes de UI
+    function mostrarMensaje(texto, tipo) {
+      const statusMsg = document.getElementById("statusMsg");
+      statusMsg.innerText = texto;
+      statusMsg.classList.remove("hidden", "text-red-400", "text-emerald-400");
+      
+      if (tipo === "error") {
+        statusMsg.classList.add("text-red-400");
+      } else {
+        statusMsg.classList.add("text-emerald-400");
+      }
+    }
+
+    // Función para descargar la imagen localmente
+    function descargarImagen() {
+      if (!currentBase64) return;
+      const link = document.createElement("a");
+      link.href = `data:image/png;base64,${currentBase64}`;
+      link.download = `qwen_ai_image_${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>

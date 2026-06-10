@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear Plan de Formación - VirtualMind</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #090D16;
+      color: #cbd5e1;
+      overflow-x: hidden;
+    }
+
+    .gradient-bg { 
+      background: linear-gradient(135deg, #090d16 0%, #0f172a 100%); 
+    }
+            
+    .card-glass {             
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .input-focus {             
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      background: rgba(15, 23, 42, 0.8) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      color: #f8fafc !important;
+      border-radius: 0.75rem !important; 
+      padding: 0.75rem 1rem !important;
+      outline: none !important;
+    }
+    .input-focus:focus {             
+      transform: translateY(-1px);             
+      border-color: #6366f1 !important;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
+      background: rgba(15, 23, 42, 0.95) !important;
+    }
+
+    #modalidad_otro_wrapper { display: none; }
+    #reviewSection { display: none; }
+    
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border-left-color: #fff;
+      animation: spin 1s ease infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Custom premium select option scroll */
+    select option {
+        background-color: #0f172a;
+        color: #cbd5e1;
+    }
+
+    /* Ambient glowing background blobs */
+    .glow-blob {
+        position: fixed; width: 600px; height: 600px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
+        border-radius: 50%; pointer-events: none; z-index: 0;
+    }
+
+    /* Estilos Grabación Whisper Premium (Siempre Visibles y Estéticos) */
+    .btn-mic-premium {
+        background-color: rgba(99, 102, 241, 0.1) !important;
+        border: 1px solid rgba(99, 102, 241, 0.25) !important;
+        color: #818cf8 !important;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3.5rem;
+        height: auto;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .btn-mic-premium:hover {
+        background-color: rgba(99, 102, 241, 0.25) !important;
+        border-color: rgba(99, 102, 241, 0.5) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+    .mic-recording {            
+        animation: micPulse 1.2s infinite ease-in-out !important;            
+        background-color: rgba(239, 68, 68, 0.25) !important;            
+        color: #fca5a5 !important;            
+        border-color: rgba(239, 68, 68, 0.5) !important;        
+    }
+    .mic-processing {            
+        background-color: rgba(234, 179, 8, 0.2) !important;            
+        color: #fef08a !important;            
+        border-color: rgba(234, 179, 8, 0.4) !important;        
+    }
+    @keyframes micPulse {            
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }            
+        50% { transform: scale(1.04); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }            
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }        
+    }
+
+    /* Custom Radio & Checkbox */
+    .checkbox-custom { position: relative; cursor: pointer; display: inline-flex; align-items: start; }
+    .checkbox-custom input[type=checkbox] { opacity: 0; position: absolute; }
+    .checkbox-custom .checkmark { 
+      display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8); 
+      border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 6px; margin-right: 12px; transition: all 0.3s ease; flex-shrink: 0; mt-0.5;
+    }
+    .checkbox-custom input:checked + .checkmark { background: #8b5cf6; border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+    .checkbox-custom input:checked + .checkmark:after { 
+      content: "✓"; color: #fff; font-size: 13px; font-weight: bold; position: absolute; left: 4px; top: 0px; 
+    }
+
+    .radio-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
+    .radio-custom input[type=radio] { opacity: 0; position: absolute; }
+    .radio-custom .radiomark { 
+      display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8); 
+      border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 50%; margin-right: 8px; transition: all 0.3s ease; 
+    }
+    .radio-custom input:checked + .radiomark { background: #4f46e5; border-color: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+    .radio-custom input:checked + .radiomark:after { 
+      content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; 
+      position: absolute; left: 6px; top: 6px; 
+    }
+
+    /* Tema Custom para el Tutorial Interactivo Driver.js (DARK MODE) */
+    .driverjs-theme { 
+        font-family: 'Inter', sans-serif; 
+        border-radius: 16px; 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+        padding: 20px; 
+        background: rgba(15, 23, 42, 0.95) !important;
+        color: #f1f5f9 !important;
+    }
+    .driverjs-theme .driver-popover-title { font-size: 18px; font-weight: 700; color: #818cf8; margin-bottom: 8px; }
+    .driverjs-theme .driver-popover-description { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+    .driverjs-theme .driver-popover-next-btn, .driverjs-theme .driver-popover-prev-btn { 
+        background-color: #4f46e5; color: white; border-radius: 8px; text-shadow: none; border: none; padding: 6px 14px; font-weight: 600; 
+        transition: all 0.2s;
+    }
+    .driverjs-theme .driver-popover-next-btn:hover, .driverjs-theme .driver-popover-prev-btn:hover { background-color: #6366f1; }
+    .driverjs-theme .driver-popover-close-btn { color: #64748b; }
+
+    /* Tooltip System CSS */
+    .vm-tooltip { position:absolute; background:#0f172a; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.45); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; white-space:nowrap; border: 1px solid rgba(255, 255, 255, 0.08); font-weight: 500; }
+    .vm-tooltip.visible { opacity:1; transform:translateY(0); }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen py-10 flex justify-center items-start relative">
+
+  <div class="glow-blob top-0 left-0"></div>
+  <div class="glow-blob bottom-0 right-0"></div>
+
+  <!-- Custom Notification Container (Toasts) -->
+  <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
+
+  <div class="w-full max-w-5xl card-glass rounded-3xl p-8 z-10 relative shadow-2xl">
+        
+    <div class="mb-8 pb-6 border-b border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <i class="fas fa-book-open text-white text-xl"></i>
+        </div>
+        <div>
+          <h2 class="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent tracking-wide">Plan de Formación</h2>
+          <p class="mt-1 text-xs text-indigo-400 font-semibold">Diseño Curricular del Proyecto</p>
+        </div>
+      </div>
+      <button type="button" onclick="verTutorial('crear_plan')" class="group flex items-center gap-2 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 hover:border-transparent px-5 py-2.5 rounded-full shadow-md transition-all text-indigo-300 hover:text-white font-bold cursor-pointer">
+          <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm">?</span>
+          <span>Ver Tutorial</span>
+      </button>
+    </div>
+
+    <div id="mensaje" class="mb-6 text-center"></div>
+    
+    <div id="contexto-proyecto" class="mb-8 p-5 bg-indigo-950/40 border border-indigo-500/20 rounded-2xl hidden shadow-inner">
+      <h3 class="font-bold text-xs uppercase tracking-wider text-indigo-400 mb-1">Vinculado al Proyecto:</h3>
+      <p class="text-xl font-bold text-slate-100" id="projectNameContext"></p>
+    </div>
+        
+    <form id="studyPlanForm" class="space-y-8">
+      
+      <!-- 1. Información Básica -->
+      <div id="sec-info-basica" class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
+        <h3 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
+            <i class="fas fa-info-circle text-indigo-400"></i> Información Básica
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+          <div class="md:col-span-2">
+            <label for="name" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Nombre del Curso / Módulo Principal <span class="text-rose-500">*</span></label>
+            <div class="flex gap-2.5">
+              <input type="text" id="name" name="name" required class="flex-1 input-focus" placeholder="Ej: Curso Avanzado de IA Generativa">
+              <button type="button" onclick="gestionarGrabacionWhisper(event, 'name')" id="btn-mic-name" class="btn-mic-premium" title="Grabar voz con Whisper">
+                <i id="ico-mic-name" class="fas fa-microphone text-lg"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="md:col-span-2">
+            <label for="description" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Descripción <span class="text-rose-500">*</span></label>
+            <div class="flex gap-2.5">
+              <textarea id="description" name="description" rows="3" required class="flex-1 input-focus resize-none" placeholder="Describe brevemente de qué trata la formación" aria-describedby="desc-hint"></textarea>
+              <button type="button" onclick="gestionarGrabacionWhisper(event, 'description')" id="btn-mic-description" class="btn-mic-premium" title="Grabar voz con Whisper">
+                <i id="ico-mic-description" class="fas fa-microphone text-lg"></i>
+              </button>
+            </div>
+            <p id="desc-hint" class="text-[10px] text-slate-500 mt-1.5 font-medium">Un resumen claro ayudará a los estudiantes a entender el alcance.</p>
+          </div>
+
+          <div>
+            <label for="modalidad" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Modalidad <span class="text-rose-500">*</span></label>
+            <select id="modalidad" name="modalidad" required class="w-full input-focus cursor-pointer">
+              <option value="Presencial">Presencial</option>
+              <option value="Virtual" selected>Virtual</option>
+              <option value="B-Learning">B-Learning (Mixta)</option>
+              <option value="Autoformación">Autoformación</option>
+              <option value="Otra">Otra</option>
+            </select>
+          </div>
+
+          <div id="modalidad_otro_wrapper">
+            <label for="modalidad_otro" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Especificar otra modalidad</label>
+            <div class="flex gap-2.5">
+              <input type="text" id="modalidad_otro" name="modalidad_otro" placeholder="Especifique aquí" class="flex-1 input-focus">
+              <button type="button" onclick="gestionarGrabacionWhisper(event, 'modalidad_otro')" id="btn-mic-modalidad_otro" class="btn-mic-premium" title="Grabar voz con Whisper">
+                <i id="ico-mic-modalidad_otro" class="fas fa-microphone text-lg"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label for="duracion" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Duración (semanas) <span class="text-rose-500">*</span></label>
+            <input type="number" id="duracion" name="duracion" required min="1" class="w-full input-focus" placeholder="Ej: 8">
+          </div>
+
+          <fieldset>
+            <legend class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">Sincronía <span class="text-rose-500">*</span></legend>
+            <div class="flex gap-8">
+              <label class="radio-custom text-sm font-medium text-slate-300">
+                <input type="radio" name="sincronia" value="Sincrono" required>
+                <span class="radiomark"></span> Síncrono
+              </label>
+              <label class="radio-custom text-sm font-medium text-slate-300">
+                <input type="radio" name="sincronia" value="Asincrono">
+                <span class="radiomark"></span> Asíncrono
+              </label>
+            </div>
+          </fieldset>
+
+        </div>
+      </div>
+
+      <!-- 2. Objetivos y Aprendizaje -->
+      <div id="sec-objetivos" class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
+        <h3 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
+            <i class="fas fa-bullseye text-purple-400"></i> Objetivos y Aprendizaje
+        </h3>
+        <div class="grid grid-cols-1 gap-6">
+                    
+          <div>
+            <label for="objetivo_general" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Objetivo General <span class="text-rose-500">*</span></label>
+            <div class="flex gap-2.5">
+              <textarea id="objetivo_general" name="objetivo_general" rows="3" required class="flex-1 input-focus resize-none" placeholder="Define el propósito principal del curso"></textarea>
+              <button type="button" onclick="gestionarGrabacionWhisper(event, 'objetivo_general')" id="btn-mic-objetivo_general" class="btn-mic-premium" title="Grabar voz con Whisper">
+                <i id="ico-mic-objetivo_general" class="fas fa-microphone text-lg"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">Objetivos Específicos</label>
+            <div id="objetivos_especificos_container" class="space-y-3 mb-4">
+              <!-- Dynamically injected -->
+            </div>
+                        
+            <div class="flex gap-3">
+              <button type="button" onclick="agregarObjetivoEspecifico()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg transition-all font-semibold border border-white/5 shadow-sm">
+                <i class="fas fa-plus-circle mr-1 text-indigo-400"></i> Agregar objetivo
+              </button>
+              <button type="button" onclick="generarObjetivosConIA()" id="btnGenerarObjetivosIA" class="text-xs bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white px-4 py-2 rounded-lg transition-all font-semibold shadow-sm">
+                <i class="fas fa-robot mr-1"></i> Sugerir con IA
+              </button>
+            </div>
+
+            <div class="mt-6 p-5 bg-purple-900/10 border border-purple-500/20 rounded-2xl" id="caja_modulos_auto">
+              <label class="checkbox-custom items-start mb-0">
+                <input type="checkbox" id="crear_modulos_auto" onchange="toggleCrearModulos()">
+                <span class="checkmark mt-1"></span>
+                <div class="flex-1">
+                  <span class="font-bold text-sm text-purple-300">¿Crear módulos automáticamente?</span>
+                  <p class="text-xs text-purple-400/70 mt-1">Si activas esta opción, el sistema organizará la currícula asignando un módulo por cada objetivo específico que hayas trazado.</p>
+                </div>
+              </label>
+                            
+              <div id="modulos_container" class="mt-4 pt-4 border-t border-purple-500/10 hidden">
+                <label class="block text-xs font-bold uppercase tracking-wide text-purple-400 mb-3">Definición de Módulos</label>
+                <div id="modulos_nombres_container" class="space-y-3 mb-4">
+                  <!-- Dynamically Injected -->
+                </div>
+                <div class="flex gap-3">
+                  <button type="button" onclick="usarObjetivosComoModulos()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg transition-all font-semibold border border-white/5 shadow-sm">
+                    <i class="fas fa-copy mr-1 text-indigo-400"></i> Usar objetivos como nombres
+                  </button>
+                  <button type="button" onclick="generarNombresModulosIA()" id="btnGenerarModulosIA" class="text-xs bg-indigo-500/10 hover:bg-indigo-500 border border-indigo-500/20 hover:border-transparent text-indigo-300 hover:text-white px-4 py-2 rounded-lg transition-all font-semibold shadow-sm">
+                    <i class="fas fa-robot mr-1"></i> Auto-nombrar con IA
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-3 font-medium">Recomendación: Agrega cada objetivo específico por separado para una mejor indexación.</p>
+          </div>
+
+          <div>
+            <label for="resultados_aprendizaje" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Resultados de Aprendizaje</label>
+            <div class="flex gap-2.5">
+              <textarea id="resultados_aprendizaje" name="resultados_aprendizaje" rows="3" class="flex-1 input-focus resize-none" placeholder="¿Qué sabrá hacer el estudiante al finalizar? (Uno por línea)"></textarea>
+              <button type="button" onclick="gestionarGrabacionWhisper(event, 'resultados_aprendizaje')" id="btn-mic-resultados_aprendizaje" class="btn-mic-premium" title="Grabar voz con Whisper">
+                <i id="ico-mic-resultados_aprendizaje" class="fas fa-microphone text-lg"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 3. Recursos y Evaluaciones -->
+      <div id="sec-recursos" class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
+        <h3 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
+            <i class="fas fa-laptop-code text-emerald-400"></i> Recursos y Evaluaciones
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          <!-- Recursos -->
+          <div class="space-y-5">
+            <h4 class="text-sm font-bold text-indigo-300 border-b border-indigo-500/10 pb-2">Materiales Académicos</h4>
+            <div>
+              <span class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Horas de Estudio (Proyecto)</span>
+              <p id="horas_estudio_display" class="w-full border border-white/5 bg-slate-900/60 p-3 rounded-xl text-emerald-400 font-mono text-sm min-h-[48px]">Cargando...</p>
+              <input type="hidden" id="horas_estudio" name="horas_estudio">
+            </div>
+            <div>
+              <label for="recursos_libros" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Libros / Bibliografía</label>
+              <select id="recursos_libros" name="recursos_libros" class="w-full input-focus cursor-pointer">
+                <option value="No aplica">No aplica</option>
+                <option value="Libro guía (1)">Libro guía (1)</option>
+                <option value="Bibliografía complementaria (2-5)">Bibliografía complementaria (2-5)</option>
+                <option value="Bibliografía extensa (5+)">Bibliografía extensa (5+)</option>
+              </select>
+            </div>
+            <div>
+              <label for="recursos_articulos" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Artículos / Lecturas</label>
+              <select id="recursos_articulos" name="recursos_articulos" class="w-full input-focus cursor-pointer">
+                <option value="No aplica">No aplica</option>
+                <option value="Lecturas obligatorias (1-3)">Lecturas obligatorias (1-3)</option>
+                <option value="Lecturas obligatorias (4-6)">Lecturas obligatorias (4-6)</option>
+                <option value="Lecturas complementarias">Lecturas complementarias</option>
+                <option value="Artículos de investigación">Artículos de investigación</option>
+              </select>
+            </div>
+            <div>
+              <label for="recursos_materiales" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Materiales / Software</label>
+              <select id="recursos_materiales" name="recursos_materiales" class="w-full input-focus cursor-pointer">
+                <option value="No aplica">No aplica</option>
+                <option value="Plataforma LMS">Plataforma LMS</option>
+                <option value="Software especializado (requiere instalación)">Software especializado (requiere instalación)</option>
+                <option value="Software en la nube (SaaS)">Software en la nube (SaaS)</option>
+                <option value="Material descargable (PDFs, plantillas)">Material descargable (PDFs, plantillas)</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Evaluaciones -->
+          <div class="space-y-5">
+            <h4 class="text-sm font-bold text-emerald-300 border-b border-emerald-500/10 pb-2">Sistema de Evaluación</h4>
+            <div>
+              <label for="evaluaciones_cuestionarios" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Cuestionarios</label>
+              <select id="evaluaciones_cuestionarios" name="evaluaciones_cuestionarios" class="w-full input-focus cursor-pointer">
+                <option value="No aplica">No aplica</option>
+                <option value="1-2 Cuestionarios">1-2 Cuestionarios</option>
+                <option value="3-5 Cuestionarios">3-5 Cuestionarios</option>
+                <option value="Cuestionario por módulo">Cuestionario por módulo</option>
+                <option value="Autoevaluaciones">Autoevaluaciones</option>
+              </select>
+            </div>
+            <div>
+              <label for="evaluaciones_examenes" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Exámenes Formales</label>
+              <select id="evaluaciones_examenes" name="evaluaciones_examenes" class="w-full input-focus cursor-pointer">
+                <option value="No aplica">No aplica</option>
+                <option value="Examen de medio término">Examen de medio término</option>
+                <option value="Examen final">Examen final</option>
+                <option value="Examen de medio término y final">Examen de medio término y final</option>
+              </select>
+            </div>
+            <div>
+              <label for="evaluaciones_tareas" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Tareas / Proyectos</label>
+              <select id="evaluaciones_tareas" name="evaluaciones_tareas" class="w-full input-focus cursor-pointer">
+                <option value="No aplica">No aplica</option>
+                <option value="Tareas semanales">Tareas semanales</option>
+                <option value="Proyecto final (1)">Proyecto final (1)</option>
+                <option value="Entregables por módulo">Entregables por módulo</option>
+                <option value="Estudio de caso">Estudio de caso</option>
+                <option value="Evaluación continua">Evaluación continua</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Submit & Actions -->
+      <div class="pt-6 border-t border-white/5 text-center space-y-4 md:space-y-0 md:flex md:justify-between md:items-center">
+        <div class="flex gap-3 w-full md:w-auto">
+          <button type="button" id="btnLimpiarProgreso" class="flex-1 md:flex-none px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition-all border border-white/5">
+            <i class="fas fa-eraser mr-1.5"></i>Limpiar
+          </button>
+          <button type="button" id="btnGuardarProgreso" class="flex-1 md:flex-none px-5 py-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-sm font-bold rounded-xl transition-all hover:bg-indigo-500/20">
+            <i class="fas fa-save mr-1.5"></i>Guardar en Borrador
+          </button>
+        </div>
+                
+        <button type="button" id="btnRevisar" class="w-full md:w-auto px-10 py-3.5 bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5">
+          <i class="fas fa-robot mr-1.5"></i> Auditar con IA & Finalizar
+        </button>
+      </div>
+    </form>
+
+    <!-- Review Section -->
+    <div id="reviewSection" class="hidden bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner mt-8 animate-fade-in">
+      <h3 class="text-xl font-bold text-slate-200 mb-6 border-b border-white/5 pb-3">
+        <i class="fas fa-clipboard-check text-emerald-400 mr-2"></i> Auditoría de Plan de Formación
+      </h3>
+      <div id="reviewContent" class="space-y-4 p-5 bg-slate-900/60 rounded-xl border border-white/5"></div>
+      
+      <div class="pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <button type="button" id="btnEditar" class="w-full sm:w-auto px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl border border-white/5 transition-all text-sm">
+          <i class="fas fa-arrow-left mr-1.5"></i> Volver a Editar
+        </button>
+        <button type="button" id="btnConfirmarCrear" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-75 disabled:cursor-wait text-sm">
+          <span id="btnConfirmarTexto" class="flex items-center justify-center">
+            <i class="fas fa-check-double mr-2"></i> Aprobar y Generar Plan
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIRMACIÓN CUSTOM (Sustituye confirm() para William Andrés) -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-[150] hidden items-center justify-center p-4 animate-fade-in">
+    <div class="card-glass rounded-2xl max-w-md w-full p-6 text-center border border-white/10 shadow-2xl">
+      <div class="w-16 h-16 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto mb-4 border border-rose-500/20 shadow-inner">
+        <i class="fas fa-exclamation-triangle text-2xl animate-pulse"></i>
+      </div>
+      <h3 class="text-lg font-bold text-slate-100 mb-2" id="confirmTitle">Confirmar Acción</h3>
+      <p class="text-sm text-slate-400 mb-8 leading-relaxed whitespace-pre-wrap" id="confirmText">¿Estás seguro de realizar esta acción?</p>
+      <div class="flex gap-3 justify-center">
+        <button id="btnConfirmCancel" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-semibold border border-white/5 transition-all">Cancelar</button>
+        <button id="btnConfirmAccept" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-rose-600/20">Sí, proceder</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. CONSTANTES GLOBALES Y TOASTS
+    // ==========================================
+    const CACHE_KEY = 'studyPlanFormProgress';
+    const form = document.getElementById('studyPlanForm');
+    const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+    const API_STUDY_PLANS = `${API_URL}/study_plans/`;
+    const API_GEMINI = `${API_URL}/chat/gemini`;
+    const API_WHISPER = `${API_URL}/whisper/transcribir`;
+
+    let objetivosCounter = 0;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let idCampoDestino = null;
+    let temporizadorMaximo = null;
+
+    // --- Elegant Toast Alerts ---
+    function showNotification(type, message) {
+        const container = document.getElementById('customToastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = `flex items-center p-3.5 rounded-xl shadow-2xl border backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+            type === 'success' 
+                ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' 
+                : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+        }`;
+        toast.innerHTML = `
+            <span class="mr-3 text-xl">${type === 'success' ? '✨' : '⚠️'}</span>
+            <div class="text-xs font-semibold tracking-wide">${message}</div>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 50);
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    // --- Custom Promise Confirmation Modal ---
+    function openConfirmModal(msg, customIconHtml = null, isSuccess = false) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirmModal');
+            const text = document.getElementById('confirmText');
+            const btnAccept = document.getElementById('btnConfirmAccept');
+            const btnCancel = document.getElementById('btnConfirmCancel');
+            
+            text.innerHTML = msg; // Permite inyectar html (como los saltos de línea de IA)
+            
+            // Customizar el botón si es para la IA
+            if(isSuccess) {
+                btnAccept.className = "px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-600/20";
+                btnAccept.textContent = "Continuar";
+            } else {
+                btnAccept.className = "px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-rose-600/20";
+                btnAccept.textContent = "Sí, proceder";
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            const handleAccept = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); cleanup(); resolve(true); };
+            const handleCancel = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); cleanup(); resolve(false); };
+            const cleanup = () => { btnAccept.removeEventListener('click', handleAccept); btnCancel.removeEventListener('click', handleCancel); };
+            
+            btnAccept.addEventListener('click', handleAccept);
+            btnCancel.addEventListener('click', handleCancel);
+        });
+    }
+
+    // ==========================================
+    // 2. TUTORIAL INTERACTIVO CON DRIVER.JS
+    // ==========================================
+    window.verTutorial = function(key) {
+        if (key !== 'crear_plan') return;
+
+        const driver = window.driver.js.driver;
+        const tour = driver({
+            showProgress: true,
+            animate: true,
+            nextBtnText: 'Siguiente &rarr;',
+            prevBtnText: '&larr; Anterior',
+            doneBtnText: '¡Entendido!',
+            progressText: 'Paso {{current}} de {{total}}',
+            popoverClass: 'driverjs-theme',
+            steps: [
+                { 
+                    element: '.mb-8.pb-6', 
+                    popover: { title: 'Plan de Formación', description: 'Este es el corazón académico de tu proyecto. Aquí definirás qué y cómo aprenderán los estudiantes.', side: "bottom", align: 'start' } 
+                },
+                { 
+                    element: '#sec-info-basica', 
+                    popover: { title: '1. Información Básica', description: 'Define el nombre del curso, descripción, modalidad y duración. Recuerda usar el micrófono para agilizar el llenado.', side: "top", align: 'start' } 
+                },
+                { 
+                    element: '#sec-objetivos', 
+                    popover: { title: '2. Objetivos y Aprendizaje', description: 'Establece la meta general y los específicos. ¡Puedes pedirle a nuestra IA que genere los objetivos basados en tu temática!', side: "top", align: 'start' } 
+                },
+                { 
+                    element: '#caja_modulos_auto', 
+                    popover: { title: 'Creación de Módulos', description: 'Si marcas esta opción, el sistema convertirá automáticamente tus objetivos específicos en módulos curriculares formales.', side: "bottom", align: 'start' } 
+                },
+                { 
+                    element: '#sec-recursos', 
+                    popover: { title: '3. Recursos y Evaluaciones', description: 'Selecciona la carga bibliográfica, tipo de software y cómo vas a evaluar (cuestionarios, tareas, exámenes).', side: "top", align: 'start' } 
+                },
+                { 
+                    element: '#btnRevisar', 
+                    popover: { title: 'Revisión con IA', description: 'Antes de guardar, Gemini auditará la coherencia de tu plan contra los datos de tu proyecto. ¡Haz clic aquí al terminar!', side: "top", align: 'center' } 
+                }
+            ]
+        });
+                
+        tour.drive();
+    };
+
+    // ==========================================
+    // 3. LOGICA DEL FORMULARIO Y LOCALSTORAGE
+    // ==========================================
+    function saveProgress() {
+      const container = document.getElementById('objetivos_especificos_container');
+      if (!container) return;
+      const inputs = container.querySelectorAll('input[name="objetivos_especificos"]');
+      const objetivos = Array.from(inputs).map(input => input.value).filter(v => v.trim());
+                  
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      data.objetivos_especificos = objetivos;
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      showNotification('success', 'Borrador guardado localmente.');
+    }
+
+    function agregarObjetivoEspecifico(valor = '') {
+      objetivosCounter++;
+      const container = document.getElementById('objetivos_especificos_container');
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-2.5 w-full bg-slate-900/50 p-2 rounded-xl border border-white/5 transition-all';
+      div.id = 'objetivo_wrapper_' + objetivosCounter;
+      div.innerHTML = `
+        <div class="flex-1 flex gap-2.5 items-center">
+          <span class="text-slate-500 font-bold ml-2">${objetivosCounter}.</span>
+          <input type="text" id="obj-input-${objetivosCounter}" name="objetivos_especificos" value="${valor}"
+              class="flex-1 input-focus text-sm border-none bg-transparent !shadow-none !p-2"
+              placeholder="Escribe un objetivo medible...">
+          <button type="button" onclick="gestionarGrabacionWhisper(event, 'obj-input-${objetivosCounter}')" id="btn-mic-obj-input-${objetivosCounter}" class="btn-mic-premium !h-10 !w-12" title="Grabar con Whisper IA">
+            <i id="ico-mic-obj-input-${objetivosCounter}" class="fas fa-microphone text-sm"></i>
+          </button>
+        </div>
+        <button type="button" onclick="eliminarObjetivoEspecifico(${objetivosCounter})" class="text-rose-400 hover:text-rose-300 p-3 transition-colors">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      `;
+      container.appendChild(div);
+    }
+
+    function eliminarObjetivoEspecifico(id) {
+      const wrapper = document.getElementById('objetivo_wrapper_' + id);
+      if (wrapper) {
+        wrapper.remove();
+        saveProgress();
+      }
+    }
+
+    function toggleCrearModulos() {
+      const checkbox = document.getElementById('crear_modulos_auto');
+      const container = document.getElementById('modulos_container');
+      if (checkbox.checked) {
+        container.classList.remove('hidden');
+        sincronizarModulosConObjetivos();
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    function sincronizarModulosConObjetivos() {
+      const objetivosContainer = document.getElementById('objetivos_especificos_container');
+      const modulosContainer = document.getElementById('modulos_nombres_container');
+      const objetivosInputs = objetivosContainer.querySelectorAll('input[name="objetivos_especificos"]');
+      const objetivos = Array.from(objetivosInputs).map(i => i.value).filter(v => v.trim());
+                  
+      modulosContainer.innerHTML = '';
+      objetivos.forEach((obj, index) => {
+        agregarNombreModulo(obj, index + 1);
+      });
+      if (objetivos.length === 0) {
+        agregarNombreModulo('', 1);
+      }
+    }
+
+    function usarObjetivosComoModulos() {
+      sincronizarModulosConObjetivos();
+    }
+
+    function agregarNombreModulo(valor = '', numero = null) {
+      const container = document.getElementById('modulos_nombres_container');
+      const count = container.children.length + 1;
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-2.5 w-full bg-slate-900/50 p-2 rounded-xl border border-white/5 transition-all';
+      div.innerHTML = `
+        <span class="text-purple-400/50 font-bold ml-2">M${numero || count}.</span>
+        <input type="text" name="modulos_nombres" value="${valor}"
+            class="flex-1 input-focus text-sm border-none bg-transparent !shadow-none !p-2"
+            placeholder="Nombre del módulo ${numero || count}">
+        <button type="button" onclick="this.parentElement.remove(); actualizarNumerosModulos(); saveProgress();" class="text-rose-400 hover:text-rose-300 p-3 transition-colors">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      `;
+      container.appendChild(div);
+    }
+
+    function actualizarNumerosModulos() {
+      const container = document.getElementById('modulos_nombres_container');
+      const inputs = container.querySelectorAll('input[name="modulos_nombres"]');
+      inputs.forEach((input, index) => {
+        input.placeholder = `Nombre del módulo ${index + 1}`;
+        // Update the span M#.
+        const span = input.previousElementSibling;
+        if(span && span.tagName === 'SPAN') span.textContent = `M${index + 1}.`;
+      });
+    }
+
+    // ==========================================
+    // 4. WHISPER LOCAL Y GRABACIÓN (PREMIUM NEON)
+    // ==========================================
+    let estaGrabando = false;
+
+    function getSessionToken() { return localStorage.getItem('token'); }
+
+    async function gestionarGrabacionWhisper(e, idCampo) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+
+        if (estaGrabando && idCampoDestino === idCampo) {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+            return;
+        }
+
+        if (estaGrabando) {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+            await new Promise(resolve => setTimeout(resolve, 150));
+        }
+
+        idCampoDestino = idCampo;
+        audioChunks = [];
+        estaGrabando = true;
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+                        
+            mediaRecorder.ondataavailable = (event) => { 
+                 if (event.data && event.data.size > 0) audioChunks.push(event.data); 
+             };
+                        
+            mediaRecorder.onstart = () => {
+                resetearIconosMic();
+                const currentBtn = document.getElementById(`btn-mic-${idCampoDestino}`);
+                const currentIco = document.getElementById(`ico-mic-${idCampoDestino}`);
+                if (currentBtn) currentBtn.classList.add('mic-recording');
+                if (currentIco) { currentIco.className = "fas fa-stop text-lg"; }
+                                
+                temporizadorMaximo = setTimeout(() => { 
+                     if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); 
+                 }, 10000);
+            };
+                        
+            mediaRecorder.onstop = async () => {
+                clearTimeout(temporizadorMaximo);
+                estaGrabando = false;
+
+                const processingBtn = document.getElementById(`btn-mic-${idCampoDestino}`);
+                const processingIco = document.getElementById(`ico-mic-${idCampoDestino}`);
+                                
+                if (processingBtn) { 
+                     processingBtn.classList.remove('mic-recording'); 
+                     processingBtn.classList.add('mic-processing'); 
+                 }
+                if (processingIco) { processingIco.className = "fas fa-spinner fa-spin text-lg"; }
+                                
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
+                stream.getTracks().forEach(track => track.stop());
+                                
+                if (audioBlob.size > 100) {
+                    await enviarAudioAWhisper(audioBlob);
+                } else {
+                    console.warn("Muestra de audio inválida o muy corta.");
+                    resetearIconosMic();
+                }
+            };
+                        
+            mediaRecorder.start();
+        } catch (err) { 
+             estaGrabando = false;
+             console.error("Error al inicializar hardware de audio:", err); 
+             showNotification('error', 'No se pudo acceder al micrófono del sistema.');
+             resetearIconosMic(); 
+         }
+    }
+
+    async function enviarAudioAWhisper(blob) {
+        if (!blob || blob.size === 0) { resetearIconosMic(); return; }
+
+        const token = getSessionToken();
+        const formData = new FormData();
+        formData.append('audio', blob, 'dictado.webm');
+                
+        try {
+            const res = await fetch(API_WHISPER, { 
+                 method: 'POST', 
+                 headers: { 'Authorization': `Bearer ${token}` }, 
+                 body: formData 
+             });
+                        
+            if (!res.ok) { 
+                 const errData = await res.json().catch(() => ({ detail: "Error de parsing en backend" })); 
+                 throw new Error(errData.detail || "Fallo crítico Whisper"); 
+             }
+                        
+            const data = await res.json();
+            const texto = (data.texto || '').trim();
+                        
+            if (texto) {
+                const input = document.getElementById(idCampoDestino);
+                if (input) {
+                    input.value = input.value.trim() ? input.value.trim() + ' ' + texto : texto;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    // Only save progress explicitly, removing the alert.
+                }
+            }
+        } catch (err) { 
+             console.error("Error en la petición mutada de Whisper:", err); 
+             showNotification('error', `Error IA de voz: ${err.message}`);
+         } finally { 
+             resetearIconosMic(); 
+         }
+    }
+
+    function resetearIconosMic() {
+        document.querySelectorAll('[id^="btn-mic-"]').forEach(btn => {
+            // Restore base classes properly based on ID
+            if(btn.id.includes("obj-input") || btn.id === "btn-mic-name" || btn.id === "btn-mic-modalidad_otro" || btn.id === "btn-mic-resultados_aprendizaje"){
+                btn.className = "btn-mic-premium !h-10 !w-12";
+            } else {
+                btn.className = "btn-mic-premium";
+            }
+        });
+        document.querySelectorAll('[id^="ico-mic-"]').forEach(ico => { 
+             ico.className = "fas fa-microphone text-sm"; // Changed to text-sm to fit smaller container
+         });
+        if (!estaGrabando) idCampoDestino = null;
+    }
+
+    // ==========================================
+    // 5. INTELIGENCIA ARTIFICIAL (GEMINI)
+    // ==========================================
+    async function generarNombresModulosIA() {
+      const objetivoGeneral = document.getElementById('objetivo_general').value;
+      const objetivosContainer = document.getElementById('objetivos_especificos_container');
+      const objetivosInputs = objetivosContainer.querySelectorAll('input[name="objetivos_especificos"]');
+      const objetivos = Array.from(objetivosInputs).map(i => i.value).filter(v => v.trim());
+                  
+      if (!objetivoGeneral && objetivos.length === 0) {
+        showNotification('error', 'Por favor, escribe el objetivo general o agrega objetivos específicos primero.');
+        return;
+      }
+
+      const btn = document.getElementById('btnGenerarModulosIA');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Generando...';
+
+      const prompt = `Eres un experto en diseño curricular. Basado en el siguiente objetivo general y objetivos específicos, genera nombres cortos y descriptivos para los módulos del curso.\nObjetivo General: ${objetivoGeneral}\nObjetivos Específicos: ${objetivos.map((o, i) => `${i+1}. ${o}`).join('\n')}\nGenera entre ${Math.max(3, objetivos.length)} y ${Math.min(8, objetivos.length + 2)} nombres de módulos. Cada nombre debe ser corto (máximo 8 palabras) y describir el contenido del módulo.\nDevuelve SOLO una lista de nombres, uno por línea, sin números ni viñetas.`;
+            
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(API_GEMINI, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ prompt: prompt })
+        });
+        if (!response.ok) throw new Error('Error al contactar la IA');
+        const data = await response.json();
+        const respuesta = data.respuesta || data.mensaje || '';
+
+        const container = document.getElementById('modulos_nombres_container');
+        container.innerHTML = '';
+        const lineas = respuesta.split('\n').filter(linea => linea.trim().length > 0);
+        if (lineas.length > 0) {
+          lineas.forEach(linea => {
+            const textoLimpio = linea.replace(/^[\d\.\)\-\*\•]+\s*/, '').trim();
+            if (textoLimpio.length > 3) {
+              agregarNombreModulo(textoLimpio);
+            }
+          });
+        }
+      } catch (error) {
+        showNotification('error', 'Error al generar nombres: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    async function generarObjetivosConIA() {
+      const objetivoGeneral = document.getElementById('objetivo_general').value;
+      if (!objetivoGeneral) {
+        showNotification('error', 'Por favor, escribe primero el Objetivo General para generar los específicos.');
+        return;
+      }
+
+      const btn = document.getElementById('btnGenerarObjetivosIA');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Generando...';
+
+      const proyectoName = document.getElementById('projectNameContext')?.textContent || '';
+      const prompt = `Eres un experto en diseño curricular. Dado el siguiente objetivo general de un plan de estudios, genera entre 4 y 6 objetivos específicos que sean medibles y alineados con el objetivo general.\nObjetivo General: ${objetivoGeneral}\n${proyectoName ? 'Nombre del proyecto: ' + proyectoName : ''}\nGenera los objetivos específicos en formato de lista, uno por línea, sin números ni viñetas. Solo el texto de cada objetivo.`;
+            
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(API_GEMINI, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ prompt: prompt })
+        });
+        if (!response.ok) throw new Error('Error al contactar la IA');
+        const data = await response.json();
+        const respuesta = data.respuesta || data.mensaje || '';
+
+        document.getElementById('objetivos_especificos_container').innerHTML = '';
+        const lineas = respuesta.split('\n').filter(linea => linea.trim().length > 0);
+        lineas.forEach(linea => {
+          const textoLimpio = linea.replace(/^[\d\.\)\-\*\•]+\s*/, '').trim();
+          if (textoLimpio.length > 10) {
+            agregarObjetivoEspecifico(textoLimpio);
+          }
+        });
+      } catch (error) {
+        showNotification('error', 'Error al generar objetivos: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    // ==========================================
+    // 6. INICIALIZACIÓN Y EVENTOS
+    // ==========================================
+    function loadProgress() {
+      const savedData = localStorage.getItem(CACHE_KEY);
+      if (savedData) {
+        const data = JSON.parse(savedData);
+        if (data.objetivos_especificos && Array.isArray(data.objetivos_especificos)) {
+          document.getElementById('objetivos_especificos_container').innerHTML = '';
+          data.objetivos_especificos.forEach(obj => { agregarObjetivoEspecifico(obj); });
+        } else {
+          agregarObjetivoEspecifico();
+        }
+        for (const key in data) {
+          if (key !== 'objetivos_especificos' && form.elements[key]) {
+            const element = form.elements[key];
+            if (element.type === 'radio') {
+              const r = form.querySelector(`input[name="${key}"][value="${data[key]}"]`);
+              if (r) r.checked = true;
+            } else { element.value = data[key]; }
+          }
+        }
+      } else {
+        agregarObjetivoEspecifico();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadProgress();
+        const modalitySelect = document.getElementById('modalidad');
+        const wrapper = document.getElementById('modalidad_otro_wrapper');
+
+        const toggleOtroInput = () => {
+            if (modalitySelect.value === 'Otra') wrapper.style.display = 'block';
+            else wrapper.style.display = 'none';
+        };
+        modalitySelect.addEventListener('change', toggleOtroInput);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const project_id = urlParams.get('project_id');
+        const project_name = urlParams.get('project_name');
+        const project_desc = urlParams.get('project_desc');
+        const project_horas = urlParams.get('project_horas'); 
+
+        if (!project_id) {
+            document.getElementById('mensaje').innerHTML = `<div class="p-5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl"><p class="font-bold"><i class="fas fa-exclamation-triangle mr-2"></i> Error Crítico: No se especificó un proyecto base.</p></div>`;
+            form.style.display = 'none';
+            return;
+        }
+
+        if (project_name) {
+            document.getElementById('projectNameContext').textContent = decodeURIComponent(project_name);
+            document.getElementById('contexto-proyecto').classList.remove('hidden');
+            document.getElementById('name').value = decodeURIComponent(project_name);
+        }
+        if (project_desc) document.getElementById('description').value = decodeURIComponent(project_desc);
+        if (project_horas) {
+            document.getElementById('horas_estudio_display').textContent = `${project_horas} horas`;
+            document.getElementById('horas_estudio').value = `${project_horas} horas`;
+        }
+    });
+
+    form.addEventListener('input', () => { /* optional auto-save on type can be enabled here */ });
+    document.getElementById('btnGuardarProgreso').addEventListener('click', saveProgress);
+    
+    document.getElementById('btnLimpiarProgreso').addEventListener('click', async () => {
+      const confirmed = await openConfirmModal("¿Estás seguro de limpiar todo el formulario? Se borrarán todos los datos y el caché guardado.");
+      if (confirmed) {
+        localStorage.removeItem(CACHE_KEY);
+        form.reset();
+        document.getElementById('modalidad').dispatchEvent(new Event('change'));
+        document.getElementById('horas_estudio_display').textContent = 'Cargando...';
+        document.getElementById('objetivos_especificos_container').innerHTML = '';
+        agregarObjetivoEspecifico();
+      }
+    });
+
+    document.getElementById('btnRevisar').addEventListener('click', () => {
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+                
+        const preview = document.getElementById('reviewContent');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        let html = '<dl class="divide-y divide-white/5">';
+        for (const key in data) {
+            if (!data[key]) continue;
+            html += `<div class="py-3 grid grid-cols-3 gap-4"><dt class="text-xs font-bold uppercase tracking-wide text-slate-400">${key.replace(/_/g, ' ')}</dt><dd class="text-sm text-slate-200 font-medium col-span-2">${data[key]}</dd></div>`;
+        }
+        preview.innerHTML = html + '</dl>';
+
+        form.style.display = 'none';
+        document.getElementById('reviewSection').style.display = 'block';
+    });
+
+    document.getElementById('btnEditar').addEventListener('click', () => {
+        form.style.display = 'block';
+        document.getElementById('reviewSection').style.display = 'none';
+    });
+
+    // ==========================================
+    // 7. ENVÍO DE DATOS Y AI AUDIT (SUBMIT)
+    // ==========================================
+    document.getElementById('btnConfirmarCrear').addEventListener('click', async () => {
+      const btn = document.getElementById('btnConfirmarCrear');
+      const token = localStorage.getItem('token');
+      const project_name = document.getElementById('projectNameContext').textContent || 'Proyecto';
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      const urlParams = new URLSearchParams(window.location.search);
+      data['project_id'] = parseInt(urlParams.get('project_id'));
+
+      // Re-collect specific arrays since Object.fromEntries only gets the last value of duplicate keys
+      const objInputs = document.querySelectorAll('input[name="objetivos_especificos"]');
+      data['objetivos_especificos'] = Array.from(objInputs).map(i => i.value).filter(v => v.trim());
+      const modInputs = document.querySelectorAll('input[name="modulos_nombres"]');
+      data['modulos_nombres'] = Array.from(modInputs).map(i => i.value).filter(v => v.trim());
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="flex items-center justify-center"><i class="fas fa-spinner fa-spin mr-2"></i> Auditando...</span>';
+
+      try {
+          const prompt = `Evalúa la coherencia entre este proyecto y su plan de estudio. Responde en 2 o 3 frases contundentes y motivadoras.\nProyecto: ${project_name}\nPlan: ${data.name}\nObjetivo: ${data.objetivo_general}`;
+          
+          const geminiRes = await fetch(API_GEMINI, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({ prompt: prompt })
+          });
+          
+          if(!geminiRes.ok) throw new Error("Error en auditoría IA");
+          const aiData = await geminiRes.json();
+          
+          const msgHtml = `🤖 <b>Auditoría de IA completada:</b><br><br><span class="text-indigo-300 italic">"${aiData.respuesta || aiData.mensaje}"</span><br><br>¿Deseas guardar el Plan de Formación definitivamente?`;
+          
+          const confirmed = await openConfirmModal(msgHtml, null, true);
+          if (!confirmed) {
+              btn.disabled = false;
+              btn.innerHTML = '<span class="flex items-center justify-center"><i class="fas fa-check-double mr-2"></i> Aprobar y Generar Plan</span>';
+              return;
+          }
+
+          btn.innerHTML = '<span class="flex items-center justify-center"><i class="fas fa-spinner fa-spin mr-2"></i> Guardando...</span>';
+
+          const response = await fetch(API_STUDY_PLANS, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(data)
+          });
+          
+          if(!response.ok) {
+              const errData = await response.json();
+              throw new Error(errData.detail || "Error al crear el plan de estudios");
+          }
+          
+          const plan = await response.json();
+          localStorage.removeItem(CACHE_KEY);
+          showNotification('success', '✅ Plan creado exitosamente. Redirigiendo a módulos...');
+          
+          setTimeout(() => {
+              window.location.href = `/r/superadmin/modulos/?study_plan_id=${plan.id}`;
+          }, 1500);
+
+      } catch (err) { 
+          showNotification('error', err.message); 
+          btn.disabled = false;
+          btn.innerHTML = '<span class="flex items-center justify-center"><i class="fas fa-check-double mr-2"></i> Aprobar y Generar Plan</span>';
+      }
+    });
+  </script>
+</body>
+</html>

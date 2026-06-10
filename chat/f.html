@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat + Videollamadas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-500 to-pink-500 min-h-screen font-sans">
+
+  <header class="bg-indigo-700 text-white p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">💬 Chat Virtualmind</h1>
+    <div>
+      <button onclick="window.location.href='/r/superadmin/'" class="bg-white text-indigo-700 px-3 py-1 rounded">🏠 Dashboard</button>
+      <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded ml-2">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="p-4 max-w-4xl mx-auto bg-white rounded shadow mt-6">
+    <h2 class="text-lg font-bold mb-4">Mensajes</h2>
+
+    <div class="flex space-x-3 mb-4">
+      <select id="destinatarioSelect" class="flex-1 p-2 rounded border"></select>
+      <button onclick="refrescarMensajes()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded">🔄 Refrescar</button>
+      <button onclick="enviarVideollamada()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded">🎥 Videollamada</button>
+      <button onclick="limpiarChat()" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-2 rounded">🧹 Limpiar</button>
+    </div>
+
+    <div id="chatBox" class="bg-gray-100 rounded p-4 h-[400px] overflow-y-auto space-y-3 border shadow-inner"></div>
+
+    <form id="formMensaje" class="mt-4 flex gap-2 items-center">
+      <select id="emojiSelect" class="border rounded p-2">
+        <option value="">😊</option>
+        <option value="😀">😀</option>
+        <option value="😂">😂</option>
+        <option value="😍">😍</option>
+        <option value="😎">😎</option>
+        <option value="😢">😢</option>
+        <option value="👍">👍</option>
+        <option value="🎉">🎉</option>
+        <option value="🔥">🔥</option>
+        <option value="❤️">❤️</option>
+        <option value="🤖">🤖</option>
+      </select>
+      <input id="mensajeInput" type="text" placeholder="Escribe tu mensaje..." class="flex-1 p-2 border rounded" />
+      <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">Enviar</button>
+    </form>
+  </main>
+
+  <footer class="text-center text-sm text-white mt-10 mb-6">
+    &copy; 2025 Virtualmind
+  </footer>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token");
+    const headers = { "Authorization": "Bearer " + token, "Content-Type": "application/json" };
+    let usuarios = [], yo = null;
+
+    if (!token) window.location.href = "/index.html";
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    yo = payload.user_id;
+
+    document.getElementById("formMensaje").onsubmit = async e => {
+      e.preventDefault();
+      const contenido = document.getElementById("mensajeInput").value.trim();
+      const destinatario_uid = document.getElementById("destinatarioSelect").value;
+      if (!contenido || !destinatario_uid) return;
+      await fetch(`${API}/mensajes`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ contenido, destinatario_uid })
+      });
+      document.getElementById("mensajeInput").value = "";
+      refrescarMensajes();
+    };
+
+    document.getElementById("emojiSelect").addEventListener("change", function () {
+      const emoji = this.value;
+      if (emoji) {
+        const input = document.getElementById("mensajeInput");
+        input.value += emoji;
+        this.selectedIndex = 0;
+      }
+    });
+
+    async function enviarVideollamada() {
+      const destinatario_uid = document.getElementById("destinatarioSelect").value;
+      const sala = "room_" + Math.random().toString(36).substring(2, 10);
+      const url = `https://meet.jit.si/${sala}`;
+      await fetch(`${API}/mensajes`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          contenido: `🔴 Has sido invitado a una videollamada: ${url}`,
+          destinatario_uid
+        })
+      });
+      refrescarMensajes();
+    }
+
+    function limpiarChat() {
+      const box = document.getElementById("chatBox");
+      box.innerHTML = "";
+    }
+
+    async function eliminarMensaje(id) {
+      if (!confirm("¿Eliminar este mensaje?")) return;
+      await fetch(`${API}/mensajes/${id}`, {
+        method: "DELETE",
+        headers
+      });
+      refrescarMensajes();
+    }
+
+    async function refrescarMensajes() {
+      const resInbox = await fetch(`${API}/mensajes/inbox`, { headers });
+      const inbox = await resInbox.json();
+      const resYo = await fetch(`${API}/mensajes/enviados`, { headers });
+      const enviados = await resYo.json();
+      const todos = [...inbox, ...enviados].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+      const box = document.getElementById("chatBox");
+      box.innerHTML = "";
+
+      todos.forEach(m => {
+        const remitente = usuarios.find(u => u.uid === m.remitente_uid);
+        const remitenteNombre = remitente ? (remitente.name || remitente.email || remitente.uid) : "Desconocido";
+        const clase = m.remitente_uid === yo ? "text-right" : "text-left";
+        const color = m.remitente_uid === yo ? "bg-indigo-100 text-indigo-800" : "bg-white text-gray-800";
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const contenido = m.contenido.replace(urlRegex, url => `<a href="${url}" target="_blank" class="underline text-blue-600">${url}</a>`);
+        const botonEliminar = m.remitente_uid === yo
+          ? `<button onclick="eliminarMensaje('${m.id}')" class="text-xs text-red-500 ml-2 hover:underline">🗑️</button>`
+          : "";
+
+        box.innerHTML += `
+          <div class="${clase}">
+            <div class="inline-block ${color} px-4 py-2 rounded shadow-sm">
+              <strong>${remitenteNombre}:</strong> ${contenido} ${botonEliminar}
+            </div>
+          </div>
+        `;
+      });
+
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function cargarUsuarios() {
+      const res = await fetch(`${API}/users`, { headers });
+      usuarios = await res.json();
+      const select = document.getElementById("destinatarioSelect");
+      select.innerHTML = usuarios
+        .filter(u => u.uid !== yo)
+        .map(u => `<option value="${u.uid}">${u.name || u.email || u.uid}</option>`)
+        .join("");
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "/index.html";
+    }
+
+    // 👇 Aseguramos cargar usuarios ANTES de mostrar mensajes
+    (async () => {
+      await cargarUsuarios();
+      await refrescarMensajes();
+    })();
+  </script>
+</body>
+</html>
+

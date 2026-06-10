@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi Drive Personal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+  <header class="bg-white shadow p-4">
+    <div class="max-w-7xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-800">📁 Mi Drive Personal</h1>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto mt-6 px-4">
+
+    <!-- Subida de archivo -->
+    <section class="bg-white p-6 rounded-lg shadow mb-6">
+      <h2 class="text-xl font-semibold text-gray-700 mb-4">📤 Subir archivo</h2>
+      <form id="upload-form" class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+        <input type="file" id="file-input" class="border p-2 rounded w-full md:w-auto" />
+        <select id="folder-select" class="border p-2 rounded w-full md:w-auto">
+          <option disabled selected>Selecciona carpeta</option>
+        </select>
+        <input type="text" id="file-name" placeholder="Nombre del archivo" class="border p-2 rounded w-full md:w-auto" />
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+          Subir
+        </button>
+      </form>
+    </section>
+
+    <!-- Lista de carpetas -->
+    <section class="bg-white p-6 rounded-lg shadow">
+      <h2 class="text-xl font-semibold text-gray-700 mb-4">📂 Mis carpetas</h2>
+      <div id="folder-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Carpetas aparecerán aquí -->
+      </div>
+    </section>
+
+    <!-- Archivos dentro de una carpeta -->
+    <section id="files-section" class="hidden mt-6 bg-white p-6 rounded-lg shadow">
+      <h2 class="text-xl font-semibold text-gray-700 mb-4">📄 Archivos en <span id="folder-name"></span></h2>
+      <ul id="file-list" class="space-y-2"></ul>
+    </section>
+
+  </main>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token"); // debe estar guardado luego del login
+
+    async function cargarCarpetas() {
+      const res = await fetch(`${API}/folders?include_general=false`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const carpetas = await res.json();
+
+      const folderList = document.getElementById('folder-list');
+      const folderSelect = document.getElementById('folder-select');
+      folderList.innerHTML = '';
+      folderSelect.innerHTML = '<option disabled selected>Selecciona carpeta</option>';
+
+      carpetas.forEach(folder => {
+        const card = document.createElement('div');
+        card.className = 'border border-gray-200 rounded-lg p-4 shadow hover:shadow-lg bg-gray-50 cursor-pointer';
+        card.innerHTML = `
+          <h3 class="font-bold text-lg text-gray-800 mb-1">${folder.nombre}</h3>
+          <p class="text-sm text-gray-500 mb-2">${folder.descripcion}</p>
+          <p class="text-xs text-gray-400">Archivos: ${folder.archivos.length}</p>
+        `;
+        card.onclick = () => mostrarArchivos(folder);
+        folderList.appendChild(card);
+
+        const option = document.createElement('option');
+        option.value = folder.id;
+        option.textContent = folder.nombre;
+        folderSelect.appendChild(option);
+      });
+    }
+
+    function mostrarArchivos(folder) {
+      const filesSection = document.getElementById('files-section');
+      const folderName = document.getElementById('folder-name');
+      const fileList = document.getElementById('file-list');
+
+      folderName.textContent = folder.nombre;
+      fileList.innerHTML = '';
+
+      if (folder.archivos.length === 0) {
+        fileList.innerHTML = '<li class="text-sm text-gray-400">No hay archivos</li>';
+      } else {
+        folder.archivos.forEach(file => {
+          const li = document.createElement('li');
+          li.className = "text-sm text-blue-600 hover:underline";
+          li.innerHTML = `<a href="${file.url}" target="_blank">${file.nombre_archivo}</a>`;
+          fileList.appendChild(li);
+        });
+      }
+
+      filesSection.classList.remove('hidden');
+    }
+
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('file-input');
+      const folderId = document.getElementById('folder-select').value;
+      const fileName = document.getElementById('file-name').value;
+      const file = fileInput.files[0];
+
+      if (!file || !folderId || !fileName) {
+        alert("⚠️ Selecciona archivo, carpeta y pon un nombre.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("nombre_archivo", fileName);
+      formData.append("tipo", file.type);
+      formData.append("folder_id", folderId);  
+      const res = await fetch(`${API}/archivos/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      if (res.ok) {
+        alert("✅ Archivo subido con éxito");
+        fileInput.value = "";
+        document.getElementById('file-name').value = "";
+        cargarCarpetas(); // recarga para mostrar conteo actualizado
+      } else {
+        alert("❌ Error al subir el archivo");
+      }
+    });
+
+    // Cargar carpetas al iniciar
+    cargarCarpetas();
+  </script>
+
+</body>
+</html>
+

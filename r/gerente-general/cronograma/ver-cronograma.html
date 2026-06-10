@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Cronograma - VirtualMind</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/fetch-con-token.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #090D16; color: #cbd5e1; }
+        .card-glass { background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+        .card-dark { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.06); }
+        .timeline-dot { width: 18px; height: 18px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.15); flex-shrink: 0; }
+        .timeline-line { width: 2px; flex-shrink: 0; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .gantt-bar { height: 28px; border-radius: 6px; min-width: 4px; transition: all 0.3s; position: relative; }
+        .gantt-bar:hover { filter: brightness(1.2); transform: scaleY(1.1); }
+        .gantt-track { position: relative; height: 28px; background: rgba(15,23,42,0.6); border-radius: 6px; overflow: hidden; }
+        .gantt-label { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; padding: 0 10px; font-size: 11px; font-weight: 600; color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.5); white-space: nowrap; overflow: hidden; }
+        .driverjs-theme { font-family: 'Inter', sans-serif; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); padding: 20px; background: rgba(15,23,42,0.95)!important; color: #f1f5f9!important; }
+        .driverjs-theme .driver-popover-title { font-size: 18px; font-weight: 700; color: #818cf8; }
+        .driverjs-theme .driver-popover-description { color: #94a3b8; font-size: 14px; }
+        .driverjs-theme .driver-popover-next-btn, .driverjs-theme .driver-popover-prev-btn { background: #4f46e5; color: white; border-radius: 8px; border: none; padding: 6px 14px; font-weight: 600; }
+        @media print { body { background: white!important; color: black!important; } .no-print { display: none!important; } .card-glass { background: white!important; border: 1px solid #e5e7eb!important; } .card-dark { background: #f9fafb!important; } }
+        .tooltip { position: relative; }
+        .tooltip .tooltip-text { visibility: hidden; opacity: 0; width: 220px; background: rgba(15,23,42,0.95); color: #f1f5f9; text-align: center; border-radius: 8px; padding: 8px 12px; position: absolute; z-index: 100; bottom: 125%; left: 50%; transform: translateX(-50%); transition: all 0.3s; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; font-weight: 400; pointer-events: none; }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+        .tooltip .tooltip-text::after { content: ''; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: rgba(15,23,42,0.95) transparent transparent transparent; }
+        .tooltip-right .tooltip-text { bottom: auto; top: 50%; transform: translateY(-50%); left: 105%; }
+        .tooltip-right .tooltip-text::after { top: 50%; left: -5px; margin-left: 0; margin-top: -5px; border-color: transparent rgba(15,23,42,0.95) transparent transparent; }
+    </style>
+</head>
+<body class="min-h-screen p-4 lg:p-6">
+    <div class="max-w-6xl mx-auto">
+
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6 no-print">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                    <i class="fas fa-calendar-alt text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-white" id="cronogramaNombre" title="Nombre del cronograma">Cargando...</h1>
+                    <p class="text-sm text-slate-400" id="projectName"></p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <span id="estadoBadge" class="px-3 py-1 rounded-full text-xs font-bold hidden"></span>
+                <button onclick="verTutorial()" class="tooltip flex items-center gap-1.5 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 px-4 py-2 rounded-xl text-indigo-300 hover:text-white text-xs font-bold transition-all cursor-pointer">
+                    <span class="bg-indigo-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">?</span> Tutorial
+                    <span class="tooltip-text">Guía interactiva paso a paso del cronograma</span>
+                </button>
+                <button onclick="sugerirAjustesIA()" id="btnIA" class="tooltip flex items-center gap-1.5 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 px-4 py-2 rounded-xl text-purple-300 hover:text-white text-xs font-bold transition-all cursor-pointer">
+                    <i class="fas fa-robot"></i> Sugerir con IA
+                    <span class="tooltip-text">IA analiza fechas y sugiere optimizaciones</span>
+                </button>
+                <button onclick="window.history.back()" class="tooltip flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-slate-300 text-xs font-bold transition-all cursor-pointer">
+                    <i class="fas fa-arrow-left"></i> Volver
+                    <span class="tooltip-text">Regresar a la página anterior</span>
+                </button>
+                <button onclick="window.print()" class="tooltip flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-white text-xs font-bold transition-all cursor-pointer">
+                    <i class="fas fa-print"></i> Imprimir
+                    <span class="tooltip-text">Imprimir o guardar como PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Resumen Stats -->
+        <div id="statsRow" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 hidden no-print">
+            <div class="card-glass rounded-2xl p-4 text-center tooltip">
+                <p class="text-xs text-slate-500">Fases</p>
+                <p class="text-2xl font-bold text-white" id="statFases">0</p>
+                <span class="tooltip-text">Total de fases en el cronograma</span>
+            </div>
+            <div class="card-glass rounded-2xl p-4 text-center tooltip">
+                <p class="text-xs text-slate-500">Etapas</p>
+                <p class="text-2xl font-bold text-white" id="statEtapas">0</p>
+                <span class="tooltip-text">Total de etapas en el cronograma</span>
+            </div>
+            <div class="card-glass rounded-2xl p-4 text-center tooltip">
+                <p class="text-xs text-slate-500">Duración</p>
+                <p class="text-2xl font-bold text-emerald-400" id="statDuracion">0d</p>
+                <span class="tooltip-text">Duración total del cronograma</span>
+            </div>
+            <div class="card-glass rounded-2xl p-4 text-center tooltip">
+                <p class="text-xs text-slate-500">Progreso</p>
+                <p class="text-2xl font-bold text-indigo-400" id="statProgreso">0%</p>
+                <span class="tooltip-text">Porcentaje completado del cronograma</span>
+            </div>
+        </div>
+
+        <!-- Progress bar general -->
+        <div id="progressSection" class="card-dark rounded-2xl p-4 mb-6 hidden no-print">
+            <div class="flex justify-between text-xs text-slate-400 mb-2">
+                <span class="tooltip">Progreso General<span class="tooltip-text">Avance total del cronograma basado en etapas completadas</span></span>
+                <span id="progressLabel">0%</span>
+            </div>
+            <div class="h-3 bg-slate-800 rounded-full overflow-hidden" title="Barra de progreso general del cronograma">
+                <div id="progressBar" class="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-1000" style="width:0%"></div>
+            </div>
+        </div>
+
+        <!-- Fechas generales -->
+        <div class="card-glass rounded-2xl p-4 mb-6 hidden" id="datesBar">
+            <div class="flex items-center gap-3 text-sm">
+                <i class="fas fa-calendar-alt text-indigo-400"></i>
+                <span class="text-slate-400">Cronograma:</span>
+                <span class="text-white font-semibold" id="overallDates"></span>
+                <span class="text-slate-600 mx-2">|</span>
+                <span class="text-slate-400">Estado:</span>
+                <span id="estadoText" class="font-bold"></span>
+            </div>
+        </div>
+
+        <!-- AI Suggestions Panel -->
+        <div id="iaPanel" class="hidden card-glass rounded-2xl p-4 mb-6 border border-purple-500/20 no-print">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-purple-400"><i class="fas fa-robot mr-2"></i>Sugerencias IA</h3>
+                <button onclick="document.getElementById('iaPanel').classList.add('hidden')" class="text-slate-500 hover:text-white transition-all text-xs cursor-pointer">✕</button>
+            </div>
+            <div id="iaContent" class="text-sm text-slate-300 space-y-2"></div>
+        </div>
+
+        <!-- Timeline Cronograma -->
+        <div id="timelineContainer" class="space-y-6">
+            <div class="card-glass rounded-2xl p-8 text-center">
+                <i class="fas fa-spinner fa-spin fa-2x text-indigo-400"></i>
+                <p class="mt-3 text-slate-400">Cargando cronograma...</p>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token");
+    const cronogramaId = new URLSearchParams(window.location.search).get("cronograma_id");
+    const roleBase = '/' + window.location.pathname.split('/').slice(1, 3).join('/');
+
+    const $ = id => document.getElementById(id);
+    const cronoNombre = $('cronogramaNombre');
+    const projName = $('projectName');
+    const timeline = $('timelineContainer');
+    const overallDates = $('overallDates');
+    const estadoText = $('estadoText');
+    const estadoBadge = $('estadoBadge');
+
+    async function fetchAPI(endpoint) {
+        const r = await fetch(`${API}${endpoint}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!r.ok) throw new Error(`Error ${r.status}`);
+        return r.json();
+    }
+
+    function diasEntre(a, b) { return Math.ceil((new Date(b) - new Date(a)) / (1000*60*60*24)) + 1; }
+
+    function renderStats(fases, etapasCount) {
+        $('statsRow').classList.remove('hidden');
+        $('progressSection').classList.remove('hidden');
+        $('datesBar').classList.remove('hidden');
+        $('statFases').textContent = fases.length;
+        $('statEtapas').textContent = etapasCount;
+
+        if (fases.length) {
+            const fechas = fases.flatMap(f => [new Date(f.fecha_inicio), new Date(f.fecha_fin)]);
+            const min = new Date(Math.min(...fechas));
+            const max = new Date(Math.max(...fechas));
+            const duracion = diasEntre(min, max);
+            $('statDuracion').textContent = duracion + 'd';
+
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const totalMs = max - min;
+            const transcurrido = hoy - min;
+            const pct = totalMs > 0 ? Math.min(100, Math.max(0, Math.round((transcurrido / totalMs) * 100))) : 0;
+            $('statProgreso').textContent = pct + '%';
+            $('progressLabel').textContent = pct + '%';
+            $('progressBar').style.width = pct + '%';
+        }
+    }
+
+    function renderGantt(fases, users) {
+        if (!fases.length) {
+            timeline.innerHTML = `<div class="card-glass rounded-2xl p-8 text-center"><i class="fas fa-info-circle text-3xl text-slate-500 mb-3"></i><p class="text-slate-400">Este cronograma no tiene fases ni etapas definidas.</p></div>`;
+            return;
+        }
+
+        const todasFechas = fases.flatMap(f => [new Date(f.fecha_inicio), new Date(f.fecha_fin), ...f.etapas.flatMap(e => [new Date(e.fecha_inicio), new Date(e.fecha_fin)])]);
+        const fechaMin = new Date(Math.min(...todasFechas));
+        const fechaMax = new Date(Math.max(...todasFechas));
+        const rangoDias = diasEntre(fechaMin, fechaMax) || 1;
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
+
+        fases.sort((a,b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+        let idx = 0;
+        const colors = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16'];
+
+        fases.forEach((fase, fi) => {
+            fase.etapas.sort((a,b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+            const faseInicio = new Date(fase.fecha_inicio);
+            const faseFin = new Date(fase.fecha_fin);
+            const diasFase = diasEntre(faseInicio, faseFin);
+
+            const faseInicioStr = faseInicio.toLocaleDateString('es-CO', { day:'numeric', month:'short' });
+            const faseFinStr = faseFin.toLocaleDateString('es-CO', { day:'numeric', month:'short', year:'numeric' });
+
+            let etapasHTML = '';
+            fase.etapas.forEach((etapa, ei) => {
+                const color = colors[(idx++) % colors.length];
+                const eInicio = new Date(etapa.fecha_inicio);
+                const eFin = new Date(etapa.fecha_fin);
+                const diasE = diasEntre(eInicio, eFin);
+
+                const offset = ((eInicio - fechaMin) / (1000*60*60*24)) / rangoDias * 100;
+                const width = Math.max(2, (diasE / rangoDias) * 100);
+                const isOngoing = eInicio <= hoy && eFin >= hoy;
+                const isPast = eFin < hoy;
+                const opacity = isPast ? '0.5' : '1';
+
+                const responsables = (etapa.responsables || []).map(uid => {
+                    const u = users.find(u => u.uid === uid);
+                    return u ? u.nombre || u.username || u.email : '?';
+                }).join(', ');
+
+                etapasHTML += `
+                    <div class="flex items-center gap-4 py-2 group animate-fade-in" style="animation-delay:${ei*0.1}s">
+                        <div class="w-2 h-2 rounded-full bg-slate-600 flex-shrink-0"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <div>
+                                    <span class="text-sm font-semibold text-slate-200 tooltip">${etapa.nombre_etapa}
+                                        <span class="tooltip-text tooltip-right">${etapa.nombre_etapa}${responsables ? '<br/><b>Responsables:</b> '+responsables : ''}</span>
+                                    </span>
+                                    <span class="text-xs text-slate-500 ml-2">${etapa.fecha_inicio} → ${etapa.fecha_fin}</span>
+                                </div>
+                                <span class="text-xs px-2 py-0.5 rounded-full font-semibold ${isPast ? 'text-emerald-400 bg-emerald-400/10' : isOngoing ? 'text-amber-400 bg-amber-400/10' : 'text-slate-500 bg-slate-500/10'}">${isPast ? 'Completada' : isOngoing ? 'En curso' : 'Pendiente'}</span>
+                            </div>
+                            <div class="gantt-track mt-1.5 tooltip">
+                                <div class="gantt-bar" style="margin-left:${Math.max(0,offset)}%;width:${Math.min(100-offset,width)}%;background:${color};opacity:${opacity};">
+                                    <div class="gantt-label">${etapa.nombre_etapa} (${diasE}d)</div>
+                                </div>
+                                <span class="tooltip-text">${etapa.nombre_etapa}: ${etapa.fecha_inicio} → ${etapa.fecha_fin} (${diasE} días)${responsables ? '<br/><b>Responsables:</b> '+responsables : ''}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const faseDiv = document.createElement('div');
+            faseDiv.className = 'card-glass rounded-2xl p-5 animate-fade-in';
+            faseDiv.style.animationDelay = (fi*0.15)+'s';
+            faseDiv.innerHTML = `
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm" style="background:${colors[fi%colors.length]}">${fi+1}</div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold text-white tooltip">${fase.nombre_fase}
+                            <span class="tooltip-text">Fase ${fi+1}: ${diasFase} días de duración</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">${faseInicioStr} → ${faseFinStr}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-500">${fase.etapas.length} etapas</span>
+                        <div class="text-xs text-slate-500">${diasFase} días</div>
+                    </div>
+                </div>
+                <div class="space-y-1">${etapasHTML}</div>
+            `;
+            timeline.appendChild(faseDiv);
+        });
+    }
+
+    async function init() {
+        if (!cronogramaId) {
+            timeline.innerHTML = `<div class="card-glass rounded-2xl p-8 text-center"><i class="fas fa-exclamation-triangle text-3xl text-rose-400 mb-3"></i><p class="text-rose-400 font-semibold">Error: No se proporcionó un ID de cronograma.</p></div>`;
+            return;
+        }
+        try {
+            const crono = await fetchAPI(`/cronogramas/${cronogramaId}`);
+            const [project, users] = await Promise.all([
+                fetchAPI(`/projects/${crono.project_id}`),
+                fetchAPI(`/users/`)
+            ]);
+
+            cronoNombre.textContent = crono.nombre || 'Cronograma sin nombre';
+            projName.textContent = `📁 ${project.name || 'Proyecto'}`;
+
+            // Estado badge
+            const esCerrado = crono.estado === 'cerrado';
+            estadoBadge.classList.remove('hidden');
+            if (esCerrado) {
+                estadoBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-400/10 text-emerald-400 border border-emerald-500/20';
+                estadoBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Cerrado';
+            } else {
+                estadoBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-400/10 text-amber-400 border border-amber-500/20';
+                estadoBadge.innerHTML = '<i class="fas fa-clock mr-1"></i> Planificado';
+            }
+            estadoText.textContent = esCerrado ? 'Cerrado' : 'Planificado';
+            estadoText.className = `font-bold ${esCerrado ? 'text-emerald-400' : 'text-amber-400'}`;
+
+            const estructura = crono.estructura || [];
+            const todasEtapas = estructura.flatMap(f => f.etapas || []);
+            renderStats(estructura, todasEtapas.length);
+            renderGantt(estructura, users);
+
+            if (estructura.length) {
+                const fechasInicio = estructura.map(f => new Date(f.fecha_inicio));
+                const fechasFin = estructura.map(f => new Date(f.fecha_fin));
+                const minD = new Date(Math.min(...fechasInicio)).toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' });
+                const maxD = new Date(Math.max(...fechasFin)).toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' });
+                overallDates.textContent = `${minD} → ${maxD}`;
+            }
+        } catch(e) {
+            console.error(e);
+            timeline.innerHTML = `<div class="card-glass rounded-2xl p-8 text-center"><i class="fas fa-exclamation-triangle text-3xl text-rose-400 mb-3"></i><p class="text-rose-400 font-semibold">Error al cargar el cronograma.<br><span class="text-sm text-slate-400">${e.message}</span></p></div>`;
+        }
+    }
+
+    function mdToHtml(md) {
+        return md
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/^### (.+)$/gm, '<h3 class="text-base font-bold text-indigo-300 mt-4 mb-2">$1</h3>')
+            .replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold text-indigo-300 mt-5 mb-2">$1</h2>')
+            .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold text-indigo-300 mt-5 mb-3">$1</h1>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong class="text-slate-100">$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/`(.+?)`/g, '<code class="bg-slate-800 text-emerald-300 px-1.5 py-0.5 rounded text-xs">$1</code>')
+            .replace(/^- (.+)$/gm, '<li class="flex items-start gap-2 text-slate-300"><i class="fas fa-circle text-[6px] text-indigo-400 mt-1.5 flex-shrink-0"></i><span>$1</span></li>')
+            .replace(/^\d+\. (.+)$/gm, '<li class="flex items-start gap-2 text-slate-300"><span class="text-indigo-400 font-bold flex-shrink-0">•</span><span>$1</span></li>')
+            .replace(/\n\n/g, '</p><p class="mb-2">')
+            .replace(/\n/g, '<br>');
+    }
+
+    // IA Suggestions
+    window.sugerirAjustesIA = async function() {
+        const btn = document.getElementById('btnIA');
+        const orig = btn.innerHTML;
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Analizando...';
+        const panel = document.getElementById('iaPanel');
+        const content = document.getElementById('iaContent');
+        panel.classList.remove('hidden');
+        content.innerHTML = '<p class="text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>IA analizando el cronograma...</p>';
+
+        try {
+            const crono = await fetchAPI(`/cronogramas/${cronogramaId}`);
+            const project = await fetchAPI(`/projects/${crono.project_id}`);
+            const res = await fetch(`${API}/chat/gemini`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    prompt: `Eres un experto en gestión de proyectos educativos. Analiza este cronograma y da sugerencias específicas para mejorarlo. Responde en español con viñetas cortas y prácticas.
+
+PROYECTO: ${project.name}
+TIPO: ${project.tipo_proyecto || 'No especificado'}
+DESCRIPCIÓN: ${project.description || 'Sin descripción'}
+HORAS: ${project.horas_curso || 'No especificado'}
+ESTADO CRONOGRAMA: ${crono.estado}
+
+ESTRUCTURA DEL CRONOGRAMA:
+${JSON.stringify(crono.estructura, null, 2)}
+
+Sugiere:
+1. Optimizaciones de fechas (¿hay cuellos de botella? ¿etapas que pueden solaparse?)
+2. ¿Faltan responsables? ¿Hay etapas sin asignar?
+3. Duración recomendada vs duración actual
+4. Riesgos detectados
+5. Cómo mejorar la distribución del trabajo`
+                })
+            });
+            const data = await res.json();
+            const texto = data.response || data.message || data.text || JSON.stringify(data);
+            content.innerHTML = `<div class="text-sm text-slate-300 leading-relaxed">${mdToHtml(texto)}</div>`;
+        } catch(e) {
+            content.innerHTML = `<p class="text-rose-400 text-sm">Error al conectar con IA: ${e.message}</p>`;
+        } finally {
+            btn.disabled = false; btn.innerHTML = orig;
+        }
+    };
+
+    // Tutorial
+    window.verTutorial = function() {
+        const d = window.driver.js.driver;
+        const tour = d({
+            showProgress: true, animate: true,
+            nextBtnText: 'Siguiente →', prevBtnText: '← Anterior', doneBtnText: '¡Entendido!',
+            progressText: 'Paso {{current}} de {{total}}',
+            popoverClass: 'driverjs-theme',
+            steps: [
+                { element: '#cronogramaNombre', popover: { title: 'Cronograma', description: 'Aquí ves el nombre y estado del cronograma. Puedes ver si está Planificado o Cerrado.', side: 'bottom', align: 'start' } },
+                { element: '#statsRow', popover: { title: 'Estadísticas', description: 'Resumen visual: número de fases, etapas, duración total y progreso general.', side: 'top', align: 'start' } },
+                { element: '#progressSection', popover: { title: 'Progreso General', description: 'Barra de avance del cronograma basada en el tiempo transcurrido vs fechas planificadas.', side: 'top', align: 'start' } },
+                { element: '.card-glass:nth-of-type(3)', popover: { title: 'Fases y Etapas', description: 'Cada fase se muestra con sus etapas. La barra de Gantt visualiza la duración y superposición entre etapas. Los colores indican progreso: verde = completada, ámbar = en curso, gris = pendiente.', side: 'top', align: 'start' } },
+                { element: '#btnIA', popover: { title: 'IA Inteligente', description: 'Haz clic para que la IA analice el cronograma y sugiera optimizaciones, detecte riesgos y mejore la planificación.', side: 'bottom', align: 'start' } }
+            ]
+        });
+        tour.drive();
+    };
+
+    init();
+});
+</script>
+
+<!-- Roles check -->
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const allowedRoles = ['superadmin','admin','coordinador','gerente-general','disenador-instruccional','autor','cliente'];
+    const t = localStorage.getItem('token');
+    if (!t) { window.location.href = '/'; return; }
+    try {
+        const p = JSON.parse(atob(t.split('.')[1]));
+        const r = p.roles || [p.role].filter(Boolean);
+        if (!r.some(ro => allowedRoles.includes(ro))) window.location.href = '/';
+    } catch(e) { window.location.href = '/'; }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperar Contraseña - VirtualMind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .step { transition: all 0.3s ease; }
+    .step-indicator { transition: all 0.3s ease; }
+    .password-wrap { position: relative; }
+    .password-wrap .input-eye {
+      position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
+      width: 1.5rem; height: 1.5rem; color: #6b7280; cursor: pointer;
+    }
+    .password-wrap .input-eye:hover { color: #6366f1; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade { animation: fadeIn 0.4s ease forwards; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .animate-pulse { animation: pulse 2s infinite; }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+  </style>
+</head>
+<body class="min-h-screen gradient-bg flex items-center justify-center p-4">
+
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+    
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-center">
+      <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-white">Recuperar Contraseña</h1>
+      <p class="text-indigo-100 text-sm mt-1">Sigue los pasos para restablecer tu contraseña</p>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="flex justify-center items-center gap-4 py-4 bg-gray-50 border-b">
+      <div id="step1-indicator" class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold step-indicator">1</div>
+        <span class="text-sm font-medium text-gray-700">Email</span>
+      </div>
+      <div class="w-8 border-t-2 border-gray-300"></div>
+      <div id="step2-indicator" class="flex items-center gap-2 opacity-50">
+        <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-sm font-bold step-indicator">2</div>
+        <span class="text-sm font-medium text-gray-500">Código</span>
+      </div>
+      <div class="w-8 border-t-2 border-gray-300"></div>
+      <div id="step3-indicator" class="flex items-center gap-2 opacity-50">
+        <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-sm font-bold step-indicator">3</div>
+        <span class="text-sm font-medium text-gray-500">Nueva Clave</span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="p-6">
+      
+      <!-- Step 1: Email -->
+      <div id="step1" class="step animate-fade">
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h2 class="text-lg font-semibold text-gray-800">Ingresa tu correo electrónico</h2>
+          <p class="text-gray-500 text-sm mt-1">Te enviaremos un código de verificación</p>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+            <input type="email" id="emailInput" placeholder="tu@correo.com" 
+              class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+          </div>
+          <button id="btnEnviarCodigo" onclick="enviarCodigo()"
+            class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition flex items-center justify-center gap-2">
+            <span>Enviar Código</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Código -->
+      <div id="step2" class="step hidden">
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h2 class="text-lg font-semibold text-gray-800">Código Enviado</h2>
+          <p class="text-gray-500 text-sm mt-1">Ingresa el código de 6 dígitos que enviamos a <span id="emailMostrado" class="font-medium text-indigo-600"></span></p>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Código de verificación</label>
+          <div class="flex gap-2 justify-center">
+            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" data-index="0">
+            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" data-index="1">
+            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" data-index="2">
+            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" data-index="3">
+            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" data-index="4">
+            <input type="text" maxlength="1" class="code-input w-12 h-14 text-center text-2xl font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" data-index="5">
+          </div>
+        </div>
+
+        <p class="text-center text-sm text-gray-500 mb-4">
+          ¿No recibiste el código? <button onclick="enviarCodigo()" class="text-indigo-600 hover:text-indigo-800 font-medium">Reenviar</button>
+        </p>
+
+        <button id="btnVerificarCodigo" onclick="verificarCodigo()"
+          class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition">
+          Verificar Código
+        </button>
+
+        <button onclick="volverStep1()" class="w-full mt-3 text-gray-500 hover:text-gray-700 py-2 text-sm">
+          ← Usar otro correo
+        </button>
+      </div>
+
+      <!-- Step 3: Nueva Contraseña -->
+      <div id="step3" class="step hidden">
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <h2 class="text-lg font-semibold text-gray-800">Nueva Contraseña</h2>
+          <p class="text-gray-500 text-sm mt-1">Ingresa tu nueva contraseña</p>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nueva contraseña</label>
+            <div class="password-wrap">
+              <input type="password" id="newPassword" placeholder="Mínimo 8 caracteres" 
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <span class="input-eye toggle-password" data-target="newPassword">
+                <svg class="eye-open w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                <svg class="eye-closed w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</label>
+            <div class="password-wrap">
+              <input type="password" id="confirmPassword" placeholder="Repite la contraseña" 
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <span class="input-eye toggle-password" data-target="confirmPassword">
+                <svg class="eye-open w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                <svg class="eye-closed w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <button id="btnCambiarPassword" onclick="cambiarPassword()"
+            class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition">
+            Cambiar Contraseña
+          </button>
+        </div>
+      </div>
+
+      <!-- Mensaje -->
+      <div id="mensaje" class="mt-4 text-center text-sm hidden"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="bg-gray-50 p-4 text-center border-t">
+      <a href="/index.html" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+        ← Volver al login
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://gestordecursos.pegui.edu.co:8000';
+    let userEmail = '';
+    let resetToken = '';
+
+    // Pre-fill email from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailFromUrl = urlParams.get('email');
+    if (emailFromUrl) {
+      document.getElementById('emailInput').value = emailFromUrl;
+      userEmail = emailFromUrl;
+    }
+
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const targetId = toggle.dataset.target;
+        const input = document.getElementById(targetId);
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        toggle.querySelector('.eye-open').classList.toggle('hidden', !isPassword);
+        toggle.querySelector('.eye-closed').classList.toggle('hidden', isPassword);
+      });
+    });
+
+    // Code input navigation
+    const codeInputs = document.querySelectorAll('.code-input');
+    codeInputs.forEach((input, index) => {
+      input.addEventListener('input', (e) => {
+        if (e.target.value.length === 1 && index < 5) {
+          codeInputs[index + 1].focus();
+        }
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+          codeInputs[index - 1].focus();
+        }
+      });
+    });
+
+    function showStep(step) {
+      ['step1', 'step2', 'step3'].forEach(s => {
+        document.getElementById(s).classList.add('hidden');
+      });
+      document.getElementById(`step${step}`).classList.remove('hidden');
+      document.getElementById(`step${step}`).classList.add('animate-fade');
+
+      // Update indicators
+      for (let i = 1; i <= 3; i++) {
+        const indicator = document.getElementById(`step${i}-indicator`);
+        const circle = indicator.querySelector('div');
+        const text = indicator.querySelector('span');
+        if (i <= step) {
+          circle.className = 'w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold step-indicator';
+          text.className = 'text-sm font-medium text-gray-700';
+          indicator.classList.remove('opacity-50');
+        } else {
+          circle.className = 'w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-sm font-bold step-indicator';
+          text.className = 'text-sm font-medium text-gray-500';
+          indicator.classList.add('opacity-50');
+        }
+      }
+    }
+
+    function mostrarMensaje(texto, tipo) {
+      const msg = document.getElementById('mensaje');
+      msg.textContent = texto;
+      msg.className = `mt-4 text-center text-sm ${tipo === 'error' ? 'text-red-600 bg-red-50 p-3 rounded-lg' : 'text-green-600 bg-green-50 p-3 rounded-lg'}`;
+      msg.classList.remove('hidden');
+    }
+
+    async function enviarCodigo() {
+      const email = document.getElementById('emailInput').value.trim();
+      if (!email) {
+        mostrarMensaje('Ingresa tu correo electrónico', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btnEnviarCodigo');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-pulse">Enviando...</span>';
+
+      try {
+        const res = await fetch(`${API}/auth/request-password-reset`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+        
+        if (res.ok) {
+          userEmail = email;
+          document.getElementById('emailMostrado').textContent = email;
+          mostrarMensaje('Código enviado correctamente', 'success');
+          showStep(2);
+          codeInputs[0].focus();
+        } else {
+          mostrarMensaje(data.detail || 'Error al enviar código', 'error');
+        }
+      } catch (e) {
+        mostrarMensaje('Error de conexión', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Enviar Código</span><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`;
+      }
+    }
+
+    async function verificarCodigo() {
+      const codigo = Array.from(codeInputs).map(i => i.value).join('');
+      if (codigo.length !== 6) {
+        mostrarMensaje('Ingresa el código de 6 dígitos', 'error');
+        return;
+      }
+
+      // Also check email from input in case URL param wasn't set
+      const emailInput = document.getElementById('emailInput').value.trim();
+      const emailParaEnviar = userEmail || emailInput;
+      
+      if (!emailParaEnviar) {
+        mostrarMensaje('Ingresa tu correo electrónico primero', 'error');
+        return;
+      }
+      
+      userEmail = emailParaEnviar;
+
+      const btn = document.getElementById('btnVerificarCodigo');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-pulse">Verificando...</span>';
+
+      try {
+        const res = await fetch(`${API}/auth/verify-password-reset-code`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: userEmail, code: codigo })
+        });
+
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          mostrarMensaje('Error del servidor', 'error');
+          return;
+        }
+        
+        if (res.ok) {
+          resetToken = data.reset_token;
+          showStep(3);
+        } else {
+          mostrarMensaje(data.detail || 'Código incorrecto', 'error');
+        }
+      } catch (e) {
+        mostrarMensaje('Error de conexión', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Verificar Código';
+      }
+    }
+
+    async function cambiarPassword() {
+      const newPass = document.getElementById('newPassword').value;
+      const confirmPass = document.getElementById('confirmPassword').value;
+
+      if (newPass.length < 8) {
+        mostrarMensaje('La contraseña debe tener al menos 8 caracteres', 'error');
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        mostrarMensaje('Las contraseñas no coinciden', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btnCambiarPassword');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-pulse">Cambiando...</span>';
+
+      try {
+        const res = await fetch(`${API}/auth/reset-password-confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            email: userEmail, 
+            reset_token: resetToken,
+            new_password: newPass 
+          })
+        });
+
+        if (res.ok) {
+          mostrarMensaje('¡Contraseña cambiada correctamente!', 'success');
+          btn.innerHTML = '✓ Contraseña Actualizada';
+          btn.className = 'w-full bg-green-600 text-white py-3 rounded-lg font-semibold';
+          setTimeout(() => {
+            window.location.href = '/index.html';
+          }, 2000);
+        } else {
+          const data = await res.json();
+          mostrarMensaje(data.detail || 'Error al cambiar contraseña', 'error');
+        }
+      } catch (e) {
+        mostrarMensaje('Error de conexión', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Cambiar Contraseña';
+      }
+    }
+
+    function volverStep1() {
+      showStep(1);
+      document.getElementById('mensaje').classList.add('hidden');
+      codeInputs.forEach(i => i.value = '');
+    }
+  </script>
+</body>
+</html>

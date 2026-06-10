@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Mis Proyectos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {font-family:'Inter',sans-serif}
+    .gradient-bg{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+    .card-hover{transition:all .3s ease}
+    .card-hover:hover{transform:translateY(-5px);box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05)}
+    .chart-container{background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);min-height:380px}
+    .ai-chat{height:400px;overflow-y:auto}
+    .message-ai{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+    .loading-dots::after{content:'.';animation:dots 1.5s infinite}
+    @keyframes dots{0%,20%{content:'.'}40%{content:'..'}60%{content:'...'}80%,100%{content:''}}
+    .chart-fixed{position:relative;height:320px;width:100%}
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 min-h-screen">
+  
+  <div class="gradient-bg text-white shadow-2xl">
+    <div class="container mx-auto px-6 py-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-4xl font-bold mb-2">Dashboard de Mis Proyectos</h1>
+          <p class="text-blue-100">Panel de control inteligente con IA integrada</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button onclick="renderClientDashboard()" title="Recargar datos ahora" class="bg-white/10 hover:bg-white/20 p-3 rounded-full transition-colors">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <div class="text-right">
+                <div class="text-sm text-blue-100">Última actualización:</div>
+                <div class="text-lg font-bold" id="lastUpdate">-</div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-6 -mt-8 relative z-10">
+    <div id="status-container" class="mb-4"></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="card-hover bg-white rounded-xl shadow-lg p-6"><div class="flex items-center"><div class="bg-gradient-to-r from-indigo-500 to-blue-500 p-3 rounded-full text-white mr-4"><i class="fas fa-project-diagram text-xl"></i></div><div><p class="text-gray-600 text-sm font-medium">Mis Proyectos</p><p class="text-3xl font-bold text-gray-800" id="totalProjects">-</p></div></div></div>
+      <div class="card-hover bg-white rounded-xl shadow-lg p-6"><div class="flex items-center"><div class="bg-gradient-to-r from-green-400 to-green-600 p-3 rounded-full text-white mr-4"><i class="fas fa-tasks text-xl"></i></div><div><p class="text-gray-600 text-sm font-medium">Tareas Totales</p><p class="text-3xl font-bold text-gray-800" id="totalTasks">-</p></div></div></div>
+      <div class="card-hover bg-white rounded-xl shadow-lg p-6"><div class="flex items-center"><div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-3 rounded-full text-white mr-4"><i class="fas fa-check-circle text-xl"></i></div><div><p class="text-gray-600 text-sm font-medium">Tareas Completadas</p><p class="text-3xl font-bold text-gray-800" id="completedTasks">-</p></div></div></div>
+      <div class="card-hover bg-white rounded-xl shadow-lg p-6"><div class="flex items-center"><div class="bg-gradient-to-r from-purple-400 to-pink-500 p-3 rounded-full text-white mr-4"><i class="fas fa-chart-line text-xl"></i></div><div><p class="text-gray-600 text-sm font-medium">Progreso General</p><p class="text-3xl font-bold text-gray-800" id="globalProgress">-</p></div></div></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="space-y-8">
+        <div class="chart-container rounded-xl p-6 shadow-xl"><h3 class="text-xl font-semibold text-gray-800 mb-4">Progreso de Mis Proyectos</h3><div class="chart-fixed"><canvas id="projectProgressChart"></canvas></div></div>
+        <div class="chart-container rounded-xl p-6 shadow-xl"><h3 class="text-xl font-semibold text-gray-800 mb-4">Tareas por Estado</h3><div class="chart-fixed"><canvas id="tasksStatusChart"></canvas></div></div>
+      </div>
+      <div class="bg-white rounded-xl shadow-xl p-6">
+        <div class="flex items-center justify-between mb-4"><h3 class="text-xl font-semibold text-gray-800 flex items-center"><i class="fas fa-robot mr-3 text-indigo-600"></i>Tu Analista IA Personal</h3><select id="aiModel" class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50"><option value="gemini">VirtualMind IA</option><option value="openai">OpenAI GPT</option><option value="kimi">Kimi AI</option></select></div>
+        <div class="ai-chat bg-gray-50 rounded-lg p-4 mb-4" id="chatContainer"><div class="text-center text-gray-500 py-8"><p>Hola, soy tu asistente. Pregúntame lo que necesites saber sobre tus proyectos.</p></div></div>
+        <div class="flex gap-2 mb-4"><input type="text" id="aiInput" placeholder="Ej: ¿Cuáles son mis tareas urgentes?" class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" onkeypress="if(event.key==='Enter') sendAIMessage()" /><button onclick="sendAIMessage()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2 rounded-lg" id="sendBtn"><i class="fas fa-paper-plane"></i></button></div>
+        <div class="space-y-2"><h4 class="text-sm font-semibold text-gray-600">Sugerencias:</h4><div class="flex flex-wrap gap-2"><button onclick="quickQuery('Resume el estado actual de mis proyectos')" class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs hover:bg-blue-100">Resumen general</button><button onclick="quickQuery('Identifica posibles riesgos o retrasos en mis cronogramas')" class="px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs hover:bg-red-100">Buscar riesgos</button><button onclick="quickQuery('¿Cuáles son mis tareas con mayor prioridad?')" class="px-3 py-1 bg-yellow-50 text-yellow-700 rounded-full text-xs hover:bg-yellow-100">Tareas prioritarias</button><button onclick="quickQuery('Sugiere los próximos pasos para mis proyectos')" class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs hover:bg-green-100">Próximos pasos</button></div></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    let clientDashboardData = {};
+    let chartInstances = {};
+
+    function parseJwt(token) {
+        try {
+            return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        } catch (e) {
+            console.error("Fallo al decodificar el token:", e);
+            return null; // Devuelve null si el token es inválido
+        }
+    }
+
+    async function apiGet(endpoint) {
+        const token = localStorage.getItem("token");
+        if (!token) { window.location.href = "/index.html"; return Promise.reject("No token"); }
+        const res = await fetch(`${API_BASE}${endpoint}`, { headers: { "Authorization": `Bearer ${token}` } });
+        if (!res.ok) throw new Error(`Error en ${endpoint}: ${res.statusText}`);
+        return res.json();
+    }
+    
+    async function renderClientDashboard() {
+        const statusContainer = document.getElementById('status-container');
+        statusContainer.innerHTML = `<div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-r-lg" role="alert"><p class="font-bold">Actualizando datos...</p></div>`;
+
+        try {
+            const token = localStorage.getItem("token");
+            const payload = parseJwt(token);
+
+            // ##### INICIO DE LA CORRECCIÓN #####
+            // Se añade una verificación para asegurar que el payload (token decodificado) es válido
+            if (!payload) {
+                throw new Error("Token inválido o corrupto. Por favor, inicie sesión de nuevo.");
+            }
+            // ##### FIN DE LA CORRECCIÓN #####
+
+            const userIdFromToken = payload.user_id || payload.uid;
+            if (!userIdFromToken) throw new Error("Token no contiene ID de usuario. Por favor, inicie sesión de nuevo.");
+
+            const [allProjects, allCronogramas, allTasks] = await Promise.all([
+                apiGet("/projects/"), apiGet("/cronogramas/"), apiGet("/tareas/")
+            ]);
+
+            const clienteProyectos = allProjects.filter(p => p.client_id === userIdFromToken);
+            const clienteProjectIds = clienteProyectos.map(p => p.id);
+            const clienteCronogramas = allCronogramas.filter(c => clienteProjectIds.includes(c.project_id));
+            const clienteTareas = allTasks.filter(t => clienteProjectIds.includes(t.project_id));
+
+            clienteProyectos.forEach(p => {
+                const cron = clienteCronogramas.find(c => c.project_id === p.id);
+                p.progreso = cron ? calcularProgresoCronograma(cron) : 0;
+            });
+            
+            clientDashboardData = {
+                projects: clienteProyectos,
+                cronograms: clienteCronogramas,
+                tasks: clienteTareas
+            };
+
+            updateStatCards(clientDashboardData);
+            renderCharts(clientDashboardData);
+            
+            statusContainer.innerHTML = '';
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('es-ES');
+
+        } catch (e) {
+            console.error("Error cargando el dashboard del cliente:", e);
+            statusContainer.innerHTML = `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg" role="alert"><p class="font-bold">Error al recargar</p><p>${e.message}</p></div>`;
+        }
+    }
+
+    function calcularProgresoCronograma(cronograma) {
+        if (!cronograma || !cronograma.estructura) return 0;
+        const totalEtapas = cronograma.estructura.reduce((acc, fase) => acc + fase.etapas.length, 0);
+        if (totalEtapas === 0) return 0;
+        const hoy = new Date();
+        const etapasCompletadas = cronograma.estructura.flatMap(fase => fase.etapas).filter(etapa => new Date(etapa.fecha_fin) < hoy).length;
+        return Math.round((etapasCompletadas / totalEtapas) * 100);
+    }
+    
+    function updateStatCards(data) {
+        const completedTasks = data.tasks.filter(t => t.estado === 'Cerrado').length;
+        const totalProgress = data.projects.length > 0 
+            ? Math.round(data.projects.reduce((acc, p) => acc + p.progreso, 0) / data.projects.length)
+            : 0;
+        document.getElementById('totalProjects').textContent = data.projects.length;
+        document.getElementById('totalTasks').textContent = data.tasks.length;
+        document.getElementById('completedTasks').textContent = completedTasks;
+        document.getElementById('globalProgress').textContent = `${totalProgress}%`;
+    }
+
+    function renderCharts(data) {
+        Object.values(chartInstances).forEach(chart => chart.destroy());
+
+        const ctxProjects = document.getElementById('projectProgressChart').getContext('2d');
+        chartInstances.projects = new Chart(ctxProjects, {
+            type: 'bar',
+            data: {
+                labels: data.projects.map(p => p.name || `Proyecto ${p.id}`),
+                datasets: [{
+                    label: 'Progreso (%)',
+                    data: data.projects.map(p => p.progreso),
+                    backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                    borderWidth: 1, borderRadius: 5
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        const taskStatusCounts = data.tasks.reduce((acc, task) => {
+            const status = task.estado || 'Indefinido';
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+        }, {});
+        const ctxTasks = document.getElementById('tasksStatusChart').getContext('2d');
+        chartInstances.tasks = new Chart(ctxTasks, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(taskStatusCounts),
+                datasets: [{
+                    data: Object.values(taskStatusCounts),
+                    backgroundColor: ['#34D399', '#FBBF24', '#F87171', '#60A5FA', '#A78BFA', '#A8A29E'],
+                    borderWidth: 2
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    function generateAIContext() { /* ... sin cambios ... */ }
+    async function callAIModel({ model, text }) { /* ... sin cambios ... */ }
+    async function sendAIMessage() { /* ... sin cambios ... */ }
+    function quickQuery(text) { /* ... sin cambios ... */ }
+
+    renderClientDashboard();
+    setInterval(renderClientDashboard, 300000);
+  </script>
+</body>
+</html>

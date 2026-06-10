@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOC VR - Sistema Operativo Core</title>
+    
+    <!-- Tailwind CSS para UI futurista -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- A-Frame para VR -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: { 900: '#030712', 800: '#0B1120', 700: '#111827', accent: '#06b6d4', glow: '#3b82f6', neon: '#8b5cf6' }
+                    },
+                    boxShadow: {
+                        'neon-cyan': '0 0 15px rgba(6, 182, 212, 0.5)',
+                        'neon-purple': '0 0 15px rgba(139, 92, 246, 0.5)',
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+        body { 
+            font-family: 'Rajdhani', sans-serif; 
+            background: #030712; 
+            color: #e2e8f0;
+            overflow-x: hidden; 
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #030712 60%);
+        }
+        
+        h1, h2, h3, .font-tech { font-family: 'Orbitron', sans-serif; }
+
+        /* Estilos Glassmorphism */
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .sidebar { width: 280px; min-height: 100vh; border-right: 1px solid rgba(6, 182, 212, 0.2); }
+        .content { flex: 1; height: 100vh; overflow-y: auto; }
+        
+        .card { 
+            background: rgba(11, 17, 32, 0.7); 
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .card:hover {
+            border-color: rgba(6, 182, 212, 0.6);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-cyber {
+            background: linear-gradient(45deg, #06b6d4, #3b82f6);
+            color: white;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 8px 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: none;
+        }
+        .btn-cyber:hover {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.6);
+            filter: brightness(1.2);
+        }
+
+        .tab-btn { border-left: 3px solid transparent; transition: all 0.2s; opacity: 0.6; }
+        .tab-btn:hover { background: rgba(30, 58, 138, 0.3); opacity: 1; }
+        .tab-active { 
+            background: linear-gradient(90deg, rgba(6, 182, 212, 0.15) 0%, transparent 100%) !important; 
+            border-left: 3px solid #06b6d4; 
+            color: #22d3ee;
+            opacity: 1;
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+        }
+        
+        .viewer-container { 
+            height: 650px; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            position: relative; 
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(6, 182, 212, 0.1);
+        }
+        
+        /* Custom Scrollbar futurista */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #030712; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #06b6d4; box-shadow: 0 0 10px #06b6d4; }
+    </style>
+</head>
+<body class="flex">
+
+    <!-- Sidebar / Menú Lateral -->
+    <div class="sidebar glass-panel shadow-2xl z-10 flex flex-col relative">
+        <!-- Decoración superior -->
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-purple-600"></div>
+
+        <div class="mb-8 mt-6 text-center">
+            <div class="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500 shadow-neon-cyan relative overflow-hidden">
+                <div class="absolute inset-0 bg-cyan-500 opacity-20 animate-pulse"></div>
+                <i class="fas fa-network-wired text-3xl text-cyan-400 z-10"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-widest text-white">NOC <span class="text-cyan-400">CORE</span></h1>
+            <p class="text-xs text-blue-400 font-mono mt-2 bg-blue-900/30 inline-block px-2 py-1 rounded border border-blue-800/50">Ing. William Andrés</p>
+        </div>
+        
+        <nav class="space-y-2 flex-1 px-4">
+            <a href="#" onclick="showTab('dashboard')" class="flex items-center space-x-3 p-3 rounded tab-btn tab-active font-tech tracking-wide" data-tab="dashboard">
+                <i class="fas fa-chart-line w-5 text-center"></i><span>Telemetría</span>
+            </a>
+            <a href="#" onclick="showTab('laboratorio')" class="flex items-center space-x-3 p-3 rounded tab-btn font-tech tracking-wide" data-tab="laboratorio">
+                <i class="fas fa-server w-5 text-center"></i><span>Nodos & API</span>
+            </a>
+            <a href="#" onclick="showTab('visor')" class="flex items-center space-x-3 p-3 rounded tab-btn font-tech tracking-wide" data-tab="visor">
+                <i class="fas fa-vr-card w-5 text-center text-purple-400"></i><span class="text-purple-300">Matrix VR</span>
+            </a>
+        </nav>
+        
+        <div class="mt-auto p-4 border-t border-gray-800 bg-gray-900/50">
+            <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+                <span class="font-mono">Estado API</span>
+                <div class="flex items-center"><div class="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2 shadow-[0_0_8px_#10b981]"></div> ONLINE</div>
+            </div>
+            <a href="#" class="flex items-center justify-center space-x-2 p-2 rounded bg-red-900/20 hover:bg-red-900/40 text-red-400 border border-red-900/50 transition">
+                <i class="fas fa-power-off text-xs"></i><span class="text-sm font-tech">Desconectar</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="content p-8 relative">
+        
+        <!-- Dashboard Tab -->
+        <div id="tab-dashboard" class="tab-content">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-4xl font-bold text-white tracking-wide">Métricas Globales <span class="text-cyan-500">_</span></h2>
+                    <p class="text-gray-400 mt-1 text-lg">Monitoreo en tiempo real del enjambre de microservicios.</p>
+                </div>
+                <button onclick="showTab('visor')" class="btn-cyber flex items-center shadow-neon-cyan">
+                    <i class="fas fa-vr-card mr-2 text-lg"></i> Iniciar Entorno 3D
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="card p-6 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-cyan-500 opacity-5 rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform"></div>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="text-cyan-400 font-tech text-sm uppercase">Módulos Activos</div>
+                        <i class="fas fa-cubes text-cyan-500/50 text-2xl"></i>
+                    </div>
+                    <div class="text-5xl font-bold text-white mt-4 font-mono relative z-10">12</div>
+                    <div class="mt-2 text-xs text-green-400"><i class="fas fa-arrow-up mr-1"></i>100% Operativos</div>
+                </div>
+
+                <div class="card p-6 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-purple-500 opacity-5 rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform"></div>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="text-purple-400 font-tech text-sm uppercase">Modelos IA</div>
+                        <i class="fas fa-brain text-purple-500/50 text-2xl"></i>
+                    </div>
+                    <div class="text-5xl font-bold text-white mt-4 font-mono relative z-10">5</div>
+                    <div class="mt-2 text-xs text-purple-300">LLM & Bioinformática</div>
+                </div>
+
+                <div class="card p-6 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-blue-500 opacity-5 rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform"></div>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="text-blue-400 font-tech text-sm uppercase">Tráfico (Req/s)</div>
+                        <i class="fas fa-network-wired text-blue-500/50 text-2xl"></i>
+                    </div>
+                    <div class="text-5xl font-bold text-white mt-4 font-mono relative z-10">842</div>
+                    <div class="mt-2 text-xs text-blue-300">Latencia: 14ms</div>
+                </div>
+
+                <div class="card p-6 border-l-4 border-l-red-500 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-red-500 opacity-5 rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:scale-110 transition-transform"></div>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="text-red-400 font-tech text-sm uppercase">WAF / Amenazas</div>
+                        <i class="fas fa-shield-virus text-red-500/50 text-2xl"></i>
+                    </div>
+                    <div class="text-5xl font-bold text-white mt-4 font-mono relative z-10">3</div>
+                    <div class="mt-2 text-xs text-red-400">Ataques mitigados hoy</div>
+                </div>
+            </div>
+            
+            <div class="card p-6 glass-panel">
+                <h3 class="font-tech text-xl mb-6 text-gray-200 border-b border-gray-800 pb-3"><i class="fas fa-server text-cyan-500 mr-2"></i>Estado del Cluster Backend</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg border border-gray-800 hover:border-cyan-900 transition">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-2 h-2 bg-cyan-500 rounded-full shadow-[0_0_8px_#06b6d4]"></div>
+                            <span class="font-tech text-gray-300">Gateway Auth & JWT</span>
+                        </div>
+                        <span class="px-3 py-1 bg-cyan-900/30 border border-cyan-800 text-cyan-400 text-xs font-bold rounded">EN LÍNEA</span>
+                    </div>
+                    <div class="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg border border-gray-800 hover:border-purple-900 transition">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_8px_#a855f7]"></div>
+                            <span class="font-tech text-gray-300">Motor Bioinformática & IA</span>
+                        </div>
+                        <span class="px-3 py-1 bg-purple-900/30 border border-purple-800 text-purple-400 text-xs font-bold rounded">EN LÍNEA</span>
+                    </div>
+                    <div class="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg border border-gray-800 hover:border-green-900 transition">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_#10b981]"></div>
+                            <span class="font-tech text-gray-300">Data Lake PostgreSQL</span>
+                        </div>
+                        <span class="px-3 py-1 bg-green-900/30 border border-green-800 text-green-400 text-xs font-bold rounded">SINCRO</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visor VR Tab (Centro de Comando Matrix) -->
+        <div id="tab-visor" class="tab-content hidden h-full flex flex-col">
+            
+            <div class="glass-panel p-5 rounded-xl mb-6 border border-cyan-500/20 shadow-lg">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-tech text-gray-400 uppercase tracking-wider mb-2">Entorno Holográfico</label>
+                        <select id="visor-escenario" class="w-full p-2.5 bg-gray-900 border border-gray-700 rounded text-cyan-100 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition outline-none" onchange="cargarEscenario()">
+                            <option value="cyber">Cyber NOC (Predeterminado)</option>
+                            <option value="hacker">Modo Hacker (Dark Matrix)</option>
+                            <option value="vacio">Deep Space (Vacío)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-tech text-gray-400 uppercase tracking-wider mb-2">Inspeccionar Nodo</label>
+                        <select id="visor-modelo" class="w-full p-2.5 bg-gray-900 border border-purple-500/50 rounded text-purple-200 font-bold focus:border-purple-500 outline-none" onchange="cargarModelo()">
+                            <option value="panel">💻 Dashboard Master</option>
+                            <option value="adn">🧬 Bioinformática & ADN (NUEVO)</option>
+                            <option value="ia">🧠 Inteligencia Artificial</option>
+                            <option value="seguridad">🛡️ WAF & Ciberseguridad</option>
+                            <option value="database">🗄️ Cluster Base de Datos</option>
+                            <option value="api">🌐 API Endpoints</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-tech text-gray-400 uppercase tracking-wider mb-2">Comando de Voz / IA</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="input-guia-vr" placeholder="Ej: Analizar latencia del modelo de ADN..." 
+                                   class="flex-1 p-2.5 bg-gray-900 border border-gray-700 rounded text-white focus:border-cyan-500 outline-none font-mono text-sm"
+                                   onkeypress="if(event.key==='Enter') enviarGuiaVR()">
+                            <button onclick="enviarGuiaVR()" class="btn-cyber px-6 shadow-neon-cyan">
+                                EJECUTAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor VR -->
+            <div class="viewer-container flex-1 bg-black relative" id="visor-container">
+                <!-- Botón de Fullscreen nativo dentro del contenedor -->
+                <button onclick="iniciarVR()" class="absolute top-4 right-4 z-50 bg-gray-900/80 border border-cyan-500 text-cyan-400 px-4 py-2 rounded-lg backdrop-blur-sm hover:bg-cyan-900 hover:text-white transition font-tech text-sm shadow-neon-cyan">
+                    <i class="fas fa-expand mr-2"></i> MODO INMERSIVO
+                </button>
+
+                <!-- Escena A-Frame -->
+                <a-scene id="vr-scene" embedded webxr="optional: immersive-vr" renderer="antialias: true; colorManagement: true;">
+                    
+                    <a-sky id="cielo-vr" color="#02040a"></a-sky>
+
+                    <!-- Entorno Arquitectónico Generado Dinámicamente -->
+                    <a-entity id="entorno-estructuras"></a-entity>
+
+                    <!-- Módulo/Nodo a inspeccionar (Aquí se inyectan las pantallas y hologramas) -->
+                    <a-entity id="mundo-virtual" position="0 0 0"></a-entity>
+
+                    <!-- Iluminación Sci-Fi -->
+                    <a-light type="ambient" color="#ffffff" intensity="0.3"></a-light>
+                    <a-light id="luz-principal" type="directional" position="2 6 -2" intensity="0.8" color="#e0f2fe"></a-light>
+                    <a-light type="point" position="0 2 -3" intensity="0.8" color="#06b6d4" distance="15"></a-light>
+                    <a-light type="point" position="-3 1 -1" intensity="0.5" color="#8b5cf6" distance="10"></a-light>
+
+                    <!-- Cámara del Jugador/Admin -->
+                    <a-entity id="camara-principal" position="0 1.6 3">
+                        <a-camera wasd-controls="acceleration: 20" look-controls="pointerLockEnabled: false">
+                            <a-cursor color="#06b6d4" fuse="false" raycaster="objects: .clickable"
+                                      animation__click="property: scale; startEvents: click; easing: easeInCubic; dur: 150; from: 0.1 0.1 0.1; to: 1 1 1">
+                            </a-cursor>
+                            
+                            <!-- HUD del Visor -->
+                            <a-entity position="0 0 -1">
+                                <!-- Líneas de HUD Laterales -->
+                                <a-plane position="-0.8 0 0" width="0.01" height="0.4" color="#06b6d4" opacity="0.3"></a-plane>
+                                <a-plane position="0.8 0 0" width="0.01" height="0.4" color="#06b6d4" opacity="0.3"></a-plane>
+                                
+                                <!-- Mensajes del Sistema IA -->
+                                <a-text id="vr-chat-display" value="SYS_OS: En línea.\nIdentidad: Ing. William Andrés." 
+                                        position="0 -0.55 0" color="#10b981" scale="0.12 0.12 0.12" align="center" 
+                                        font="monoid" opacity="0.9"></a-text>
+                            </a-entity>
+                        </a-camera>
+                    </a-entity>
+                </a-scene>
+            </div>
+            
+            <div class="mt-4 flex justify-between items-center text-xs text-gray-500 font-mono bg-gray-900/50 p-2 rounded">
+                <div>[ W A S D ] para navegar sector | [ RATÓN ] para rotar vista holográfica</div>
+                <div class="text-cyan-600">Engine: WebGL / A-Frame v1.4.0</div>
+            </div>
+        </div>
+
+        <!-- Tab Nodos (Oculto en esta vista por brevedad, usa la lógica base) -->
+        <div id="tab-laboratorio" class="tab-content hidden">
+            <h2 class="text-3xl font-bold text-white mb-6">Administración de Nodos</h2>
+            <div class="card p-8 text-center border-dashed border-2 border-gray-700 bg-transparent">
+                <i class="fas fa-server text-4xl text-gray-600 mb-4"></i>
+                <p class="text-gray-400">Los nodos y endpoints están siendo leídos desde el Gateway API.<br>Ve a la pestaña <b>Matrix VR</b> para la visualización en 3D.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT PRINCIPAL: Generación Procedural VR -->
+    <script>
+        // --- FUNCIONES CORE PARA CREAR UI EN VR --- //
+        
+        // Crea pantallas holográficas futuristas con animaciones de flotación
+        function crearPantallaHolografica(x, y, z, rotY, titulo, datos, colorBorde = "#0ea5e9", ancho = 2.6, alto = 1.6, delay = 0) {
+            const wrapCount = ancho > 2.2 ? 50 : 35;
+            // Material emisivo para que brille en la oscuridad
+            return `
+                <a-entity position="${x} ${y} ${z}" rotation="0 ${rotY} 0" 
+                          animation="property: position; to: ${x} ${y + 0.05} ${z}; dir: alternate; dur: 3000; easing: easeInOutSine; loop: true; delay: ${delay}">
+                    
+                    <!-- Cristal Trasero Translúcido -->
+                    <a-plane position="0 0 0" width="${ancho}" height="${alto}" color="#020617" opacity="0.8" material="transparent: true; metalness: 0.8; roughness: 0.2"></a-plane>
+                    
+                    <!-- Marco Brillante Neón -->
+                    <a-box position="0 0 -0.01" width="${ancho + 0.02}" height="${alto + 0.02}" depth="0.01" color="${colorBorde}" material="emissive: ${colorBorde}; emissiveIntensity: 0.4"></a-box>
+                    
+                    <!-- Header de la Pantalla -->
+                    <a-plane position="0 ${(alto/2) - 0.15} 0.01" width="${ancho}" height="0.3" color="${colorBorde}" opacity="0.2"></a-plane>
+                    <a-text value="> ${titulo}" position="${-ancho/2 + 0.15} ${(alto/2) - 0.15} 0.02" color="#ffffff" scale="0.45 0.45 0.45" font="exo2bold"></a-text>
+                    <a-plane position="0 ${(alto/2) - 0.3} 0.02" width="${ancho}" height="0.01" color="${colorBorde}" material="emissive: ${colorBorde}"></a-plane>
+                    
+                    <!-- Cuerpo de Texto/Datos -->
+                    <a-text value="${datos}" position="${-ancho/2 + 0.15} ${(alto/2) - 0.5} 0.02" color="#cbd5e1" scale="0.35 0.35 0.35" baseline="top" wrap-count="${wrapCount}" font="monoid" line-height="55"></a-text>
+                    
+                    <!-- Detalles decorativos técnicos -->
+                    <a-circle position="${ancho/2 - 0.2} ${(alto/2) - 0.15} 0.02" radius="0.03" color="#ef4444" material="emissive: #ef4444; emissiveIntensity: 0.5"></a-circle>
+                    <a-circle position="${ancho/2 - 0.3} ${(alto/2) - 0.15} 0.02" radius="0.03" color="#eab308"></a-circle>
+                </a-entity>
+            `;
+        }
+
+        // Creador de Servidor Rack para base de datos
+        function crearServidorRack(x, z, delay=0) {
+            let luces = "";
+            for(let i = 0; i < 6; i++) {
+                const dur1 = 200 + Math.random() * 500;
+                const dur2 = 300 + Math.random() * 600;
+                luces += `
+                    <a-box position="0 ${0.3 + (i*0.28)} 0.46" width="0.8" height="0.2" depth="0.02" color="#0f172a" material="metalness: 0.8"></a-box>
+                    <!-- LEDs de Actividad -->
+                    <a-circle position="-0.3 ${0.3 + (i*0.28)} 0.48" radius="0.015" color="#10b981" material="emissive: #10b981" animation="property: material.emissiveIntensity; to: 0; dir: alternate; dur: ${dur1}; loop: true"></a-circle>
+                    <a-circle position="-0.2 ${0.3 + (i*0.28)} 0.48" radius="0.015" color="#3b82f6" material="emissive: #3b82f6" animation="property: material.emissiveIntensity; to: 0; dir: alternate; dur: ${dur2}; loop: true"></a-circle>
+                `;
+            }
+            return `
+                <a-entity position="${x} 0 ${z}" animation="property: position; to: ${x} 0.05 ${z}; dir: alternate; dur: 4000; easing: easeInOutSine; loop: true; delay: ${delay}">
+                    <!-- Chasis Metálico -->
+                    <a-box position="0 1.1 0" width="1.1" height="2.2" depth="1" color="#020617" material="metalness: 0.9; roughness: 0.1"></a-box>
+                    <a-box position="0 1.1 0" width="1.15" height="2.25" depth="0.9" color="#0ea5e9" material="wireframe: true; opacity: 0.2"></a-box>
+                    <!-- Puerta Cristal Emisivo -->
+                    <a-plane position="0 1.1 0.51" width="1" height="2.1" color="#082f49" opacity="0.6" material="transparent: true"></a-plane>
+                    ${luces}
+                </a-entity>
+            `;
+        }
+
+        // Generador de ADN para bioinformática
+        function generarEstructuraADN() {
+            let helix = '';
+            for(let i = 0; i < 25; i++) {
+                let y = (i * 0.15) - 1.8; // Centrar verticalmente
+                let angle = i * 0.4;
+                let x1 = Math.cos(angle) * 0.6;
+                let z1 = Math.sin(angle) * 0.6;
+                let x2 = Math.cos(angle + Math.PI) * 0.6;
+                let z2 = Math.sin(angle + Math.PI) * 0.6;
+                
+                // Nodos de Adenina/Timina/Guanina/Citosina (Colores)
+                let color1 = i % 2 === 0 ? "#ec4899" : "#a855f7"; // Rosa/Morado
+                let color2 = i % 2 === 0 ? "#06b6d4" : "#10b981"; // Cyan/Verde
+                
+                helix += `
+                    <!-- Bases nitrogenadas -->
+                    <a-sphere position="${x1} ${y} ${z1}" radius="0.06" color="${color1}" material="emissive: ${color1}; emissiveIntensity: 0.8"></a-sphere>
+                    <a-sphere position="${x2} ${y} ${z2}" radius="0.06" color="${color2}" material="emissive: ${color2}; emissiveIntensity: 0.8"></a-sphere>
+                    <!-- Enlaces (Puentes de hidrógeno) -->
+                    <a-cylinder position="0 ${y} 0" radius="0.015" height="1.2" rotation="90 ${-angle * 180 / Math.PI} 0" color="#e2e8f0" material="emissive: #ffffff; emissiveIntensity: 0.3; opacity: 0.7"></a-cylinder>
+                `;
+            }
+            return `
+                <a-entity position="0 2 -2.5" animation="property: rotation; to: 0 360 0; loop: true; dur: 12000; easing: linear">
+                    ${helix}
+                </a-entity>
+                <!-- Anillos de escaneo ADN -->
+                <a-torus position="0 0.5 -2.5" radius="0.9" radius-tubular="0.01" color="#06b6d4" material="emissive: #06b6d4" animation="property: position; to: 0 3.5 -2.5; dir: alternate; dur: 3000; loop: true; easing: linear"></a-torus>
+            `;
+        }
+
+        // --- LÓGICA DE LA APLICACIÓN --- //
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+            document.querySelector('[data-tab="' + tabId + '"]').classList.add('tab-active');
+            if(tabId === 'visor') window.dispatchEvent(new Event('resize'));
+        }
+
+        function cargarEscenario() {
+            const escenario = document.getElementById('visor-escenario').value;
+            const cielo = document.getElementById('cielo-vr');
+            const entorno = document.getElementById('entorno-estructuras');
+            let htmlEntorno = '';
+
+            if (escenario === 'cyber') {
+                cielo.setAttribute('color', '#02040a'); 
+                // Grid Cyberpunk animado (suelo)
+                htmlEntorno = `
+                    <a-entity position="0 0 0">
+                        <!-- Suelo sólido oscuro -->
+                        <a-plane position="0 0 0" rotation="-90 0 0" width="40" height="40" color="#030712" material="roughness: 0.8; metalness: 0.2"></a-plane>
+                        <!-- Grid de luz Neón -->
+                        <a-entity rotation="-90 0 0" position="0 0.01 0">
+                            <a-plane width="40" height="40" material="color: #06b6d4; emissive: #06b6d4; emissiveIntensity: 0.5; wireframe: true; wireframeLinewidth: 2" opacity="0.3"></a-plane>
+                        </a-entity>
+                        
+                        <!-- Plataforma central/escritorio invisible con bordes -->
+                        <a-circle position="0 0.05 -1.5" radius="3" color="#0f172a" rotation="-90 0 0" material="metalness: 0.8"></a-circle>
+                        <a-torus position="0 0.05 -1.5" radius="3" radius-tubular="0.03" color="#3b82f6" rotation="-90 0 0" material="emissive: #3b82f6"></a-torus>
+                    </a-entity>
+                `;
+            } else if (escenario === 'hacker') {
+                cielo.setAttribute('color', '#000000');
+                // Estilo Matrix puro
+                htmlEntorno = `
+                    <a-plane position="0 0 0" rotation="-90 0 0" width="50" height="50" color="#001100"></a-plane>
+                    <a-entity rotation="-90 0 0" position="0 0.05 0">
+                        <a-plane width="50" height="50" material="color: #10b981; emissive: #10b981; wireframe: true" opacity="0.5"></a-plane>
+                    </a-entity>
+                `;
+            } else {
+                cielo.setAttribute('color', '#050510');
+                htmlEntorno = ''; // Espacio profundo, sin suelo
+            }
+            entorno.innerHTML = htmlEntorno;
+        }
+
+        function cargarModelo() {
+            const modelo = document.getElementById('visor-modelo').value;
+            const mundo = document.getElementById('mundo-virtual');
+            let contenido = '';
+
+            // Datos de ejemplo para las pantallas
+            const d1 = "ESTADO SERVICIOS:\n- IAM/Auth: OPTIMO [12ms]\n- BD Postgres: OPTIMO [4ms]\n- Storage S3: OPTIMO [45ms]\n\nALERTA:\nNinguna anomalía detectada en los últimos 30 días.";
+            const d2 = "RECURSOS DE SISTEMA:\n=> RAM Total: 128 GB\n=> Usada: 34.2 GB\n=> Swap: 0 GB\n\n=> CPU Cores: 32 Threads\n=> Carga Promedio: 14%\n=> Temp Nodo: 45°C";
+            const dBio = "SECUENCIA OBJETIVO: ACTG-GCTA...\nAnálisis CRISPR-Cas9 simulado.\n\nPROGRESO DE ALINEAMIENTO:\n[||||||||||||||||....] 82%\n\nMotor: DeepMind AlphaFold v2";
+
+            switch (modelo) {
+                case 'panel':
+                    // 3 Monitores curvados (simulados con rotación) para el NOC
+                    contenido = `
+                        ${crearPantallaHolografica(-2.8, 1.8, -1.8, 25, "TELEMETRÍA GLOBAL", d1, "#3b82f6", 2.2, 1.5, 0)}
+                        ${crearPantallaHolografica(0, 1.9, -2.5, 0, "SYSTEM OS - ROOT ACCESS", "BIENVENIDO ING. WILLIAM ANDRÉS\n\nCentro de Comando Virtual Iniciado.\nTodos los sistemas criptográficos operativos.\nEsperando comandos...", "#06b6d4", 3, 1.8, 500)}
+                        ${crearPantallaHolografica(2.8, 1.8, -1.8, -25, "RECURSOS HARDWARE", d2, "#3b82f6", 2.2, 1.5, 1000)}
+                    `;
+                    break;
+                case 'adn':
+                    // Holograma ADN central y pantallas de bioinformática
+                    contenido = `
+                        ${generarEstructuraADN()}
+                        ${crearPantallaHolografica(-3, 2, -2, 20, "ANALIZADOR GENÓMICO", dBio, "#ec4899", 2.2, 1.6)}
+                        ${crearPantallaHolografica(3, 2, -2, -20, "ESTADÍSTICAS PROTEICAS", "Estructuras plegadas: 14,052\nErrores de mutación: 0.001%\n\nBase de datos: PDB Sincronizada", "#06b6d4", 2.2, 1.6, 600)}
+                    `;
+                    break;
+                case 'ia':
+                    // Esfera holográfica compleja
+                    contenido = `
+                        <a-entity position="0 2 -2.5">
+                            <a-sphere radius="0.6" color="#8b5cf6" material="wireframe: true; emissive: #8b5cf6; emissiveIntensity: 0.5" animation="property: rotation; to: 360 360 0; loop: true; dur: 8000; easing: linear"></a-sphere>
+                            <a-sphere radius="0.5" color="#c084fc" opacity="0.4" material="transparent: true"></a-sphere>
+                            <!-- Anillos de datos -->
+                            <a-torus radius="1.2" radius-tubular="0.02" color="#3b82f6" rotation="45 0 0" material="emissive: #3b82f6" animation="property: rotation; to: 45 360 0; loop: true; dur: 5000; easing: linear"></a-torus>
+                            <a-torus radius="1.5" radius-tubular="0.01" color="#06b6d4" rotation="-45 0 0" material="emissive: #06b6d4" animation="property: rotation; to: -45 -360 0; loop: true; dur: 7000; easing: linear"></a-torus>
+                        </a-entity>
+                        ${crearPantallaHolografica(-3, 2, -1.5, 30, "MODELO DE LENGUAJE", "Parámetros: 7B\nContext Window: 32K\n\nTokens generados/s: 65.4\nTemperatura actual: 0.7", "#8b5cf6", 2.2, 1.4)}
+                    `;
+                    break;
+                case 'database':
+                    // Granja de servidores
+                    contenido = `
+                        ${crearServidorRack(-2.5, -3.5, 0)}
+                        ${crearServidorRack(-1, -3.5, 500)}
+                        ${crearServidorRack(0.5, -3.5, 1000)}
+                        ${crearServidorRack(2, -3.5, 1500)}
+                        <!-- Pantalla Master flotando encima de los racks -->
+                        ${crearPantallaHolografica(-0.25, 3.8, -3.5, 0, "POSTGRESQL CLUSTER MANAGER", "Nodos Activos: 4\nReplicación: Síncrona\n\nI/O Wait: 0.02%\nTransacciones: 4,200/s", "#10b981", 3.5, 1.2)}
+                    `;
+                    break;
+                default:
+                    // Genérico
+                    contenido = `${crearPantallaHolografica(0, 2, -2.5, 0, "NODO: " + modelo.toUpperCase(), "Conectando al endpoint...\nExtrayendo meta-datos...", "#94a3b8", 2.5, 1.5)}`;
+                    break;
+            }
+
+            mundo.innerHTML = contenido;
+        }
+
+        // --- SISTEMA IA INTERACTIVO EN VR --- //
+        function enviarGuiaVR() {
+            const input = document.getElementById('input-guia-vr');
+            const texto = input.value.trim();
+            if (!texto) return;
+
+            const chatHUD = document.getElementById('vr-chat-display');
+            input.value = '';
+            
+            chatHUD.setAttribute('value', '> Procesando: "' + texto + '"...');
+            chatHUD.setAttribute('color', '#eab308');
+
+            // Simular respuesta inteligente
+            setTimeout(() => {
+                let respuesta = "";
+                const tx = texto.toLowerCase();
+                
+                if(tx.includes('adn') || tx.includes('genoma')) {
+                    respuesta = "SYS_OS: Análisis CRISPR completado. Estructuras proteicas estables.";
+                } else if(tx.includes('seguridad') || tx.includes('hack')) {
+                    respuesta = "SYS_OS: Firewall impenetrable. No hay brechas activas.";
+                } else {
+                    respuesta = "SYS_OS: Comando '" + texto + "' ejecutado en el clúster.";
+                }
+                
+                chatHUD.setAttribute('value', respuesta);
+                chatHUD.setAttribute('color', '#10b981');
+                
+            }, 1800);
+        }
+
+        function iniciarVR() {
+            const scene = document.querySelector('a-scene');
+            if (scene.is('vr-mode')) {
+                scene.exitVR();
+            } else {
+                scene.enterVR(); // Pantalla completa en PC, modo inmersivo en cascos VR
+            }
+        }
+
+        // Inicio
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarEscenario();
+            cargarModelo();
+            console.log('NOC Virtualizado - Bienvenido Ing. William Andrés');
+        });
+    </script>
+</body>
+</html>

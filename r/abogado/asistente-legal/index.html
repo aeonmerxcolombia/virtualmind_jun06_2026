@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Asistente Legal IA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .chat-bubble { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .typing { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+  <div class="max-w-5xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">⚖️ Asistente Legal IA</h1>
+          <p class="text-gray-600 text-sm">Asistente especializado en temas jurídicos para Colombia</p>
+        </div>
+        <button onclick="limpiarChat()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg text-sm">
+          🗑️ Limpiar chat
+        </button>
+      </div>
+
+      <div class="bg-gray-100 rounded-lg p-4 mb-4">
+        <h3 class="font-semibold text-gray-700 mb-2">📋 Templates Rápidos:</h3>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="usarTemplate('tutela')" class="bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded text-sm text-blue-700">📝 Redactar Tutela</button>
+          <button onclick="usarTemplate('peticion')" class="bg-green-100 hover:bg-green-200 px-3 py-1 rounded text-sm text-green-700">📄 Hacer Petición</button>
+          <button onclick="usarTemplate('accion')" class="bg-purple-100 hover:bg-purple-200 px-3 py-1 rounded text-sm text-purple-700">⚡ Acción de Cumplimiento</button>
+          <button onclick="usarTemplate('derechos')" class="bg-yellow-100 hover:bg-yellow-200 px-3 py-1 rounded text-sm text-yellow-700">🛡️ Derechos de Petición</button>
+          <button onclick="usarTemplate('consulta')" class="bg-red-100 hover:bg-red-200 px-3 py-1 rounded text-sm text-red-700">❓ Consulta Legal</button>
+        </div>
+      </div>
+
+      <div id="chatContainer" class="h-96 overflow-y-auto space-y-3 mb-4 p-4 bg-gray-50 rounded-lg border">
+        <div class="chat-bubble bg-blue-50 p-3 rounded-lg text-sm text-gray-800">
+          <strong>⚖️ Asistente Legal:</strong><br>
+          Soy tu asistente especializado en derecho colombiano. Puedo ayudarte con:<br>
+          • Redacción de tutelas, peticiones y acciones<br>
+          • Consulta de normas y jurisprudencia<br>
+          • Análisis de derechos fundamentales<br>
+          • Procedimientos legales<br><br>
+          <em>¿En qué puedo ayudarte hoy?</em>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <input type="text" id="mensajeInput" placeholder="Escribe tu consulta legal..."
+          class="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button onclick="enviarMensaje()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
+          Enviar
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">📚 Normas Relevantes</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gray-50 p-4 rounded-lg border">
+          <h3 class="font-semibold text-gray-700">Constitución Política</h3>
+          <ul class="text-sm text-gray-600 mt-2 space-y-1">
+            <li>• Art. 2 - Funciones del Estado</li>
+            <li>• Art. 13 - Derechos fundamentales</li>
+            <li>• Art. 86-94 - Derechos de petición y acciones</li>
+          </ul>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg border">
+          <h3 class="font-semibold text-gray-700">Código Contencioso</h3>
+          <ul class="text-sm text-gray-600 mt-2 space-y-1">
+            <li>• Art. 104-107 - Tutela</li>
+            <li>• Art. 140-164 - Peticiones</li>
+            <li>• Art. 222-226 - Nulidades</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const chatContainer = document.getElementById("chatContainer");
+    const mensajeInput = document.getElementById("mensajeInput");
+
+    const templates = {
+      tutela: "Redacta una acción de tutela por violación del derecho fundamental a [derecho], en contra de [entidad], describiendo los hechos, pretensiones y fundamentos de derecho.",
+      peticion: "Redacta una petición a [entidad] sobre [asunto], incluyendo hechos relevantes, fundamentos de derecho y solicitud concreta.",
+      accion: "Redacta una acción de cumplimiento para exigir el cumplimiento de [norma/obligación] por parte de [entidad].",
+      derechos: "Redacta un derechos de petición urgente solicitando [solicitud] a [entidad], con fundamento en los artículos 86 y siguientes de la Constitución.",
+      consulta: "Analiza la siguiente situación: [describir caso] y indica: 1) Normas aplicables 2) Procedimiento 3) Derechos involucrados 4) Recomendaciones"
+    };
+
+    function usarTemplate(tipo) {
+      mensajeInput.value = templates[tipo];
+      mensajeInput.focus();
+    }
+
+    function limpiarChat() {
+      localStorage.removeItem("chat_legal_historial");
+      chatContainer.innerHTML = `
+        <div class="chat-bubble bg-blue-50 p-3 rounded-lg text-sm text-gray-800">
+          <strong>⚖️ Asistente Legal:</strong><br>
+          Chat limpiado. ¿En qué puedo ayudarte?
+        </div>
+      `;
+    }
+
+    function appendBubble(texto, esUsuario) {
+      const div = document.createElement("div");
+      div.className = esUsuario 
+        ? "chat-bubble bg-indigo-100 p-3 rounded-lg text-sm text-gray-800" 
+        : "chat-bubble bg-white p-3 rounded-lg border text-sm text-gray-800";
+      
+      const color = esUsuario ? "Tú" : "⚖️ Asistente Legal";
+      div.innerHTML = `<strong>${color}:</strong><br>${texto.replace(/\n/g, "<br>")}`;
+      chatContainer.appendChild(div);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      
+      // Guardar en localStorage
+      const historial = JSON.parse(localStorage.getItem("chat_legal_historial") || "[]");
+      historial.push({ texto, esUsuario });
+      localStorage.setItem("chat_legal_historial", JSON.stringify(historial));
+    }
+
+    async function enviarMensaje() {
+      const msg = mensajeInput.value.trim();
+      if (!msg) return;
+
+      appendBubble(msg, true);
+      mensajeInput.value = "";
+
+      // Mostrar indicador de "escribiendo"
+      const typingDiv = document.createElement("div");
+      typingDiv.id = "typing";
+      typingDiv.className = "chat-bubble bg-gray-100 p-3 rounded-lg italic text-gray-500";
+      typingDiv.textContent = "⚖️ Escribiendo respuesta...";
+      chatContainer.appendChild(typingDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      // Prompt especializado para abogado
+      const promptLegal = `Eres un asistente legal especializado en derecho colombiano. Responde de manera clara, precisa y con fundamento en la Constitución Política de Colombia, códigos y jurisprudencia relevante. 
+
+Contexto del usuario: ABOGADO
+
+Pregunta: ${msg}
+
+Responde en español, estructurado y con referencias legales.`;      try {
+        const res = await fetch(`${API}/chat/gemini`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ prompt: promptLegal })
+        });
+        const data = await res.json();
+        const respuesta = data.respuesta || "No se pudo obtener respuesta";
+        typingDiv.remove();
+        appendBubble(respuesta, false);
+      } catch (e) {
+        typingDiv.remove();
+        appendBubble("❌ Error al contactar la IA. Por favor intenta de nuevo.", false);
+      }
+    }
+
+    mensajeInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") enviarMensaje();
+    });
+
+    // Cargar historial al inicio
+    const historial = JSON.parse(localStorage.getItem("chat_legal_historial") || "[]");
+    if (historial.length > 0) {
+      chatContainer.innerHTML = "";
+      historial.forEach(h => appendBubble(h.texto, h.esUsuario));
+    }
+  </script>
+</body>
+</html>

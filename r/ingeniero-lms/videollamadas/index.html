@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Roles</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src='https://meet.jit.si/external_api.js'></script>
+</head>
+<body class="bg-gradient-to-br from-purple-600 via-indigo-500 to-pink-500 min-h-screen font-sans text-white">
+  <header class="bg-white shadow-md text-gray-800 p-4 flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold">🎛️ Bienvenido, <span id="userName">Usuario</span></h1>
+      <p class="text-sm">Panel de gestión de roles</p>
+    </div>
+    <div class="space-x-2">
+      <button onclick="window.location.href='/r/superadmin/'" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">🏠 Dashboard</button>
+      <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto bg-white text-gray-800 rounded-lg shadow p-6 my-6">
+    <h2 class="text-2xl font-bold mb-4">📞 Iniciar Videollamada</h2>
+    <form id="formVideo" class="mb-6 space-y-4">
+      <input type="text" id="nombreSala" placeholder="Nombre de la sala" class="w-full border px-4 py-2 rounded" required>
+
+      <label class="block font-semibold">Tipo de llamada:</label>
+      <select id="tipoLlamada" onchange="toggleSeleccionUsuarios()" class="w-full border px-4 py-2 rounded">
+        <option value="una">Uno a uno</option>
+        <option value="grupal">Grupal</option>
+      </select>
+
+      <label class="block font-semibold mt-2">Invitar a usuarios:</label>
+      <select id="listaUsuarios" class="w-full border px-4 py-2 rounded" multiple size="4"></select>
+
+      <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Iniciar videollamada</button>
+    </form>
+
+    <div id="jitsiContainer" class="w-full h-[500px] hidden border rounded-lg"></div>
+  </main>
+
+  <footer class="text-center text-sm text-white mt-10 mb-4">
+    &copy; 2025 Virtualmind. Todos los derechos reservados.
+  </footer>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token");
+    const headers = { "Authorization": "Bearer " + token, "Content-Type": "application/json" };
+    const payload = token ? JSON.parse(atob(token.split('.')[1])) : {};
+    document.getElementById("userName").innerText = payload.name || payload.email || "Usuario";
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "/index.html";
+    }
+
+    // Cargar usuarios
+    async function cargarUsuarios() {
+      const res = await fetch(`${API}/users`, { headers });
+      const users = await res.json();
+      const sel = document.getElementById("listaUsuarios");
+      users.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u.uid;
+        opt.innerText = `${u.nombre} (${u.email})`;
+        sel.appendChild(opt);
+      });
+    }
+
+    function toggleSeleccionUsuarios() {
+      const tipo = document.getElementById("tipoLlamada").value;
+      const select = document.getElementById("listaUsuarios");
+      if (tipo === 'grupal') {
+        select.setAttribute("multiple", "true");
+      } else {
+        select.removeAttribute("multiple");
+      }
+    }
+
+    document.getElementById("formVideo").onsubmit = async function (e) {
+      e.preventDefault();
+      const sala = document.getElementById("nombreSala").value.trim();
+      const tipo = document.getElementById("tipoLlamada").value;
+      const seleccionados = Array.from(document.getElementById("listaUsuarios").selectedOptions).map(o => o.value);
+
+      if (!sala || seleccionados.length === 0) return alert("Completa los campos");
+
+      // Aquí se puede guardar en el backend la llamada y notificar usuarios invitados
+      console.log("Invitando a:", seleccionados);
+
+      const domain = "meet.jit.si";
+      const options = {
+        roomName: sala,
+        width: "100%",
+        height: 500,
+        parentNode: document.getElementById("jitsiContainer"),
+        userInfo: {
+          displayName: payload.name || payload.email || "Usuario"
+        }
+      };
+
+      document.getElementById("jitsiContainer").classList.remove("hidden");
+      new JitsiMeetExternalAPI(domain, options);
+    }
+
+    cargarUsuarios();
+    toggleSeleccionUsuarios();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Solicitud de Pieza Gráfica / Animación</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+</head>
+<body class="bg-gray-100 p-6 font-sans">
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold text-emerald-700 mb-6">🎯 Nueva Solicitud de Pieza Gráfica / Animación</h1>
+    <form id="solicitudForm" class="grid grid-cols-2 gap-4">
+      
+      <!-- Fecha creación -->
+      <div>
+        <label class="block font-semibold mb-1">Fecha creación</label>
+        <input type="text" id="fechaCreacion" readonly
+               class="w-full border p-2 rounded bg-gray-100"/>
+      </div>
+
+      <!-- Persona que solicita -->
+      <div>
+        <label class="block font-semibold mb-1">Persona que solicita</label>
+        <input type="text" id="personaSolicita" readonly
+               class="w-full border p-2 rounded bg-gray-100"/>
+      </div>
+
+      <!-- Persona a quien solicita -->
+      <div class="col-span-2">
+        <label class="block font-semibold mb-1">Persona a quien solicita</label>
+        <select id="personaDestino" class="w-full border p-2 rounded">
+          <option value="">— Selecciona —</option>
+        </select>
+      </div>
+
+      <!-- Tipo de solicitud -->
+      <div>
+        <label class="block font-semibold mb-1">Tipo de solicitud</label>
+        <select id="tipoSolicitud" class="w-full border p-2 rounded">
+          <option value="">— Selecciona —</option>
+          <option value="animacion_2d_simple">Animación 2D básica</option>
+          <option value="animacion_2d_avanzada">Animación 2D avanzada</option>
+          <option value="animacion_3d">Animación 3D</option>
+          <option value="podcast">Podcast</option>
+          <option value="fotografia">Fotografía</option>
+          <option value="videocast">Videocast</option>
+          <option value="guion">Guion</option>
+          <option value="video_en_vivo">Video en vivo</option>
+          <option value="texto_escrito">Texto escrito</option>
+          <option value="correccion_texto">Corrección de texto</option>
+        </select>
+      </div>
+
+      <!-- Fecha máxima de entrega -->
+      <div>
+        <label class="block font-semibold mb-1">Fecha máxima de entrega</label>
+        <input type="date" id="fechaMaxima" class="w-full border p-2 rounded"/>
+      </div>
+
+      <!-- Proyecto -->
+      <div>
+        <label class="block font-semibold mb-1">Proyecto</label>
+        <select id="proyecto" class="w-full border p-2 rounded">
+          <option value="">— Selecciona proyecto —</option>
+        </select>
+      </div>
+
+      <!-- Curso -->
+      <div>
+        <label class="block font-semibold mb-1">Curso</label>
+        <select id="curso" class="w-full border p-2 rounded">
+          <option value="">— Selecciona curso —</option>
+        </select>
+      </div>
+
+      <!-- Módulo -->
+      <div>
+        <label class="block font-semibold mb-1">Módulo</label>
+        <input type="text" id="modulo" placeholder="Nombre del módulo"
+               class="w-full border p-2 rounded"/>
+      </div>
+
+      <!-- Unidad -->
+      <div>
+        <label class="block font-semibold mb-1">Unidad</label>
+        <input type="text" id="unidad" placeholder="Nombre de la unidad"
+               class="w-full border p-2 rounded"/>
+      </div>
+
+      <!-- Tipo de animación -->
+      <div>
+        <label class="block font-semibold mb-1">Tipo de animación</label>
+        <select id="tipoAnimacion" class="w-full border p-2 rounded">
+          <option value="">— Selecciona —</option>
+          <option>2D básica</option>
+          <option>2D avanzada</option>
+          <option>3D</option>
+          <option>Con programación</option>
+          <option>Con IA</option>
+        </select>
+      </div>
+
+      <!-- Utilidad de la animación -->
+      <div>
+        <label class="block font-semibold mb-1">Utilidad de la animación</label>
+        <select id="utilidadAnimacion" class="w-full border p-2 rounded">
+          <option value="">— Selecciona —</option>
+          <option value="fondo">Animación de fondo</option>
+          <option value="portada">Animación para portada</option>
+          <option value="separador">Separación de unidades</option>
+          <option value="otra">Otra (especificar)</option>
+        </select>
+      </div>
+
+      <!-- Otra utilidad -->
+      <div id="otroUtilidadContainer" class="hidden col-span-2">
+        <label class="block font-semibold mb-1">Otra utilidad (si aplica)</label>
+        <input type="text" id="otroUtilidad" placeholder="Describe otra utilidad"
+               class="w-full border p-2 rounded"/>
+      </div>
+
+      <!-- Nombre de la pieza -->
+      <div>
+        <label class="block font-semibold mb-1">Nombre de la pieza</label>
+        <input type="text" id="nombrePieza" placeholder="Ej: Mamá en mercado"
+               class="w-full border p-2 rounded"/>
+      </div>
+
+      <!-- Tamaño -->
+      <div>
+        <label class="block font-semibold mb-1">Tamaño (px)</label>
+        <input type="text" id="tamano" placeholder="Ej: 720x500"
+               class="w-full border p-2 rounded"/>
+      </div>
+
+      <!-- Descripción -->
+      <div class="col-span-2">
+        <label class="block font-semibold mb-1">Descripción</label>
+        <textarea id="descripcion" rows="3"
+                  class="w-full border p-2 rounded"
+                  placeholder="Describe la animación detalladamente..."></textarea>
+      </div>
+
+      <!-- Texto infografía -->
+      <div class="col-span-2">
+        <label class="block font-semibold mb-1">Texto en infografía</label>
+        <textarea id="textoInfografia" rows="2"
+                  class="w-full border p-2 rounded"
+                  placeholder="Texto a incluir o N.A."></textarea>
+      </div>
+
+      <!-- Voz en off -->
+      <div>
+        <label class="block font-semibold mb-1">Voz en off</label>
+        <select id="vozOff" class="w-full border p-2 rounded">
+          <option value="">— Selecciona —</option>
+          <option>Voz humana</option>
+          <option>Voz robótica</option>
+          <option>Niño</option>
+          <option>Niña</option>
+          <option>Adulto</option>
+          <option>Adulto mayor</option>
+          <option>Otro</option>
+        </select>
+      </div>
+
+      <!-- Enlace / Archivos -->
+      <div class="col-span-2">
+        <label class="block font-semibold mb-1">Enlace (opcional)</label>
+        <input type="url" id="enlace" placeholder="URL de referencia"
+               class="w-full border p-2 rounded"/>
+      </div>
+
+      <!-- Comentarios -->
+      <div class="col-span-2">
+        <label class="block font-semibold mb-1">Otros comentarios</label>
+        <textarea id="comentarios" rows="2"
+                  class="w-full border p-2 rounded"
+                  placeholder="Algo más que quieras añadir..."></textarea>
+      </div>
+
+      <!-- Botón enviar -->
+      <div class="col-span-2 mt-4">
+        <button type="submit"
+                class="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700">
+          Enviar Solicitud
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+
+    // Decodifica el JWT y devuelve el payload
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(atob(base64));
+      } catch {
+        return null;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("No estás autenticado");
+        return;
+      }
+      const payload = parseJwt(token);
+      const userId = payload?.user_id || payload?.sub;
+      if (!userId) {
+        alert("UID inválido en token");
+        return;
+      }
+
+      // 1) Fecha creación
+      const now = new Date();
+      document.getElementById("fechaCreacion").value =
+        now.toLocaleString("es-CO", { dateStyle:"short", timeStyle:"short" });
+
+      // 2) Persona que solicita (GET /users/{userId})
+      try {
+        const r = await fetch(`${API_BASE}/users/${userId}`, {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        if (r.ok) {
+          const u = await r.json();
+          document.getElementById("personaSolicita").value = u.nombre || u.email;
+        } else {
+          document.getElementById("personaSolicita").value = "Usuario no encontrado";
+        }
+      } catch {
+        document.getElementById("personaSolicita").value = "Error al cargar usuario";
+      }
+
+      // 3) Poblar destinatarios (GET /users)
+      try {
+        const r2 = await fetch(`${API_BASE}/users`, {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        const all = await r2.json();
+        if (Array.isArray(all)) {
+          const sel = document.getElementById("personaDestino");
+          all.forEach(u => {
+            const o = document.createElement("option");
+            o.value = u.uid;        // usa el campo uid del esquema
+            o.textContent = u.nombre;
+            sel.appendChild(o);
+          });
+        }
+      } catch (e) {
+        console.error("No se pudo cargar destinatarios", e);
+      }
+
+      // 4) Mostrar input extra cuando "Otra utilidad" está seleccionado
+      document.getElementById("utilidadAnimacion")
+        .addEventListener("change", e => {
+          const esOtro = e.target.value === "otra";
+          document.getElementById("otroUtilidadContainer")
+                  .classList.toggle("hidden", !esOtro);
+        });
+
+      // 5) Envío del formulario
+      document.getElementById("solicitudForm")
+        .addEventListener("submit", async ev => {
+          ev.preventDefault();
+          const body = {
+            solicitante:    userId,
+            destinatario:   document.getElementById("personaDestino").value,
+            tipo_solicitud: document.getElementById("tipoSolicitud").value,
+            fecha_maxima:   document.getElementById("fechaMaxima").value,
+            proyecto:       document.getElementById("proyecto").value,
+            curso:          document.getElementById("curso").value,
+            modulo:         document.getElementById("modulo").value,
+            unidad:         document.getElementById("unidad").value,
+            tipo_animacion: document.getElementById("tipoAnimacion").value,
+            utilidad_animacion: document.getElementById("utilidadAnimacion").value,
+            otro_utilidad:      document.getElementById("otroUtilidad").value,
+            nombre_pieza:       document.getElementById("nombrePieza").value,
+            tamano:             document.getElementById("tamano").value,
+            descripcion:        document.getElementById("descripcion").value,
+            texto_infografia:   document.getElementById("textoInfografia").value,
+            voz_off:            document.getElementById("vozOff").value,
+            enlace:             document.getElementById("enlace").value,
+            comentarios:        document.getElementById("comentarios").value
+          };
+
+          try {
+            const res = await fetch(`${API_BASE}/solicitudes/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+              },
+              body: JSON.stringify(body)
+            });
+            if (res.ok) {
+              alert("✅ Solicitud enviada correctamente");
+              // opcional: limpiar o redirigir
+            } else {
+              const err = await res.json();
+              alert("❌ Error: " + (err.detail||JSON.stringify(err)));
+            }
+          } catch (err) {
+            alert("⚠️ Error de red");
+            console.error(err);
+          }
+        });
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

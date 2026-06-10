@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VirtualMind Omni - IA Total</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Inter', sans-serif; background: #090D16; color: #cbd5e1; }
+.glow { position: fixed; width: 600px; height: 600px; border-radius: 50%; pointer-events: none; z-index: 0; }
+.glow-1 { top: -300px; right: -200px; background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%); }
+.glow-2 { bottom: -200px; left: -200px; background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%); }
+.card { background: rgba(15,23,42,0.6); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; transition: all 0.3s; }
+.card:hover { border-color: rgba(99,102,241,0.2); }
+.tab-btn { padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s; border: 1px solid transparent; }
+.tab-btn.active { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.3); color: #a5b4fc; }
+.tab-btn.inactive { background: transparent; border-color: rgba(255,255,255,0.06); color: #64748b; }
+.tab-btn.inactive:hover { background: rgba(255,255,255,0.03); color: #94a3b8; }
+.engine-pill { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+.engine-pill.active { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+.engine-pill.inactive { background: rgba(255,255,255,0.04); color: #64748b; border: 1px solid rgba(255,255,255,0.06); }
+.engine-pill.inactive:hover { background: rgba(255,255,255,0.08); color: #94a3b8; }
+.generating { animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.input-base { width: 100%; padding: 10px 14px; border-radius: 12px; font-size: 13px; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.08); color: #e2e8f0; outline: none; transition: border-color 0.2s; }
+.input-base:focus { border-color: rgba(99,102,241,0.4); }
+.input-base::placeholder { color: #475569; }
+.btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 10px 24px; border-radius: 12px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; transition: all 0.3s; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(99,102,241,0.25); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.result-box { border-radius: 16px; overflow: hidden; background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.06); min-height: 300px; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<div class="relative z-10 max-w-6xl mx-auto px-4 py-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold text-white flex items-center gap-3">
+        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-emerald-500 flex items-center justify-center text-lg">🧠</span>
+        VirtualMind Omni
+      </h1>
+      <p class="text-slate-500 text-sm mt-1">Estudio unificado de creación con IA · Imagen · Video · Audio · Voz</p>
+    </div>
+    <div id="statusBadge" class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-2 text-xs text-emerald-400 font-medium">
+      <span class="w-2 h-2 bg-emerald-400 rounded-full"></span>
+      Sistemas operativos
+    </div>
+  </div>
+
+  <div class="card p-1 flex gap-1" id="tabBar">
+    <button class="tab-btn active flex items-center gap-2" data-tab="imagen"><span>🎨</span> Imagen</button>
+    <button class="tab-btn inactive flex items-center gap-2" data-tab="video"><span>🎬</span> Video</button>
+    <button class="tab-btn inactive flex items-center gap-2" data-tab="audio"><span>🎵</span> Audio</button>
+    <button class="tab-btn inactive flex items-center gap-2" data-tab="clonar"><span>🧬</span> Clonar Voz</button>
+  </div>
+
+  <div id="tab-imagen" class="tab-content active">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div class="lg:col-span-2 card p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-white">Generar Imagen</h2>
+          <div class="flex gap-1.5 bg-slate-900/50 rounded-xl p-1">
+            <button class="engine-pill active" data-engine="qwen" onclick="switchEngine('qwen')">☁️ Qwen</button>
+            <button class="engine-pill inactive" data-engine="sd" onclick="switchEngine('sd')">⚡ Stable Diffusion</button>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1.5 block">Prompt</label>
+          <textarea id="imgPrompt" rows="4" class="input-base" placeholder="Describe la imagen que quieres generar..."></textarea>
+        </div>
+        <div id="sdOptions" class="space-y-3">
+          <div>
+            <label class="text-xs text-slate-400 font-medium mb-1.5 block">Prompt Negativo</label>
+            <textarea id="imgNegative" rows="2" class="input-base" placeholder="blurry, bad quality, distorted..."></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-slate-400 font-medium mb-1.5 block">Steps</label>
+              <input type="number" id="sdSteps" value="20" min="1" max="150" class="input-base">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 font-medium mb-1.5 block">CFG Scale</label>
+              <input type="number" id="sdCfg" value="7" min="1" max="30" step="0.5" class="input-base">
+            </div>
+          </div>
+        </div>
+        <div id="qwenOptions" class="space-y-3 hidden">
+          <div>
+            <label class="text-xs text-slate-400 font-medium mb-1.5 block">Resolución</label>
+            <select id="qwenSize" class="input-base">
+              <option value="2048*2048">2048 × 2048 (Cuadrada)</option>
+              <option value="1536*2688">1536 × 2688 (Retrato)</option>
+              <option value="2688*1536">2688 × 1536 (Paisaje)</option>
+              <option value="1728*2368">1728 × 2368 (Retrato HQ)</option>
+              <option value="2368*1728">2368 × 1728 (Paisaje HQ)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 font-medium mb-1.5 block">Modelo</label>
+            <select id="qwenModel" class="input-base">
+              <option value="qwen-image-2.0-pro">Qwen 2.0 Pro</option>
+              <option value="qwen-image-max">Qwen Max (Superior)</option>
+            </select>
+          </div>
+          <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+            <input type="checkbox" id="qwenPromptExtend" checked class="rounded">
+            Prompt Extend (mejora automática)
+          </label>
+        </div>
+        <button onclick="generarImagen()" id="btnGenerarImagen" class="btn-primary w-full">✨ Generar Imagen</button>
+      </div>
+      <div class="lg:col-span-3 card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold text-white">Resultado</h2>
+          <div id="imgProgress" class="hidden text-xs text-indigo-400 flex items-center gap-2">
+            <span class="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></span>
+            Generando...
+          </div>
+        </div>
+        <div id="imgResult" class="result-box">
+          <div class="text-center text-slate-600">
+            <div class="text-4xl mb-2">🎨</div>
+            <p class="text-sm">La imagen aparecerá aquí</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-video" class="tab-content">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div class="lg:col-span-2 card p-5 space-y-4">
+        <h2 class="text-sm font-bold text-white">Generar Video con WAN</h2>
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1.5 block">Prompt</label>
+          <textarea id="videoPrompt" rows="4" class="input-base" placeholder="Describe el video que quieres generar..."></textarea>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1.5 block">Duración (segundos)</label>
+          <select id="videoDuration" class="input-base">
+            <option value="5">5 segundos</option>
+            <option value="10">10 segundos</option>
+          </select>
+        </div>
+        <button onclick="generarVideo()" id="btnGenerarVideo" class="btn-primary w-full">🎬 Generar Video</button>
+      </div>
+      <div class="lg:col-span-3 card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold text-white">Resultado</h2>
+          <div id="videoProgress" class="hidden text-xs text-indigo-400 flex items-center gap-2">
+            <span class="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></span>
+            <span id="videoProgressText">Generando...</span>
+          </div>
+        </div>
+        <div id="videoResult" class="result-box">
+          <div class="text-center text-slate-600">
+            <div class="text-4xl mb-2">🎬</div>
+            <p class="text-sm">El video aparecerá aquí</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-clonar" class="tab-content">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div class="lg:col-span-2 card p-5 space-y-4">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg">🧬</div>
+          <div>
+            <h2 class="text-sm font-bold text-white">Clonación de Voz (XTTS)</h2>
+            <p class="text-xs text-slate-500">Sube una muestra de voz (3-10s) y escribe el texto a sintetizar</p>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1.5 block">Muestra de Voz (audio)</label>
+          <div class="border-2 border-dashed border-slate-700/50 rounded-xl p-4 text-center hover:border-indigo-500/30 transition cursor-pointer" onclick="document.getElementById('cloneAudioFile').click()">
+            <input type="file" id="cloneAudioFile" accept="audio/*" class="hidden" onchange="mostrarArchivoClonacion()">
+            <div id="cloneFilePlaceholder" class="text-slate-500">
+              <div class="text-3xl mb-1">🎤</div>
+              <p class="text-sm">Haz clic para subir un audio</p>
+              <p class="text-xs text-slate-600 mt-1">MP3, WAV, OGG · 3-10 segundos recomendados</p>
+            </div>
+            <div id="cloneFileInfo" class="hidden text-left">
+              <div class="flex items-center gap-3 bg-slate-800/50 rounded-lg p-3">
+                <span class="text-2xl">🎧</span>
+                <div class="flex-1 min-w-0">
+                  <p id="cloneFileName" class="text-sm text-slate-200 truncate font-medium"></p>
+                  <p id="cloneFileSize" class="text-xs text-slate-500"></p>
+                </div>
+                <button onclick="event.stopPropagation();limpiarArchivoClonacion()" class="text-slate-500 hover:text-rose-400 transition text-lg">&times;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1.5 block">Texto a sintetizar</label>
+          <textarea id="cloneText" rows="5" class="input-base" placeholder="Escribe el texto que quieres que diga con la voz clonada..."></textarea>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1.5 block">Idioma</label>
+          <select id="cloneLanguage" class="input-base">
+            <option value="es">Español</option>
+            <option value="en">Inglés</option>
+            <option value="fr">Francés</option>
+            <option value="de">Alemán</option>
+            <option value="pt">Portugués</option>
+            <option value="it">Italiano</option>
+            <option value="ja">Japonés</option>
+            <option value="ko">Coreano</option>
+            <option value="zh">Chino</option>
+          </select>
+        </div>
+        <button onclick="generarClonacion()" id="btnGenerarClonacion" class="btn-primary w-full">🧬 Clonar Voz</button>
+        <div class="bg-amber-900/20 border border-amber-700/30 rounded-xl p-3 text-xs text-amber-300">
+          <strong>⏱ Nota:</strong> La generación puede tomar 30-60 segundos en CPU. Usa muestras de voz claras y sin ruido de fondo para mejores resultados.
+        </div>
+      </div>
+      <div class="lg:col-span-3 card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold text-white">Resultado</h2>
+          <div id="cloneProgress" class="hidden text-xs text-indigo-400 flex items-center gap-2">
+            <span class="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></span>
+            Clonando voz...
+          </div>
+        </div>
+        <div id="cloneResult" class="result-box">
+          <div class="text-center text-slate-600">
+            <div class="text-4xl mb-2">🧬</div>
+            <p class="text-sm">Sube una muestra de voz y genera</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-audio" class="tab-content">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div class="lg:col-span-2 card p-5 space-y-4">
+        <h2 class="text-sm font-bold text-white flex items-center gap-2">🎙️ Texto a Voz <span class="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full">Edge TTS</span></h2>
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1.5 block">Texto a convertir</label>
+          <textarea id="audioText" rows="5" class="input-base" placeholder="Escribe el texto que quieres convertir a voz..."></textarea>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1.5 block">Voz</label>
+          <select id="audioVoice" class="input-base"></select>
+          <div class="flex gap-2 mt-2">
+            <input type="text" id="audioVoiceSearch" class="input-base flex-1" placeholder="Buscar voz..." oninput="filtrarVoces()">
+            <span id="voiceCount" class="text-xs text-slate-500 self-center"></span>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1.5 block">Filtrar por país / idioma</label>
+          <div class="flex flex-wrap gap-1.5" id="localeFilters">
+            <button class="engine-pill active" data-locale="all" onclick="filtrarLocale('all')">🌐 Todas</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 font-medium mb-1.5 block">Velocidad</label>
+            <select id="audioRate" class="input-base">
+              <option value="-20">Muy lenta</option>
+              <option value="-10">Lenta</option>
+              <option value="0" selected>Normal</option>
+              <option value="10">Rápida</option>
+              <option value="20">Muy rápida</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 font-medium mb-1.5 block">Tono</label>
+            <select id="audioPitch" class="input-base">
+              <option value="-20">Grave</option>
+              <option value="-10">Bajo</option>
+              <option value="0" selected>Normal</option>
+              <option value="10">Agudo</option>
+              <option value="20">Muy agudo</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="generarAudio()" id="btnGenerarAudio" class="btn-primary w-full">🎵 Generar Audio</button>
+      </div>
+      <div class="lg:col-span-3 card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold text-white">Resultado</h2>
+          <div id="audioProgress" class="hidden text-xs text-indigo-400 flex items-center gap-2">
+            <span class="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></span>
+            Generando...
+          </div>
+        </div>
+        <div id="audioResult" class="result-box">
+          <div class="text-center text-slate-600">
+            <div class="text-4xl mb-2">🎙️</div>
+            <p class="text-sm">Selecciona una voz y genera audio</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+const SD_BASE = "https://ia.pegui.edu.co/sdapi/v1";
+let currentEngine = 'qwen';
+
+function getToken() {
+  try { return window.parent.localStorage.getItem('token') || localStorage.getItem('token') || ''; } catch(e) { return localStorage.getItem('token') || ''; }
+}
+
+function switchEngine(engine) {
+  currentEngine = engine;
+  document.querySelectorAll('.engine-pill').forEach(b => {
+    b.classList.toggle('active', b.dataset.engine === engine);
+    b.classList.toggle('inactive', b.dataset.engine !== engine);
+  });
+  document.getElementById('sdOptions').classList.toggle('hidden', engine !== 'sd');
+  document.getElementById('qwenOptions').classList.toggle('hidden', engine !== 'qwen');
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.replace('active', 'inactive'); });
+    this.classList.replace('inactive', 'active');
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+  });
+});
+
+async function generarImagen() {
+  const prompt = document.getElementById('imgPrompt').value.trim();
+  if (!prompt) return alert('Escribe un prompt primero');
+  const btn = document.getElementById('btnGenerarImagen');
+  const result = document.getElementById('imgResult');
+  const progress = document.getElementById('imgProgress');
+  btn.disabled = true; progress.classList.remove('hidden');
+  result.innerHTML = '<div class="text-center text-slate-500 text-sm"><div class="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>Generando...</div>';
+  try {
+    if (currentEngine === 'qwen') {
+      const res = await fetch(`${API_BASE}/ai/generate-image`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+        body: JSON.stringify({ prompt, model: document.getElementById('qwenModel').value, size: document.getElementById('qwenSize').value.replace('*', '*'), prompt_extend: document.getElementById('qwenPromptExtend').checked })
+      });
+      const data = await res.json();
+      const imgUrl = data.image_url || (data.images && data.images[0]) || '';
+      if (imgUrl) {
+        if (imgUrl.startsWith('data:') || imgUrl.startsWith('/9j/') || imgUrl.startsWith('iVBOR')) {
+          const base64 = imgUrl.startsWith('data:') ? imgUrl : `data:image/png;base64,${imgUrl}`;
+          result.innerHTML = `<img src="${base64}" class="max-w-full max-h-[500px] object-contain rounded-lg">`;
+        } else {
+          result.innerHTML = `<img src="${imgUrl}" class="max-w-full max-h-[500px] object-contain rounded-lg" onerror="this.parentElement.innerHTML='<div class=\\'text-rose-400 text-sm\\'>Error al cargar imagen</div>'">`;
+        }
+      } else {
+        result.innerHTML = `<div class="text-rose-400 text-sm text-center">${data.detail || 'Error al generar imagen'}</div>`;
+      }
+    } else {
+      const dims = [512, 512];
+      const res = await fetch(`${SD_BASE}/txt2img`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, negative_prompt: document.getElementById('imgNegative').value || 'blurry, bad quality, distorted', steps: parseInt(document.getElementById('sdSteps').value) || 20, cfg_scale: parseInt(document.getElementById('sdCfg').value) || 7, width: dims[0], height: dims[1], sampler_name: "Euler a", restore_faces: true })
+      });
+      const data = await res.json();
+      if (data.images && data.images[0]) {
+        result.innerHTML = `<img src="data:image/png;base64,${data.images[0]}" class="max-w-full max-h-[500px] object-contain rounded-lg">`;
+      } else {
+        result.innerHTML = `<div class="text-rose-400 text-sm text-center">Error en Stable Diffusion</div>`;
+      }
+    }
+  } catch(e) {
+    result.innerHTML = `<div class="text-rose-400 text-sm text-center">Error de conexión: ${e.message}</div>`;
+  }
+  btn.disabled = false; progress.classList.add('hidden');
+}
+
+async function generarVideo() {
+  const prompt = document.getElementById('videoPrompt').value.trim();
+  if (!prompt) return alert('Escribe un prompt primero');
+  const btn = document.getElementById('btnGenerarVideo');
+  const result = document.getElementById('videoResult');
+  const progress = document.getElementById('videoProgress');
+  btn.disabled = true; progress.classList.remove('hidden');
+  result.innerHTML = '<div class="text-center text-slate-500 text-sm"><div class="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>Iniciando generación...</div>';
+  try {
+    const translateRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(prompt)}&langpair=es|en`);
+    const translateData = await translateRes.json();
+    const englishPrompt = translateData.responseData?.translatedText || prompt;
+    const initRes = await fetch(`${API_BASE}/ai/generate-video`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify({ prompt: englishPrompt, model: "wan2.6-t2v", duration: parseInt(document.getElementById('videoDuration').value) || 5 })
+    });
+    const initData = await initRes.json();
+    const taskId = initData.task_id;
+    if (!taskId) { result.innerHTML = '<div class="text-rose-400 text-sm text-center">Error: No se obtuvo task_id</div>'; btn.disabled = false; progress.classList.add('hidden'); return; }
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      document.getElementById('videoProgressText').textContent = `Procesando... (${attempts * 5}s)`;
+      try {
+        const statusRes = await fetch(`${API_BASE}/ai/status/${taskId}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+        const statusData = await statusRes.json();
+        if (statusData.status === 'SUCCEEDED' && statusData.video_url) {
+          clearInterval(poll);
+          result.innerHTML = `<video controls autoplay class="max-w-full max-h-[500px] rounded-lg"><source src="${statusData.video_url}" type="video/mp4"></video>`;
+          btn.disabled = false; progress.classList.add('hidden');
+        } else if (statusData.status === 'FAILED') {
+          clearInterval(poll);
+          result.innerHTML = `<div class="text-rose-400 text-sm text-center">Error: ${statusData.error || 'Falló la generación'}</div>`;
+          btn.disabled = false; progress.classList.add('hidden');
+        }
+      } catch(e) {
+        if (attempts > 120) { clearInterval(poll); result.innerHTML = '<div class="text-rose-400 text-sm text-center">Tiempo de espera agotado</div>'; btn.disabled = false; progress.classList.add('hidden'); }
+      }
+    }, 5000);
+  } catch(e) {
+    result.innerHTML = `<div class="text-rose-400 text-sm text-center">Error: ${e.message}</div>`;
+    btn.disabled = false; progress.classList.add('hidden');
+  }
+}
+
+let allVoices = [];
+let filteredVoices = [];
+let currentLocale = 'all';
+
+async function cargarVoces() {
+  const badge = document.getElementById('statusBadge');
+  try {
+    const res = await fetch(`${API_BASE}/ai/tts/voices`, {
+      headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error('Error al cargar voces');
+    allVoices = await res.json();
+    filteredVoices = allVoices;
+    actualizarSelectVoces();
+    generarBotonesLocale();
+    document.getElementById('voiceCount').textContent = `${allVoices.length} voces`;
+    badge.innerHTML = '<span class="w-2 h-2 bg-emerald-400 rounded-full"></span> ' + allVoices.length + ' voces cargadas';
+  } catch(e) {
+    badge.innerHTML = '<span class="w-2 h-2 bg-rose-400 rounded-full"></span> Error';
+    document.getElementById('voiceCount').textContent = 'Error';
+  }
+}
+
+function actualizarSelectVoces() {
+  const select = document.getElementById('audioVoice');
+  select.innerHTML = filteredVoices.map(v =>
+    `<option value="${v.voice}">${v.display}</option>`
+  ).join('');
+}
+
+function generarBotonesLocale() {
+  const locales = [...new Set(allVoices.map(v => v.locale))].sort();
+  const container = document.getElementById('localeFilters');
+  container.innerHTML = '<button class="engine-pill active" data-locale="all" onclick="filtrarLocale(\'all\')">🌐 Todas</button>' +
+    locales.map(l => {
+      const flag = l.startsWith('es') ? '🇪🇸' : l.startsWith('en') ? '🇬🇧' : l.startsWith('pt') ? '🇧🇷' : l.startsWith('fr') ? '🇫🇷' : l.startsWith('de') ? '🇩🇪' : l.startsWith('it') ? '🇮🇹' : l.startsWith('ja') ? '🇯🇵' : l.startsWith('ko') ? '🇰🇷' : l.startsWith('zh') ? '🇨🇳' : l.startsWith('ar') ? '🇸🇦' : '🌍';
+      return `<button class="engine-pill inactive" data-locale="${l}" onclick="filtrarLocale('${l}')">${flag} ${l}</button>`;
+    }).join('');
+}
+
+function filtrarLocale(locale) {
+  currentLocale = locale;
+  document.querySelectorAll('#localeFilters .engine-pill').forEach(b => {
+    b.classList.toggle('active', b.dataset.locale === locale);
+    b.classList.toggle('inactive', b.dataset.locale !== locale);
+  });
+  filtrarVoces();
+}
+
+function filtrarVoces() {
+  const query = document.getElementById('audioVoiceSearch').value.toLowerCase();
+  filteredVoices = allVoices.filter(v => {
+    if (currentLocale !== 'all' && v.locale !== currentLocale) return false;
+    if (query && !v.display.toLowerCase().includes(query) && !v.voice.toLowerCase().includes(query)) return false;
+    return true;
+  });
+  actualizarSelectVoces();
+  document.getElementById('voiceCount').textContent = `${filteredVoices.length} de ${allVoices.length} voces`;
+}
+
+async function generarAudio() {
+  const text = document.getElementById('audioText').value.trim();
+  if (!text) return alert('Escribe el texto primero');
+  const btn = document.getElementById('btnGenerarAudio');
+  const result = document.getElementById('audioResult');
+  const progress = document.getElementById('audioProgress');
+  btn.disabled = true;
+  progress.classList.remove('hidden');
+  result.innerHTML = '<div class="text-center text-slate-500 text-sm"><div class="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>Generando audio...</div>';
+  try {
+    const res = await fetch(`${API_BASE}/ai/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify({
+        text,
+        voice: document.getElementById('audioVoice').value,
+        rate: document.getElementById('audioRate').value,
+        pitch: document.getElementById('audioPitch').value
+      })
+    });
+    const data = await res.json();
+    if (data.audio_url) {
+      result.innerHTML = `<audio controls autoplay class="w-full max-h-[60px]"><source src="${data.audio_url}" type="audio/mpeg"></audio>`;
+    } else {
+      result.innerHTML = `<div class="text-rose-400 text-sm text-center">${data.detail || 'Error al generar audio'}</div>`;
+    }
+  } catch(e) {
+    result.innerHTML = `<div class="text-rose-400 text-sm text-center">Error: ${e.message}</div>`;
+  }
+  btn.disabled = false;
+  progress.classList.add('hidden');
+}
+
+function mostrarArchivoClonacion() {
+  const input = document.getElementById('cloneAudioFile');
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('cloneFilePlaceholder').classList.add('hidden');
+  const info = document.getElementById('cloneFileInfo');
+  info.classList.remove('hidden');
+  document.getElementById('cloneFileName').textContent = file.name;
+  document.getElementById('cloneFileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+}
+
+function limpiarArchivoClonacion() {
+  document.getElementById('cloneAudioFile').value = '';
+  document.getElementById('cloneFileInfo').classList.add('hidden');
+  document.getElementById('cloneFilePlaceholder').classList.remove('hidden');
+}
+
+async function generarClonacion() {
+  const input = document.getElementById('cloneAudioFile');
+  const file = input.files[0];
+  const text = document.getElementById('cloneText').value.trim();
+  const lang = document.getElementById('cloneLanguage').value;
+
+  if (!file) return alert('Selecciona un archivo de audio primero');
+  if (!text) return alert('Escribe el texto a sintetizar');
+
+  const btn = document.getElementById('btnGenerarClonacion');
+  const result = document.getElementById('cloneResult');
+  const progress = document.getElementById('cloneProgress');
+
+  btn.disabled = true;
+  progress.classList.remove('hidden');
+  result.innerHTML = '<div class="text-center text-slate-500 text-sm"><div class="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>Procesando clonación de voz... (puede tomar hasta 60s)</div>';
+
+  try {
+    const formData = new FormData();
+    formData.append('audio', file);
+    formData.append('text', text);
+    formData.append('language', lang);
+
+    const res = await fetch(`${API_BASE}/ai/clone-voice`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${getToken()}` },
+      body: formData
+    });
+
+    const data = await res.json();
+    if (data.audio_url) {
+      result.innerHTML = `<audio controls autoplay class="w-full max-h-[60px]"><source src="${data.audio_url}" type="audio/wav"></audio>
+        <div class="flex items-center gap-2 mt-3 text-xs text-slate-500">
+          <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+          Generado en ${(data.duration_ms / 1000).toFixed(1)}s
+        </div>`;
+    } else {
+      result.innerHTML = `<div class="text-rose-400 text-sm text-center">${data.detail || 'Error al clonar voz'}</div>`;
+    }
+  } catch(e) {
+    result.innerHTML = `<div class="text-rose-400 text-sm text-center">Error: ${e.message}</div>`;
+  }
+  btn.disabled = false;
+  progress.classList.add('hidden');
+}
+
+cargarVoces();
+</script>
+</body>
+</html>

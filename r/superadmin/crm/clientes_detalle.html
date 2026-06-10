@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalles del Cliente - VirtualMind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    dt { font-weight: 600; color: #475569; } /* slate-600 */
+    dd { color: #1e293b; } /* slate-800 */
+  </style>
+</head>
+<body class="bg-slate-50 py-10">
+  <div class="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-8">
+    
+    <header class="flex justify-between items-center mb-6 border-b pb-4">
+      <div>
+        <h1 id="clientName" class="text-2xl font-bold text-slate-800">Cargando...</h1>
+        <p class="text-sm text-slate-500">Detalles del Perfil y Documentos</p>
+      </div>
+      <a href="#" onclick="history.back();" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors">
+        ⬅️ Volver
+      </a>
+    </header>
+
+    <div id="loader" class="text-center py-10">
+      <p class="text-slate-500">Cargando datos del cliente...</p>
+    </div>
+    
+    <main id="clientDetailsContainer" class="hidden">
+
+      <section class="mb-8">
+        <h2 class="text-lg font-semibold text-slate-700 mb-4 pb-2 border-b">🏢 Datos de la Empresa</h2>
+        <dl class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+          <div><dt>Razón Social</dt><dd id="razon_social" class="mt-1">---</dd></div>
+          <div><dt>País</dt><dd id="pais" class="mt-1">---</dd></div>
+          <div><dt>Ciudad / Estado</dt><dd id="ciudad" class="mt-1">---</dd></div>
+          <div><dt id="nitLabel">NIT / ID Tributario</dt><dd id="nit" class="mt-1">---</dd></div>
+          <div><dt>Dirección</dt><dd id="direccion" class="mt-1">---</dd></div>
+          <div><dt>Tipo de Entidad</dt><dd id="tipo_entidad" class="mt-1">---</dd></div>
+          <div><dt>Carácter de la Entidad</dt><dd id="caracter_entidad" class="mt-1">---</dd></div>
+        </dl>
+      </section>
+
+      <section class="mb-8">
+        <h2 class="text-lg font-semibold text-slate-700 mb-4 pb-2 border-b">👔 Representante Legal</h2>
+        <dl class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+          <div><dt>Nombre Completo</dt><dd id="rep_legal_nombre" class="mt-1">---</dd></div>
+          <div><dt>Email</dt><dd id="rep_legal_email" class="mt-1">---</dd></div>
+          <div><dt>Cargo</dt><dd id="rep_legal_cargo" class="mt-1">---</dd></div>
+        </dl>
+      </section>
+
+      <section class="mb-8">
+        <h2 class="text-lg font-semibold text-slate-700 mb-4 pb-2 border-b">👤 Contacto Principal</h2>
+        <dl class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+          <div><dt>Nombre Completo</dt><dd id="contacto_nombre" class="mt-1">---</dd></div>
+          <div><dt>Email</dt><dd id="contacto_email" class="mt-1">---</dd></div>
+          <div><dt>Cargo</dt><dd id="contacto_cargo" class="mt-1">---</dd></div>
+          <div><dt>Teléfono</dt><dd id="contacto_telefono" class="mt-1">---</dd></div>
+          <div><dt>WhatsApp</dt><dd id="contacto_whatsapp" class="mt-1">---</dd></div>
+        </dl>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-semibold text-slate-700 mb-4 pb-2 border-b">📄 Documentos Cargados</h2>
+        <ul id="documentList" class="space-y-3">
+          <li class="text-sm text-slate-500">No se han encontrado documentos.</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+      const API_PROFILE = `${API_BASE}/clients/profiles/client-profiles`; 
+      const API_DOCS = `${API_BASE}/clients/documents/client-documents`;
+
+      const loader = document.getElementById('loader');
+      const container = document.getElementById('clientDetailsContainer');
+      const clientNameH1 = document.getElementById('clientName');
+      const documentList = document.getElementById('documentList');
+
+      const getClientId = () => new URLSearchParams(window.location.search).get('id');
+
+      const loadClientData = async (clientId) => {
+        if (!clientId) {
+          clientNameH1.textContent = "Error";
+          loader.textContent = "No se ha especificado un ID de cliente en la URL.";
+          return;
+        }
+
+        try {
+          const [profileRes, docsRes] = await Promise.all([
+            fetch(`${API_PROFILE}/${clientId}`),
+            fetch(`${API_DOCS}/${clientId}`)
+          ]);
+
+          if (!profileRes.ok) throw new Error(`No se pudo cargar el perfil (Error ${profileRes.status})`);
+          if (!docsRes.ok) throw new Error(`No se pudieron cargar los documentos (Error ${docsRes.status})`);
+
+          const profileData = await profileRes.json();
+          const docsData = await docsRes.json();
+
+          populateProfile(profileData);
+          populateDocuments(docsData);
+
+        } catch (error) {
+          clientNameH1.textContent = "Error de Carga";
+          loader.textContent = `Hubo un problema: ${error.message}`;
+        } finally {
+          loader.classList.add('hidden');
+          container.classList.remove('hidden');
+        }
+      };
+      
+      const populateProfile = (data) => {
+        const p = data.profile || data; 
+        const na = 'No especificado';
+
+        clientNameH1.textContent = p.razon_social || 'Cliente sin nombre';
+
+        document.getElementById('razon_social').textContent = p.razon_social || na;
+        document.getElementById('pais').textContent = p.pais || na;
+        document.getElementById('ciudad').textContent = p.ciudad || na;
+        document.getElementById('nit').textContent = data.documento || p.nit || na;
+        document.getElementById('direccion').textContent = p.direccion || na;
+        document.getElementById('tipo_entidad').textContent = (p.tipo_entidad === 'Otra' ? p.tipo_entidad_otra : p.tipo_entidad) || na;
+        document.getElementById('caracter_entidad').textContent = p.caracter_entidad || na;
+
+        document.getElementById('rep_legal_nombre').textContent = `${p.rep_legal_pnombre || ''} ${p.rep_legal_snombre || ''} ${p.rep_legal_papellido || ''} ${p.rep_legal_sapellido || ''}`.trim() || na;
+        document.getElementById('rep_legal_email').textContent = p.rep_legal_email || na;
+        document.getElementById('rep_legal_cargo').textContent = p.rep_legal_cargo || na;
+
+        document.getElementById('contacto_nombre').textContent = `${p.contacto_com_pnombre || ''} ${p.contacto_com_snombre || ''} ${p.contacto_com_papellido || ''} ${p.contacto_com_sapellido || ''}`.trim() || na;
+        document.getElementById('contacto_email').textContent = p.contacto_com_email || data.email || na;
+        document.getElementById('contacto_cargo').textContent = p.contacto_com_cargo || na;
+        document.getElementById('contacto_telefono').textContent = p.contacto_com_telefono || na;
+        document.getElementById('contacto_whatsapp').textContent = p.contacto_com_whatsapp || na;
+      };
+
+      // ==========================================================
+      // FUNCIÓN populateDocuments() CORREGIDA
+      // ==========================================================
+      const populateDocuments = (docs) => {
+        documentList.innerHTML = ''; // Limpiar la lista
+
+        if (!Array.isArray(docs) || docs.length === 0) {
+          const li = document.createElement('li');
+          li.className = 'text-sm text-slate-500';
+          li.textContent = 'No se han encontrado documentos.';
+          documentList.appendChild(li);
+          return;
+        }
+
+        // Itera sobre la lista de documentos
+        docs.forEach(doc => {
+          const li = document.createElement('li');
+          li.className = 'flex items-center justify-between bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors';
+          
+          const link = document.createElement('a');
+          link.href = doc.archivo_url;
+          link.target = '_blank';
+          link.className = 'text-sm font-medium text-blue-600 hover:underline';
+          link.textContent = doc.tipo_documento;
+
+          const date = new Date(doc.fecha_subida).toLocaleDateString('es-CO', {
+              year: 'numeric', month: 'long', day: 'numeric'
+          });
+          const dateSpan = document.createElement('span');
+          dateSpan.className = 'text-xs text-slate-500';
+          dateSpan.textContent = `Subido: ${date}`;
+
+          li.appendChild(link);
+          li.appendChild(dateSpan);
+          documentList.appendChild(li);
+        });
+      };
+
+      const clientId = getClientId();
+      loadClientData(clientId);
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestión de Usuarios - Superadmin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/assets/logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .modal-bg { background-color: rgba(0,0,0,0.5); }
+    .action-btn { cursor: pointer; margin-right: 0.5rem; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen text-gray-800">
+
+  <!-- Navbar -->
+  <header class="bg-white shadow-md flex justify-between items-center px-6 py-4">
+    <div class="flex items-center gap-3">
+      <img src="/assets/logo.png" class="w-10 h-10 rounded-full shadow" alt="Logo"/>
+      <h1 class="text-xl font-bold">Superadmin – Usuarios</h1>
+    </div>
+  </header>
+
+  <main class="p-6">
+    <div class="bg-white shadow-xl rounded-xl p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-semibold">Usuarios</h2>
+        <button id="btnCreate" onclick="openCreateModal()" class="hidden bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">+ Crear usuario</button>
+      </div>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <input id="filtroTexto" type="text" placeholder="Buscar por nombre, email o documento..." class="flex-1 px-3 py-2 border rounded shadow-sm w-full md:max-w-sm">
+        <select id="filtroRol" class="border rounded px-3 py-2">
+          <option value="">Todos los roles</option>
+        </select>
+        <select id="filtroEstado" class="border rounded px-3 py-2">
+          <option value="todos">Todos</option>
+          <option value="activo">Activos</option>
+          <option value="inactivo">Inactivos</option>
+        </select>
+      </div>
+      <div id="msg" class="text-sm text-green-600 mb-3"></div>
+      <table class="min-w-full table-auto text-sm">
+        <thead class="bg-gray-100 font-semibold">
+          <tr>
+            <th class="px-3 py-2 text-left">Nombre</th>
+            <th class="px-3 py-2 text-left">Documento</th>
+            <th class="px-3 py-2 text-left">Email</th>
+            <th class="px-3 py-2 text-left">Roles</th>
+            <th class="px-3 py-2 text-left">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal: Crear -->
+  <div id="modalCreate" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+      <h3 class="text-lg font-semibold mb-4">Crear Nuevo Usuario</h3>
+      <form id="userCreateForm" class="space-y-4">
+        <input name="nombre" placeholder="Nombre completo" class="w-full border px-3 py-2 rounded" required />
+        <input name="tipo_documento" placeholder="Tipo de documento" class="w-full border px-3 py-2 rounded" required />
+        <input name="documento" placeholder="Número de documento" class="w-full border px-3 py-2 rounded" required />
+        <input name="email" type="email" placeholder="Correo electrónico" class="w-full border px-3 py-2 rounded" required />
+        <input name="password" type="password" placeholder="Contraseña" class="w-full border px-3 py-2 rounded" required />
+        <label class="block text-sm font-medium">Roles:</label>
+        <select name="role_ids" id="createRoleSelect" multiple class="w-full border px-3 py-2 rounded h-32"></select>
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="closeCreateModal()" class="text-gray-600 px-4 py-2 rounded">Cancelar</button>
+          <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Editar -->
+  <div id="modalEdit" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+      <h3 class="text-lg font-semibold mb-4">Editar Usuario</h3>
+      <form id="userEditForm" data-uid="" class="space-y-4">
+        <input id="edit_nombre" name="nombre" placeholder="Nombre completo" class="w-full border px-3 py-2 rounded" required />
+        <input id="edit_tipo_documento" name="tipo_documento" placeholder="Tipo de documento" class="w-full border px-3 py-2 rounded" required />
+        <input id="edit_documento" name="documento" placeholder="Número de documento" class="w-full border px-3 py-2 rounded" required />
+        <input id="edit_email" name="email" type="email" placeholder="Correo electrónico" class="w-full border px-3 py-2 rounded" required />
+        <input id="edit_password" name="password" type="password" placeholder="Nueva contraseña (opcional)" class="w-full border px-3 py-2 rounded" />
+        <label class="block text-sm font-medium">Roles:</label>
+        <select name="role_ids" id="editRoleSelect" multiple class="w-full border px-3 py-2 rounded h-32"></select>
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="closeEditModal()" class="text-gray-600 px-4 py-2 rounded">Cancelar</button>
+          <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Ver Detalle -->
+  <div id="modalView" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+      <h3 class="text-lg font-semibold mb-4">Detalle de Usuario</h3>
+      <div class="space-y-2">
+        <p><strong>UID:</strong> <span id="view_uid"></span></p>
+        <p><strong>Nombre:</strong> <span id="view_nombre"></span></p>
+        <p><strong>Documento:</strong> <span id="view_documento"></span></p>
+        <p><strong>Email:</strong> <span id="view_email"></span></p>
+        <p><strong>Roles:</strong> <span id="view_roles"></span></p>
+        <p><strong>Estado:</strong> <span id="view_estado"></span></p>
+      </div>
+      <div class="flex justify-end mt-4">
+        <button onclick="closeViewModal()" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón de control de lectura -->
+  <button id="controlLectura" onclick="controlarLectura()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">
+    Activar Lectura
+  </button>
+
+  <script>
+    const API_USERS = "https://gestordecursos.pegui.edu.co:8000/users";
+    const API_ROLES = "https://gestordecursos.pegui.edu.co:8000/roles";
+    const token = localStorage.getItem("token");
+    if (!token) location.href = "/index.html";
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const rolesJwt = payload.roles || [payload.role];
+    let perms = payload.permissions || [];
+    if (rolesJwt.includes("superadmin")) perms.push("user:read","user:create","user:update","user:delete");
+
+    const canRead   = perms.includes("user:read");
+    const canCreate = perms.includes("user:create");
+    const canUpdate = perms.includes("user:update");
+    const canDelete = perms.includes("user:delete");
+    if (!canRead) { alert("Sin permiso"); logout(); }
+    if (canCreate) document.getElementById("btnCreate").classList.remove("hidden");
+
+    function logout() {
+      localStorage.removeItem("token");
+      location.href = "/index.html";
+    }
+    function openCreateModal() {
+      document.getElementById("modalCreate").classList.remove("hidden");
+    }
+    function closeCreateModal() {
+      document.getElementById("modalCreate").classList.add("hidden");
+    }
+    function openEditModal(uid) {
+      fetchUserForEdit(uid);
+      document.getElementById("modalEdit").classList.remove("hidden");
+    }
+    function closeEditModal() {
+      document.getElementById("modalEdit").classList.add("hidden");
+    }
+    function openViewModal(uid) {
+      fetchUserForView(uid);
+      document.getElementById("modalView").classList.remove("hidden");
+    }
+    function closeViewModal() {
+      document.getElementById("modalView").classList.add("hidden");
+    }
+
+    let todosLosUsuarios = [];
+
+    async function fetchUsers() {
+      const res = await fetch(API_USERS, { headers: { "Authorization": "Bearer " + token } });
+      if (!res.ok) return console.error("Error users", res.status);
+      todosLosUsuarios = await res.json();
+      renderizarUsuarios();
+    }
+
+    function renderizarUsuarios() {
+      const texto = document.getElementById("filtroTexto").value.toLowerCase();
+      const rol   = document.getElementById("filtroRol").value;
+      const estado= document.getElementById("filtroEstado").value;
+      const tbody = document.getElementById("userTableBody");
+      tbody.innerHTML = "";
+
+      todosLosUsuarios
+        .filter(u => {
+          const mt = u.nombre.toLowerCase().includes(texto)
+                  || u.email.toLowerCase().includes(texto)
+                  || u.documento.toLowerCase().includes(texto);
+          const mr = rol === "" || u.roles.includes(rol);
+          const me = estado === "todos"
+                  || (estado === "activo" && u.estado)
+                  || (estado === "inactivo" && !u.estado);
+          return mt && mr && me;
+        })
+        .forEach(u => {
+          let acciones = "";
+          if (canRead)   acciones += `<span class="action-btn" onclick="openViewModal('${u.uid}')">👁</span>`;
+          if (canUpdate) acciones += `<span class="action-btn" onclick="openEditModal('${u.uid}')">✎</span>`;
+          if (canDelete) acciones += `<span class="action-btn" onclick="deactivateUser('${u.uid}')">🚫</span>`;
+          tbody.innerHTML += `
+            <tr>
+              <td class="px-3 py-2">${u.nombre}</td>
+              <td class="px-3 py-2">${u.tipo_documento} ${u.documento}</td>
+              <td class="px-3 py-2">${u.email}</td>
+              <td class="px-3 py-2">${u.roles.join(", ")}</td>
+              <td class="px-3 py-2">${acciones}</td>
+            </tr>`;
+        });
+    }
+
+    async function fetchRoles() {
+      const res = await fetch(API_ROLES, { headers: { "Authorization": "Bearer " + token } });
+      if (!res.ok) return console.error("Error roles", res.status);
+      const roles = await res.json();
+      ["createRoleSelect","editRoleSelect"].forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = "";
+        roles.forEach(r => {
+          const opt = document.createElement("option");
+          opt.value = r.id;
+          opt.text  = r.name;
+          sel.appendChild(opt);
+        });
+      });
+      const filtroRol = document.getElementById("filtroRol");
+      roles.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.name;
+        opt.text  = r.name;
+        filtroRol.appendChild(opt);
+      });
+    }
+
+    async function deactivateUser(uid) {
+      if (!confirm("¿Desactivar este usuario?")) return;
+      await fetch(`${API_USERS}/${uid}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      document.getElementById("msg").innerText = "✅ Usuario desactivado";
+      fetchUsers();
+    }
+
+    // ——— CREAR USUARIO con REDIRECCIÓN basada en la respuesta del servidor ———
+    document.getElementById("userCreateForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const f = e.target;
+      const nuevo = {
+        nombre:          f.nombre.value,
+        tipo_documento:  f.tipo_documento.value,
+        documento:       f.documento.value,
+        email:           f.email.value,
+        password:        f.password.value,
+        role_ids:        Array.from(f.role_ids.selectedOptions).map(o => parseInt(o.value))
+      };
+
+      const res = await fetch(API_USERS, {
+        method: "POST",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify(nuevo)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById("msg").innerText = "✅ Usuario creado";
+        closeCreateModal();
+        f.reset();
+        fetchUsers();
+      } else {
+        const err = await res.json();
+        alert("Error: " + (err.detail || res.status));
+      }
+    });
+
+    async function fetchUserForEdit(uid) {
+      const res = await fetch(`${API_USERS}/${uid}`, { headers: { "Authorization": "Bearer " + token } });
+      const u = await res.json();
+      const f = document.getElementById("userEditForm");
+      f.dataset.uid = uid;
+      f.nombre.value          = u.nombre;
+      f.tipo_documento.value  = u.tipo_documento;
+      f.documento.value       = u.documento;
+      f.email.value           = u.email;
+      f.password.value        = "";
+      const sel = document.getElementById("editRoleSelect");
+      Array.from(sel.options).forEach(opt => {
+        opt.selected = u.roles.includes(opt.text);
+      });
+    }
+
+    document.getElementById("userEditForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const f = e.target, uid = f.dataset.uid;
+      const upd = {
+        nombre:         f.nombre.value,
+        tipo_documento: f.tipo_documento.value,
+        documento:      f.documento.value,
+        email:          f.email.value,
+        ...(f.password.value ? { password: f.password.value } : {}),
+        role_ids:       Array.from(f.role_ids.selectedOptions).map(o => parseInt(o.value))
+      };
+      const res = await fetch(`${API_USERS}/${uid}`, {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body:    JSON.stringify(upd)
+      });
+      if (res.ok) {
+        document.getElementById("msg").innerText = "✅ Usuario actualizado";
+        closeEditModal();
+        fetchUsers();
+      } else {
+        const err = await res.json();
+        alert("Error: " + (err.detail || res.status));
+      }
+    });
+
+    async function fetchUserForView(uid) {
+      const res = await fetch(`${API_USERS}/${uid}`, { headers: { "Authorization": "Bearer " + token } });
+      const u   = await res.json();
+      document.getElementById("view_uid").innerText       = u.uid;
+      document.getElementById("view_nombre").innerText    = u.nombre;
+      document.getElementById("view_documento").innerText = `${u.tipo_documento} ${u.documento}`;
+      document.getElementById("view_email").innerText     = u.email;
+      document.getElementById("view_roles").innerText     = u.roles.join(", ");
+      document.getElementById("view_estado").innerText    = u.estado ? "Activo" : "Inactivo";
+    }
+
+    document.getElementById("filtroTexto").addEventListener("input", renderizarUsuarios);
+    document.getElementById("filtroRol").addEventListener("change", renderizarUsuarios);
+    document.getElementById("filtroEstado").addEventListener("change", renderizarUsuarios);
+
+    (async function init() {
+      await fetchRoles();
+      await fetchUsers();
+    })();
+
+    // Variables de lectura
+    let lecturaHabilitada = false;
+    let ultimaLectura = "";
+
+    // Función para activar/desactivar la lectura
+    function controlarLectura() {
+      const boton = document.getElementById("controlLectura");
+      if (lecturaHabilitada) {
+        boton.innerText = "Activar Lectura";
+      } else {
+        boton.innerText = "Desactivar Lectura";
+      }
+      lecturaHabilitada = !lecturaHabilitada;
+    }
+
+    // Función para leer el texto
+    function leerTexto(texto) {
+      if (!lecturaHabilitada || texto === ultimaLectura) return;
+      speechSynthesis.cancel();
+      ultimaLectura = texto;
+      const mensaje = new SpeechSynthesisUtterance(texto);
+      mensaje.lang = "es-ES";
+      speechSynthesis.speak(mensaje);
+    }
+
+    // Agregar evento para leer texto al pasar el ratón
+    document.addEventListener("mouseover", (e) => {
+      const texto = e.target.innerText || e.target.textContent;
+      if (texto && texto.trim().length > 3) {
+        leerTexto(texto.trim());
+      }
+    });
+
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

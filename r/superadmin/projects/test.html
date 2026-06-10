@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestión de Proyectos - VirtualMind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); }
+    .card-glass { background: rgba(255,255,255,.95); backdrop-filter: blur(10px); border:1px solid rgba(255,255,255,.2); }
+    .input-focus { transition: all .3s ease; }
+    .input-focus:focus { transform: translateY(-1px); box-shadow: 0 10px 25px rgba(0,0,0,.1); }
+    .section-card { transition: all .3s ease; }
+    .section-card:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(0,0,0,.1); }
+    .checkbox-custom { position: relative; cursor: pointer; }
+    .checkbox-custom input[type=checkbox] { opacity:0; position:absolute; }
+    .checkbox-custom .checkmark { display:inline-block;width:20px;height:20px;background:#f3f4f6;border:2px solid #d1d5db;border-radius:4px;margin-right:8px;transition:all .3s ease; }
+    .checkbox-custom input:checked+.checkmark { background:#667eea;border-color:#667eea; }
+    .checkbox-custom input:checked+.checkmark:after { content:"✓";color:#fff;font-size:14px;position:absolute;left:3px;top:0; }
+    .radio-custom { position: relative; cursor: pointer; }
+    .radio-custom input[type=radio] { opacity:0; position:absolute; }
+    .radio-custom .radiomark { display:inline-block;width:20px;height:20px;background:#f3f4f6;border:2px solid #d1d5db;border-radius:50%;margin-right:8px;transition:all .3s ease; }
+    .radio-custom input:checked+.radiomark { background:#667eea;border-color:#667eea; }
+    .radio-custom input:checked+.radiomark:after { content:"";width:8px;height:8px;border-radius:50%;background:#fff;position:absolute;left:6px;top:6px; }
+    .animate-fade-in { animation:fadeIn .6s ease-out; }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  </style>
+</head>
+<body class="gradient-bg min-h-screen py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-8 animate-fade-in">
+      <h1 class="text-4xl font-bold text-white mb-2">VirtualMind</h1>
+      <p class="text-blue-100 text-lg">Gestión Inteligente de Proyectos Educativos</p>
+    </div>
+    <div class="card-glass rounded-3xl shadow-2xl p-8 animate-fade-in">
+      <div class="flex items-center mb-8">
+        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+        </div>
+        <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Crear Nuevo Proyecto
+        </h2>
+        <button id="btnTutorial" type="button" class="ml-4 flex items-center text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full px-3 py-1 transition-colors">
+            <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.152-.468 2.185-1.228 2.943-.76.758-1.79 1.3-2.772 1.55V16m-3.228-7a9 9 0 1118 0 9 9 0 01-18 0z"></path></svg>
+            Tutorial
+        </button>
+      </div>
+
+      <form id="formProyecto" class="space-y-8">
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </span>
+            Información Básica del Proyecto
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="name">Nombre del Proyecto</label>
+              <input id="name" name="name" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" placeholder="Ingresa el nombre del proyecto"/>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="clienteSelect">Cliente</label>
+              <select id="clienteSelect" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Seleccione un cliente…</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="clientId">ID Cliente (uid)</label>
+              <input id="clientId" name="client_id" readonly required class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"/>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="codigoReferencia">Código Interno/Referencia</label>
+              <input id="codigoReferencia" name="codigo_referencia" readonly class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"/>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="faseSelect">Fase del Proyecto</label>
+              <select id="faseSelect" name="fase_id" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600">
+                <option value="">Cargando fase…</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="etapa">Etapa</label>
+              <select id="etapa" name="etapa" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600">
+                <option value="Etapa Contractual" selected>Etapa Contractual</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="start_date">Fecha de Inicio</label>
+              <input id="start_date" name="start_date" type="date" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="end_date">Fecha de Finalización</label>
+              <input id="end_date" name="end_date" type="date" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+            
+            <div class="space-y-2 md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700" for="tipoProyecto">Tipo de Proyecto</label>
+              <select id="tipoProyecto" name="tipo_proyecto" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Selecciona...</option>
+                <optgroup label="Cursos">
+                  <option value="Curso virtual">Curso virtual</option>
+                  <option value="Mooc">MOOC (Curso Online Masivo y Abierto)</option>
+                  <option value="Scorm">SCORM</option>
+                  <option value="OVA">OVA (Objeto Virtual de Aprendizaje)</option>
+                  <option value="Microlearning">Microlearning</option>
+                  <option value="Microcursos">Microcursos o cápsulas educativas</option>
+                  <option value="RapidLearning">RapidLearning</option>
+                  <option value="Gamificados">Gamificados</option>
+                  <option value="VideoLearning">Video learning</option>
+                  <option value="LearningByDoing">Learning by doing</option>
+                  <option value="MobileLearning">Mobile Learning</option>
+                  <option value="Nanocursos">Nanocursos / Cursos express</option>
+                  <option value="Storytelling">Cursos en formato storytelling</option>
+                </optgroup>
+                <optgroup label="Talleres">
+                  <option value="TallerVirtual">Taller virtual</option>
+                  <option value="TallerPresencial">Taller presencial</option>
+                  <option value="TallerHibrido">Taller híbrido</option>
+                </optgroup>
+                <optgroup label="Ebook">
+                  <option value="EbookEducativo">Educativo</option>
+                  <option value="EbookGamificado">Gamificado</option>
+                  <option value="EbookAcademico">Académico</option>
+                  <option value="EbookInformativo">Informativo</option>
+                  <option value="EbookPromocional">Promocional</option>
+                  <option value="EbookInfantil">Infantil</option>
+                  <option value="EbookCreativo">Creativo o literario</option>
+                  <option value="EbookOtro">Otro</option>
+                </optgroup>
+                <optgroup label="Podcast">
+                  <option value="PodcastEducativo">Educativos</option>
+                  <option value="PodcastCultural">Culturales y literarios</option>
+                  <option value="PodcastNegocios">Negocios y emprendimiento</option>
+                  <option value="PodcastEntretenimiento">Entretenimiento</option>
+                  <option value="PodcastBienestar">Bienestar y desarrollo personal</option>
+                  <option value="PodcastNoticias">Noticias y actualidad</option>
+                  <option value="PodcastViajes">Viajes y estilo de vida</option>
+                  <option value="PodcastTecnologia">Tecnología y ciencia</option>
+                  <option value="PodcastFamilia">Familia y educación</option>
+                  <option value="PodcastEspiritualidad">Espiritualidad y religión</option>
+                  <option value="PodcastDeportes">Deportes</option>
+                  <option value="PodcastSociedad">Opinión y sociedad</option>
+                  <option value="PodcastMusica">Música y arte</option>
+                  <option value="PodcastCrimen">Crimen y misterio</option>
+                  <option value="PodcastRelaciones">Relaciones y sexualidad</option>
+                  <option value="PodcastCocina">Cocina y gastronomía</option>
+                  <option value="PodcastPsicologia">Psicología y salud mental</option>
+                  <option value="PodcastEducacion">Educación superior</option>
+                  <option value="PodcastMedioAmbiente">Medio ambiente</option>
+                </optgroup>
+                <optgroup label="Apps Educativas">
+                  <option value="AppAprendizajeIdiomas">Aprendizaje de idiomas</option>
+                  <option value="AppCursosVirtuales">Cursos virtuales</option>
+                  <option value="AppDocentesEstudiantes">Apps para docentes y estudiantes</option>
+                  <option value="AppJuegosEducativos">Juegos educativos infantiles</option>
+                </optgroup>
+                <optgroup label="Apps Ecommerce">
+                  <option value="AppTiendaOnline">Tiendas online</option>
+                  <option value="AppMarketplace">Marketplace</option>
+                  <option value="AppComparadoresPrecios">Comparadores de precios</option>
+                  <option value="AppSupermercadoModa">Compra de supermercado o moda</option>
+                </optgroup>
+                <optgroup label="Apps Salud y Bienestar">
+                  <option value="AppMeditacion">Meditación y mindfulness</option>
+                  <option value="AppHabitosSaludables">Seguimiento de hábitos saludables</option>
+                  <option value="AppSaludMental">Salud mental</option>
+                  <option value="AppCitasMedicas">Control de citas médicas</option>
+                </optgroup>
+                <optgroup label="Apps Fitness y Estilo de vida">
+                  <option value="AppRutinas">Rutinas de ejercicio</option>
+                  <option value="AppNutricion">Nutrición y dietas</option>
+                  <option value="AppPasos">Seguimiento de peso/pasos</option>
+                  <option value="AppYoga">Yoga y entrenamiento personalizado</option>
+                </optgroup>
+                <optgroup label="Apps Redes sociales">
+                  <option value="AppChats">Chats y mensajería</option>
+                  <option value="AppForos">Foros y comunidades</option>
+                  <option value="AppCitas">Apps de citas</option>
+                  <option value="AppInteraccionSocial">Plataformas de interacción social</option>
+                </optgroup>
+                <optgroup label="Apps Viajes y transporte">
+                  <option value="AppVuelos">Reservas de vuelos y hoteles</option>
+                  <option value="AppMapas">Mapas y navegación</option>
+                  <option value="AppTransporte">Transporte urbano (Uber, Didi, etc.)</option>
+                  <option value="AppGuiasViaje">Guías de viaje</option>
+                </optgroup>
+                <optgroup label="Apps Finanzas">
+                  <option value="AppBancaDigital">Bancos digitales</option>
+                  <option value="AppGastos">Control de gastos</option>
+                  <option value="AppCriptomonedas">Criptomonedas</option>
+                  <option value="AppContabilidad">Facturación y contabilidad personal</option>
+                </optgroup>
+                <optgroup label="Apps Juegos">
+                  <option value="AppJuegosCasuales">Juegos casuales</option>
+                  <option value="AppJuegosEducativos">Juegos educativos</option>
+                  <option value="AppEstrategia">Estrategia, acción, aventura</option>
+                  <option value="AppJuegosMultijugador">Juegos multijugador</option>
+                </optgroup>
+                <optgroup label="Apps Música y Audio">
+                  <option value="AppReproductores">Reproductores de música</option>
+                  <option value="AppStreamingAudio">Streaming de audio</option>
+                  <option value="AppProduccionMusical">Producción y edición musical</option>
+                </optgroup>
+                <optgroup label="Apps Fotografía y Video">
+                  <option value="AppEdicionImagenes">Edición de imágenes</option>
+                  <option value="AppFiltros">Filtros y efectos</option>
+                  <option value="AppProduccionVideo">Producción de video</option>
+                  <option value="AppAlbumes">Álbumes y galerías</option>
+                </optgroup>
+                <optgroup label="Apps Noticias y Revistas">
+                  <option value="AppPortalesNoticias">Portales de noticias</option>
+                  <option value="AppRSS">Lectores RSS</option>
+                  <option value="AppRevistas">Revistas digitales</option>
+                </optgroup>
+                <optgroup label="Apps Cocina y Gastronomía">
+                  <option value="AppRecetarios">Recetarios</option>
+                  <option value="AppPlanificacionComidas">Planificación de comidas</option>
+                  <option value="AppComprasIngredientes">Compras de ingredientes</option>
+                  <option value="AppDelivery">Apps para delivery</option>
+                </optgroup>
+                <optgroup label="Apps Productividad">
+                  <option value="AppTareas">Gestión de tareas</option>
+                  <option value="AppCalendarios">Calendarios y agendas</option>
+                  <option value="AppHerramientasTrabajo">Herramientas de productividad</option>
+                </optgroup>
+                <optgroup label="Otros">
+                  <option value="LandingPage">Landing Page</option>
+                  <option value="Otro">Otro (especificar)</option>
+                </optgroup>
+              </select>
+            </div>
+            <div id="divTipoProyectoPersonalizado" style="display:none;" class="space-y-2 md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700" for="tipoProyectoPersonalizado">Tipo de Proyecto Personalizado</label>
+              <input id="tipoProyectoPersonalizado" name="tipo_proyecto_personalizado" placeholder="Especifique el tipo de proyecto" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+            <div class="space-y-2 md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700" for="estado">Estado</label>
+              <select id="estado" name="estado" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="Planificado">Planificado</option>
+                <option value="En desarrollo">En desarrollo</option>
+                <option value="Aprobado">Aprobado</option>
+                <option value="Finalizado">Finalizado</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-6 space-y-2">
+            <label class="block text-sm font-semibold text-gray-700" for="description">Descripción resumen del proyecto</label>
+            <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus resize-none" placeholder="Describe brevemente el proyecto..."></textarea>
+          </div>
+        </div>
+
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+            </span>
+            Configuración de Lenguaje e Inclusión
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+              <h4 class="font-semibold text-gray-700">Lenguaje Inclusivo</h4>
+              <div class="flex space-x-6">
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="lenguaje_incluyente" value="true" id="incluyenteSi">
+                  <span class="radiomark"></span> Sí
+                </label>
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="lenguaje_incluyente" value="false" id="incluyenteNo" checked>
+                  <span class="radiomark"></span> No
+                </label>
+              </div>
+              <select name="lenguaje_inclusivo_tipo" id="tipoLenguajeSelect" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Selecciona…</option>
+                <option value="Tradicional">Tradicional</option>
+                <option value="Doble mención">Doble mención</option>
+                <option value="Neutro">Neutro</option>
+                <option value="No binario">No binario</option>
+                <option value="Otro">Otro</option>
+              </select>
+              <input id="otroLenguajeInput" name="lenguaje_inclusivo_otro" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" placeholder="Si elegiste Otro, especifica aquí"/>
+            </div>
+
+            <div class="space-y-4">
+              <h4 class="font-semibold text-gray-700">Idioma</h4>
+              <div class="flex flex-wrap gap-4">
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="idioma" value="Español" checked>
+                  <span class="radiomark"></span> Español
+                </label>
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="idioma" value="Inglés">
+                  <span class="radiomark"></span> Inglés
+                </label>
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="idioma" value="Bilingüe">
+                  <span class="radiomark"></span> Bilingüe
+                </label>
+              </div>
+              <input name="idioma_otro" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" placeholder="Otro idioma"/>
+            </div>
+          </div>
+
+          <div class="mt-8 space-y-4">
+            <h4 class="font-semibold text-gray-700">Inclusión Digital</h4>
+            <div class="flex space-x-6 mb-4">
+              <label class="radio-custom flex items-center">
+                <input type="radio" name="inclusion_digital" value="true" id="inclusionSi">
+                <span class="radiomark"></span> Sí
+              </label>
+              <label class="radio-custom flex items-center">
+                <input type="radio" name="inclusion_digital" value="false" id="inclusionNo" checked>
+                <span class="radiomark"></span> No
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_web" value="true">
+                <span class="checkmark"></span> Accesibilidad web
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_asistiva" value="true">
+                <span class="checkmark"></span> Tecnología asistiva
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_universal" value="true">
+                <span class="checkmark"></span> Diseño universal
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_educativa" value="true">
+                <span class="checkmark"></span> Educación digital inclusiva
+              </label>
+            </div>
+            <input name="inclusion_digital_otro" class="w-full mt-2 px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" placeholder="Otro (especificar)"/>
+          </div>
+        </div>
+
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+            </span>
+            Diseño Visual y Tipografía
+          </h3>
+
+          <div class="space-y-3">
+            <h4 class="font-semibold text-gray-700">Tipografía de Título</h4>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+              <div>
+                <label class="text-sm font-medium text-gray-700 block mb-1">Fuente</label>
+                <select id="tituloFuente" name="tipografia_titulo_fuente" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                  <option>Inter</option> <option>Roboto</option> <option>Open Sans</option> <option>Lato</option> <option>Montserrat</option> <option>Poppins</option> <option>Merriweather</option> <option>Playfair Display</option> <option>Source Sans 3</option> <option>Nunito</option> <option>Otro</option>
+                </select>
+                <input id="tituloFuenteOtro" placeholder="Escribe la fuente" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-700 block mb-1">Tamaño</label>
+                <select id="tituloTamano" name="tipografia_titulo_tamano" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                  <option>24px</option> <option>28px</option> <option>32px</option> <option>36px</option> <option>40px</option> <option>48px</option> <option>Otro</option>
+                </select>
+                <input id="tituloTamanoOtro" placeholder="Ej: 34px o 2rem" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+              </div>
+              <label class="checkbox-custom flex items-center mt-7 md:mt-0"> <input type="checkbox" name="tipografia_titulo_negrita" value="true"> <span class="checkmark"></span> Negrita </label>
+              <label class="checkbox-custom flex items-center mt-7 md:mt-0"> <input type="checkbox" name="tipografia_titulo_cursiva" value="true"> <span class="checkmark"></span> Cursiva </label>
+            </div>
+          </div>
+
+          <div class="space-y-3 mt-6">
+            <h4 class="font-semibold text-gray-700">Tipografía de Subtítulo</h4>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+              <div>
+                <label class="text-sm font-medium text-gray-700 block mb-1">Fuente</label>
+                <select id="subtituloFuente" name="tipografia_subtitulo_fuente" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                  <option>Inter</option> <option>Roboto</option> <option>Open Sans</option> <option>Lato</option> <option>Montserrat</option> <option>Poppins</option> <option>Merriweather</option> <option>Playfair Display</option> <option>Nunito</option> <option>Otro</option>
+                </select>
+                <input id="subtituloFuenteOtro" placeholder="Escribe la fuente" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-700 block mb-1">Tamaño</label>
+                <select id="subtituloTamano" name="tipografia_subtitulo_tamano" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                  <option>18px</option> <option>20px</option> <option>24px</option> <option>28px</option> <option>Otro</option>
+                </select>
+                <input id="subtituloTamanoOtro" placeholder="Ej: 22px o 1.25rem" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+              </div>
+              <label class="checkbox-custom flex items-center mt-7 md:mt-0"> <input type="checkbox" name="tipografia_subtitulo_negrita" value="true"> <span class="checkmark"></span> Negrita </label>
+              <label class="checkbox-custom flex items-center mt-7 md:mt-0"> <input type="checkbox" name="tipografia_subtitulo_cursiva" value="true"> <span class="checkmark"></span> Cursiva </label>
+            </div>
+          </div>
+
+          <div class="space-y-3 mt-6">
+            <h4 class="font-semibold text-gray-700">Tipografía de Párrafo</h4>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+              <div>
+                <label class="text-sm font-medium text-gray-700 block mb-1">Fuente</label>
+                <select id="parrafoFuente" name="tipografia_parrafo_fuente" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                  <option>Inter</option> <option>Roboto</option> <option>Open Sans</option> <option>Lato</option> <option>Montserrat</option> <option>Poppins</option> <option>Merriweather</option> <option>Playfair Display</option> <option>Nunito</option> <option>Otro</option>
+                </select>
+                <input id="parrafoFuenteOtro" placeholder="Escribe la fuente" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-700 block mb-1">Tamaño</label>
+                <select id="parrafoTamano" name="tipografia_parrafo_tamano" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                  <option>12px</option> <option>14px</option> <option>16px</option> <option>18px</option> <option>Otro</option>
+                </select>
+                <input id="parrafoTamanoOtro" placeholder="Ej: 15px o 1rem" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+              </div>
+              <label class="checkbox-custom flex items-center mt-7 md:mt-0"> <input type="checkbox" name="tipografia_parrafo_negrita" value="true"> <span class="checkmark"></span> Negrita </label>
+              <label class="checkbox-custom flex items-center mt-7 md:mt-0"> <input type="checkbox" name="tipografia_parrafo_cursiva" value="true"> <span class="checkmark"></span> Cursiva </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </span>
+            Configuración de Tiempo de Estudio
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-2">
+              <label for="horas_curso" class="block text-sm font-semibold text-gray-700">Total de Horas de Estudio</label>
+              <input id="horas_curso" name="horas_curso" type="number" min="0" step="0.1" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+            </div>
+            <div class="space-y-2">
+              <label for="horas_autonomo" class="block text-sm font-semibold text-gray-700">Horas de Aprendizaje Autónomo Virtual</label>
+              <input id="horas_autonomo" name="horas_aprendizaje_autonomo_virtual" type="number" min="0" step="0.1" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+            </div>
+            <div class="space-y-2">
+              <label for="horas_actividades" class="block text-sm font-semibold text-gray-700">Horas de Actividades de Aprendizaje</label>
+              <input id="horas_actividades" name="horas_actividades_aprendizaje" type="number" min="0" step="0.1" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+            </span>
+            Derechos y Entregables
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Cesión de Derechos</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center"><input type="radio" name="cesion_derechos" value="true"><span class="radiomark"></span> Sí</label>
+                  <label class="radio-custom flex items-center"><input type="radio" name="cesion_derechos" value="false" checked><span class="radiomark"></span> No</label>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Derechos Patrimoniales de Autor</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center"><input type="radio" name="derechos_patrimoniales_autor" value="true"><span class="radiomark"></span> Sí</label>
+                  <label class="radio-custom flex items-center"><input type="radio" name="derechos_patrimoniales_autor" value="false" checked><span class="radiomark"></span> No</label>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Acuerdo de Confidencialidad</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center"><input type="radio" name="acuerdo_confidencialidad" value="true"><span class="radiomark"></span> Sí</label>
+                  <label class="radio-custom flex items-center"><input type="radio" name="acuerdo_confidencialidad" value="false" checked><span class="radiomark"></span> No</label>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Entrega de Fuentes</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center"><input type="radio" name="entrega_fuentes" value="true"><span class="radiomark"></span> Sí</label>
+                  <label class="radio-custom flex items-center"><input type="radio" name="entrega_fuentes" value="false" checked><span class="radiomark"></span> No</label>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Entrega de Escrito de Autor</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center"><input type="radio" name="entrega_escrito_autor" value="true"><span class="radiomark"></span> Sí</label>
+                  <label class="radio-custom flex items-center"><input type="radio" name="entrega_escrito_autor" value="false" checked><span class="radiomark"></span> No</label>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Entrega de Diseño Instruccional</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center"><input type="radio" name="entrega_diseno_instruccional" value="true"><span class="radiomark"></span> Sí</label>
+                  <label class="radio-custom flex items-center"><input type="radio" name="entrega_diseno_instruccional" value="false" checked><span class="radiomark"></span> No</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </span>
+            Público Objetivo
+          </h3>
+          <p class="text-sm text-gray-600 mb-4">¿A quién está dirigido el proyecto?</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto border border-gray-200 rounded-xl p-4 bg-gray-50">
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Primera infancia"><span class="checkmark"></span> Primera infancia (0 a 5 años)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Niños 6 a 11 años"><span class="checkmark"></span> Niños (6 a 11 años)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Adolescentes"><span class="checkmark"></span> Adolescentes (12 a 17 años)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Jóvenes"><span class="checkmark"></span> Jóvenes (18 a 25 años)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Adultos"><span class="checkmark"></span> Adultos (26 a 59 años)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Mayores"><span class="checkmark"></span> Mayores (60+)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Docentes"><span class="checkmark"></span> Docentes / Educadores</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Empresas"><span class="checkmark"></span> Empresas / Equipos</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Instituciones educativas"><span class="checkmark"></span> Instituciones educativas</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Público general"><span class="checkmark"></span> Público general</label>
+          </div>
+          <input name="publico_objetivo_otro" placeholder="Otro (especificar)" class="w-full mt-4 px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+        </div>
+
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </span>
+            Observaciones Adicionales
+          </h3>
+          <textarea id="observaciones" name="observaciones" rows="4" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus resize-none" placeholder="Agrega cualquier observación o comentario adicional..."></textarea>
+        </div>
+
+        <div class="text-center">
+          <button type="submit" class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-blue-200">
+            <span class="relative z-10 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              Crear Proyecto
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalTutorial" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+      <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl p-6 relative animate-fade-in">
+          <div class="flex justify-between items-center mb-4 border-b pb-3">
+              <h3 class="text-xl font-bold text-gray-800">Guía para Crear un Proyecto</h3>
+              <button id="btnCloseTutorial" class="text-gray-400 hover:text-gray-700 transition-colors">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+          </div>
+          <div class="space-y-4 text-gray-700 max-h-[70vh] overflow-y-auto pr-2">
+              <h4 class="font-semibold text-blue-600">1. Información Básica</h4>
+              <p>Aquí defines los datos principales del proyecto. Selecciona un cliente de la lista y el ID y Código se generarán solos. Elige las fechas y el tipo de proyecto que vas a realizar.</p>
+              
+              <h4 class="font-semibold text-green-600">2. Lenguaje e Inclusión</h4>
+              <p>Configura si el proyecto usará lenguaje inclusivo y define el idioma principal. Activa la opción de "Inclusión Digital" si el proyecto requiere características de accesibilidad.</p>
+              
+              <h4 class="font-semibold text-purple-600">3. Diseño Visual y Tipografía</h4>
+              <p>Define las fuentes y tamaños para los textos del proyecto. Puedes elegir de la lista o seleccionar "Otro" para escribir una fuente personalizada.</p>
+              
+              <h4 class="font-semibold text-orange-600">4. Tiempo de Estudio</h4>
+              <p>Especifica la cantidad de horas estimadas para el curso, el aprendizaje autónomo y las actividades. Esto es útil para la planificación y los créditos académicos.</p>
+              
+              <h4 class="font-semibold text-red-600">5. Derechos y Entregables</h4>
+              <p>Marca las casillas correspondientes a los acuerdos legales y los materiales que se entregarán al cliente al finalizar el proyecto (código fuente, diseños, etc.).</p>
+              
+              <h4 class="font-semibold text-indigo-600">6. Público Objetivo</h4>
+              <p>Selecciona a quién va dirigido el contenido del proyecto. Puedes marcar varias opciones y especificar una audiencia diferente en el campo de texto.</p>
+              
+              <p class="pt-4 border-t mt-4">Una vez completes todos los campos requeridos, haz clic en el botón <strong>"Crear Proyecto"</strong> para guardarlo.</p>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+
+    function generarCodigoReferencia(length = 12) {
+      const array = new Uint8Array(length / 2);
+      crypto.getRandomValues(array);
+      return Array.from(array, b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function getToken() { return localStorage.getItem('token'); }
+
+    // ===== FUNCIÓN CORREGIDA Y OPTIMIZADA =====
+    async function loadClients(clientIdToSelect = null) {
+        const token = getToken();
+        if (!token) { 
+            alert('Login requerido'); 
+            window.location.href = '/'; 
+            return; 
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/clients/`, { headers: { Authorization: 'Bearer ' + token } });
+            if (!response.ok) { 
+                alert('Error al cargar clientes'); 
+                return; 
+            }
+            const clientes = await response.json(); 
+
+            const sel = document.getElementById('clienteSelect');
+            sel.innerHTML = '<option value="">Seleccione un cliente…</option>';
+            
+            clientes
+                .filter(c => c.estado)
+                .forEach(c => {
+                    sel.innerHTML += `<option value="${c.uid}">${c.nombre} (${c.email})</option>`;
+                });
+
+            sel.addEventListener('change', e => {
+                document.getElementById('clientId').value = e.target.value;
+                document.getElementById('codigoReferencia').value = generarCodigoReferencia(12);
+            });
+
+            // Lógica de pre-selección movida aquí para asegurar que se ejecuta después de poblar el dropdown
+            if (clientIdToSelect && sel.querySelector(`option[value="${clientIdToSelect}"]`)) {
+                sel.value = clientIdToSelect;
+                sel.dispatchEvent(new Event('change')); // Dispara el evento para llenar los otros campos
+            }
+
+        } catch (error) {
+            console.error("Error al cargar la lista de clientes:", error);
+            alert('Ocurrió un error al cargar la lista de clientes.');
+        }
+    }
+
+
+    async function loadFaseInicio() {
+      const token = getToken();
+      if (!token) return;
+      try {
+        const r = await fetch(`${API_URL}/fases`, { headers: { Authorization: 'Bearer ' + token } });
+        if (!r.ok) return;
+        const fases = await r.json();
+        const inicio = fases.find(f => f.nombre.toLowerCase().includes("fase de inicio"));
+        if (inicio) {
+          const sel = document.getElementById('faseSelect');
+          sel.innerHTML = `<option value="${inicio.id}" selected>${inicio.nombre}</option>`;
+        }
+      } catch (e) { console.error(e); }
+    }
+    
+    function toggleOtro(selectId, inputId) {
+      const sel = document.getElementById(selectId);
+      const inp = document.getElementById(inputId);
+      const apply = () => {
+        if (sel.value === 'Otro') {
+          inp.classList.remove('hidden'); inp.disabled = false; inp.required = true;
+        } else {
+          inp.classList.add('hidden'); inp.disabled = true; inp.required = false; inp.value = '';
+        }
+      };
+      sel.addEventListener('change', apply);
+      apply();
+    }
+
+    function selectedOrOtro(selectId, inputId) {
+      const sel = document.getElementById(selectId);
+      const inp = document.getElementById(inputId);
+      return sel.value === 'Otro' ? (inp.value || null) : (sel.value || null);
+    }
+
+    const tipoLenguajeSelect = document.getElementById('tipoLenguajeSelect');
+    const otroLenguajeInput = document.getElementById('otroLenguajeInput');
+    document.getElementById('incluyenteSi').addEventListener('change', () => { tipoLenguajeSelect.disabled = false; });
+    document.getElementById('incluyenteNo').addEventListener('change', () => { tipoLenguajeSelect.disabled = true; tipoLenguajeSelect.value = ""; otroLenguajeInput.disabled = true; otroLenguajeInput.value = ""; });
+    tipoLenguajeSelect.addEventListener('change', () => {
+      if (tipoLenguajeSelect.value === "Otro") { otroLenguajeInput.disabled = false; }
+      else { otroLenguajeInput.disabled = true; otroLenguajeInput.value = ""; }
+    });
+
+    const radioInclusionSi = document.getElementById('inclusionSi');
+    const radioInclusionNo = document.getElementById('inclusionNo');
+    const checkboxesInclusion = document.querySelectorAll('input[type="checkbox"][name^="inclusion_digital_"]');
+    const inputInclusionOtro = document.querySelector('input[name="inclusion_digital_otro"]');
+    function setInclusionEnabled(st) {
+      checkboxesInclusion.forEach(ch => { ch.disabled = !st; if (!st) ch.checked = false; });
+      inputInclusionOtro.disabled = !st; if (!st) inputInclusionOtro.value = '';
+    }
+    radioInclusionSi.addEventListener('change', () => setInclusionEnabled(true));
+    radioInclusionNo.addEventListener('change', () => setInclusionEnabled(false));
+    
+    const tipoProyectoSelect = document.getElementById('tipoProyecto');
+    const divTipoPersonalizado = document.getElementById('divTipoProyectoPersonalizado');
+    const inputTipoPersonalizado = document.getElementById('tipoProyectoPersonalizado');
+    tipoProyectoSelect.addEventListener('change', () => {
+      if (tipoProyectoSelect.value === 'Otro') { divTipoPersonalizado.style.display = 'block'; inputTipoPersonalizado.required = true; }
+      else { divTipoPersonalizado.style.display = 'none'; inputTipoPersonalizado.required = false; inputTipoPersonalizado.value = ''; }
+    });
+
+    toggleOtro('tituloFuente', 'tituloFuenteOtro');
+    toggleOtro('tituloTamano', 'tituloTamanoOtro');
+    toggleOtro('subtituloFuente', 'subtituloFuenteOtro');
+    toggleOtro('subtituloTamano', 'subtituloTamanoOtro');
+    toggleOtro('parrafoFuente', 'parrafoFuenteOtro');
+    toggleOtro('parrafoTamano', 'parrafoTamanoOtro');
+
+    document.getElementById('formProyecto').onsubmit = async e => {
+      e.preventDefault();
+      const token = getToken(); if (!token) { alert('Login requerido'); return; }
+      const f = e.target;
+
+      const publico = Array.from(f.querySelectorAll('input[name="publico_objetivo"]:checked')).map(c => c.value);
+      const data = {
+        name: f.name.value,
+        client_id: f.client_id.value,
+        codigo_referencia: f.codigo_referencia.value,
+        start_date: f.start_date.value,
+        end_date: f.end_date.value || null,
+        tipo_proyecto: f.tipo_proyecto.value,
+        tipo_proyecto_personalizado: f.tipo_proyecto.value === 'Otro' ? (f.tipo_proyecto_personalizado.value || null) : null,
+        estado: f.estado.value,
+        description: f.description.value || null,
+        fase_id: document.getElementById('faseSelect').value,
+        etapa: "Etapa Contractual",
+        lenguaje_incluyente: f.lenguaje_incluyente.value === 'true',
+        lenguaje_inclusivo_tipo: f.lenguaje_incluyente.value === 'true' ? (f.lenguaje_inclusivo_tipo.value || null) : null,
+        lenguaje_inclusivo_otro: (f.lenguaje_incluyente.value === 'true' && f.lenguaje_inclusivo_tipo.value === 'Otro') ? (f.lenguaje_inclusivo_otro.value || null) : null,
+        inclusion_digital: f.inclusion_digital.value === 'true',
+        inclusion_digital_web: f.inclusion_digital_web?.checked || false,
+        inclusion_digital_asistiva: f.inclusion_digital_asistiva?.checked || false,
+        inclusion_digital_universal: f.inclusion_digital_universal?.checked || false,
+        inclusion_digital_educativa: f.inclusion_digital_educativa?.checked || false,
+        inclusion_digital_otro: f.inclusion_digital_otro.value || null,
+        idioma: f.idioma.value,
+        idioma_otro: f.idioma_otro.value || null,
+        tipografia_titulo_fuente: selectedOrOtro('tituloFuente', 'tituloFuenteOtro'),
+        tipografia_titulo_tamano: selectedOrOtro('tituloTamano', 'tituloTamanoOtro'),
+        tipografia_titulo_negrita: f.tipografia_titulo_negrita?.checked || false,
+        tipografia_titulo_cursiva: f.tipografia_titulo_cursiva?.checked || false,
+        tipografia_subtitulo_fuente: selectedOrOtro('subtituloFuente', 'subtituloFuenteOtro'),
+        tipografia_subtitulo_tamano: selectedOrOtro('subtituloTamano', 'subtituloTamanoOtro'),
+        tipografia_subtitulo_negrita: f.tipografia_subtitulo_negrita?.checked || false,
+        tipografia_subtitulo_cursiva: f.tipografia_subtitulo_cursiva?.checked || false,
+        tipografia_parrafo_fuente: selectedOrOtro('parrafoFuente', 'parrafoFuenteOtro'),
+        tipografia_parrafo_tamano: selectedOrOtro('parrafoTamano', 'parrafoTamanoOtro'),
+        tipografia_parrafo_negrita: f.tipografia_parrafo_negrita?.checked || false,
+        tipografia_parrafo_cursiva: f.tipografia_parrafo_cursiva?.checked || false,
+        horas_curso: f.horas_curso.value ? parseFloat(f.horas_curso.value) : null,
+        horas_aprendizaje_autonomo_virtual: f.horas_aprendizaje_autonomo_virtual.value ? parseFloat(f.horas_aprendizaje_autonomo_virtual.value) : null,
+        horas_actividades_aprendizaje: f.horas_actividades_aprendizaje.value ? parseFloat(f.horas_actividades_aprendizaje.value) : null,
+        cesion_derechos: f.cesion_derechos.value === 'true',
+        derechos_patrimoniales_autor: f.derechos_patrimoniales_autor.value === 'true',
+        acuerdo_confidencialidad: f.acuerdo_confidencialidad.value === 'true',
+        entrega_fuentes: f.entrega_fuentes.value === 'true',
+        entrega_escrito_autor: f.entrega_escrito_autor.value === 'true',
+        entrega_diseno_instruccional: f.entrega_diseno_instruccional.value === 'true',
+        publico_objetivo: publico,
+        publico_objetivo_otro: f.publico_objetivo_otro.value || null,
+        observaciones: f.observaciones.value || null
+      };
+      try {
+        const res = await fetch(`${API_URL}/projects/`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) { const txt = await res.text(); alert('Error al crear proyecto:\n' + txt); return; }
+        window.location.href = "https://gestordecursos.pegui.edu.co/r/superadmin/projects";
+      } catch (err) { alert('Error en la solicitud: ' + err); }
+    };
+
+    // --- CARGA DE LA PÁGINA CORREGIDA ---
+    window.addEventListener('load', async () => {
+      // Primero, obtenemos el ID del cliente de la URL
+      const params = new URLSearchParams(window.location.search);
+      const clientIdFromUrl = params.get('clientId');
+      
+      // Luego, llamamos a las funciones de carga. A loadClients le pasamos el ID.
+      await loadClients(clientIdFromUrl);
+      await loadFaseInicio();
+      
+      // Activamos el resto de funcionalidades
+      setInclusionEnabled(radioInclusionSi.checked);
+
+      // Listeners para el modal del tutorial
+      const btnTutorial = document.getElementById('btnTutorial');
+      const modalTutorial = document.getElementById('modalTutorial');
+      const btnCloseTutorial = document.getElementById('btnCloseTutorial');
+      
+      btnTutorial.addEventListener('click', () => modalTutorial.classList.remove('hidden'));
+      btnCloseTutorial.addEventListener('click', () => modalTutorial.classList.add('hidden'));
+      modalTutorial.addEventListener('click', (e) => {
+          if (e.target === modalTutorial) {
+              modalTutorial.classList.add('hidden');
+          }
+      });
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

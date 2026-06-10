@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mi Perfil de Cliente</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.05); }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-4xl glass-card p-8 rounded-2xl shadow-xl">
+
+    <h2 class="text-3xl font-bold mb-6 text-center text-slate-700">Mi Perfil de Cliente</h2>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <div class="lg:col-span-2 space-y-6">
+        
+        <form id="profileForm" class="space-y-5 p-6 border rounded-xl bg-white/50">
+          <div class="flex items-center gap-4">
+            <div id="preview" class="hidden">
+              <img id="foto_actual" src="" alt="Foto de perfil" class="w-24 h-24 object-cover rounded-full border-4 border-blue-400 shadow-lg" />
+            </div>
+            <div>
+                <h3 id="display_nombre" class="text-2xl font-bold text-slate-800">Cargando...</h3>
+                <p id="display_email" class="text-sm text-slate-500">Cargando...</p>
+            </div>
+          </div>
+          
+          <input type="hidden" id="user_id" name="user_id" />
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+            <div>
+              <label for="nombre_cliente" class="block font-medium mb-1 text-slate-600 text-sm">Nombre de Empresa</label>
+              <input type="text" id="nombre_cliente" name="nombre_cliente" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm" />
+            </div>
+            <div>
+              <label for="nit" class="block font-medium mb-1 text-slate-600 text-sm">NIT</label>
+              <input type="text" id="nit" name="nit" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="persona_contacto" class="block font-medium mb-1 text-slate-600 text-sm">Persona de Contacto</label>
+              <input type="text" id="persona_contacto" name="persona_contacto" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm" />
+            </div>
+            <div>
+              <label for="cargo_contacto" class="block font-medium mb-1 text-slate-600 text-sm">Cargo del Contacto</label>
+              <input type="text" id="cargo_contacto" name="cargo_contacto" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm" />
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="whatsapp" class="block font-medium mb-1 text-slate-600 text-sm">WhatsApp</label>
+                <input type="tel" id="whatsapp" name="whatsapp" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm" />
+            </div>
+            <div>
+                <label for="ciudad" class="block font-medium mb-1 text-slate-600 text-sm">Ciudad</label>
+                <input type="text" id="ciudad" name="ciudad" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm" />
+            </div>
+          </div>
+
+          <div>
+            <label for="foto" class="block font-medium mb-1 text-slate-600 text-sm">Actualizar Foto de Perfil</label>
+            <input type="file" id="foto" name="foto" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+          </div>
+
+          <div class="pt-4 border-t">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition-all">
+              Guardar Cambios de Perfil
+            </button>
+          </div>
+        </form>
+
+      </div>
+
+      <div class="space-y-6">
+        <div class="p-6 border rounded-xl bg-white/50">
+          <h3 class="text-xl font-bold text-slate-800 mb-4">Mis Documentos</h3>
+          <ul id="documentosLista" class="space-y-2">
+            <li class="text-sm text-slate-500">Cargando documentos...</li>
+          </ul>
+        </div>
+        
+        <form id="documentForm" class="p-6 border rounded-xl bg-white/50 space-y-4">
+            <h3 class="text-xl font-bold text-slate-800">Subir Nuevo Documento</h3>
+            <div>
+                <label for="tipo_documento_upload" class="block font-medium mb-1 text-slate-600 text-sm">Tipo de Documento</label>
+                <select id="tipo_documento_upload" name="tipo_documento" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm" required>
+                    <option value="">Seleccionar tipo...</option>
+                    <option value="PROPUESTA COMERCIAL">Propuesta Comercial</option>
+                    <option value="CONTRATO FIRMADO">Contrato Firmado</option>
+                    <option value="CÁMARA DE COMERCIO">Cámara de Comercio</option>
+                    <option value="RUT">RUT</option>
+                    <option value="OTRO">Otro</option>
+                </select>
+            </div>
+            <div>
+                <label for="archivo_upload" class="block font-medium mb-1 text-slate-600 text-sm">Archivo</label>
+                <input type="file" id="archivo_upload" name="file" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" required/>
+            </div>
+            <div>
+                <button type="submit" class="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 shadow-md transition-all">
+                  Subir Documento
+                </button>
+            </div>
+        </form>
+      </div>
+    </div>
+    
+    <div id="respuesta" class="mt-6 text-center text-sm"></div>
+  </div>
+
+<script>
+const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+const API_USERS = `${API_BASE}/clients`;
+const API_PROFILES = `${API_BASE}/clients/profiles/client-profiles/`;
+const API_DOCUMENTS = `${API_BASE}/clients/documents/client-documents/`;
+
+const $ = (id) => document.getElementById(id);
+
+// Esta función ahora obtiene el EMAIL, ya que es lo que está en el token
+function getEmailFromToken() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.sub;
+  } catch (e) {
+    console.error("Token inválido:", e);
+    return null;
+  }
+}
+
+// NUEVA FUNCIÓN: Busca al cliente por email y devuelve su UID
+async function getUserIdByEmail(email) {
+    if (!email) return null;
+    try {
+        const url = new URL(API_USERS);
+        url.searchParams.set("email", email);
+        const res = await fetch(url.href);
+        if (!res.ok) return null;
+        const data = await res.json();
+        // El endpoint de lista devuelve un array, tomamos el primer resultado
+        if (data.length > 0) {
+            return data[0].uid;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error buscando UID por email:", error);
+        return null;
+    }
+}
+
+
+// Función para cargar los datos del perfil del cliente
+async function cargarPerfil(userId) {
+  try {
+    const [accountRes, profileRes] = await Promise.all([
+        fetch(`${API_USERS}/${userId}`),
+        fetch(`${API_PROFILES}${userId}`)
+    ]);
+
+    if (accountRes.ok) {
+        const data = await accountRes.json();
+        $('display_nombre').textContent = data.nombre || 'Nombre no disponible';
+        $('display_email').textContent = data.email || 'Email no disponible';
+    } else {
+        throw new Error("No se pudo cargar la información de la cuenta.");
+    }
+    
+    if (profileRes.ok) {
+      const data = await profileRes.json();
+      $('nombre_cliente').value = data.nombre_cliente || '';
+      $('nit').value = data.nit || '';
+      $('persona_contacto').value = data.persona_contacto || '';
+      $('cargo_contacto').value = data.cargo_contacto || '';
+      $('whatsapp').value = data.whatsapp || '';
+      $('ciudad').value = data.ciudad || '';
+      if (data.foto_url) {
+        $('foto_actual').src = data.foto_url;
+        $('preview').classList.remove('hidden');
+      }
+      $('profileForm').setAttribute('data-existe', 'true');
+    } else if (profileRes.status === 404) {
+      $('profileForm').setAttribute('data-existe', 'false');
+    } else {
+        throw new Error("No se pudo cargar el perfil del cliente.");
+    }
+  } catch (error) {
+    console.error("Error cargando perfil:", error);
+    $('respuesta').innerHTML = `<span class="text-red-600">⚠️ ${error.message}</span>`;
+  }
+}
+
+// Función para cargar la lista de documentos
+async function cargarDocumentos(userId) {
+    try {
+        const res = await fetch(`${API_DOCUMENTS}${userId}`);
+        const lista = $('documentosLista');
+        if (!res.ok) {
+            lista.innerHTML = '<li class="text-sm text-red-500">No se pudieron cargar los documentos.</li>';
+            return;
+        }
+        const documentos = await res.json();
+        if (documentos.length === 0) {
+            lista.innerHTML = '<li class="text-sm text-slate-500">Aún no tienes documentos subidos.</li>';
+            return;
+        }
+        
+        lista.innerHTML = documentos.map(doc => {
+            const fullUrl = doc.archivo_url || '#';
+            return `
+                <li class="flex items-center justify-between py-2 border-b last:border-0">
+                    <span class="text-sm text-slate-700">${doc.tipo_documento}</span>
+                    <a href="${fullUrl}" target="_blank" class="text-sm font-medium text-blue-600 hover:underline">Ver</a>
+                </li>`;
+        }).join('');
+
+    } catch (error) {
+        console.error("Error cargando documentos:", error);
+        $('documentosLista').innerHTML = '<li class="text-sm text-red-500">Error de red al cargar documentos.</li>';
+    }
+}
+
+// LÓGICA DE CARGA DE PÁGINA CORREGIDA
+window.addEventListener("DOMContentLoaded", async () => {
+  const email = getEmailFromToken();
+  if (!email) {
+      $('respuesta').innerHTML = '<span class="text-red-600">❌ Sesión no válida. Por favor, inicia sesión de nuevo.</span>';
+      return;
+  }
+
+  const userId = await getUserIdByEmail(email);
+  
+  if (userId) {
+    $('user_id').value = userId;
+    await Promise.all([
+        cargarPerfil(userId),
+        cargarDocumentos(userId)
+    ]);
+  } else {
+    $('respuesta').innerHTML = '<span class="text-red-600">❌ No se pudo encontrar el perfil asociado a tu cuenta.</span>';
+  }
+});
+
+// Guardar cambios en el perfil
+$('profileForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const form = e.target;
+  const formData = new FormData(form);
+  const userId = form.user_id.value;
+  const existe = form.getAttribute('data-existe') === 'true';
+
+  const url = existe ? `${API_PROFILES}${userId}` : API_PROFILES;
+  const method = existe ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(url, { method, body: formData });
+    const data = await res.json();
+    if (res.ok) {
+      $('respuesta').innerHTML = '<span class="text-green-600">✅ Perfil guardado correctamente.</span>';
+      await cargarPerfil(userId); // Recargar perfil para mostrar foto nueva
+    } else {
+      $('respuesta').innerHTML = `<span class="text-red-600">❌ Error: ${data.detail || 'Fallo en la solicitud'}</span>`;
+    }
+  } catch (error) {
+    $('respuesta').innerHTML = `<span class="text-red-600">⚠️ Error de red: ${error.message}</span>`;
+  }
+});
+
+// Subir un nuevo documento
+$('documentForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const userId = $('user_id').value;
+    
+    if (!userId) {
+        $('respuesta').innerHTML = '<span class="text-red-600">❌ No se ha podido identificar al usuario.</span>';
+        return;
+    }
+
+    formData.append('user_id', userId);
+
+    try {
+        const res = await fetch(API_DOCUMENTS, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+            $('respuesta').innerHTML = '<span class="text-green-600">✅ Documento subido con éxito.</span>';
+            form.reset();
+            await cargarDocumentos(userId); // Recargar la lista de documentos
+        } else {
+            $('respuesta').innerHTML = `<span class="text-red-600">❌ Error al subir: ${data.detail || 'Fallo en la solicitud'}</span>`;
+        }
+    } catch (error) {
+        $('respuesta').innerHTML = `<span class="text-red-600">⚠️ Error de red: ${error.message}</span>`;
+    }
+});
+
+</script>
+
+</body>
+</html>

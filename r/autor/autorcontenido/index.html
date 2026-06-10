@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Formularios | Listar y Editar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: "Inter", sans-serif; background:#f1f5f9; }
+    .card { background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;box-shadow:0 1px 2px rgb(0 0 0 / .04); }
+    .inp{width:100%;background:#f1f5f9;border:2px solid transparent;border-radius:.5rem;padding:.5rem 1rem;color:#0f172a;transition:border-color .15s,background-color .15s}
+    .inp:focus{outline:none;background:#fff;border-color:#14b8a6}
+    .lab{display:block;font-size:.875rem;font-weight:700;color:#475569;margin-bottom:.5rem}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.5rem 1rem;border-radius:.5rem;font-size:.875rem;font-weight:600;transition:all .15s}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn-p{background:#14b8a6;color:#fff}.btn-p:hover{background:#0d9488}
+    .btn-s{background:#e2e8f0;color:#0f172a}.btn-s:hover{background:#cbd5e1}
+    .btn-d{background:#e11d48;color:#fff}.btn-d:hover{background:#be123c}
+    .pill{background:#ccfbf1;color:#115e59;font-weight:600;border-radius:9999px;padding:.25rem .75rem;font-size:.75rem;margin-right:.5rem;margin-bottom:.5rem;display:inline-flex;align-items:center;gap:.5rem}
+    .del-pill{cursor:pointer;font-weight:700;color:#14b8a6}.del-pill:hover{color:#0d9488}
+    #notification-container{position:fixed;bottom:1.25rem;right:1.25rem;z-index:50;width:100%;max-width:24rem}
+    .notification{padding:1rem;border-radius:.75rem;box-shadow:0 10px 30px rgb(0 0 0 / .25);color:#fff;font-weight:700;display:flex;align-items:center;gap:.75rem;backdrop-filter: blur(6px)}
+    .modal{position:fixed;inset:0;z-index:50;display:none}
+    .modal.show{display:flex}
+    .th-sort{cursor:pointer}
+  </style>
+</head>
+<body>
+  <div id="notification-container"></div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-slate-200">
+    <div class="mx-auto max-w-6xl px-4 py-4">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div class="flex-1 min-w-0">
+          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">Formularios de Autor de Contenidos</h1>
+          <p class="text-slate-600 mt-1">Listado con edición rápida.</p>
+        </div>
+        <div class="w-full md:w-[28rem]">
+          <label for="projectSelect" class="lab !mb-1">Proyecto activo</label>
+          <select id="projectSelect" class="inp">
+            <option value="">Cargando proyectos...</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-6 space-y-6">
+    <!-- Toolbar -->
+    <section class="card p-4 md:p-5">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <input id="quickSearch" class="inp md:w-80" placeholder="🔎 Buscar por curso / módulo / autor...">
+          <button id="btnRefresh" class="btn btn-s">Refrescar</button>
+        </div>
+        <div class="text-sm text-slate-600">Total: <span id="totalRows">0</span></div>
+      </div>
+    </section>
+
+    <!-- Tabla -->
+    <section class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100">
+            <tr class="text-left text-slate-600 font-semibold">
+              <th class="p-3 th-sort" data-sort="id">ID</th>
+              <th class="p-3 th-sort" data-sort="course_name">Curso</th>
+              <th class="p-3 th-sort" data-sort="module_name">Módulo</th>
+              <th class="p-3 th-sort" data-sort="author_name">Autor</th>
+              <th class="p-3 th-sort" data-sort="updated_at">Última Edición</th>
+              <th class="p-3 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tblBody" class="divide-y divide-slate-200"></tbody>
+        </table>
+      </div>
+      <div class="flex items-center justify-between p-4 bg-slate-50 border-t">
+        <div id="pagerInfo" class="text-sm text-slate-600"></div>
+        <div class="flex gap-2">
+          <button id="prevPage" class="btn btn-s !p-2" title="Anterior">
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+          </button>
+          <button id="nextPage" class="btn btn-s !p-2" title="Siguiente">
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL EDICIÓN (con scroll interno) -->
+  <div id="editModal" class="modal items-center justify-center p-4">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" data-close="true"></div>
+
+    <!-- Box flexible: header/scroll/footer -->
+    <div id="editBox" class="relative w-full max-w-5xl card flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between p-4 border-b shrink-0">
+        <h3 class="font-bold text-lg">Editar formulario <span id="editIdLabel" class="text-slate-500"></span></h3>
+        <div class="flex gap-2">
+          <button id="btnPreview" class="btn btn-s">Previsualizar JSON</button>
+          <button id="btnClose" class="btn btn-s" data-close="true">✕</button>
+        </div>
+      </div>
+
+      <div id="editScroll" class="flex-1 overflow-y-auto p-4 min-h-0" style="-webkit-overflow-scrolling:touch">
+        <form id="formEdit" class="space-y-8">
+          <!-- General -->
+          <section class="card p-4">
+            <h4 class="text-lg font-semibold text-slate-800">Información General</h4>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="lab" for="e_course_name">Nombre del curso</label>
+                <input id="e_course_name" class="inp" required>
+              </div>
+              <div>
+                <label class="lab" for="e_module_name">Nombre del módulo</label>
+                <input id="e_module_name" class="inp">
+              </div>
+              <div class="md:col-span-2">
+                <label class="lab" for="e_author_name">Autor (usuarios)</label>
+                <select id="e_author_name" class="inp"><option value="">Cargando usuarios...</option></select>
+              </div>
+              <div class="md:col-span-2">
+                <label class="lab" for="e_publico_objetivo">Público objetivo</label>
+                <textarea id="e_publico_objetivo" class="inp" rows="2"></textarea>
+              </div>
+              <div class="grid grid-cols-3 gap-2 md:col-span-2">
+                <div>
+                  <label class="lab !text-xs" for="e_horas_curso">Curso (h)</label>
+                  <input type="number" id="e_horas_curso" class="inp" min="0">
+                </div>
+                <div>
+                  <label class="lab !text-xs" for="e_horas_estudio_autonomo">Autónomas (h)</label>
+                  <input type="number" id="e_horas_estudio_autonomo" class="inp" min="0">
+                </div>
+                <div>
+                  <label class="lab !text-xs" for="e_horas_estudio_asincronico">Asincrónicas (h)</label>
+                  <input type="number" id="e_horas_estudio_asincronico" class="inp" min="0">
+                </div>
+              </div>
+              <div class="md:col-span-2 flex flex-wrap gap-6">
+                <label class="inline-flex items-center gap-2"><input type="checkbox" id="e_derechos_patrimoniales"> Patrimoniales</label>
+                <label class="inline-flex items-center gap-2"><input type="checkbox" id="e_derechos_intelectuales"> Intelectuales</label>
+              </div>
+            </div>
+          </section>
+
+          <!-- Índice & Unidades -->
+          <section class="card p-4">
+            <h4 class="text-lg font-semibold text-slate-800">Índice y Estructura</h4>
+            <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div><label class="lab" for="e_idx_horas_sinc">Horas síncronas</label><input id="e_idx_horas_sinc" type="number" min="0" class="inp"></div>
+              <div><label class="lab" for="e_idx_auto">Autoformación (h)</label><input id="e_idx_auto" type="number" min="0" class="inp"></div>
+              <div><label class="lab" for="e_idx_paginas">Páginas</label><input id="e_idx_paginas" type="number" min="0" class="inp"></div>
+              <div><label class="lab" for="e_idx_preliminar">Índice preliminar</label><input id="e_idx_preliminar" class="inp"></div>
+            </div>
+            <div class="mt-4">
+              <div class="flex items-center justify-between">
+                <h5 class="font-semibold text-slate-700">Unidades</h5>
+                <button type="button" id="e_addUnidad" class="btn btn-s">+ Añadir unidad</button>
+              </div>
+              <div id="e_unidadesWrap" class="space-y-3 mt-3"></div>
+            </div>
+          </section>
+
+          <!-- Objetivos -->
+          <section class="card p-4">
+            <h4 class="text-lg font-semibold text-slate-800">Objetivos y Resultados</h4>
+            <div class="mt-4 space-y-4">
+              <div><label class="lab" for="e_obj_gral_curso">Objetivo general del curso</label><textarea id="e_obj_gral_curso" class="inp" rows="2"></textarea></div>
+              <div><label class="lab" for="e_obj_gral_mod">Objetivo general del módulo</label><textarea id="e_obj_gral_mod" class="inp" rows="2"></textarea></div>
+              <div>
+                <label class="lab">Objetivos específicos</label>
+                <div class="flex gap-2">
+                  <input id="e_obj_esp_in" class="inp" placeholder="Escribe y presiona +">
+                  <button type="button" class="btn btn-s e-add-pill" data-input="e_obj_esp_in" data-list="e_obj_esp_list">+</button>
+                </div>
+                <div id="e_obj_esp_list" class="mt-2"></div>
+              </div>
+              <div>
+                <label class="lab">Objetivos por unidad</label>
+                <div class="flex gap-2">
+                  <input id="e_obj_unidad_in" class="inp" placeholder="Escribe y presiona +">
+                  <button type="button" class="btn btn-s e-add-pill" data-input="e_obj_unidad_in" data-list="e_obj_unidad_list">+</button>
+                </div>
+                <div id="e_obj_unidad_list" class="mt-2"></div>
+              </div>
+              <div>
+                <label class="lab">Resultados de aprendizaje</label>
+                <div class="flex gap-2">
+                  <input id="e_res_aprend_in" class="inp" placeholder="Escribe y presiona +">
+                  <button type="button" class="btn btn-s e-add-pill" data-input="e_res_aprend_in" data-list="e_res_aprend_list">+</button>
+                </div>
+                <div id="e_res_aprend_list" class="mt-2"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Contenido -->
+          <section class="card p-4">
+            <h4 class="text-lg font-semibold text-slate-800">Contenido Escrito</h4>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label class="lab" for="e_cont_presentacion">Presentación</label><textarea id="e_cont_presentacion" class="inp" rows="3"></textarea></div>
+              <div><label class="lab" for="e_cont_introduccion">Introducción</label><textarea id="e_cont_introduccion" class="inp" rows="3"></textarea></div>
+              <div class="md:col-span-2"><label class="lab" for="e_cont_desarrollo">Desarrollo</label><textarea id="e_cont_desarrollo" class="inp" rows="5"></textarea></div>
+
+              <div>
+                <label class="lab">Glosario preliminar</label>
+                <div class="flex gap-2">
+                  <input id="e_glosario_term" class="inp" placeholder="Término">
+                  <input id="e_glosario_def" class="inp" placeholder="Definición">
+                  <button type="button" id="e_addGlosario" class="btn btn-s">+</button>
+                </div>
+                <div id="e_glosario_list" class="mt-2"></div>
+              </div>
+
+              <div>
+                <label class="lab">Preguntas de reflexión</label>
+                <div class="flex gap-2">
+                  <input id="e_preg_reflex_in" class="inp" placeholder="Escribe y presiona +">
+                  <button type="button" class="btn btn-s e-add-pill" data-input="e_preg_reflex_in" data-list="e_preg_reflex_list">+</button>
+                </div>
+                <div id="e_preg_reflex_list" class="mt-2"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Evaluación & Actividades -->
+          <section class="card p-4">
+            <h4 class="text-lg font-semibold text-slate-800">Actividades y Evaluación</h4>
+            <div class="mt-4 space-y-4">
+              <div><label class="lab" for="e_act_diag">Actividad diagnóstica</label><textarea id="e_act_diag" class="inp" rows="2"></textarea></div>
+              <div>
+                <div class="flex items-center justify-between">
+                  <h5 class="font-semibold text-slate-700">Actividades</h5>
+                  <button id="e_addActividad" type="button" class="btn btn-s">+ Añadir</button>
+                </div>
+                <div id="e_actividadesWrap" class="space-y-3 mt-3"></div>
+              </div>
+
+              <div>
+                <h5 class="font-semibold text-slate-700">Parámetros de evaluación</h5>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                  <div><label class="lab" for="e_eval_nota">Nota mínima</label><input id="e_eval_nota" type="number" step="0.1" class="inp" min="0" max="10"></div>
+                  <div><label class="lab" for="e_eval_intentos">Intentos</label><input id="e_eval_intentos" type="number" class="inp" min="1"></div>
+                  <div><label class="lab" for="e_eval_tiempo">Tiempo (min)</label><input id="e_eval_tiempo" type="number" class="inp" min="0"></div>
+                  <div><label class="lab" for="e_eval_retro">Retroalimentación</label><input id="e_eval_retro" class="inp"></div>
+                </div>
+              </div>
+
+              <div>
+                <label class="lab">Tipos de pregunta</label>
+                <div id="e_tqp_group" class="flex flex-wrap gap-x-4 gap-y-2">
+                  <label><input type="checkbox" class="tqp" value="seleccion_multiple"> Selección múltiple</label>
+                  <label><input type="checkbox" class="tqp" value="falso_verdadero"> Falso/Verdadero</label>
+                  <label><input type="checkbox" class="tqp" value="completar"> Completar</label>
+                  <label><input type="checkbox" class="tqp" value="relacionar"> Relacionar</label>
+                  <label><input type="checkbox" class="tqp" value="abierta"> Abierta</label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Accesibilidad / Referencias / Glosario Final -->
+          <section class="card p-4">
+            <h4 class="text-lg font-semibold text-slate-800">Accesibilidad, Referencias y Glosario Final</h4>
+            <div class="mt-4 space-y-4">
+              <div>
+                <label class="lab">Opciones de Accesibilidad</label>
+                <div id="e_acc_group" class="flex flex-wrap gap-x-4 gap-y-2">
+                  <label><input type="checkbox" class="acc" value="subtitulos"> Subtítulos</label>
+                  <label><input type="checkbox" class="acc" value="teclado"> Navegación por teclado</label>
+                  <label><input type="checkbox" class="acc" value="voz_off"> Voz en off</label>
+                  <label><input type="checkbox" class="acc" value="transcripciones"> Transcripciones</label>
+                  <label><input type="checkbox" class="acc" value="texto_alt"> Texto alternativo</label>
+                  <label><input type="checkbox" class="acc" value="lenguaje_claro"> Lenguaje claro</label>
+                </div>
+              </div>
+              <div><label class="lab" for="e_referencias">Referencias y créditos</label><textarea id="e_referencias" class="inp" rows="3"></textarea></div>
+              <div>
+                <label class="lab">Glosario Final</label>
+                <div class="flex gap-2">
+                  <input id="e_gl_term" class="inp" placeholder="Término">
+                  <input id="e_gl_def" class="inp" placeholder="Definición">
+                  <button type="button" id="e_addGl" class="btn btn-s">+</button>
+                </div>
+                <div id="e_gl_list" class="mt-2"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-between">
+            <button id="btnDelete" type="button" class="btn btn-d">Eliminar</button>
+            <div class="flex gap-2">
+              <button id="btnSave" type="submit" class="btn btn-p">Guardar cambios</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t shrink-0">
+        <pre id="prePreview" class="text-xs p-2 rounded-md overflow-auto max-h-40 bg-white border"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <template id="unidad-template">
+    <div class="p-3 border rounded-lg bg-slate-50 space-y-2 dynamic-item">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-2">
+        <div class="md:col-span-4">
+          <label class="lab !text-xs">Nombre unidad</label>
+          <input class="inp !bg-white u-nombre">
+        </div>
+        <div>
+          <label class="lab !text-xs">Orden</label>
+          <input type="number" class="inp !bg-white u-orden" min="1">
+        </div>
+      </div>
+      <div>
+        <label class="lab !text-xs">Subtemas</label>
+        <div class="flex gap-2">
+          <input class="inp !bg-white u-sub-in" placeholder="Escribe y presiona +">
+          <button type="button" class="btn btn-s !px-3 !py-1 u-sub-add">+</button>
+        </div>
+        <div class="u-sub-list mt-2"></div>
+      </div>
+      <div class="text-right border-t pt-2 mt-2">
+        <button type="button" class="btn btn-d !text-xs !py-1 del-item">Eliminar Unidad</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="actividad-template">
+    <div class="p-3 border rounded-lg bg-slate-50 space-y-2 dynamic-item">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+        <input class="inp !bg-white a-titulo" placeholder="Título">
+        <input class="inp !bg-white a-tipo" placeholder="Tipo (foro, ensayo...)">
+        <input class="inp !bg-white a-peso" placeholder="Peso (%)" type="number" min="0" max="100">
+        <input class="inp !bg-white a-tiempo" placeholder="Tiempo (min)" type="number" min="0">
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <textarea class="inp !bg-white a-instrucciones" rows="2" placeholder="Instrucciones"></textarea>
+        <textarea class="inp !bg-white a-materiales" rows="2" placeholder="Materiales"></textarea>
+      </div>
+      <div class="text-right border-t pt-2 mt-2">
+        <button type="button" class="btn btn-d !text-xs !py-1 del-item">Eliminar Actividad</button>
+      </div>
+    </div>
+  </template>
+
+  <template id="pill-template">
+    <span class="pill"><span class="pill-text"></span><button type="button" class="del-pill" title="Eliminar">&times;</button></span>
+  </template>
+
+  <template id="glosario-pill-template">
+    <span class="pill"><span class="font-normal pill-text"></span><button type="button" class="del-pill" title="Eliminar">&times;</button></span>
+  </template>
+
+  <script>
+  const UI = {
+    notify(msg, type='info'){
+      const colors={info:'#0284c7',success:'#16a34a',error:'#e11d48'};
+      const n=document.createElement('div');
+      n.className='notification'; n.style.background=colors[type]||colors.info; n.innerHTML=`<span>${msg}</span>`;
+      document.getElementById('notification-container').appendChild(n);
+      setTimeout(()=>{n.style.transition='opacity .5s'; n.style.opacity='0'; setTimeout(()=>n.remove(),500)},4000);
+    }
+  };
+
+  const App = {
+    config:{ API_BASE:"https://gestordecursos.pegui.edu.co:8000", PAGE_SIZE:10 },
+    state:{
+      token:null,
+      currentProjectId:null,
+      users:[],
+      list:[],
+      page:1,
+      sort:{key:'id',dir:'asc'},
+      editingId:null
+    },
+
+    init(){
+      this.state.token = localStorage.getItem('tokend') || localStorage.getItem('token') || localStorage.getItem('access_token');
+      if(!this.state.token){
+        document.body.innerHTML = '<div class="h-screen w-full flex items-center justify-center bg-rose-50 text-rose-700"><h1>No se encontró "tokend" en localStorage.</h1></div>';
+        return;
+      }
+      this.$ = (s, r=document)=>r.querySelector(s);
+      this.$$ = (s, r=document)=>[...r.querySelectorAll(s)];
+
+      this.cache();
+      this.bind();
+      Promise.all([this.loadProjects(), this.loadUsers()]).then(()=>{
+        const urlProjectId = new URLSearchParams(location.search).get('project_id');
+        if (urlProjectId) this.els.projectSelect.value = urlProjectId;
+        this.els.projectSelect.dispatchEvent(new Event('change'));
+      });
+    },
+
+    cache(){
+      this.els = {
+        projectSelect: this.$('#projectSelect'),
+        quickSearch: this.$('#quickSearch'),
+        btnRefresh: this.$('#btnRefresh'),
+        tblBody: this.$('#tblBody'),
+        pagerInfo: this.$('#pagerInfo'),
+        prevPage: this.$('#prevPage'),
+        nextPage: this.$('#nextPage'),
+        totalRows: this.$('#totalRows'),
+        // Modal
+        modal: this.$('#editModal'),
+        prePreview: this.$('#prePreview'),
+        formEdit: this.$('#formEdit'),
+        editIdLabel: this.$('#editIdLabel'),
+        btnSave: this.$('#btnSave'),
+        btnDelete: this.$('#btnDelete'),
+        btnPreview: this.$('#btnPreview'),
+        // Edit fields
+        e_course_name: this.$('#e_course_name'),
+        e_module_name: this.$('#e_module_name'),
+        e_author_name: this.$('#e_author_name'),
+        e_publico_objetivo: this.$('#e_publico_objetivo'),
+        e_horas_curso: this.$('#e_horas_curso'),
+        e_horas_estudio_autonomo: this.$('#e_horas_estudio_autonomo'),
+        e_horas_estudio_asincronico: this.$('#e_horas_estudio_asincronico'),
+        e_derechos_patrimoniales: this.$('#e_derechos_patrimoniales'),
+        e_derechos_intelectuales: this.$('#e_derechos_intelectuales'),
+        e_idx_horas_sinc: this.$('#e_idx_horas_sinc'),
+        e_idx_auto: this.$('#e_idx_auto'),
+        e_idx_paginas: this.$('#e_idx_paginas'),
+        e_idx_preliminar: this.$('#e_idx_preliminar'),
+        e_unidadesWrap: this.$('#e_unidadesWrap'),
+        e_addUnidad: this.$('#e_addUnidad'),
+        e_obj_gral_curso: this.$('#e_obj_gral_curso'),
+        e_obj_gral_mod: this.$('#e_obj_gral_mod'),
+        e_obj_esp_list: this.$('#e_obj_esp_list'),
+        e_obj_unidad_list: this.$('#e_obj_unidad_list'),
+        e_res_aprend_list: this.$('#e_res_aprend_list'),
+        e_cont_presentacion: this.$('#e_cont_presentacion'),
+        e_cont_introduccion: this.$('#e_cont_introduccion'),
+        e_cont_desarrollo: this.$('#e_cont_desarrollo'),
+        e_glosario_list: this.$('#e_glosario_list'),
+        e_preg_reflex_list: this.$('#e_preg_reflex_list'),
+        e_actividadesWrap: this.$('#e_actividadesWrap'),
+        e_act_diag: this.$('#e_act_diag'),
+        e_eval_nota: this.$('#e_eval_nota'),
+        e_eval_intentos: this.$('#e_eval_intentos'),
+        e_eval_tiempo: this.$('#e_eval_tiempo'),
+        e_eval_retro: this.$('#e_eval_retro'),
+        e_tqp_group: this.$('#e_tqp_group'),
+        e_acc_group: this.$('#e_acc_group'),
+        e_referencias: this.$('#e_referencias'),
+        e_gl_list: this.$('#e_gl_list'),
+        // Templates
+        tplUnidad: this.$('#unidad-template'),
+        tplActividad: this.$('#actividad-template'),
+        tplPill: this.$('#pill-template'),
+        tplGlPill: this.$('#glosario-pill-template'),
+      };
+    },
+
+    bind(){
+      // Selección de proyecto
+      this.els.projectSelect.addEventListener('change', ()=>{
+        this.state.currentProjectId = this.els.projectSelect.value ? Number(this.els.projectSelect.value) : null;
+        this.state.page = 1;
+        this.loadList();
+      });
+
+      // Buscar / refrescar
+      this.els.quickSearch.addEventListener('input', ()=>{ this.state.page=1; this.renderTable(); });
+      this.els.btnRefresh.addEventListener('click', ()=>this.loadList());
+
+      // Paginación
+      this.els.prevPage.addEventListener('click', ()=>{ this.state.page--; this.renderTable(); });
+      this.els.nextPage.addEventListener('click', ()=>{ this.state.page++; this.renderTable(); });
+
+      // Orden
+      this.$$('.th-sort').forEach(th=>{
+        th.addEventListener('click', ()=>{
+          const k = th.dataset.sort;
+          const cur = this.state.sort;
+          this.state.sort = { key:k, dir: (cur.key===k && cur.dir==='asc') ? 'desc':'asc' };
+          this.renderTable();
+        });
+      });
+
+      // Acciones tabla
+      this.els.tblBody.addEventListener('click',(e)=>{
+        const b = e.target.closest('button'); if(!b) return;
+        const id = b.closest('tr')?.dataset.id;
+        if(b.classList.contains('act-edit')) this.openEdit(id);
+        if(b.classList.contains('act-del')) this.doDelete(id);
+        if(b.classList.contains('act-json')) this.previewFromRow(id);
+      });
+
+      // Modal open/close
+      document.getElementById('editModal').addEventListener('click', e=>{
+        if(e.target.dataset.close==='true') this.closeModal();
+      });
+      document.getElementById('btnClose').addEventListener('click', ()=>this.closeModal());
+
+      // Edit helpers
+      this.els.e_addUnidad.addEventListener('click', ()=>this.addUnidad());
+      document.getElementById('e_addActividad').addEventListener('click', ()=>this.addActividad());
+      document.getElementById('e_addGlosario').addEventListener('click', ()=>this.addGlosarioPill(this.$('#e_glosario_term'), this.$('#e_glosario_def'), this.els.e_glosario_list));
+      document.getElementById('e_addGl').addEventListener('click', ()=>this.addGlosarioPill(this.$('#e_gl_term'), this.$('#e_gl_def'), this.els.e_gl_list));
+
+      // Add-pill genérico
+      this.$$('.e-add-pill').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const input = document.getElementById(btn.dataset.input);
+          const list = document.getElementById(btn.dataset.list);
+          if(input.value.trim()){ this.createPill(list, input.value.trim()); input.value=''; }
+        });
+      });
+
+      // Borrar pill y dinámicos (delegación)
+      this.els.formEdit.addEventListener('click', e=>{
+        if(e.target.matches('.del-pill')) e.target.closest('.pill').remove();
+        if(e.target.matches('.del-item')) e.target.closest('.dynamic-item').remove();
+        if(e.target.matches('.u-sub-add')){
+          const wrap = e.target.closest('.dynamic-item');
+          const input = wrap.querySelector('.u-sub-in');
+          if(input.value.trim()){ this.createPill(wrap.querySelector('.u-sub-list'), input.value.trim()); input.value=''; }
+        }
+      });
+
+      // Guardar / Eliminar
+      this.els.formEdit.addEventListener('submit', (e)=>{
+        if(!this.els.formEdit.checkValidity()){
+          e.preventDefault(); this.els.formEdit.reportValidity(); UI.notify('Corrige los campos marcados.', 'error'); return;
+        }
+        e.preventDefault();
+        this.doSave();
+      });
+      this.els.btnDelete.addEventListener('click', ()=>this.doDelete(this.state.editingId));
+
+      // Preview JSON
+      this.els.btnPreview.addEventListener('click', ()=>{
+        const payload = this.collectPayload();
+        this.els.prePreview.textContent = JSON.stringify(payload, null, 2);
+      });
+    },
+
+    // -------- API ----------
+    async api(endpoint, method='GET', body=null, auth=true){
+      const headers={'Content-Type':'application/json','Accept':'application/json'};
+      if(auth && this.state.token) headers['Authorization'] = `Bearer ${this.state.token}`;
+      const opts = {method, headers};
+      if(body) opts.body = JSON.stringify(body);
+      let resp;
+      try{ resp = await fetch(`${this.config.API_BASE}${endpoint}`, opts); }
+      catch(e){ throw new Error(`Conexión fallida ${endpoint}: ${e.message}`); }
+      if(!resp.ok){
+        let msg = `Error ${resp.status} en ${endpoint}`;
+        try{ const j = await resp.json(); if(j?.detail) msg+=`: ${j.detail}`; else if(j?.message) msg+=`: ${j.message}`; }catch{}
+        throw new Error(msg);
+      }
+      return resp.status===204?null:await resp.json();
+    },
+
+    async loadProjects(){
+      try{
+        const raw = await this.api('/projects');
+        const arr = Array.isArray(raw)? raw : (raw?.items||raw?.data||[]);
+        const projects = arr.map(p=>({ id: p.id ?? p.project_id, name: p.name ?? p.project_name ?? p.title ?? p.nombre })).filter(p=>p.id!=null);
+        const sel = this.els.projectSelect;
+        sel.innerHTML = '<option value="">-- Selecciona un Proyecto --</option>';
+        projects.forEach(p=> sel.innerHTML += `<option value="${p.id}">[${p.id}] ${p.name||p.id}</option>`);
+      }catch(e){
+        this.els.projectSelect.innerHTML = '<option value="">Error al cargar</option>';
+        UI.notify(e.message,'error');
+      }
+    },
+
+    async loadUsers(){
+      try{
+        const raw = await this.api('/users'); // protegido
+        const arr = Array.isArray(raw)? raw : (raw?.items||raw?.data||[]);
+        this.state.users = arr.map(u=>{
+          const id=u.id ?? u.user_id ?? u.uid;
+          const name=u.full_name ?? u.name ?? u.display_name ?? u.username ?? u.email ?? `[${id}]`;
+          return {id,name};
+        });
+        const sel = this.els.e_author_name;
+        sel.innerHTML = '<option value="">-- Selecciona un autor --</option>';
+        this.state.users.forEach(u=>{
+          const o = document.createElement('option'); o.value=u.name; o.textContent=u.name; o.dataset.userId = u.id; sel.appendChild(o);
+        });
+      }catch(e){
+        this.els.e_author_name.innerHTML = '<option value="">Error al cargar usuarios</option>';
+        UI.notify('No se pudieron cargar usuarios (requiere tokend).','error');
+      }
+    },
+
+    async loadList(){
+      if(!this.state.currentProjectId){ this.state.list=[]; this.renderTable(); return; }
+      try{
+        const data = await this.api(`/author_content_forms?project_id=${this.state.currentProjectId}`);
+        this.state.list = Array.isArray(data)? data : (data?.items || []);
+        this.renderTable();
+      }catch(e){ this.state.list=[]; this.renderTable(); UI.notify(e.message,'error'); }
+    },
+
+    // -------- Render ----------
+    renderTable(){
+      const q = (this.els.quickSearch.value||'').toLowerCase().trim();
+      const filtered = this.state.list.filter(it =>
+        (it.course_name||'').toLowerCase().includes(q) ||
+        (it.module_name||'').toLowerCase().includes(q) ||
+        (it.author_name||'').toLowerCase().includes(q)
+      );
+
+      // sort
+      const {key,dir} = this.state.sort;
+      filtered.sort((a,b)=>{
+        const va = (a[key]??''); const vb=(b[key]??'');
+        if(key==='updated_at'){ return (dir==='asc'?1:-1) * ((new Date(va)) - (new Date(vb))); }
+        if(va<vb) return dir==='asc'?-1:1;
+        if(va>vb) return dir==='asc'?1:-1;
+        return 0;
+      });
+
+      // pagination
+      const total = filtered.length;
+      this.els.totalRows.textContent = total;
+      const totalPages = Math.max(1, Math.ceil(total / this.config.PAGE_SIZE));
+      this.state.page = Math.min(this.state.page, totalPages);
+      const start = (this.state.page - 1) * this.config.PAGE_SIZE;
+      const pageData = filtered.slice(start, start + this.config.PAGE_SIZE);
+
+      // render rows
+      if(pageData.length===0){
+        this.els.tblBody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500">No hay registros.</td></tr>';
+      }else{
+        this.els.tblBody.innerHTML = pageData.map(it=>{
+          const fecha = it.updated_at ? new Date(it.updated_at).toLocaleDateString('es-CO',{year:'numeric',month:'short',day:'numeric'}) : '-';
+          return `<tr data-id="${it.id}">
+            <td class="p-3 font-semibold text-slate-500">${it.id}</td>
+            <td class="p-3">${it.course_name||'-'}</td>
+            <td class="p-3 text-slate-600">${it.module_name||'-'}</td>
+            <td class="p-3 text-slate-600">${it.author_name||'-'}</td>
+            <td class="p-3 text-slate-600">${fecha}</td>
+            <td class="p-3 text-center space-x-1">
+              <button class="btn btn-s !p-2 act-edit" title="Editar">✏️</button>
+              <button class="btn btn-s !p-2 act-json" title="Ver JSON">JSON</button>
+              <button class="btn btn-d !p-2 act-del" title="Eliminar">🗑️</button>
+            </td>
+          </tr>`;
+        }).join('');
+      }
+
+      // pager
+      this.els.pagerInfo.textContent = `Página ${this.state.page} de ${totalPages}`;
+      this.els.prevPage.disabled = this.state.page<=1;
+      this.els.nextPage.disabled = this.state.page>=totalPages;
+    },
+
+    // -------- Modal Edición ----------
+    async openEdit(id){
+      try{
+        const data = await this.api(`/author_content_forms/${id}`);
+        this.fillEditor(data);
+        this.state.editingId = id;
+        this.els.editIdLabel.textContent = `#${id}`;
+        this.els.prePreview.textContent = '';
+        this.showModal();
+      }catch(e){ UI.notify(e.message,'error'); }
+    },
+
+    showModal(){
+      this.els.modal.classList.add('show');
+      document.body.style.overflow = 'hidden'; // bloquea scroll del fondo
+    },
+    closeModal(){
+      this.els.modal.classList.remove('show');
+      document.body.style.overflow = '';       // restaura scroll
+      this.state.editingId=null;
+    },
+
+    fillEditor(data){
+      // General
+      this.els.e_course_name.value = data.course_name || '';
+      this.els.e_module_name.value = data.module_name || '';
+      // Asegura que el autor exista en el combo
+      const name = data.author_name || '';
+      const sel = this.els.e_author_name;
+      if(name && ![...sel.options].some(o=>o.value===name)){
+        const opt=document.createElement('option'); opt.value=name; opt.textContent=name + ' (no listado)'; sel.appendChild(opt);
+      }
+      sel.value = name;
+
+      this.els.e_publico_objetivo.value = data.publico_objetivo || '';
+      this.els.e_horas_curso.value = data.horas_curso ?? '';
+      this.els.e_horas_estudio_autonomo.value = data.horas_estudio_autonomo ?? '';
+      this.els.e_horas_estudio_asincronico.value = data.horas_estudio_asincronico ?? '';
+      this.els.e_derechos_patrimoniales.checked = !!data.derechos_patrimoniales;
+      this.els.e_derechos_intelectuales.checked = !!data.derechos_intelectuales;
+
+      // Índice
+      this.els.e_idx_preliminar.value = data.indice_estructura?.indice_preliminar || '';
+      this.els.e_idx_horas_sinc.value = data.indice_estructura?.horas_sincronicas ?? '';
+      this.els.e_idx_auto.value = data.indice_estructura?.autoformacion_horas ?? '';
+      this.els.e_idx_paginas.value = data.indice_estructura?.paginas ?? '';
+
+      // limpiar dinámicos
+      ['e_unidadesWrap','e_obj_esp_list','e_obj_unidad_list','e_res_aprend_list','e_glosario_list','e_preg_reflex_list','e_actividadesWrap','e_gl_list']
+        .forEach(k=> this.els[k].innerHTML='');
+
+      (data.indice_estructura?.unidades || []).forEach(u=> this.addUnidad(u));
+
+      // Objetivos
+      this.els.e_obj_gral_curso.value = data.objetivos?.obj_gral_curso || '';
+      (data.objetivos?.obj_esp_curso || []).forEach(x=>this.createPill(this.els.e_obj_esp_list, x));
+      this.els.e_obj_gral_mod.value = data.objetivos?.obj_gral_modulo || '';
+      (data.objetivos?.obj_unidad || []).forEach(x=>this.createPill(this.els.e_obj_unidad_list, x));
+      (data.objetivos?.resultados || []).forEach(x=>this.createPill(this.els.e_res_aprend_list, x));
+
+      // Contenido
+      this.els.e_cont_presentacion.value = data.contenido_escrito?.presentacion || '';
+      this.els.e_cont_introduccion.value = data.contenido_escrito?.introduccion || '';
+      this.els.e_cont_desarrollo.value = data.contenido_escrito?.desarrollo || '';
+      (data.contenido_escrito?.glosario_preliminar || []).forEach(item=> this.addGlosarioPill(null,null,this.els.e_glosario_list, `${item.termino}: ${item.definicion}`));
+      (data.contenido_escrito?.preguntas_reflexion || []).forEach(x=> this.createPill(this.els.e_preg_reflex_list, x));
+
+      // Actividades
+      (data.actividades_aprendizaje?.items || []).forEach(a=> this.addActividad(a));
+      this.els.e_act_diag.value = data.actividades_aprendizaje?.diagnostico || '';
+
+      // Evaluación
+      (this.els.e_tqp_group?.querySelectorAll('input') || []).forEach(c => c.checked = (data.evaluacion?.tipos_pregunta || []).includes(c.value));
+      this.els.e_eval_nota.value = data.evaluacion?.nota_minima ?? '';
+      this.els.e_eval_intentos.value = data.evaluacion?.intentos ?? '';
+      this.els.e_eval_tiempo.value = data.evaluacion?.tiempo_limite_min ?? '';
+      this.els.e_eval_retro.value = data.evaluacion?.retro ?? '';
+
+      // Accesibilidad
+      (this.els.e_acc_group?.querySelectorAll('input') || []).forEach(c => c.checked = (data.accesibilidad?.checks || []).includes(c.value));
+      this.els.e_referencias.value = data.referencias || '';
+      (data.glosario || []).forEach(g=> this.addGlosarioPill(null,null,this.els.e_gl_list, `${g.termino}: ${g.definicion}`));
+    },
+
+    collectPayload(){
+      const qsa = (sel,root=document)=>[...root.querySelectorAll(sel)];
+      const collectPills = (listEl)=> listEl? qsa('.pill-text', listEl).map(p=>p.textContent) : [];
+      const collectGlosario = (listEl)=> listEl? qsa('.pill', listEl).map(p=>{
+        const [t,...d]=p.querySelector('.pill-text').textContent.split(':'); return {termino:t.trim(), definicion:d.join(':').trim()};
+      }) : [];
+      const collectCheck = (group, cls)=> group? qsa(`.${cls}:checked`, group).map(c=>c.value) : [];
+
+      return {
+        project_id: this.state.currentProjectId,
+        course_name: this.els.e_course_name.value.trim(),
+        module_name: this.els.e_module_name.value.trim(),
+        author_name: this.els.e_author_name.value.trim(),
+        derechos_patrimoniales: this.els.e_derechos_patrimoniales.checked,
+        derechos_intelectuales: this.els.e_derechos_intelectuales.checked,
+        publico_objetivo: this.els.e_publico_objetivo.value.trim(),
+        horas_curso: Number(this.els.e_horas_curso.value || 0),
+        horas_estudio_autonomo: Number(this.els.e_horas_estudio_autonomo.value || 0),
+        horas_estudio_asincronico: Number(this.els.e_horas_estudio_asincronico.value || 0),
+
+        indice_estructura:{
+          indice_preliminar: this.els.e_idx_preliminar.value.trim(),
+          horas_sincronicas: Number(this.els.e_idx_horas_sinc.value || 0),
+          autoformacion_horas: Number(this.els.e_idx_auto.value || 0),
+          paginas: Number(this.els.e_idx_paginas.value || 0),
+          unidades: qsa('.dynamic-item', this.els.e_unidadesWrap).map(w=>({
+            nombre: w.querySelector('.u-nombre').value.trim(),
+            orden: Number(w.querySelector('.u-orden').value || 0),
+            subtemas: collectPills(w.querySelector('.u-sub-list'))
+          })).filter(u=>u.nombre)
+        },
+
+        objetivos:{
+          obj_gral_curso: this.els.e_obj_gral_curso.value.trim(),
+          obj_esp_curso: collectPills(this.els.e_obj_esp_list),
+          obj_gral_modulo: this.els.e_obj_gral_mod.value.trim(),
+          obj_unidad: collectPills(this.els.e_obj_unidad_list),
+          resultados: collectPills(this.els.e_res_aprend_list)
+        },
+
+        contenido_escrito:{
+          presentacion: this.els.e_cont_presentacion.value.trim(),
+          introduccion: this.els.e_cont_introduccion.value.trim(),
+          desarrollo: this.els.e_cont_desarrollo.value.trim(),
+          glosario_preliminar: collectGlosario(this.els.e_glosario_list),
+          preguntas_reflexion: collectPills(this.els.e_preg_reflex_list)
+        },
+
+        actividades_aprendizaje:{
+          diagnostico: this.els.e_act_diag.value.trim(),
+          items: qsa('.dynamic-item', this.els.e_actividadesWrap).map(w=>({
+            titulo: w.querySelector('.a-titulo').value.trim(),
+            tipo: w.querySelector('.a-tipo').value.trim(),
+            peso: Number(w.querySelector('.a-peso').value || 0),
+            tiempo_min: Number(w.querySelector('.a-tiempo').value || 0),
+            instrucciones: w.querySelector('.a-instrucciones').value.trim(),
+            materiales: w.querySelector('.a-materiales').value.trim()
+          })).filter(a=>a.titulo)
+        },
+
+        evaluacion:{
+          tipos_pregunta: collectCheck(this.els.e_tqp_group,'tqp'),
+          nota_minima: Number(this.els.e_eval_nota.value || 0),
+          intentos: Number(this.els.e_eval_intentos.value || 1),
+          tiempo_limite_min: Number(this.els.e_eval_tiempo.value || 0),
+          retro: this.els.e_eval_retro.value.trim()
+        },
+
+        accesibilidad:{ checks: collectCheck(this.els.e_acc_group,'acc') },
+        referencias: this.els.e_referencias.value.trim(),
+        glosario: collectGlosario(this.els.e_gl_list)
+      };
+    },
+
+    async doSave(){
+      if(!this.state.currentProjectId){ UI.notify('Selecciona un proyecto.', 'error'); return; }
+      const payload = this.collectPayload();
+      const id = this.state.editingId;
+      try{
+        console.log('[PUT]', `${this.config.API_BASE}/author_content_forms/${id}`, payload);
+        await this.api(`/author_content_forms/${id}`, 'PUT', payload);
+        UI.notify('Formulario actualizado con éxito.','success');
+        this.closeModal();
+        this.loadList();
+      }catch(e){ UI.notify(e.message,'error'); }
+    },
+
+    async doDelete(id){
+      if(!id) return;
+      if(!confirm(`¿Eliminar el formulario #${id}?`)) return;
+      try{
+        await this.api(`/author_content_forms/${id}`, 'DELETE');
+        UI.notify(`Formulario #${id} eliminado.`,'success');
+        if(this.state.editingId===id) this.closeModal();
+        this.loadList();
+      }catch(e){ UI.notify(e.message,'error'); }
+    },
+
+    previewFromRow(id){
+      const row = this.state.list.find(x=>String(x.id)===String(id));
+      if(!row){ UI.notify('No se encontró el registro.','error'); return; }
+      this.els.prePreview.textContent = JSON.stringify(row, null, 2);
+      this.showModal();
+      this.els.editIdLabel.textContent = `#${id} (vista previa)`;
+      this.state.editingId = id;
+    },
+
+    // ---- Helpers dinámicos ----
+    addUnidad(data={}){
+      const frag = this.els.tplUnidad.content.cloneNode(true);
+      const qs = (s,r)=>r.querySelector(s);
+      qs('.u-nombre',frag).value = data.nombre || '';
+      qs('.u-orden',frag).value = data.orden || (this.els.e_unidadesWrap.children.length+1);
+      (data.subtemas||[]).forEach(t=> this.createPill(qs('.u-sub-list',frag), t));
+      this.els.e_unidadesWrap.appendChild(frag);
+    },
+
+    addActividad(data={}){
+      const frag = this.els.tplActividad.content.cloneNode(true);
+      const qs = (s,r)=>r.querySelector(s);
+      qs('.a-titulo',frag).value = data.titulo || '';
+      qs('.a-tipo',frag).value = data.tipo || '';
+      qs('.a-peso',frag).value = data.peso ?? '';
+      qs('.a-tiempo',frag).value = data.tiempo_min ?? '';
+      qs('.a-instrucciones',frag).value = data.instrucciones || '';
+      qs('.a-materiales',frag).value = data.materiales || '';
+      this.els.e_actividadesWrap.appendChild(frag);
+    },
+
+    createPill(listEl, text){
+      const frag = this.els.tplPill.content.cloneNode(true);
+      frag.querySelector('.pill-text').textContent = text;
+      listEl.appendChild(frag);
+    },
+
+    addGlosarioPill(termInput, defInput, listEl, predefined=null){
+      const text = predefined || `${termInput.value.trim()}: ${defInput.value.trim()}`;
+      if(!text || text===':') return;
+      const frag = this.els.tplGlPill.content.cloneNode(true);
+      frag.querySelector('.pill-text').textContent = text;
+      listEl.appendChild(frag);
+      if(termInput) termInput.value='';
+      if(defInput) defInput.value='';
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', ()=>App.init());
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

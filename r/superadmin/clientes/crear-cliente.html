@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear cliente</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+</head>
+<body class="bg-white p-8">
+  <h1 class="text-3xl font-bold text-center text-emerald-600 mb-6">Crear cliente</h1>
+
+  <form id="clientForm" class="space-y-4 max-w-2xl mx-auto">
+    <input type="hidden" id="user_id" name="user_id">
+    
+    <input class="border w-full p-2" placeholder="Nombre del cliente" id="nombre_cliente" title="Nombre completo del cliente o empresa">
+    <input class="border w-full p-2" placeholder="NIT" id="nit" title="NIT o identificación tributaria">
+
+    <label class="block font-bold">Tipo de entidad:</label>
+    <div class="flex gap-4 flex-wrap">
+      <label><input type="radio" name="tipo_entidad" value="Privada" title="Selecciona el tipo de entidad"> Privada</label>
+      <label><input type="radio" name="tipo_entidad" value="Pública" title="Selecciona el tipo de entidad"> Pública</label>
+      <label><input type="radio" name="tipo_entidad" value="Institución educativa" title="Selecciona el tipo de entidad"> Institución educativa</label>
+      <label><input type="radio" name="tipo_entidad" value="ONG" title="Selecciona el tipo de entidad"> ONG</label>
+      <label><input type="radio" name="tipo_entidad" value="Fundación" title="Selecciona el tipo de entidad"> Fundación</label>
+      <label><input type="radio" name="tipo_entidad" value="Organización" title="Selecciona el tipo de entidad"> Organización</label>
+    </div>
+
+    <input class="border w-full p-2" placeholder="Persona de contacto" id="persona_contacto" title="Nombre de la persona de contacto directo">
+    <input class="border w-full p-2" placeholder="Cargo de contacto" id="cargo_contacto" title="Cargo o puesto de la persona de contacto">
+    <input class="border w-full p-2" placeholder="Correo electrónico" id="correo_contacto" title="Correo electrónico de contacto">
+    <input class="border w-full p-2" placeholder="Teléfono / WhatsApp" id="whatsapp" title="Número de teléfono o WhatsApp">
+    <input class="border w-full p-2" placeholder="Ciudad" id="ciudad" title="Ciudad de ubicación del cliente">
+    <input class="border w-full p-2" placeholder="Observaciones (opcional)" id="observaciones" title="Notas u observaciones adicionales">
+
+    <button type="submit" class="bg-emerald-500 text-white font-bold py-2 px-6 rounded-full">GUARDAR CLIENTE</button>
+  </form>
+
+  <script>
+    // Obtener el uid del usuario desde la URL
+    const params = new URLSearchParams(window.location.search);
+    const uid = params.get("uid");
+    document.getElementById("user_id").value = uid;
+
+    document.getElementById("clientForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const tipoEntidad = document.querySelector('input[name="tipo_entidad"]:checked')?.value;
+
+      const payload = {
+        user_id: uid,
+        nombre_cliente: document.getElementById("nombre_cliente").value,
+        nit: document.getElementById("nit").value,
+        tipo_entidad: tipoEntidad,
+        organizacion: tipoEntidad,
+        persona_contacto: document.getElementById("persona_contacto").value,
+        cargo_contacto: document.getElementById("cargo_contacto").value,
+        correo_contacto: document.getElementById("correo_contacto").value,
+        whatsapp: document.getElementById("whatsapp").value,
+        ciudad: document.getElementById("ciudad").value,
+        observaciones: document.getElementById("observaciones").value,
+      };
+
+      const res = await fetch("https://gestordecursos.pegui.edu.co:8000/client-profiles/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert("Perfil del cliente guardado");
+        window.location.href = `subir-documentos.html?uid=${uid}`;
+      } else {
+        alert("Error al guardar el perfil");
+      }
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+
