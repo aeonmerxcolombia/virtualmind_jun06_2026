@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear cliente</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white p-8">
+  <h1 class="text-3xl font-bold text-center text-emerald-600 mb-6">Crear cliente</h1>
+
+  <form id="clientForm" class="space-y-4 max-w-2xl mx-auto">
+    <input type="hidden" id="user_id" name="user_id">
+    
+    <input class="border w-full p-2" placeholder="Nombre del cliente" id="nombre_cliente">
+    <input class="border w-full p-2" placeholder="NIT" id="nit">
+
+    <label class="block font-bold">Tipo de entidad:</label>
+    <div class="flex gap-4 flex-wrap">
+      <label><input type="radio" name="tipo_entidad" value="Privada"> Privada</label>
+      <label><input type="radio" name="tipo_entidad" value="Pública"> Pública</label>
+      <label><input type="radio" name="tipo_entidad" value="Institución educativa"> Institución educativa</label>
+      <label><input type="radio" name="tipo_entidad" value="ONG"> ONG</label>
+      <label><input type="radio" name="tipo_entidad" value="Fundación"> Fundación</label>
+      <label><input type="radio" name="tipo_entidad" value="Organización"> Organización</label>
+    </div>
+
+    <input class="border w-full p-2" placeholder="Persona de contacto" id="persona_contacto">
+    <input class="border w-full p-2" placeholder="Cargo de contacto" id="cargo_contacto">
+    <input class="border w-full p-2" placeholder="Correo electrónico" id="correo_contacto">
+    <input class="border w-full p-2" placeholder="Teléfono / WhatsApp" id="whatsapp">
+    <input class="border w-full p-2" placeholder="Ciudad" id="ciudad">
+    <input class="border w-full p-2" placeholder="Observaciones (opcional)" id="observaciones">
+
+    <button type="submit" class="bg-emerald-500 text-white font-bold py-2 px-6 rounded-full">GUARDAR CLIENTE</button>
+  </form>
+
+  <script>
+    // Obtener el uid del usuario desde la URL
+    const params = new URLSearchParams(window.location.search);
+    const uid = params.get("uid");
+    document.getElementById("user_id").value = uid;
+
+    document.getElementById("clientForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const tipoEntidad = document.querySelector('input[name="tipo_entidad"]:checked')?.value;
+
+      const payload = {
+        user_id: uid,
+        nombre_cliente: document.getElementById("nombre_cliente").value,
+        nit: document.getElementById("nit").value,
+        tipo_entidad: tipoEntidad,
+        organizacion: tipoEntidad,
+        persona_contacto: document.getElementById("persona_contacto").value,
+        cargo_contacto: document.getElementById("cargo_contacto").value,
+        correo_contacto: document.getElementById("correo_contacto").value,
+        whatsapp: document.getElementById("whatsapp").value,
+        ciudad: document.getElementById("ciudad").value,
+        observaciones: document.getElementById("observaciones").value,
+      };
+
+      const res = await fetch("https://gestordecursos.pegui.edu.co:8000/client-profiles/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert("Perfil del cliente guardado");
+        window.location.href = `subir-documentos.html?uid=${uid}`;
+      } else {
+        alert("Error al guardar el perfil");
+      }
+    });
+  </script>
+</body>
+</html>
+

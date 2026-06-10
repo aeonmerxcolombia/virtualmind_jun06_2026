@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Plan de Formación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .spinner { animation: spin 1s linear infinite; }
+        select { 
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); 
+            background-position: right 0.5rem center; 
+            background-repeat: no-repeat; 
+            background-size: 1.5em 1.5em; 
+            padding-right: 2.5rem; 
+        }
+        .proyecto-card:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900">
+
+    <nav class="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="/r/superadmin/index.html" class="text-white hover:text-indigo-200 transition flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Volver al Panel</span>
+                </a>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-book text-white text-sm"></i>
+                    </div>
+                    <span class="text-white font-semibold">VirtualMind</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 py-12">
+        <div class="text-center mb-10 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mb-6 shadow-xl">
+                <i class="fas fa-graduation-cap text-4xl text-white"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-3">Crear Plan de Formación</h1>
+            <p class="text-lg text-indigo-200">Selecciona un proyecto para crear su plan de estudio</p>
+        </div>
+
+        <div id="loading" class="flex flex-col items-center justify-center py-20">
+            <div class="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full spinner"></div>
+            <p class="mt-6 text-indigo-200 text-lg">Cargando proyectos...</p>
+        </div>
+
+        <div id="content" class="hidden">
+            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" id="proyectosGrid">
+            </div>
+        </div>
+
+        <div id="error" class="hidden text-center py-20">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-red-500/20 rounded-full mb-6">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-400"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Error al cargar</h3>
+            <p class="text-red-300 mb-6" id="errorMessage">No se pudieron cargar los proyectos</p>
+            <button onclick="cargarProyectos()" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-semibold transition">
+                <i class="fas fa-redo mr-2"></i>Reintentar
+            </button>
+        </div>
+
+        <div id="empty" class="hidden text-center py-20">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-indigo-500/20 rounded-full mb-6">
+                <i class="fas fa-folder-open text-4xl text-indigo-400"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Sin proyectos disponibles</h3>
+            <p class="text-indigo-200">No hay proyectos para crear planes de estudio</p>
+        </div>
+    </div>
+
+    <div id="modalPlan" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-fade-in">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-check-circle text-indigo-600"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Crear Plan de Estudio</h3>
+                    </div>
+                    <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-600 mb-4">¿Deseas crear el plan de estudio para el proyecto:</p>
+                <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6">
+                    <p class="font-semibold text-indigo-900" id="modalProyectoNombre">-</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="cerrarModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition">
+                        Cancelar
+                    </button>
+                    <button onclick="confirmarCrear()" class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition">
+                        <i class="fas fa-plus mr-2"></i>Crear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = "https://gestordecursos.pegui.edu.co:8000";
+        const token = localStorage.getItem("token");
+        let proyectosData = [];
+        let proyectoSeleccionado = null;
+
+        if (!token) {
+            window.location.href = "/index.html";
+        }
+
+        async function cargarProyectos() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('content').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('empty').classList.add('hidden');
+
+            try {
+                console.log('Cargando proyectos desde:', `${API}/projects`);
+                
+                const res = await fetch(`${API}/projects`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                console.log('Response status:', res.status);
+                
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(`Error ${res.status}: ${text}`);
+                }
+                
+                proyectosData = await res.json();
+                console.log('Proyectos cargados:', proyectosData.length);
+                
+                if (proyectosData.length === 0) {
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('empty').classList.remove('hidden');
+                    return;
+                }
+
+                await Promise.all(proyectosData.map(async (p) => {
+                    const plansRes = await fetch(`${API}/study_plans/project/${p.id}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    p.plans = plansRes.ok ? await plansRes.json() : [];
+                }));
+
+                renderProyectos();
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('content').classList.remove('hidden');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error').classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = err.message;
+            }
+        }
+
+        function renderProyectos() {
+            const grid = document.getElementById('proyectosGrid');
+            grid.innerHTML = '';
+
+            proyectosData.forEach((proyecto, index) => {
+                const tienePlan = proyecto.plans && proyecto.plans.length > 0;
+                const planCount = proyecto.plans ? proyecto.plans.length : 0;
+
+                const card = document.createElement('div');
+                card.className = `proyecto-card bg-white/10 backdrop-blur-md rounded-2xl p-6 border transition-all duration-300 ${tienePlan ? 'border-red-500/50 opacity-75' : 'border-white/20 hover:border-indigo-400 cursor-pointer hover:bg-white/15'}`;
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('animate-fade-in');
+
+                if (!tienePlan) {
+                    card.onclick = () => seleccionarProyecto(proyecto);
+                }
+
+                const estadoBadge = tienePlan 
+                    ? `<span class="inline-flex items-center gap-1 bg-red-500/20 text-red-300 text-xs font-semibold px-3 py-1 rounded-full">
+                        <i class="fas fa-ban"></i> Ya tiene ${planCount} plan(es)
+                       </span>`
+                    : `<span class="inline-flex items-center gap-1 bg-green-500/20 text-green-300 text-xs font-semibold px-3 py-1 rounded-full">
+                        <i class="fas fa-check-circle"></i> Disponible
+                       </span>`;
+
+                const fecha = proyecto.start_date ? new Date(proyecto.start_date).toLocaleDateString('es-CO') : 'Sin fecha';
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-folder-open text-white text-lg"></i>
+                        </div>
+                        ${estadoBadge}
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2 line-clamp-2">${proyecto.name || 'Sin nombre'}</h3>
+                    <p class="text-indigo-200 text-sm mb-4 line-clamp-2">${proyecto.description || 'Sin descripción'}</p>
+                    <div class="flex items-center gap-4 text-indigo-300 text-xs">
+                        <span class="flex items-center gap-1">
+                            <i class="fas fa-calendar"></i> ${fecha}
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <i class="fas fa-hashtag"></i> #${proyecto.id}
+                        </span>
+                    </div>
+                    ${tienePlan ? `
+                        <div class="mt-4 pt-4 border-t border-white/10">
+                            <p class="text-red-300 text-xs">Este proyecto ya tiene un plan de estudio asignado</p>
+                        </div>
+                    ` : `
+                        <div class="mt-4 pt-4 border-t border-white/10">
+                            <button class="w-full bg-indigo-600/50 hover:bg-indigo-600 text-indigo-100 font-semibold py-2 rounded-xl transition text-sm">
+                                <i class="fas fa-plus mr-2"></i>Crear Plan
+                            </button>
+                        </div>
+                    `}
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function seleccionarProyecto(proyecto) {
+            proyectoSeleccionado = proyecto;
+            document.getElementById('modalProyectoNombre').textContent = proyecto.name || 'Proyecto sin nombre';
+            document.getElementById('modalPlan').classList.remove('hidden');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalPlan').classList.add('hidden');
+            proyectoSeleccionado = null;
+        }
+
+        function confirmarCrear() {
+            if (proyectoSeleccionado) {
+                const nombreEncoded = encodeURIComponent(proyectoSeleccionado.name || '');
+                const descEncoded = encodeURIComponent(proyectoSeleccionado.description || '');
+                const horasEncoded = encodeURIComponent(proyectoSeleccionado.horas_curso || '');
+                window.location.href = `index.html?project_id=${proyectoSeleccionado.id}&project_name=${nombreEncoded}&project_desc=${descEncoded}&project_horas=${horasEncoded}`;
+            }
+        }
+
+        cargarProyectos();
+    </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+<script src="/js/voz-input.js"></script>
+</body>
+</html>

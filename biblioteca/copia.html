@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biblioteca de Recursos - VirtualMind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Animaciones personalizadas */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.5s ease-in-out; }
+    .hidden-scrollbar::-webkit-scrollbar { display: none; }
+    .hidden-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300 flex flex-col min-h-screen">
+
+  <!-- 🔹 HEADER -->
+  <header class="bg-indigo-600 dark:bg-indigo-800 text-white shadow-md">
+    <div class="container mx-auto flex justify-between items-center px-4 py-3">
+      <h1 class="text-2xl font-bold">📚 Biblioteca VirtualMind</h1>
+      <div class="flex items-center gap-4">
+        <input type="text" id="globalSearch" placeholder="Buscar en toda la biblioteca...       class="rounded px-3 py-2 text-black w-64" onkeyup="loadResources()" />
+ 
+      </div>
+    </div>
+  </header>
+
+  <!-- 🔹 MAIN -->
+  <main class="flex-1 container mx-auto px-4 py-6">
+
+    <!-- FORMULARIO -->
+    <section class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow mb-8">
+      <h2 class="text-xl font-semibold mb-4">Subir nuevo recurso</h2>
+      <form id="uploadForm" class="grid gap-4">
+        <input type="text" id="title" name="title" placeholder="Título" required
+          class="border rounded p-2 w-full dark:bg-gray-700" />
+        <textarea id="description" name="description" placeholder="Descripción"
+          class="border rounded p-2 w-full dark:bg-gray-700"></textarea>
+        <input type="file" id="file" name="file" accept="application/pdf,image/*,video/*" required
+          class="border rounded p-2 w-full dark:bg-gray-700" />
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+          Subir recurso
+        </button>
+      </form>
+    </section>
+
+    <!-- FILTROS -->
+    <section class="flex flex-wrap items-center justify-between mb-6 gap-2">
+      <div class="flex gap-2">
+        <button onclick="loadResources()" class="filter-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 px-3 py-1 rounded">Todos</button>
+        <button onclick="loadResources('pdf')" class="filter-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 px-3 py-1 rounded">PDF</button>
+        <button onclick="loadResources('image')" class="filter-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 px-3 py-1 rounded">Imágenes</button>
+        <button onclick="loadResources('video')" class="filter-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 px-3 py-1 rounded">Videos</button>
+      </div>
+    </section>
+
+    <!-- LISTADO -->
+    <section id="resourceList" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <!-- Render dinámico -->
+    </section>
+
+    <!-- LOADER -->
+    <div id="loader" class="hidden text-center mt-6">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mx-auto"></div>
+      <p class="mt-2">Cargando recursos...</p>
+    </div>
+
+  </main>
+
+  <!-- 🔹 FOOTER -->
+  <footer class="bg-gray-800 text-white text-center p-4">
+    © 2025 VirtualMind - Biblioteca de Recursos
+  </footer>
+
+  <!-- 🔹 MODAL PREVIEW -->
+  <div id="previewModal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-11/12 md:w-2/3 lg:w-1/2 relative">
+      <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-600 hover:text-red-500">✖</button>
+      <div id="previewContent"></div>
+    </div>
+  </div>
+
+  <!-- 🔹 SCRIPTS -->
+  <script>
+    const API_URL = "https://gestordecursos.pegui.edu.co:8000/resources";
+    const token = localStorage.getItem("token"); // JWT
+    const loader = document.getElementById("loader");
+
+    // Subida
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append("title", document.getElementById("title").value);
+      formData.append("description", document.getElementById("description").value);
+      formData.append("file", document.getElementById("file").files[0]);
+
+      const res = await fetch(API_URL + "/", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token },
+        body: formData
+      });
+
+      if (res.ok) {
+        alert("✅ Recurso subido con éxito");
+        document.getElementById("uploadForm").reset();
+        loadResources();
+      } else {
+        alert("❌ Error al subir recurso");
+      }
+    });
+
+    // Listado
+    async function loadResources(type = null) {
+      loader.classList.remove("hidden");
+      let url = API_URL + "/";
+      const search = document.getElementById("globalSearch").value;
+      const params = [];
+      if (type) params.push("type=" + type);
+      if (search) params.push("search=" + encodeURIComponent(search));
+      if (params.length) url += "?" + params.join("&");
+
+      const res = await fetch(url, { headers: { "Authorization": "Bearer " + token } });
+      const data = await res.json();
+      renderResources(data);
+      loader.classList.add("hidden");
+    }
+
+    // Render Cards
+    function renderResources(resources) {
+      const container = document.getElementById("resourceList");
+      container.innerHTML = "";
+
+      if (!resources.length) {
+        container.innerHTML = `<p class="text-gray-500 col-span-full text-center">No se encontraron recursos.</p>`;
+        return;
+      }
+
+      resources.forEach(r => {
+        let icon = "📄"; let color = "bg-indigo-100";
+        if (r.file_type === "image") { icon = "🖼️"; color = "bg-green-100"; }
+        if (r.file_type === "video") { icon = "🎬"; color = "bg-red-100"; }
+
+        container.innerHTML += `
+          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow p-4 flex flex-col fade-in">
+            <div class="${color} text-4xl p-4 rounded-lg text-center">${icon}</div>
+            <h3 class="text-lg font-semibold mt-2">${r.title}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 flex-1">${r.description || ""}</p>
+            <div class="flex gap-2 mt-3">
+              <button onclick="openPreview('${r.file_type}', '${r.file_url}', '${r.title}')" class="bg-indigo-500 text-white px-3 py-1 rounded">Ver</button>
+              <button onclick="shareResource('${r.file_url}')" class="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded">Compartir</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Previsualización en modal
+    function openPreview(type, url, title) {
+      const modal = document.getElementById("previewModal");
+      const content = document.getElementById("previewContent");
+      modal.classList.remove("hidden");
+
+      if (type === "image") {
+        content.innerHTML = `<img src="${url}" alt="${title}" class="rounded-lg w-full" />`;
+      } else if (type === "video") {
+        content.innerHTML = `<video controls class="w-full rounded-lg"><source src="${url}" type="video/mp4">Tu navegador no soporta video.</video>`;
+      } else {
+        content.innerHTML = `<iframe src="${url}" class="w-full h-96 rounded-lg" frameborder="0"></iframe>`;
+      }
+    }
+
+    function closeModal() {
+      document.getElementById("previewModal").classList.add("hidden");
+    }
+
+    // Compartir
+    function shareResource(url) {
+      if (navigator.share) {
+        navigator.share({
+          title: "Recurso VirtualMind",
+          text: "Mira este recurso en la Biblioteca VirtualMind:",
+          url: url
+        });
+      } else {
+        prompt("Copia este enlace:", url);
+      }
+    }
+
+    // Cargar inicial
+    loadResources();
+  </script>
+</body>
+</html>
+

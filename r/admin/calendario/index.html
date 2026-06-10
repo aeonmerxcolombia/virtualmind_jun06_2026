@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario Inteligente - VirtualMind</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #090D16; color: #cbd5e1; }
+        .card-glass { background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+        .card-dark { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.06); }
+        .fc-header-toolbar {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+            color: white; border-radius: 12px; padding: 1rem; margin-bottom: 1rem;
+        }
+        .fc-toolbar-title { color: white !important; font-size: 1.2rem !important; font-weight: 700 !important; }
+        .fc-button-primary {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 8px !important;
+            transition: all 0.3s ease !important;
+            color: white !important;
+            font-weight: 600 !important;
+        }
+        .fc-button-primary:hover { background: rgba(255, 255, 255, 0.3) !important; }
+        .fc-button-primary.fc-button-active { background: rgba(255, 255, 255, 0.3) !important; }
+        .fc-daygrid-event {
+            border-radius: 6px !important; border: none !important;
+            font-weight: 500 !important; font-size: 12px !important;
+            padding: 4px 6px !important; overflow: hidden !important;
+            cursor: pointer !important;
+        }
+        .fc-daygrid-day-frame { background: rgba(15,23,42,0.3) !important; }
+        .fc-col-header-cell { background: rgba(15,23,42,0.5) !important; }
+        .fc-col-header-cell-cushion { color: #94a3b8 !important; font-weight: 600 !important; }
+        .fc-daygrid-day-number { color: #cbd5e1 !important; font-weight: 500 !important; }
+        .fc-day-other .fc-daygrid-day-number { color: #475569 !important; }
+        .fc-list-day-text, .fc-list-day-side-text { color: #f1f5f9 !important; }
+        .fc-list-table { background: rgba(15,23,42,0.3) !important; }
+        .fc-list-event { background: rgba(15,23,42,0.2) !important; border-color: rgba(255,255,255,0.05) !important; }
+        .fc-list-event-title a { color: #e2e8f0 !important; }
+        .fc-list-event-time { color: #94a3b8 !important; }
+        select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em; padding-right: 2.5rem; }
+        .progress-bar { height: 8px; border-radius: 4px; background-color: rgba(15,23,42,0.5); overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .driverjs-theme { font-family: 'Inter', sans-serif; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); padding: 20px; background: rgba(15,23,42,0.95)!important; color: #f1f5f9!important; }
+        .driverjs-theme .driver-popover-title { font-size: 18px; font-weight: 700; color: #818cf8; }
+        .driverjs-theme .driver-popover-description { color: #94a3b8; font-size: 14px; }
+        .driverjs-theme .driver-popover-next-btn, .driverjs-theme .driver-popover-prev-btn { background: #4f46e5; color: white; border-radius: 8px; border: none; padding: 6px 14px; font-weight: 600; }
+        .tooltip { position: relative; }
+        .tooltip .tooltip-text { visibility: hidden; opacity: 0; width: 220px; background: rgba(15,23,42,0.95); color: #f1f5f9; text-align: center; border-radius: 8px; padding: 8px 12px; position: absolute; z-index: 100; bottom: 125%; left: 50%; transform: translateX(-50%); transition: all 0.3s; border: 1px solid rgba(255,255,255,0.1); font-size: 12px; font-weight: 400; pointer-events: none; }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+        .tooltip .tooltip-text::after { content: ''; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: rgba(15,23,42,0.95) transparent transparent transparent; }
+        .tooltip-right .tooltip-text { bottom: auto; top: 50%; transform: translateY(-50%); left: 105%; }
+        .tooltip-right .tooltip-text::after { top: 50%; left: -5px; margin-left: 0; margin-top: -5px; border-color: transparent rgba(15,23,42,0.95) transparent transparent; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: rgba(15,23,42,0.95); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; max-width: 500px; width: 90%; padding: 24px; }
+        input, select, textarea { background: rgba(15, 23, 42, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; color: #f8fafc !important; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s; }
+        input:focus, select:focus { border-color: #6366f1 !important; box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important; outline: none; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen p-4 lg:p-8">
+    <div class="max-w-7xl mx-auto space-y-8">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                    <i class="fas fa-calendar-alt text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl lg:text-4xl font-bold text-white">Calendario de Proyecto</h1>
+                    <p class="text-sm text-slate-400">Visualiza el cronograma y las tareas de tus proyectos</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="verTutorial()" class="tooltip flex items-center gap-1.5 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 px-4 py-2 rounded-xl text-indigo-300 hover:text-white text-xs font-bold transition-all cursor-pointer">
+                    <span class="bg-indigo-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">?</span> Tutorial
+                    <span class="tooltip-text">Guía interactiva paso a paso del calendario</span>
+                </button>
+                <button onclick="sugerirIA()" id="btnIA" class="tooltip flex items-center gap-1.5 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 px-4 py-2 rounded-xl text-purple-300 hover:text-white text-xs font-bold transition-all cursor-pointer">
+                    <i class="fas fa-robot"></i> Sugerir con IA
+                    <span class="tooltip-text">IA analiza el proyecto y sugiere mejoras</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- AI Suggestions Panel -->
+        <div id="iaPanel" class="hidden card-glass rounded-2xl p-4 border border-purple-500/20">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-purple-400"><i class="fas fa-robot mr-2"></i>Sugerencias IA</h3>
+                <button onclick="document.getElementById('iaPanel').classList.add('hidden')" class="text-slate-500 hover:text-white transition-all text-xs cursor-pointer">✕</button>
+            </div>
+            <div id="iaContent" class="text-sm text-slate-300 space-y-2 leading-relaxed whitespace-pre-wrap"></div>
+        </div>
+
+        <!-- Selección de Proyecto y Estadísticas -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 card-glass rounded-2xl p-6 animate-fade-in">
+                <h2 class="text-xl font-semibold text-slate-200 mb-4 tooltip">Selección de Proyecto
+                    <span class="tooltip-text">Elige un proyecto para visualizar su calendario y cronograma</span>
+                </h2>
+                <select id="projectSelect" class="w-full p-3 bg-slate-900/60 border border-white/10 rounded-xl focus:ring-2 focus:ring-purple-300 transition appearance-none cursor-pointer">
+                    <option value="">Cargando proyectos...</option>
+                </select>
+            </div>
+            <div class="card-glass rounded-2xl p-6 animate-fade-in">
+                <h2 class="text-lg font-semibold text-slate-200 mb-4 tooltip">Estadísticas de Tareas
+                    <span class="tooltip-text">Resumen numérico del estado de las tareas del proyecto seleccionado</span>
+                </h2>
+                <div id="taskStats" class="space-y-2">
+                    <div class="flex justify-between items-center"><span class="text-sm text-slate-400 tooltip">Total<span class="tooltip-text">Número total de tareas del proyecto</span></span><span id="totalTasks" class="font-bold text-white">0</span></div>
+                    <div class="flex justify-between items-center"><span class="text-sm text-slate-400 tooltip">Completadas<span class="tooltip-text">Tareas que ya fueron completadas y cerradas</span></span><span id="completedTasks" class="font-bold text-emerald-400">0</span></div>
+                    <div class="flex justify-between items-center"><span class="text-sm text-slate-400 tooltip">En Proceso<span class="tooltip-text">Tareas que están actualmente en desarrollo</span></span><span id="inProgressTasks" class="font-bold text-amber-400">0</span></div>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-sm mb-1"><span class="text-slate-400 tooltip">Progreso<span class="tooltip-text">Porcentaje de avance general del proyecto</span></span><span id="progressPercent" class="text-white font-bold">0%</span></div>
+                        <div class="progress-bar"><div id="progressFill" class="progress-fill bg-gradient-to-r from-indigo-500 to-emerald-500" style="width: 0%"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendario y Tabla de Cronograma -->
+        <div class="grid grid-cols-1 xl:grid-cols-5 gap-6">
+            <div class="xl:col-span-3 card-glass rounded-2xl p-6 animate-fade-in">
+                <h2 class="text-xl font-semibold text-slate-200 mb-4 tooltip">Calendario de Etapas
+                    <span class="tooltip-text">Vista mensual de las etapas programadas del proyecto. Haz clic en un evento para ver detalles.</span>
+                </h2>
+                <div id="calendar" class="rounded-xl p-2"></div>
+            </div>
+            <div class="xl:col-span-2 card-glass rounded-2xl p-6 animate-fade-in">
+                <h2 class="text-xl font-semibold text-slate-200 mb-4 tooltip">Resumen del Cronograma
+                    <span class="tooltip-text">Listado detallado de fases, etapas y responsables del proyecto</span>
+                </h2>
+                <div id="cronogramaContent" class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-800/50">
+                            <tr>
+                                <th class="py-2 px-3 text-left font-semibold text-slate-400 tooltip">Fase / Etapa<span class="tooltip-text">Nombre de la fase o etapa del proyecto</span></th>
+                                <th class="py-2 px-3 text-left font-semibold text-slate-400 tooltip">Fechas<span class="tooltip-text">Fecha de inicio y fin programada</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cronograma-table-body">
+                            <tr><td colspan="2" class="py-8 text-center text-slate-500">Seleccione un proyecto para ver su cronograma.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Modal de detalle de evento -->
+    <div id="eventModal" class="modal-overlay hidden">
+        <div class="modal-content animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white" id="modalTitle">Evento</h3>
+                <button onclick="cerrarModal()" class="text-slate-500 hover:text-white text-xl cursor-pointer">&times;</button>
+            </div>
+            <div id="modalBody" class="text-sm text-slate-300 space-y-2"></div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    const TOKEN = localStorage.getItem("token");
+
+    const projectSelect = document.getElementById("projectSelect");
+    const calendarEl = document.getElementById("calendar");
+    const cronogramaTableBody = document.getElementById('cronograma-table-body');
+
+    let allProjects = [];
+    let allUsers = [];
+    let allCronogramas = [];
+    let allTasks = [];
+    let cronogramasMap = new Map();
+    let usersMap = new Map();
+
+    const phaseColors = ['#ef4444', '#f97316', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'];
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        locale: "es",
+        height: "auto",
+        headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,listWeek"
+        },
+        events: [],
+        eventClick: function(info) {
+            const props = info.event.extendedProps;
+            document.getElementById('modalTitle').textContent = info.event.title;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="flex items-center gap-2"><i class="fas fa-calendar text-indigo-400"></i> <b>Fechas:</b> ${info.event.start.toLocaleDateString()} - ${info.event.end ? info.event.end.toLocaleDateString() : info.event.start.toLocaleDateString()}</div>
+                ${props.responsables ? `<div class="flex items-center gap-2"><i class="fas fa-users text-emerald-400"></i> <b>Responsables:</b> ${props.responsables}</div>` : ''}
+                ${props.fase ? `<div class="flex items-center gap-2"><i class="fas fa-layer-group text-purple-400"></i> <b>Fase:</b> ${props.fase}</div>` : ''}
+            `;
+            document.getElementById('eventModal').classList.remove('hidden');
+        }
+    });
+    calendar.render();
+
+    async function apiGet(endpoint) {
+        const res = await fetch(`${API_BASE}${endpoint}`, { headers: { "Authorization": `Bearer ${TOKEN}` } });
+        if (!res.ok) throw new Error(`Error en ${endpoint}: ${res.statusText}`);
+        return await res.json();
+    }
+    
+    function getNextDayISO(dateString) {
+        if (!dateString) return null;
+        const date = new Date(dateString + 'T00:00:00');
+        date.setDate(date.getDate() + 1);
+        return date.toISOString().split('T')[0];
+    }
+
+    async function init() {
+        try {
+            [allProjects, allUsers, allCronogramas, allTasks] = await Promise.all([
+                apiGet("/projects/"),
+                apiGet("/users/"),
+                apiGet("/cronogramas/"),
+                apiGet("/tareas/")
+            ]);
+
+            allUsers.forEach(u => usersMap.set(u.uid, u.nombre || u.username));
+            allCronogramas.forEach(c => cronogramasMap.set(c.project_id, c));
+
+            projectSelect.innerHTML = '<option value="">✨ Selecciona un proyecto</option>';
+            allProjects.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p.id;
+                opt.textContent = p.name || `Proyecto ${p.id}`;
+                projectSelect.appendChild(opt);
+            });
+
+        } catch (error) {
+            console.error('Error fatal en la inicialización:', error);
+            projectSelect.innerHTML = '<option value="">❌ Error al cargar datos</option>';
+        }
+    }
+
+    function renderCronogramaView(projectId) {
+        const cronograma = cronogramasMap.get(projectId);
+        calendar.removeAllEvents();
+        
+        if (cronograma && cronograma.estructura) {
+            renderCronogramaTable(cronograma.estructura);
+            renderCalendarEvents(cronograma.estructura);
+        } else {
+            cronogramaTableBody.innerHTML = `<tr><td colspan="2" class="py-8 text-center text-slate-500">Este proyecto no tiene un cronograma definido.</td></tr>`;
+        }
+        
+        const tasksForProject = allTasks.filter(t => t.project_id === projectId);
+        updateTaskStats(tasksForProject);
+    }
+    
+    function renderCronogramaTable(estructura) {
+        cronogramaTableBody.innerHTML = '';
+        estructura.sort((a,b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+
+        estructura.forEach(fase => {
+            const faseRow = document.createElement('tr');
+            faseRow.className = 'bg-slate-800/40 font-semibold';
+            faseRow.innerHTML = `<td class="py-3 px-3 text-slate-200" colspan="2">${fase.nombre_fase}</td>`;
+            cronogramaTableBody.appendChild(faseRow);
+            
+            fase.etapas.sort((a,b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+
+            fase.etapas.forEach(etapa => {
+                const etapaRow = document.createElement('tr');
+                const responsablesNombres = etapa.responsables.map(uid => usersMap.get(uid) || 'Desconocido').join(', ');
+                const fechaInicio = new Date(etapa.fecha_inicio + 'T00:00:00').toLocaleDateString('es-CO');
+                const fechaFin = new Date(etapa.fecha_fin + 'T00:00:00').toLocaleDateString('es-CO');
+
+                etapaRow.innerHTML = `
+                    <td class="py-3 px-3 pl-8 border-l-4" style="border-color: ${phaseColors[fase.fase_id % phaseColors.length]}">
+                        <p class="font-medium text-slate-200">${etapa.nombre_etapa}</p>
+                        <p class="text-xs text-slate-500">${responsablesNombres}</p>
+                    </td>
+                    <td class="py-3 px-3 text-slate-400">${fechaInicio} - ${fechaFin}</td>
+                `;
+                cronogramaTableBody.appendChild(etapaRow);
+            });
+        });
+    }
+
+    function renderCalendarEvents(estructura) {
+        const events = [];
+        estructura.forEach(fase => {
+            fase.etapas.forEach(etapa => {
+                const responsablesNombres = etapa.responsables.map(uid => usersMap.get(uid) || 'Desconocido').join(', ');
+                events.push({
+                    title: etapa.nombre_etapa,
+                    start: etapa.fecha_inicio,
+                    end: getNextDayISO(etapa.fecha_fin),
+                    color: phaseColors[fase.fase_id % phaseColors.length],
+                    extendedProps: {
+                        responsables: responsablesNombres,
+                        fase: fase.nombre_fase
+                    }
+                });
+            });
+        });
+        calendar.addEventSource(events);
+    }
+
+    function updateTaskStats(tasks) {
+        const stats = {
+            total: tasks.length,
+            completed: tasks.filter(t => t.cerrada || t.estado === 'Cerrado').length,
+            inProgress: tasks.filter(t => t.en_proceso || t.estado === 'en-proceso').length,
+        };
+        document.getElementById('totalTasks').textContent = stats.total;
+        document.getElementById('completedTasks').textContent = stats.completed;
+        document.getElementById('inProgressTasks').textContent = stats.inProgress;
+        const progress = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+        document.getElementById('progressPercent').textContent = `${progress}%`;
+        document.getElementById('progressFill').style.width = `${progress}%`;
+    }
+    
+    projectSelect.addEventListener('change', (e) => {
+        const projectId = parseInt(e.target.value, 10);
+        if (projectId) {
+            renderCronogramaView(projectId);
+        } else {
+            cronogramaTableBody.innerHTML = `<tr><td colspan="2" class="py-8 text-center text-slate-500">Seleccione un proyecto para ver su cronograma.</td></tr>`;
+            calendar.removeAllEvents();
+            updateTaskStats([]);
+        }
+    });
+
+    init();
+});
+
+// Modal
+function cerrarModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+}
+
+function mdToHtml(md) {
+    return md
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/^### (.+)$/gm, '<h3 class="text-base font-bold text-indigo-300 mt-4 mb-2">$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold text-indigo-300 mt-5 mb-2">$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold text-indigo-300 mt-5 mb-3">$1</h1>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong class="text-slate-100">$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code class="bg-slate-800 text-emerald-300 px-1.5 py-0.5 rounded text-xs">$1</code>')
+        .replace(/^- (.+)$/gm, '<li class="flex items-start gap-2 text-slate-300"><i class="fas fa-circle text-[6px] text-indigo-400 mt-1.5 flex-shrink-0"></i><span>$1</span></li>')
+        .replace(/^\d+\. (.+)$/gm, '<li class="flex items-start gap-2 text-slate-300"><span class="text-indigo-400 font-bold flex-shrink-0">•</span><span>$1</span></li>')
+        .replace(/\n\n/g, '</p><p class="mb-2">')
+        .replace(/\n/g, '<br>');
+}
+
+// IA Suggestions
+window.sugerirIA = async function() {
+    const btn = document.getElementById('btnIA');
+    const orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Analizando...';
+    const panel = document.getElementById('iaPanel');
+    const content = document.getElementById('iaContent');
+    panel.classList.remove('hidden');
+    content.innerHTML = '<p class="text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>IA analizando el proyecto y calendario...</p>';
+
+    const projectId = parseInt(document.getElementById('projectSelect').value);
+    if (!projectId) {
+        content.innerHTML = '<p class="text-amber-400 text-sm">Selecciona un proyecto primero.</p>';
+        btn.disabled = false; btn.innerHTML = orig;
+        return;
+    }
+
+    try {
+        const API = "https://gestordecursos.pegui.edu.co:8000";
+        const token = localStorage.getItem("token");
+        const [project, cronogramas, tareas] = await Promise.all([
+            fetch(`${API}/projects/${projectId}`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+            fetch(`${API}/cronogramas/project/${projectId}`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+            fetch(`${API}/tareas/`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+        ]);
+        const tareasProyecto = tareas.filter(t => t.project_id === projectId);
+
+        const res = await fetch(`${API}/chat/gemini`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+                prompt: `Eres un experto en gestión de proyectos educativos. Analiza la información de este proyecto y da sugerencias específicas para mejorar la planificación y ejecución. Responde en español con viñetas cortas y prácticas.
+
+PROYECTO: ${project.name}
+TIPO: ${project.tipo_proyecto || 'No especificado'}
+DESCRIPCIÓN: ${project.description || 'Sin descripción'}
+HORAS: ${project.horas_curso || 'No especificado'}
+ESTADO: ${project.estado || 'No especificado'}
+
+CRONOGRAMA:
+${JSON.stringify(cronogramas, null, 2)}
+
+TAREAS (${tareasProyecto.length} total):
+Completadas: ${tareasProyecto.filter(t => t.cerrada || t.estado === 'Cerrado').length}
+En Proceso: ${tareasProyecto.filter(t => t.en_proceso || t.estado === 'en-proceso').length}
+
+Sugiere:
+1. ¿La planificación actual es realista según el tipo de proyecto?
+2. ¿Hay suficientes etapas para cubrir el alcance?
+3. Recomendaciones para mejorar el flujo de trabajo
+4. ¿Se están usando los recursos adecuadamente?
+5. Puntos críticos a tener en cuenta`
+            })
+        });
+        const data = await res.json();
+        const texto = data.response || data.message || data.text || JSON.stringify(data);
+        content.innerHTML = `<div class="text-sm text-slate-300 leading-relaxed">${mdToHtml(texto)}</div>`;
+    } catch(e) {
+        content.innerHTML = `<p class="text-rose-400 text-sm">Error al conectar con IA: ${e.message}</p>`;
+    } finally {
+        btn.disabled = false; btn.innerHTML = orig;
+    }
+};
+
+// Tutorial
+window.verTutorial = function() {
+    const d = window.driver.js.driver;
+    const tour = d({
+        showProgress: true, animate: true,
+        nextBtnText: 'Siguiente →', prevBtnText: '← Anterior', doneBtnText: '¡Entendido!',
+        progressText: 'Paso {{current}} de {{total}}',
+        popoverClass: 'driverjs-theme',
+        steps: [
+            { element: '#projectSelect', popover: { title: 'Selección de Proyecto', description: 'Elige un proyecto para visualizar su calendario, cronograma y tareas asociadas.', side: 'bottom', align: 'start' } },
+            { element: '#taskStats', popover: { title: 'Estadísticas', description: 'Resumen de tareas del proyecto: totales, completadas, en proceso y progreso general.', side: 'top', align: 'start' } },
+            { element: '#calendar', popover: { title: 'Calendario de Etapas', description: 'Vista mensual con todas las etapas del cronograma. Cambia entre vista mensual y semanal. Haz clic en cualquier evento para ver más detalles.', side: 'top', align: 'start' } },
+            { element: '#cronogramaContent', popover: { title: 'Resumen del Cronograma', description: 'Lista detallada de fases y etapas con fechas y responsables del proyecto seleccionado.', side: 'top', align: 'start' } },
+            { element: '#btnIA', popover: { title: 'IA Inteligente', description: 'Haz clic para que la IA analice el proyecto, cronograma y tareas, y sugiera mejoras y optimizaciones.', side: 'bottom', align: 'start' } }
+        ]
+    });
+    tour.drive();
+};
+</script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

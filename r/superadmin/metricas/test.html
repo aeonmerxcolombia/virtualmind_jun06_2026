@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Analytics Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .card-hover { transition: all .3s ease; }
+    .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04); }
+    .stats-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .chart-container { background: rgba(255,255,255,.95); backdrop-filter: blur(10px); border:1px solid rgba(255,255,255,.2); min-height:400px; }
+    .ai-chat { height:400px; overflow-y:auto; }
+    .message-ai { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); }
+    .loading-dots::after { content:''; animation:dots 1.5s infinite; }
+    @keyframes dots{0%,20%{content:'.'}40%{content:'..'}60%{content:'...'}80%,100%{content:''}}
+    .glass-effect { background:rgba(255,255,255,.1); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.2); }
+    .ai-insight { background:linear-gradient(135deg,rgba(102,126,234,.1) 0%,rgba(118,75,162,.1) 100%); border:1px solid rgba(102,126,234,.2); animation:pulse-glow 3s infinite; }
+    @keyframes pulse-glow{0%,100%{box-shadow:0 0 5px rgba(102,126,234,.3)}50%{box-shadow:0 0 20px rgba(102,126,234,.5)}}
+    .metric-card { background:linear-gradient(135deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.7) 100%); backdrop-filter:blur(10px); }
+    .chart-fixed { position:relative; height:350px; width:100%; }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 min-h-screen">
+
+  <!-- ====================  HEADER  ==================== -->
+  <div class="gradient-bg text-white shadow-2xl">
+    <div class="container mx-auto px-6 py-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-4xl font-bold mb-2">Dashboard Analytics Pro</h1>
+          <p class="text-blue-100">Panel de control inteligente con IA integrada</p>
+        </div>
+        <div class="text-right">
+          <div class="text-2xl font-bold" id="currentTime"></div>
+          <div class="text-sm text-blue-100">Última actualización: <span id="lastUpdate">-</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================  CONTENIDO  ==================== -->
+  <div class="container mx-auto px-6 -mt-8 relative z-10">
+
+    <!-- ---------- Tarjetas de estadísticas ---------- -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="card-hover bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center">
+          <div class="stats-gradient p-3 rounded-full text-white mr-4"><i class="fas fa-project-diagram text-xl"></i></div>
+          <div>
+            <p class="text-gray-600 text-sm font-medium">Total Proyectos</p>
+            <p class="text-3xl font-bold text-gray-800" id="totalProjects">-</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-hover bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center">
+          <div class="bg-gradient-to-r from-green-400 to-green-600 p-3 rounded-full text-white mr-4"><i class="fas fa-users text-xl"></i></div>
+          <div>
+            <p class="text-gray-600 text-sm font-medium">Usuarios Activos</p>
+            <p class="text-3xl font-bold text-gray-800" id="totalUsers">-</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-hover bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center">
+          <div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-3 rounded-full text-white mr-4"><i class="fas fa-calendar-alt text-xl"></i></div>
+          <div>
+            <p class="text-gray-600 text-sm font-medium">Cronogramas</p>
+            <p class="text-3xl font-bold text-gray-800" id="activeCronograms">-</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-hover bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        <div class="flex items-center">
+          <div class="bg-gradient-to-r from-purple-400 to-pink-500 p-3 rounded-full text-white mr-4"><i class="fas fa-chart-line text-xl"></i></div>
+          <div>
+            <p class="text-gray-600 text-sm font-medium">Progreso Global</p>
+            <p class="text-3xl font-bold text-gray-800" id="globalProgress">-</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- Insights IA ---------- -->
+    <div class="ai-insight rounded-xl p-6 mb-8">
+      <div class="flex items-center mb-4">
+        <i class="fas fa-brain text-2xl text-indigo-600 mr-3"></i>
+        <h3 class="text-xl font-semibold text-gray-800">Insights IA en Tiempo Real</h3>
+        <div class="ml-auto flex items-center space-x-2">
+          <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span class="text-sm text-gray-600">Analizando...</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white bg-opacity-50 rounded-lg p-4">
+          <div class="flex items-center mb-2"><i class="fas fa-exclamation-triangle text-amber-500 mr-2"></i><span class="font-semibold text-gray-800">Alertas</span></div>
+          <p class="text-sm text-gray-700" id="aiAlerts">Cargando análisis...</p>
+        </div>
+        <div class="bg-white bg-opacity-50 rounded-lg p-4">
+          <div class="flex items-center mb-2"><i class="fas fa-lightbulb text-yellow-500 mr-2"></i><span class="font-semibold text-gray-800">Oportunidades</span></div>
+          <p class="text-sm text-gray-700" id="aiOpportunities">Cargando análisis...</p>
+        </div>
+        <div class="bg-white bg-opacity-50 rounded-lg p-4">
+          <div class="flex items-center mb-2"><i class="fas fa-target text-green-500 mr-2"></i><span class="font-semibold text-gray-800">Próximos Pasos</span></div>
+          <p class="text-sm text-gray-700" id="aiNextSteps">Cargando análisis...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- Gráficos principales ---------- -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div class="chart-container rounded-xl p-6 shadow-xl">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+          <i class="fas fa-chart-bar mr-3 text-indigo-600"></i>
+          Progreso de Proyectos
+          <button onclick="analyzeChart('projects')" class="ml-auto text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full hover:bg-indigo-200 transition-colors">
+            <i class="fas fa-magic mr-1"></i>Analizar IA
+          </button>
+        </h3>
+        <div class="chart-fixed"><canvas id="projectProgressChart"></canvas></div>
+      </div>
+
+      <div class="chart-container rounded-xl p-6 shadow-xl">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+          <i class="fas fa-chart-pie mr-3 text-indigo-600"></i>
+          Distribución de Roles
+          <button onclick="analyzeChart('roles')" class="ml-auto text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full hover:bg-indigo-200 transition-colors">
+            <i class="fas fa-magic mr-1"></i>Analizar IA
+          </button>
+        </h3>
+        <div class="chart-fixed"><canvas id="rolesChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ---------- Panel central (Chat IA) ---------- -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+
+      <!-- Chat IA -->
+      <div class="lg:col-span-2 bg-white rounded-xl shadow-xl p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+            <i class="fas fa-robot mr-3 text-indigo-600"></i>Analista IA Avanzado
+          </h3>
+          <div class="flex items-center space-x-3">
+            <select id="aiModel" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+              <option value="openai">OpenAI GPT</option>
+              <option value="gemini">Google Gemini</option>
+              <option value="kimi">Kimi AI</option>
+            </select>
+            <button onclick="generateSmartReport()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg text-sm hover:opacity-90 transition-opacity">
+              <i class="fas fa-file-alt mr-1"></i>Reporte Completo
+            </button>
+          </div>
+        </div>
+
+        <div class="ai-chat bg-gray-50 rounded-lg p-4 mb-4" id="chatContainer">
+          <div class="text-center text-gray-500 py-8">
+            <i class="fas fa-comments text-4xl mb-3"></i>
+            <p class="font-medium">Analista IA listo para insights profundos</p>
+            <p class="text-sm">Pregunta sobre tendencias, predicciones, riesgos y oportunidades</p>
+          </div>
+        </div>
+
+        <div class="flex gap-2 mb-4">
+          <input type="text" id="aiInput" placeholder="¿Qué insights necesitas sobre tus datos?"
+                 class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 onkeypress="if(event.key==='Enter') sendAIMessage()" />
+          <button onclick="sendAIMessage()" class="gradient-bg text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity" id="sendBtn">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+
+        <!-- Preguntas rápidas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <h4 class="text-sm font-semibold text-gray-600 mb-2">📊 Análisis de Rendimiento</h4>
+            <div class="space-y-2">
+              <button onclick="quickQuery('Identifica los 3 proyectos con peor rendimiento y las causas probables')"
+                      class="w-full text-left px-3 py-2 bg-red-50 text-red-700 rounded text-xs hover:bg-red-100 transition-colors">
+                🔍 Proyectos de bajo rendimiento
+              </button>
+              <button onclick="quickQuery('Analiza las tendencias de productividad en los últimos meses y predice el próximo trimestre')"
+                      class="w-full text-left px-3 py-2 bg-blue-50 text-blue-700 rounded text-xs hover:bg-blue-100 transition-colors">
+                📈 Tendencias de productividad
+              </button>
+            </div>
+          </div>
+          <div>
+            <h4 class="text-sm font-semibold text-gray-600 mb-2">💡 Optimización</h4>
+            <div class="space-y-2">
+              <button onclick="quickQuery('Sugiere una redistribución óptima de recursos basada en el rendimiento actual')"
+                      class="w-full text-left px-3 py-2 bg-green-50 text-green-700 rounded text-xs hover:bg-green-100 transition-colors">
+                ⚖️ Redistribución de recursos
+              </button>
+              <button onclick="quickQuery('Identifica cuellos de botella y sugiere soluciones específicas para acelerar procesos')"
+                      class="w-full text-left px-3 py-2 bg-purple-50 text-purple-700 rounded text-xs hover:bg-purple-100 transition-colors">
+                🚀 Eliminar cuellos de botella
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs Inteligentes -->
+      <div class="bg-white rounded-xl shadow-xl p-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+          <i class="fas fa-tachometer-alt mr-3 text-indigo-600"></i>KPIs Inteligentes
+        </h3>
+
+        <div class="space-y-4">
+          <div class="metric-card rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-gray-600">Eficiencia IA Score</span>
+              <span class="text-sm font-bold text-green-600" id="aiEfficiencyScore">-</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2 mb-2"><div class="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full" id="efficiencyBar" style="width:0%"></div></div>
+            <p class="text-xs text-gray-500" id="efficiencyInsight">Calculando...</p>
+          </div>
+
+          <div class="metric-card rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-gray-600">Riesgo Predictivo</span>
+              <span class="text-sm font-bold" id="riskScore">-</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2 mb-2"><div class="h-2 rounded-full" id="riskBar" style="width:0%"></div></div>
+            <p class="text-xs text-gray-500" id="riskInsight">Analizando...</p>
+          </div>
+
+          <div class="metric-card rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-gray-600">Potencial de Mejora</span>
+              <span class="text-sm font-bold text-blue-600" id="improvementPotential">-</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2 mb-2"><div class="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full" id="improvementBar" style="width:0%"></div></div>
+            <p class="text-xs text-gray-500" id="improvementInsight">Evaluando...</p>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg">
+          <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
+            <i class="fas fa-crystal-ball mr-2 text-indigo-600"></i>Predicción IA
+          </h4>
+          <p class="text-sm text-gray-600" id="aiPrediction">Generando predicción inteligente...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- Unidades por plan de estudio ---------- -->
+    <div class="bg-white rounded-xl shadow-xl p-6 mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+          <i class="fas fa-chart-area mr-3 text-indigo-600"></i>Análisis de Unidades por Plan de Estudio
+        </h3>
+        <button onclick="analyzeChart('units')" class="text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full hover:bg-indigo-200 transition-colors">
+          <i class="fas fa-magic mr-1"></i>Analizar con IA
+        </button>
+      </div>
+      <div class="chart-fixed"><canvas id="unitsChart"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- ==============================================================
+       ====================   JAVASCRIPT   ==========================
+       ============================================================== -->
+  <script>
+    /* --------------------------------------------------------------
+       📦  CONFIGURACIÓN BÁSICA
+       -------------------------------------------------------------- */
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    const getToken = () => localStorage.getItem("token");
+
+    /* --------------------------------------------------------------
+       📦  VARIABLES REASIGNABLES (¡las cambiamos a let!)
+       -------------------------------------------------------------- */
+    let dashboardData = {};      // permite re‑asignar después de cargar los datos
+    let chartInstances = {};     // mismo caso para los objetos Chart.js
+
+    /* --------------------------------------------------------------
+       📡  FUNCIÓN GENÉRICA DE PETICIÓN A LA IA
+       -------------------------------------------------------------- */
+    async function callAIModel({ model, text }) {
+      const token = getToken();
+      if (!token) {
+        alert("Sesión expirada. Redirigiendo al login.");
+        window.location.href = "https://gestordecursos.pegui.edu.co/";
+        return;
+      }
+
+      let endpoint, payload;
+      switch (model) {
+        case "openai":   endpoint = "/chat/openai";   payload = { mensaje: text }; break;
+        case "gemini":   endpoint = "/chat/gemini";   payload = { prompt:   text }; break;
+        case "kimi":     endpoint = "/chat/kimi";     payload = { mensaje: text }; break;
+        default: throw new Error(`Modelo desconocido: ${model}`);
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type":  "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          if (res.status === 422) {
+            const err = await res.json();
+            console.error("Error 422 IA:", err);
+            return "❌ Error de validación (422). Ver consola.";
+          }
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        /* ----  IMPORTANTE ----
+           * Algunos endpoints devuelven texto plano (p.ej. "Hola").
+           * Primero leemos como texto y, si parece JSON, lo parseamos.
+        */
+        const raw = await res.text();
+        let data;
+        try {
+          data = JSON.parse(raw);
+        } catch (_) {
+          // No es JSON → devolvemos el texto tal cual
+          data = raw;
+        }
+
+        // Si la respuesta es un objeto con la respuesta dentro, extraerla.
+        return typeof data === "string" ? data : data.response ?? data.message ?? JSON.stringify(data);
+
+      } catch (e) {
+        console.error("Fallo al contactar IA:", e);
+        return `❌ Error al contactar el modelo ${model}.`;
+      }
+    }
+
+    /* --------------------------------------------------------------
+       📤  ENVIAR MENSAJE DESDE EL CHAT
+       -------------------------------------------------------------- */
+    async function sendAIMessage() {
+      const input   = document.getElementById("aiInput");
+      const model   = document.getElementById("aiModel").value;
+      const chatBox = document.getElementById("chatContainer");
+      const sendBtn = document.getElementById("sendBtn");
+      const userMsg = input.value.trim();
+
+      if (!userMsg) return;
+      input.value = "";
+      sendBtn.disabled = true;
+
+      // Mensaje del usuario
+      chatBox.innerHTML += `
+        <div class="mb-4 flex justify-end">
+          <div class="bg-indigo-600 text-white rounded-lg p-3 max-w-md"><p class="text-sm">${userMsg}</p></div>
+        </div>`;
+
+      // Loader
+      const loadingId = "loading-" + Date.now();
+      chatBox.innerHTML += `
+        <div class="mb-4 flex justify-start" id="${loadingId}">
+          <div class="message-ai text-white rounded-lg p-3 max-w-md">
+            <div class="flex items-center">
+              <div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+              <p class="text-sm">Analizando con IA <span class="loading-dots"></span></p>
+            </div>
+          </div>
+        </div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Prompt enriquecido
+      const prompt = `
+        Como analista senior de datos educativos, responde a la siguiente consulta:
+
+        ${userMsg}
+
+        CONTEXTO DEL SISTEMA (resumen):
+        ${JSON.stringify(generateEnhancedContext(), null, 2)}
+
+        RESPONDE en español, usando viñetas y emojis cuando convenga.`;
+
+      const aiResponse = await callAIModel({ model, text: prompt });
+
+      // Quitar loader
+      document.getElementById(loadingId)?.remove();
+
+      // Mostrar respuesta IA
+      chatBox.innerHTML += `
+        <div class="mb-4 flex justify-start">
+          <div class="message-ai text-white rounded-lg p-4 max-w-3xl">
+            <div class="flex items-center mb-2">
+              <i class="fas fa-brain mr-2"></i>
+              <span class="text-xs font-semibold">${model.toUpperCase()} ANALYST</span>
+              <div class="ml-auto bg-white bg-opacity-20 px-2 py-1 rounded-full text-xs">
+                ${new Date().toLocaleTimeString('es-ES')}
+              </div>
+            </div>
+            <div class="text-sm whitespace-pre-line leading-relaxed">${aiResponse}</div>
+          </div>
+        </div>`;
+
+      sendBtn.disabled = false;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    /* --------------------------------------------------------------
+       🤖  GENERAR INFORME COMPLETO
+       -------------------------------------------------------------- */
+    async function generateSmartReport() {
+      const model   = document.getElementById("aiModel").value;
+      const chatBox = document.getElementById("chatContainer");
+
+      // Limpiar placeholder (si existe)
+      if (chatBox.querySelector('.text-center')) chatBox.innerHTML = "";
+
+      // Loader
+      chatBox.innerHTML += `
+        <div class="mb-4 flex justify-center">
+          <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg p-4 max-w-md text-center">
+            <i class="fas fa-file-alt text-2xl mb-2"></i>
+            <p class="font-semibold">Generando reporte ejecutivo...</p>
+            <div class="mt-2 flex justify-center">
+              <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+            </div>
+          </div>
+        </div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      const prompt = `
+        ERES UN CONSULTOR SENIOR EN ANALÍTICA EDUCATIVA.
+        CON LOS DATOS DEL CONTEXTO, CREA UN INFORME EJECUTIVO COMPLETO (~1500 palabras) que incluya:
+        • Resumen ejecutivo
+        • Análisis de rendimiento (proyectos, usuarios, unidades)
+        • Identificación de riesgos críticos
+        • Oportunidades de mejora
+        • Plan de acción (corto, medio, largo plazo)
+        • Métricas clave a monitorizar
+
+        Usa viñetas, emojis y tono profesional.
+        CONTEXTO:
+        ${JSON.stringify(generateEnhancedContext(), null, 2)}
+        `;
+
+      const report = await callAIModel({ model, text: prompt });
+
+      // Quitar loader
+      chatBox.querySelector('.flex.justify-center')?.remove();
+
+      // Mostrar reporte
+      chatBox.innerHTML += `
+        <div class="mb-4">
+          <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg p-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center"><i class="fas fa-file-alt mr-2"></i><span class="font-semibold">REPORTE EJECUTIVO – ${model.toUpperCase()}</span></div>
+              <button onclick="downloadReport()" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded text-xs transition-colors">
+                <i class="fas fa-download mr-1"></i>Descargar
+              </button>
+            </div>
+            <div class="text-xs mt-1 opacity-90">Generado: ${new Date().toLocaleString('es-ES')}</div>
+          </div>
+          <div class="bg-white rounded-b-lg p-4 border border-purple-200">
+            <div class="text-sm whitespace-pre-line leading-relaxed text-gray-800" id="executiveReport">
+              ${report}
+            </div>
+          </div>
+        </div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function downloadReport() {
+      const txt = document.getElementById('executiveReport')?.textContent ?? 'Sin contenido';
+      const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reporte_Ejecutivo_${new Date().toISOString().split('T')[0]}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    /* --------------------------------------------------------------
+       🧠  CONTEXTO ENRIQUECIDO
+       -------------------------------------------------------------- */
+    function generateEnhancedContext() {
+      const { projects = [], users = [], cronograms = [], units = [], studyplans = [] } = dashboardData;
+
+      const completedProjects = projects.filter(p => p.completedFases === p.totalFases).length;
+      const avgProgress = projects.length
+        ? projects.reduce((s, p) => s + ((p.completedFases || 0) / (p.totalFases || 1)), 0) / projects.length * 100
+        : 0;
+      const completedUnits = units.filter(u => u.completed).length;
+      const unitRate = units.length ? (completedUnits / units.length) * 100 : 0;
+
+      return {
+        resumen: {
+          total_proyectos: projects.length,
+          proyectos_completados: completedProjects,
+          progreso_promedio_proyectos: Math.round(avgProgress),
+          total_usuarios: users.length,
+          total_cronogramas: cronograms.length,
+          total_unidades: units.length,
+          unidades_completadas: completedUnits,
+          tasa_completacion_unidades: Math.round(unitRate),
+          fecha_analisis: new Date().toISOString()
+        },
+        proyectos_detalle: projects.map(p => ({
+          nombre: p.name,
+          fases_totales: p.totalFases || 0,
+          fases_completadas: p.completedFases || 0,
+          progreso_porcentaje: Math.round(((p.completedFases || 0) / (p.totalFases || 1)) * 100)
+        })),
+        distribucion_roles: users.reduce((a, u) => {
+          (u.roles || []).forEach(r => a[r] = (a[r] || 0) + 1);
+          return a;
+        }, {}),
+        planes_estudio: studyplans.map(sp => ({
+          nombre: sp.name,
+          unidades_asociadas: units.filter(u => u.plan_name === sp.name).length
+        }))
+      };
+    }
+
+    /* --------------------------------------------------------------
+       📊  INSIGHTS AUTOMÁTICOS + PREDICCIÓN
+       -------------------------------------------------------------- */
+    async function generateAutoInsights() {
+      const ctx   = generateEnhancedContext();
+      const model = document.getElementById('aiModel')?.value || 'openai';
+
+      const prompts = {
+        alerts:        "Con los siguientes datos, indica 2 alertas críticas (máx 50 palabras).",
+        opportunities: "Con los mismos datos, indica 2 oportunidades de mejora (máx 50 palabras).",
+        nextsteps:     "Con los mismos datos, sugiere 3 próximos pasos (máx 50 palabras)."
+      };
+
+      const call = (txt) => callAIModel({ model, text: `${txt}\n${JSON.stringify(ctx, null, 2)}` });
+
+      try {
+        const [a, o, n] = await Promise.all([
+          call(prompts.alerts),
+          call(prompts.opportunities),
+          call(prompts.nextsteps)
+        ]);
+        document.getElementById('aiAlerts').textContent        = a;
+        document.getElementById('aiOpportunities').textContent = o;
+        document.getElementById('aiNextSteps').textContent    = n;
+
+        // Predicción
+        const predPrompt = `
+          Con los datos del contexto, genera una predicción de rendimiento para las próximas 4‑6 semanas.
+          Incluye métricas concretas y una breve recomendación (máx 60 palabras).`;
+        const prediction = await call(predPrompt);
+        document.getElementById('aiPrediction').textContent = prediction;
+
+      } catch (e) {
+        console.error('Error generando insights automáticos:', e);
+        ['aiAlerts', 'aiOpportunities', 'aiNextSteps', 'aiPrediction'].forEach(id => {
+          document.getElementById(id).textContent = 'Error al generar datos';
+        });
+      }
+    }
+
+    /* --------------------------------------------------------------
+       📈  MÉTRICAS INTELIGENTES (cálculo local)
+       -------------------------------------------------------------- */
+    async function calculateIntelligentMetrics() {
+      const { projects = [], users = [], units = [] } = dashboardData;
+
+      // Efficiency
+      const completedProjects = projects.filter(p => p.completedFases === p.totalFases).length;
+      const avgProgress = projects.length
+        ? projects.reduce((s, p) => s + ((p.completedFases || 0) / (p.totalFases || 1)), 0) / projects.length
+        : 0;
+      const efficiencyScore = Math.round((avgProgress + (completedProjects / Math.max(projects.length, 1))) * 50);
+      document.getElementById('aiEfficiencyScore').textContent = `${efficiencyScore}%`;
+      document.getElementById('efficiencyBar').style.width = `${efficiencyScore}%`;
+
+      if (efficiencyScore >= 80) {
+        document.getElementById('efficiencyBar').className = 'bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full';
+        document.getElementById('efficiencyInsight').textContent = '🚀 Excelente eficiencia operativa';
+      } else if (efficiencyScore >= 60) {
+        document.getElementById('efficiencyBar').className = 'bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full';
+        document.getElementById('efficiencyInsight').textContent = '⚡ Buena eficiencia, con margen de mejora';
+      } else {
+        document.getElementById('efficiencyBar').className = 'bg-gradient-to-r from-red-400 to-red-600 h-2 rounded-full';
+        document.getElementById('efficiencyInsight').textContent = '⚠️ Eficiencia baja, requiere atención';
+      }
+
+      // Risk
+      const stagnantProjects = projects.filter(p => (p.completedFases || 0) < (p.totalFases || 1) * 0.3).length;
+      const riskScore = Math.min(Math.round((stagnantProjects / Math.max(projects.length, 1)) * 100), 100);
+      document.getElementById('riskScore').textContent = `${riskScore}%`;
+      document.getElementById('riskBar').style.width = `${riskScore}%`;
+
+      let riskColor, riskText, riskClass;
+      if (riskScore <= 20) { riskColor = 'from-green-400 to-green-600'; riskText = '✅ Riesgo bajo'; riskClass = 'text-green-600'; }
+      else if (riskScore <= 50) { riskColor = 'from-yellow-400 to-yellow-600'; riskText = '⚠️ Riesgo moderado'; riskClass = 'text-yellow-600'; }
+      else { riskColor = 'from-red-400 to-red-600'; riskText = '🚨 Alto riesgo'; riskClass = 'text-red-600'; }
+      document.getElementById('riskBar').className = `h-2 rounded-full bg-gradient-to-r ${riskColor}`;
+      document.getElementById('riskInsight').textContent = riskText;
+      document.getElementById('riskScore').className = `text-sm font-bold ${riskClass}`;
+
+      // Improvement
+      const incompleteProjects = projects.filter(p => (p.completedFases || 0) < (p.totalFases || 1)).length;
+      const improvementPotential = Math.round((incompleteProjects / Math.max(projects.length, 1)) * 100);
+      document.getElementById('improvementPotential').textContent = `${improvementPotential}%`;
+      document.getElementById('improvementBar').style.width = `${improvementPotential}%`;
+
+      let improvText;
+      if (improvementPotential >= 70) improvText = '🎯 Alto potencial de optimización';
+      else if (improvementPotential >= 40) improvText = '📈 Oportunidades de mejora disponibles';
+      else improvText = '🏆 Sistema ya altamente optimizado';
+      document.getElementById('improvementInsight').textContent = improvText;
+    }
+
+    /* --------------------------------------------------------------
+       📊  RENDER ESTADISTICAS Y GRÁFICOS
+       -------------------------------------------------------------- */
+    async function renderStats() {
+      try {
+        const [projRes, userRes, cronRes, planRes, unitRes] = await Promise.all([
+          fetchData('projects'),
+          fetchData('users'),
+          fetchData('cronogramas'),
+          fetchData('study_plans'),
+          fetchData('units')
+        ]);
+
+        const projects   = Array.isArray(projRes) ? projRes : [];
+        const users      = Array.isArray(userRes) ? userRes : [];
+        const cronograms = Array.isArray(cronRes) ? cronRes : [];
+        const studyplans = Array.isArray(planRes) ? planRes : [];
+        const units      = Array.isArray(unitRes) ? unitRes : [];
+
+        dashboardData = { projects, users, cronograms, studyplans, units };
+
+        // Tarjetas principales
+        document.getElementById('totalProjects').textContent   = projects.length;
+        document.getElementById('totalUsers').textContent      = users.length;
+        document.getElementById('activeCronograms').textContent = cronograms.length;
+        const totalFases = projects.reduce((s, p) => s + (p.totalFases || 0), 0);
+        const completedFases = projects.reduce((s, p) => s + (p.completedFases || 0), 0);
+        const globalProgress = totalFases ? Math.round((completedFases / totalFases) * 100) : 0;
+        document.getElementById('globalProgress').textContent = `${globalProgress}%`;
+
+        // Destruir gráficos anteriores
+        Object.values(chartInstances).forEach(ch => ch.destroy());
+        chartInstances = {};
+
+        // ---- Gráfico Progreso de Proyectos ----
+        const ctxProj = document.getElementById('projectProgressChart').getContext('2d');
+        chartInstances.projectProgress = new Chart(ctxProj, {
+          type: 'bar',
+          data: {
+            labels: projects.map(p => p.name?.substring(0,20)+'...'||'Proyecto'),
+            datasets: [
+              { label:'Fases completadas', data:projects.map(p=>p.completedFases||0),
+                backgroundColor:'rgba(34,197,94,0.8)', borderColor:'rgba(34,197,94,1)', borderWidth:1, borderRadius:4 },
+              { label:'Fases pendientes', data:projects.map(p=>(p.totalFases||0)-(p.completedFases||0)),
+                backgroundColor:'rgba(239,68,68,0.8)', borderColor:'rgba(239,68,68,1)', borderWidth:1, borderRadius:4 }
+            ]
+          },
+          options:{
+            responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{position:'top'},
+                      tooltip:{ backgroundColor:'rgba(0,0,0,0.8)', titleColor:'white', bodyColor:'white' } },
+            scales:{ y:{beginAtZero:true}, x:{ticks:{maxRotation:45}} }
+          }
+        });
+
+        // ---- Gráfico Distribución de Roles ----
+        const roleCounts = {};
+        users.forEach(u => (u.roles||[]).forEach(r=>roleCounts[r]=(roleCounts[r]||0)+1));
+        const roleColors = Object.keys(roleCounts).map((_,i)=>`hsl(${(i*137.5)%360},70%,60%)`);
+        const ctxRoles = document.getElementById('rolesChart').getContext('2d');
+        chartInstances.roles = new Chart(ctxRoles, {
+          type:'doughnut',
+          data:{ labels:Object.keys(roleCounts),
+                 datasets:[{ data:Object.values(roleCounts), backgroundColor:roleColors,
+                            borderColor:'white', borderWidth:2 }]},
+          options:{ responsive:true, maintainAspectRatio:false,
+                    plugins:{ legend:{position:'bottom'} } }
+        });
+
+        // ---- Gráfico Unidades por Plan ----
+        const planUnits = {};
+        units.forEach(u=>{
+          const plan = u.plan_name || 'Sin plan asignado';
+          if(!planUnits[plan]) planUnits[plan]={completed:0,total:0};
+          planUnits[plan].total++;
+          if(u.completed) planUnits[plan].completed++;
+        });
+        const ctxUnits = document.getElementById('unitsChart').getContext('2d');
+        chartInstances.units = new Chart(ctxUnits, {
+          type:'bar',
+          data:{
+            labels:Object.keys(planUnits),
+            datasets:[
+              { label:'Unidades completadas', data:Object.values(planUnits).map(p=>p.completed),
+                backgroundColor:'rgba(59,130,246,0.8)', borderColor:'rgba(59,130,246,1)', borderWidth:1, borderRadius:4 },
+              { label:'Unidades totales', data:Object.values(planUnits).map(p=>p.total),
+                backgroundColor:'rgba(156,163,175,0.6)', borderColor:'rgba(156,163,175,1)', borderWidth:1, borderRadius:4 }
+            ]
+          },
+          options:{
+            responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{position:'top'} },
+            scales:{ y:{beginAtZero:true}, x:{ticks:{maxRotation:45}} }
+          }
+        });
+
+        // Métricas inteligentes y insights automáticos
+        await calculateIntelligentMetrics();
+        await generateAutoInsights();
+
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('es-ES');
+
+      } catch (e) {
+        console.error("Error cargando dashboard:", e);
+        ['totalProjects','totalUsers','activeCronograms','globalProgress'].forEach(id=>{
+          const el=document.getElementById(id);
+          if(el) el.textContent='Error';
+        });
+      }
+    }
+
+    /* --------------------------------------------------------------
+       📦  CONSULTAS RÁPIDAS
+       -------------------------------------------------------------- */
+    function quickQuery(text) {
+      document.getElementById('aiInput').value = text;
+      sendAIMessage();
+    }
+
+    /* --------------------------------------------------------------
+       📈  ANALIZAR GRÁFICO CON IA
+       -------------------------------------------------------------- */
+    function analyzeChart(type) {
+      let query='';
+      if (type==='projects') query='Analiza el gráfico de progreso de proyectos: identifica retrasos, buenas tendencias y sugiere acciones.';
+      else if (type==='roles')   query='Analiza la distribución de roles y propone una redistribución óptima si hay escasez.';
+      else if (type==='units')   query='Revisa el rendimiento por plan de estudio y señala los planes con peor desempeño.';
+      document.getElementById('aiInput').value = query;
+      sendAIMessage();
+    }
+
+    /* --------------------------------------------------------------
+       📡  FETCH GENÉRICO (APIs del backend)
+       -------------------------------------------------------------- */
+    async function fetchData(endpoint) {
+      const token = getToken();
+      if (!token) {
+        console.warn('Sin token → redirigiendo');
+        window.location.href = 'https://gestordecursos.pegui.edu.co/';
+        return { error: 'No token' };
+      }
+      try {
+        const res = await fetch(`${API_BASE}/${endpoint}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          if (res.status === 403) return { error: '403 Forbidden' };
+          throw new Error(`HTTP ${res.status}`);
+        }
+        return await res.json();
+      } catch (e) {
+        console.error(`Error fetch ${endpoint}:`, e);
+        return { error: e.message };
+      }
+    }
+
+    /* --------------------------------------------------------------
+       ⏱  RELOJ EN TIEMPO REAL
+       -------------------------------------------------------------- */
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('currentTime').textContent = now.toLocaleTimeString('es-ES');
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    /* --------------------------------------------------------------
+       🚀  INICIALIZAR DASHBOARD
+       -------------------------------------------------------------- */
+    renderStats();                     // carga inicial
+    setInterval(renderStats, 300000);  // refresca cada 5 min
+
+    console.log('Dashboard Analytics Pro inicializado correctamente');
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

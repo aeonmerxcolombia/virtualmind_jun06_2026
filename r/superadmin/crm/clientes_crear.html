@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear Cliente - VirtualMind</title>
+  
+  <!-- Dependencias -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="/js/countries-data.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/19.2.16/css/intlTelInput.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/19.2.16/js/intlTelInput.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #090D16;
+      color: #cbd5e1;
+      overflow-x: hidden;
+    }
+
+    .gradient-bg { 
+      background: linear-gradient(135deg, #090d16 0%, #0f172a 100%); 
+    }
+            
+    .card-glass {             
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .step { display: none; }
+    .step.active { display: block; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(12px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+
+    /* Campos de Entrada Estilo Cyberpunk */
+    #clientForm input[type="text"],
+    #clientForm input[type="email"],
+    #clientForm input[type="password"],
+    #clientForm select,
+    #clientForm textarea {
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      background: rgba(15, 23, 42, 0.6) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      color: #f8fafc !important;
+      border-radius: 0.75rem !important; 
+      padding: 0.75rem 1rem !important;
+      box-shadow: none !important;
+      width: 100%;
+    }
+    #clientForm input[type="tel"] {
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      background: rgba(15, 23, 42, 0.6) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      color: #f8fafc !important;
+      border-radius: 0.75rem !important; 
+      box-shadow: none !important;
+      width: 100%;
+      padding-left: 3rem !important;
+    }
+
+    #clientForm input:focus,
+    #clientForm select:focus,
+    #clientForm textarea:focus {
+      border-color: #6366f1 !important; 
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
+      background: rgba(15, 23, 42, 0.95) !important;
+      outline: none !important;
+    }
+
+    #clientForm input:disabled,
+    #clientForm select:disabled,
+    #clientForm textarea:disabled {
+      background-color: rgba(15, 23, 42, 0.3) !important; 
+      color: #64748b !important; 
+      border-color: rgba(255, 255, 255, 0.02) !important; 
+      cursor: not-allowed !important;
+    }
+
+    /* Validaciones */
+    .error { border-color: #f43f5e !important; box-shadow: 0 0 10px rgba(244, 63, 94, 0.2) !important; }
+    .error-text { color: #f43f5e; font-size: 0.75rem; margin-top: 6px; display: none; font-weight: 600; }
+    .error-text.active { display: block; animation: fadeIn 0.3s ease; }
+
+    #saveIndicator { transition: opacity 0.5s ease-in-out; }
+    
+    /* CSS de intl-tel-input para Tema Oscuro */
+    .iti { width: 100%; display: block; }
+    .iti__input { 
+      padding-left: 3rem !important;
+    }
+    .iti__flag-container {
+      border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 0.75rem 0 0 0.75rem !important;
+      padding: 0 8px;
+    }
+    .iti__country-list { 
+      background-color: #0f172a !important; 
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: #f1f5f9 !important;
+      z-index: 100; 
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .iti__country { padding: 10px !important; transition: background-color 0.2s; }
+    .iti__country:hover, .iti__country.iti__highlight { background-color: rgba(99, 102, 241, 0.2) !important; }
+    .iti--separate-dial-code .iti__selected-flag { background-color: transparent !important; color: #f8fafc !important; }
+
+    /* Custom Radio & Checkbox */
+    .radio-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
+    .radio-custom input[type=radio] { opacity: 0; position: absolute; }
+    .radio-custom .radiomark { 
+      display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8); 
+      border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 50%; margin-right: 8px; transition: all 0.3s ease; 
+    }
+    .radio-custom input:checked + .radiomark { background: #4f46e5; border-color: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+    .radio-custom input:checked + .radiomark:after { 
+      content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; 
+      position: absolute; left: 6px; top: 6px; 
+    }
+
+    #caracter_entidad_group { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem; }
+    #caracter_entidad_group label { display: inline-flex; items: center; min-width: 150px; font-weight: 500; color: #cbd5e1; cursor: pointer; transition: color 0.2s; }
+    #caracter_entidad_group label:hover { color: #fff; }
+
+    /* Botones y Controles */
+    .remove-doc-btn {
+        background-color: rgba(244, 63, 94, 0.1);
+        color: #fda4af;
+        border: 1px solid rgba(244, 63, 94, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        font-size: 0.8rem;
+    }
+    .remove-doc-btn:hover { background-color: #e11d48; color: #ffffff; border-color: transparent; }
+
+    .help-icon { 
+        display: inline-flex; align-items: center; justify-content: center; 
+        width: 18px; height: 18px; background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 50%; font-size: 11px; font-weight: bold; cursor: help; transition: all 0.2s;
+    }
+    .help-icon:hover { background: #6366f1; color: #fff; box-shadow: 0 0 8px rgba(99, 102, 241, 0.5); }
+
+    /* Ambient glowing background blobs */
+    .glow-blob {
+        position: fixed; width: 600px; height: 600px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
+        border-radius: 50%; pointer-events: none; z-index: 0;
+    }
+
+    /* Tooltip System CSS */
+    .vm-tooltip { position:absolute; background:#0f172a; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.45); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; white-space:nowrap; border: 1px solid rgba(255, 255, 255, 0.08); font-weight: 500; }
+    .vm-tooltip.visible { opacity:1; transform:translateY(0); }
+
+    /* Custom File Input Styling */
+    input[type=file]::file-selector-button {
+      border: 0; background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2);
+      padding: 0.5rem 1rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-right: 1rem;
+    }
+    input[type=file]::file-selector-button:hover { background: rgba(99, 102, 241, 0.25); color: #fff; }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen py-10 flex justify-center items-start relative">
+
+  <div class="glow-blob top-0 left-0"></div>
+  <div class="glow-blob bottom-0 right-0"></div>
+
+  <!-- Custom Notification Container (Toasts) -->
+  <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
+
+  <!-- Contenedor Principal -->
+  <div class="w-full max-w-5xl card-glass rounded-3xl p-8 z-10 relative">
+    
+    <header class="flex flex-col sm:flex-row justify-between items-center mb-8 border-b border-white/5 pb-6 gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <i class="fas fa-building text-white text-xl"></i>
+        </div>
+        <div>
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">Registro de Cliente</h1>
+            <p class="text-xs text-indigo-400 font-semibold mt-1">Creación de perfiles corporativos</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right hidden sm:block">
+            <p id="progressText" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Paso 1 de 5</p>
+            <span id="saveIndicator" class="text-[10px] text-emerald-400 opacity-0 font-medium">✓ Progreso guardado</span>
+        </div>
+        <button id="resetFormBtn" type="button" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl border border-white/5 transition-all font-semibold shadow-md flex items-center gap-2" data-tooltip="Borra todos los datos guardados y empieza de nuevo" data-tooltip-position="bottom">
+            <i class="fas fa-redo-alt"></i> <span>Reiniciar</span>
+        </button>
+      </div>
+    </header>
+    
+    <div class="mb-10">
+      <div class="w-full bg-slate-900/50 rounded-full h-2 border border-white/5 overflow-hidden">
+        <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500 ease-out" style="width: 20%"></div>
+      </div>
+    </div>
+        
+    <form id="clientForm" class="space-y-6">
+                  
+      <!-- ================= PASO 1 ================= -->
+      <section class="step" data-step="1">
+        <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
+            <h2 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
+                <i class="fas fa-city text-indigo-400"></i> Datos de la Empresa
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+            <div>
+                <label for="razon_social" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5 flex items-center gap-1">Razón Social <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Razón social registrada de la empresa" data-tooltip-position="top">?</span></label>
+                <input type="text" id="razon_social" name="razon_social" required spellcheck="true" placeholder="Ej: TechCorp SAS" data-tooltip="Nombre legal registrado de la empresa ante la cámara de comercio" data-tooltip-position="top">
+                <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p>
+            </div>
+            <div>
+                <label for="pais" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">País <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Selecciona el país donde está registrada la empresa" data-tooltip-position="top">?</span></label>
+                <select id="pais" name="pais" required data-tooltip="Selecciona el país donde está registrada la empresa" data-tooltip-position="top">
+                <option value="">Seleccione...</option>
+                </select>
+                <input type="text" id="otro_pais" name="otro_pais" class="hidden mt-3" placeholder="Especifique el país" spellcheck="true" data-tooltip="Escribe el nombre del país si no está en la lista" data-tooltip-position="top">
+                <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Debe seleccionar un país.</p>
+            </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+            <div>
+                <label for="ciudad" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Ciudad / Estado <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Ciudad o estado donde tiene su sede la empresa" data-tooltip-position="top">?</span></label>
+                <select id="ciudad" name="ciudad" disabled required data-tooltip="Ciudad o estado donde tiene su sede la empresa" data-tooltip-position="top">
+                <option value="">Seleccione un país primero...</option>
+                </select>
+                <input type="text" id="otra_ciudad" name="otra_ciudad" class="hidden mt-3" placeholder="Especifique la ciudad" spellcheck="true" data-tooltip="Escribe la ciudad si no está en la lista" data-tooltip-position="top">
+                <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Debe seleccionar una ciudad.</p>
+            </div>
+            <div>
+                <label id="nitLabel" for="nit" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">NIT / ID Tributario <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Número de identificación tributaria del país seleccionado" data-tooltip-position="top">?</span></label>
+                <input type="text" id="nit" name="nit" disabled required placeholder="Seleccione un país primero" spellcheck="false" data-tooltip="Número de identificación tributaria del país seleccionado" data-tooltip-position="top">
+                <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p>
+            </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+            <div>
+                <label for="direccion" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Dirección Oficial <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Dirección física de la sede principal de la empresa" data-tooltip-position="top">?</span></label>
+                <input type="text" id="direccion" name="direccion" required spellcheck="true" placeholder="Sede principal" data-tooltip="Dirección física de la sede principal de la empresa" data-tooltip-position="top">
+                <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p>
+            </div> 
+            <div>
+                <label for="tipo_entidad" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Tipo de Entidad <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Clasificación legal de la empresa según su constitución" data-tooltip-position="top">?</span></label>
+                <select id="tipo_entidad" name="tipo_entidad" required data-tooltip="Clasificación legal de la empresa según su constitución" data-tooltip-position="top">
+                <option value="">Seleccionar...</option>
+                <option value="Persona Natural / Independiente">Persona Natural / Independiente</option>
+                <option value="Empresa Unipersonal (E.U.)">Empresa Unipersonal (E.U.)</option>
+                <option value="Sociedad por Acciones Simplificada (S.A.S)">Sociedad por Acciones Simplificada (S.A.S)</option>
+                <option value="Sociedad Anónima (S.A.)">Sociedad Anónima (S.A.)</option>
+                <option value="Sociedad de Responsabilidad Limitada (LTDA)">Sociedad de Responsabilidad Limitada (LTDA)</option>
+                <option value="Entidad sin Ánimo de Lucro (ESAL)">Entidad sin Ánimo de Lucro (ESAL)</option>
+                <option value="Fundación">Fundación</option>
+                <option value="Cooperativa">Cooperativa</option>
+                <option value="ONG">ONG</option>
+                <option value="Entidad Estatal">Entidad Estatal</option>
+                <option value="Centro Educativo">Centro Educativo</option>
+                <option value="Otra">Otra</option>
+                </select>
+                <input type="text" id="tipo_entidad_otra" name="tipo_entidad_otra" class="hidden mt-3" placeholder="Especifique otro tipo" spellcheck="true" data-tooltip="Describe el tipo de entidad si seleccionaste "Otra"" data-tooltip-position="top">
+                <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Debe seleccionar un tipo de entidad.</p>
+            </div>
+            </div>
+            
+            <div class="mt-8 bg-slate-900/50 p-5 rounded-xl border border-white/5">
+            <label class="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-3">Carácter de la Entidad <span class="text-rose-500">*</span></label>
+            <div id="caracter_entidad_group">
+                <label class="radio-custom"><input type="radio" name="caracter_entidad" value="Privada" required><span class="radiomark"></span> Privada</label>
+                <label class="radio-custom"><input type="radio" name="caracter_entidad" value="Pública"><span class="radiomark"></span> Pública</label>
+                <label class="radio-custom"><input type="radio" name="caracter_entidad" value="Mixta"><span class="radiomark"></span> Mixta</label>
+                <label class="radio-custom"><input type="radio" name="caracter_entidad" value="Gubernamental"><span class="radiomark"></span> Gubernamental</label>
+                <label class="radio-custom"><input type="radio" name="caracter_entidad" value="No Gubernamental"><span class="radiomark"></span> No Gubernamental</label>
+                <label class="radio-custom"><input type="radio" name="caracter_entidad" value="Educativa"><span class="radiomark"></span> Educativa</label>
+                <label class="radio-custom"><input type="radio" name="caracter_entidad" value="Religiosa"><span class="radiomark"></span> Religiosa</label>
+                <label class="radio-custom"><input type="radio" name="caracter_entidad" value="Sindicato"><span class="radiomark"></span> Sindicato</label>
+                <label class="radio-custom"><input type="radio" name="caracter_entidad" value="Comunitaria"><span class="radiomark"></span> Comunitaria</label>
+            </div>
+            <p class="error-text mt-3" id="caracter_entidad_group_error"><i class="fas fa-exclamation-circle mr-1"></i> Debe seleccionar una opción.</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4">
+          <button type="button" data-action="clear" data-step="1" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl transition-all font-semibold text-sm border border-white/5"><i class="fas fa-eraser mr-2"></i>Limpiar Paso</button>
+          <div class="flex w-full sm:w-auto gap-3"> 
+            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-bold text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
+            <button type="button" data-action="next" data-step="1" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all font-bold text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
+          </div>
+        </div>
+      </section>
+                  
+      <!-- ================= PASO 2 ================= -->
+      <section class="step" data-step="2">
+        <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
+            <h2 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
+                <i class="fas fa-user-tie text-emerald-400"></i> Representante Legal
+            </h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div> 
+                    <label for="rep_legal_pnombre" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Primer Nombre <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer nombre del representante legal de la empresa" data-tooltip-position="top">?</span></label> 
+                    <input type="text" id="rep_legal_pnombre" name="rep_legal_pnombre" required spellcheck="true" placeholder="Ej: Carlos" data-tooltip="Primer nombre del representante legal de la empresa" data-tooltip-position="top"> 
+                    <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p> 
+                </div>
+                <div> 
+                    <label for="rep_legal_snombre" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Segundo Nombre <span class="help-icon" data-tooltip="Segundo nombre del representante legal (si aplica)" data-tooltip-position="top">?</span></label> 
+                    <input type="text" id="rep_legal_snombre" name="rep_legal_snombre" spellcheck="true" placeholder="Opcional" data-tooltip="Segundo nombre del representante legal (si aplica)" data-tooltip-position="top"> 
+                </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <div> 
+                    <label for="rep_legal_papellido" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Primer Apellido <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer apellido del representante legal" data-tooltip-position="top">?</span></label> 
+                    <input type="text" id="rep_legal_papellido" name="rep_legal_papellido" required spellcheck="true" placeholder="Ej: Gómez" data-tooltip="Primer apellido del representante legal" data-tooltip-position="top"> 
+                    <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p> 
+                </div>
+                <div> 
+                    <label for="rep_legal_sapellido" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Segundo Apellido <span class="help-icon" data-tooltip="Segundo apellido del representante legal (si aplica)" data-tooltip-position="top">?</span></label> 
+                    <input type="text" id="rep_legal_sapellido" name="rep_legal_sapellido" spellcheck="true" placeholder="Opcional" data-tooltip="Segundo apellido del representante legal (si aplica)" data-tooltip-position="top"> 
+                </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <div> 
+                    <label for="rep_legal_email" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Correo Electrónico <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Correo electrónico corporativo del representante legal" data-tooltip-position="top">?</span></label> 
+                    <input type="email" id="rep_legal_email" name="rep_legal_email" required spellcheck="false" placeholder="representante@empresa.com" data-tooltip="Correo electrónico corporativo del representante legal" data-tooltip-position="top"> 
+                    <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Debe ingresar un correo válido.</p> 
+                </div>
+                <div> 
+                    <label for="rep_legal_cargo" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Cargo Oficial <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Cargo oficial que ocupa en la empresa" data-tooltip-position="top">?</span></label> 
+                    <input type="text" id="rep_legal_cargo" name="rep_legal_cargo" required spellcheck="true" placeholder="Ej: Gerente General" data-tooltip="Cargo oficial que ocupa en la empresa (ej: Gerente General)" data-tooltip-position="top"> 
+                    <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p> 
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4">
+          <div class="flex w-full sm:w-auto gap-3"> 
+            <button type="button" data-action="back" data-step="2" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm"><i class="fas fa-arrow-left mr-1.5"></i>Atrás</button> 
+            <button type="button" data-action="clear" data-step="2" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm" data-tooltip="Limpiar Paso" data-tooltip-position="top"><i class="fas fa-eraser"></i></button> 
+          </div>
+          <div class="flex w-full sm:w-auto gap-3"> 
+            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-bold text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
+            <button type="button" data-action="next" data-step="2" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all font-bold text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PASO 3 ================= -->
+      <section class="step" data-step="3">
+        <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
+            <h2 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
+                <i class="fas fa-user-circle text-amber-400"></i> Contacto Principal & Accesos
+            </h2>
+            
+            <div class="flex items-center mb-6 p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl"> 
+                <label class="checkbox-custom mb-0">
+                    <input type="checkbox" id="heredar_datos" data-tooltip="Marca esta opción si el contacto principal es la misma persona que el representante legal" data-tooltip-position="top">
+                    <span class="checkmark"></span>
+                </label>
+                <label for="heredar_datos" class="ml-1 text-sm text-indigo-300 font-semibold cursor-pointer select-none">Heredar datos del Representante Legal</label> 
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div> <label for="pnombre" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Primer Nombre <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer nombre de la persona de contacto para la plataforma" data-tooltip-position="top">?</span></label> <input type="text" id="pnombre" name="pnombre" required spellcheck="true" data-tooltip="Primer nombre de la persona de contacto para la plataforma" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Obligatorio.</p> </div>
+                <div> <label for="snombre" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Segundo Nombre <span class="help-icon" data-tooltip="Segundo nombre del contacto (opcional)" data-tooltip-position="top">?</span></label> <input type="text" id="snombre" name="snombre" spellcheck="true" data-tooltip="Segundo nombre del contacto (opcional)" data-tooltip-position="top"> </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <div> <label for="papellido" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Primer Apellido <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer apellido del contacto principal" data-tooltip-position="top">?</span></label> <input type="text" id="papellido" name="papellido" required spellcheck="true" data-tooltip="Primer apellido del contacto principal" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Obligatorio.</p> </div>
+                <div> <label for="sapellido" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Segundo Apellido <span class="help-icon" data-tooltip="Segundo apellido del contacto (opcional)" data-tooltip-position="top">?</span></label> <input type="text" id="sapellido" name="sapellido" spellcheck="true" data-tooltip="Segundo apellido del contacto (opcional)" data-tooltip-position="top"> </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <div> <label for="cargo" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Cargo <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Cargo del contacto principal dentro de la empresa" data-tooltip-position="top">?</span></label> <input type="text" id="cargo" name="cargo" required spellcheck="true" placeholder="Ej: Director de Proyectos" data-tooltip="Cargo del contacto principal dentro de la empresa" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Obligatorio.</p> </div>
+                <div> <label for="email" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Correo para Accesos <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Correo electrónico que usará el contacto para acceder a VirtualMind" data-tooltip-position="top">?</span></label> <input type="email" id="email" name="email" required spellcheck="false" placeholder="contacto@empresa.com" data-tooltip="Correo electrónico que usará el contacto para acceder a VirtualMind" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Ingrese correo válido.</p> </div>
+            </div>
+                    
+            <div class="mt-8 bg-indigo-500/5 border border-indigo-500/10 rounded-xl p-5">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-envelope text-indigo-400 text-lg mt-0.5"></i>
+                    <div>
+                        <p class="text-sm font-semibold text-indigo-300">Activación por correo electrónico</p>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">El cliente recibirá un enlace de activación en su correo <strong id="activationEmailDisplay">electrónico</strong> para crear su contraseña y acceder a la plataforma.</p>
+                    </div>
+                </div>
+            </div>
+                    
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <div> 
+                    <label for="telefono" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Teléfono Fijo <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Número de teléfono fijo de la empresa con código de país" data-tooltip-position="top">?</span></label> 
+                    <input type="tel" id="telefono" name="telefono" required data-tooltip="Número de teléfono fijo de la empresa con código de país" data-tooltip-position="top"> 
+                    <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Número inválido.</p>
+                </div>
+                <div> 
+                    <label for="whatsapp" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">WhatsApp Móvil <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Número de WhatsApp del contacto con código de país" data-tooltip-position="top">?</span></label> 
+                    <input type="tel" id="whatsapp" name="whatsapp" required data-tooltip="Número de WhatsApp del contacto con código de país" data-tooltip-position="top"> 
+                    <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Número inválido.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4 border-t border-white/5 pt-6">
+           <div class="flex w-full sm:w-auto gap-3"> 
+             <button type="button" data-action="back" data-step="3" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm"><i class="fas fa-arrow-left mr-1.5"></i>Atrás</button> 
+             <button type="button" data-action="clear" data-step="3" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm" data-tooltip="Limpiar Paso" data-tooltip-position="top"><i class="fas fa-eraser"></i></button> 
+           </div>
+          <div class="flex w-full sm:w-auto gap-3"> 
+            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-bold text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
+            <button type="button" data-action="next" data-step="3" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all font-bold text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
+          </div>
+        </div>
+      </section>
+            
+      <!-- ================= PASO 4 ================= -->
+      <section class="step" data-step="4">
+        <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
+            <h2 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2 border-b border-white/5 pb-3">
+                <i class="fas fa-file-invoice text-rose-400"></i> Documentos Institucionales
+            </h2>
+            <p class="text-xs text-slate-400 mb-6 bg-slate-900/80 p-4 rounded-xl border border-white/5 leading-relaxed">
+                <i class="fas fa-shield-alt text-indigo-400 mr-1.5"></i> <b>Nota de Seguridad:</b> Cargue los documentos PDF/JPG requeridos. Los archivos en caché local no se persisten; si recarga la página, deberá seleccionarlos nuevamente.
+            </p>
+                    
+            <h3 class="text-sm font-bold text-slate-300 mb-4 border-l-2 border-indigo-500 pl-2">Archivos Principales</h3>
+            <div class="space-y-4 bg-slate-900/50 p-5 rounded-xl border border-white/5">
+               <div>
+                  <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">📘 Existencia y Representación Legal <span class="help-icon" data-tooltip="Certificado de existencia y representación legal (PDF/JPG)" data-tooltip-position="top">?</span></label>
+                 <input type="file" id="doc_existencia" name="doc_existencia" accept=".pdf,.jpg,.png" class="w-full text-slate-400 text-xs" data-tooltip="Certificado de existencia y representación legal (PDF/JPG)" data-tooltip-position="top">
+               </div>
+               <div class="pt-2 border-t border-white/5">
+                  <label class="block text-xs font-bold text-slate-400 mb-2 mt-2 uppercase tracking-wide">🧾 Registro Tributario (RUT) <span class="help-icon" data-tooltip="Registro Único Tributario o equivalente (PDF/JPG)" data-tooltip-position="top">?</span></label>
+                 <input type="file" id="doc_rut" name="doc_rut" accept=".pdf,.jpg,.png" class="w-full text-slate-400 text-xs" data-tooltip="Registro Único Tributario o equivalente (PDF/JPG)" data-tooltip-position="top">
+               </div>
+               <div class="pt-2 border-t border-white/5">
+                  <label class="block text-xs font-bold text-slate-400 mb-2 mt-2 uppercase tracking-wide">🪪 Documento del Representante <span class="help-icon" data-tooltip="Documento de identidad del representante legal (PDF/JPG)" data-tooltip-position="top">?</span></label>
+                 <input type="file" id="doc_identificacion" name="doc_identificacion" accept=".pdf,.jpg,.png" class="w-full text-slate-400 text-xs" data-tooltip="Documento de identidad del representante legal (PDF/JPG)" data-tooltip-position="top">
+               </div>
+             </div>
+                    
+            <h3 class="text-sm font-bold text-slate-300 mb-4 mt-8 border-l-2 border-emerald-500 pl-2">Anexos Adicionales</h3>
+            <div id="documentos_adicionales_container" class="space-y-4"></div>
+                    
+            <button type="button" id="add_doc_btn" class="mt-4 bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-2.5 rounded-xl transition-all border border-white/5 text-xs font-bold shadow-md flex items-center gap-2" data-tooltip="Agrega un anexo adicional personalizado" data-tooltip-position="top">
+              <i class="fas fa-plus-circle text-emerald-400"></i> Añadir Anexo Extra
+            </button>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4 border-t border-white/5 pt-6">
+          <div class="flex w-full sm:w-auto gap-3"> 
+            <button type="button" data-action="back" data-step="4" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm"><i class="fas fa-arrow-left mr-1.5"></i>Atrás</button> 
+            <button type="button" data-action="clear" data-step="4" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm" data-tooltip="Limpiar Paso" data-tooltip-position="top"><i class="fas fa-eraser"></i></button> 
+          </div>
+          <div class="flex w-full sm:w-auto gap-3"> 
+            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-bold text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
+            <button type="button" data-action="next" data-step="4" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all font-bold text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PASO 5 ================= -->
+      <section class="step" data-step="5">
+        <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
+            <h2 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2 border-b border-white/5 pb-3">
+                <i class="fas fa-check-double text-emerald-400"></i> Resumen y Confirmación Final
+            </h2>
+            <p class="text-xs text-slate-400 mb-6 leading-relaxed">
+                Por favor, revise detalladamente que toda la información consignada sea correcta antes de firmar y autorizar la inserción del cliente en las bases de datos cifradas de VirtualMind.
+            </p>
+            <div id="previewContainer" class="space-y-1 p-5 border border-white/5 rounded-2xl bg-slate-900/60 shadow-inner"></div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4 border-t border-white/5 pt-6"> 
+          <button type="button" data-action="back" data-step="5" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-300 px-6 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm"><i class="fas fa-arrow-left mr-2"></i>Regresar a editar</button> 
+          <button type="button" id="btnSubmit" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all transform hover:-translate-y-0.5"><i class="fas fa-cloud-upload-alt mr-2"></i> Crear y Guardar Cliente</button> 
+        </div>
+      </section>
+    </form>
+  </div>
+
+  <!-- MODAL DE CONFIRMACIÓN CUSTOM -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-[150] hidden items-center justify-center p-4 animate-fade-in">
+    <div class="card-glass rounded-2xl max-w-md w-full p-6 text-center border border-white/10 shadow-2xl">
+      <div class="w-16 h-16 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto mb-5 border border-rose-500/20 shadow-inner">
+        <i class="fas fa-exclamation-triangle text-2xl animate-pulse"></i>
+      </div>
+      <h3 class="text-lg font-bold text-slate-100 mb-2" id="confirmTitle">Confirmar Acción</h3>
+      <p class="text-sm text-slate-400 mb-8 leading-relaxed" id="confirmText">¿Estás seguro de realizar esta acción?</p>
+      <div class="flex gap-3 justify-center">
+        <button id="btnConfirmCancel" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-semibold border border-white/5 transition-all">Cancelar</button>
+        <button id="btnConfirmAccept" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-rose-600/20">Sí, proceder</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const FORM_CACHE_KEY = 'clientFormProgress';
+      let currentStep = 1;
+      const totalSteps = 5;
+      const steps = document.querySelectorAll(".step");
+      let iti_telefono, iti_whatsapp;
+      const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+      const API_CLIENTS = `${API_BASE}/clients`;
+      const API_DOCS = `${API_BASE}/clients/documents/client-documents/`;
+      const REDIRECT_URL = "../projects/create.html"; 
+      let createdUserId = null;
+      function getToken() {
+         try {
+             return window.parent.localStorage.getItem('token') || localStorage.getItem('token');
+         } catch(e) {
+             return localStorage.getItem('token');
+         }
+      }
+
+      // --- Elegant Toast Alerts (Sustituye alerts nativos) ---
+      function showNotification(type, message) {
+          const container = document.getElementById('customToastContainer');
+          if (!container) return;
+          const toast = document.createElement('div');
+          toast.className = `flex items-center p-3.5 rounded-xl shadow-2xl border backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+              type === 'success' 
+                  ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' 
+                  : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+          }`;
+          toast.innerHTML = `
+              <span class="mr-3 text-xl">${type === 'success' ? '✨' : '⚠️'}</span>
+              <div class="text-xs font-semibold tracking-wide">${message}</div>
+          `;
+          container.appendChild(toast);
+          setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 50);
+          setTimeout(() => {
+              toast.classList.add('opacity-0', 'translate-y-2');
+              setTimeout(() => toast.remove(), 300);
+          }, 4000);
+      }
+      
+      window.alert = function(msg) {
+          const isSuccess = msg.includes('✅') || msg.toLowerCase().includes('éxito') || msg.toLowerCase().includes('creado');
+          showNotification(isSuccess ? 'success' : 'error', msg.replace(/[✅❌]/g, '').trim());
+      };
+
+      // --- Custom Promise Confirmation Modal ---
+      function openConfirmModal(msg) {
+          return new Promise((resolve) => {
+              const modal = document.getElementById('confirmModal');
+              const text = document.getElementById('confirmText');
+              const btnAccept = document.getElementById('btnConfirmAccept');
+              const btnCancel = document.getElementById('btnConfirmCancel');
+              
+              text.textContent = msg;
+              modal.classList.remove('hidden');
+              modal.classList.add('flex');
+              
+              const handleAccept = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); cleanup(); resolve(true); };
+              const handleCancel = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); cleanup(); resolve(false); };
+              const cleanup = () => { btnAccept.removeEventListener('click', handleAccept); btnCancel.removeEventListener('click', handleCancel); };
+              
+              btnAccept.addEventListener('click', handleAccept);
+              btnCancel.addEventListener('click', handleCancel);
+          });
+      }
+
+      const paisesData = window.COUNTRIES_DATA || {};
+
+      function saveProgress() { 
+          const formData = new FormData(document.getElementById('clientForm')); 
+          const data = Object.fromEntries(formData.entries()); 
+          if (iti_telefono) data.telefono = iti_telefono.getNumber(); 
+          if (iti_whatsapp) data.whatsapp = iti_whatsapp.getNumber(); 
+          data.currentStep = currentStep; 
+          data.heredar_datos = document.getElementById('heredar_datos').checked; 
+          delete data.doc_existencia; 
+          delete data.doc_rut; 
+          delete data.doc_identificacion; 
+          localStorage.setItem(FORM_CACHE_KEY, JSON.stringify(data)); 
+          const indicator = document.getElementById('saveIndicator'); 
+          indicator.style.opacity = '1'; 
+          setTimeout(() => { indicator.style.opacity = '0'; }, 2000); 
+      }
+
+      function loadProgress() { 
+          const savedData = localStorage.getItem(FORM_CACHE_KEY); 
+          if (!savedData) return; 
+          const data = JSON.parse(savedData); 
+          Object.keys(data).forEach(key => { 
+              const el = document.getElementById(key) || document.querySelector(`[name="${key}"]`); 
+              if (el) { 
+                  if (el.type === 'radio') { 
+                      const radioToSelect = document.querySelector(`[name="${key}"][value="${data[key]}"]`); 
+                      if (radioToSelect) radioToSelect.checked = true; 
+                  } else if (el.type === 'checkbox') { 
+                      el.checked = data[key]; 
+                  } else if (el.type !== 'file') { 
+                      if (key === 'telefono' && iti_telefono) iti_telefono.setNumber(data[key] || ''); 
+                      else if (key === 'whatsapp' && iti_whatsapp) iti_whatsapp.setNumber(data[key] || ''); 
+                      else el.value = data[key]; 
+                  } 
+              } 
+          }); 
+          document.getElementById('pais').dispatchEvent(new Event('change')); 
+          setTimeout(() => { 
+              if(data.ciudad) document.getElementById('ciudad').value = data.ciudad; 
+              document.getElementById('ciudad').dispatchEvent(new Event('change')); 
+          }, 100); 
+          document.getElementById('heredar_datos').dispatchEvent(new Event('change')); 
+          showStep(data.currentStep || 1); 
+      }
+
+      async function clearStep(stepNumber) { 
+          const confirmed = await openConfirmModal('¿Estás seguro de limpiar este paso? Se borrará su progreso.');
+          if (!confirmed) return; 
+          const stepContainer = document.querySelector(`[data-step='${stepNumber}']`); 
+          stepContainer.querySelectorAll('input, select, textarea').forEach(el => { 
+              if (el.type === 'radio' || el.type === 'checkbox') el.checked = false; 
+              else if (el.type === 'file') el.value = null; 
+              else el.value = ''; 
+              el.dispatchEvent(new Event('change')); 
+          }); 
+          if (stepNumber === 3) { 
+              iti_telefono.setNumber(''); 
+              iti_whatsapp.setNumber(''); 
+          } 
+          saveProgress(); 
+      }
+
+      function showStep(stepNumber) { 
+          currentStep = stepNumber; 
+          steps.forEach(s => s.classList.remove("active")); 
+          const activeStep = document.querySelector(`[data-step='${stepNumber}']`); 
+          if (activeStep) activeStep.classList.add("active"); 
+          const percent = Math.max(20, (stepNumber / totalSteps) * 100); 
+          document.getElementById("progressBar").style.width = `${percent}%`; 
+          document.getElementById("progressText").textContent = `Paso ${stepNumber} de ${totalSteps}`; 
+          window.scrollTo({ top: 0, behavior: "smooth" }); 
+      }
+
+      function validateStep(stepContainer) { 
+          let isValid = true; 
+          stepContainer.querySelectorAll(".error, .iti__input.error").forEach(el => { 
+              if (el) el.classList.remove("error"); 
+          }); 
+          stepContainer.querySelectorAll(".error-text.active").forEach(el => { 
+              if (el) el.classList.remove("active"); 
+          }); 
+          
+          stepContainer.querySelectorAll("input[required], select[required], textarea[required]").forEach(el => { 
+              if (el.id === 'telefono' || el.id === 'whatsapp') return; 
+              let fieldValid = true; 
+              let customError = null; 
+              
+              if (el.type === 'file') { 
+                  if (el.files.length === 0) fieldValid = false; 
+              } else if (el.type === 'email') { 
+                  if (el.value.trim() && !/^\S+@\S+\.\S+$/.test(el.value)) { fieldValid = false; customError = "El formato del email no es válido."; } 
+                  if(el.required && !el.value.trim()) { fieldValid = false; customError = "Este campo es obligatorio."; } 
+              } else if (el.id === 'nit') { 
+                  const pais = document.getElementById('pais').value; 
+                  const validationRules = paisesData[pais]; 
+                  if (validationRules && validationRules.nitRegex && !validationRules.nitRegex.test(el.value)) { fieldValid = false; customError = validationRules.nitError; } 
+                  else if (!el.value.trim()){ fieldValid = false; customError = "Este campo es obligatorio."; } 
+               } else if (el.required) {
+                  if (!el.value.trim()) { fieldValid = false; customError = "Este campo es obligatorio."; } 
+              } 
+              
+              if (!fieldValid) { 
+                  isValid = false; 
+                  el.classList.add("error"); 
+                  const errorMsg = el.parentElement.querySelector(".error-text"); 
+                  if (errorMsg) { 
+                      errorMsg.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> ${customError || "Este campo es obligatorio."}`; 
+                      errorMsg.classList.add("active"); 
+                  } 
+              } 
+          }); 
+
+          stepContainer.querySelectorAll('#telefono, #whatsapp').forEach(originalInput => { 
+              if (!originalInput) return; 
+              const itiInstance = window.intlTelInputGlobals.getInstance(originalInput); 
+              if (!itiInstance) return; 
+              const isRequired = originalInput.hasAttribute('required'); 
+              const itiWrapper = originalInput.closest('.iti'); 
+              if (!itiWrapper) return; 
+              const visibleInput = originalInput; 
+              const errorMsg = itiWrapper.nextElementSibling; 
+              
+              if (!errorMsg || !errorMsg.classList.contains('error-text')) return; 
+
+              if (isRequired && !originalInput.value.trim()) { 
+                  isValid = false; 
+                  visibleInput.classList.add('error'); 
+                  errorMsg.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> Obligatorio.`; 
+                  errorMsg.classList.add('active'); 
+              } else if (originalInput.value.trim() && !itiInstance.isValidNumber()) { 
+                  isValid = false; 
+                  visibleInput.classList.add('error'); 
+                  errorMsg.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> Número inválido.`; 
+                  errorMsg.classList.add('active'); 
+              } 
+          }); 
+
+          const radioGroup = stepContainer.querySelector('input[type="radio"][required]'); 
+          if (radioGroup) { 
+              const groupName = radioGroup.name; 
+              if (!stepContainer.querySelector(`input[name="${groupName}"]:checked`)) { 
+                  isValid = false; 
+                  const errorEl = document.querySelector(`#${groupName}_group_error`); 
+                  if (errorEl) { errorEl.classList.add("active"); } 
+              } 
+          } 
+          return isValid; 
+      }
+
+      function buildPreview() { 
+          const container = document.getElementById("previewContainer"); 
+          container.innerHTML = ""; 
+          const getValue = (id) => document.getElementById(id)?.value || ""; 
+          const getRadio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || ""; 
+          const getPhone = (itiInstance) => { 
+              if (!itiInstance) return ''; 
+              if (itiInstance.isValidNumber()) return itiInstance.getNumber(); 
+              return itiInstance.getNumber() ? 'Inválido' : 'No ingresado'; 
+          }; 
+          const previewData = { 
+              "<h3>🏢 Datos de la Empresa</h3>": null, 
+              "Razón Social": getValue("razon_social"), 
+              "País": getValue("pais") === 'Otro' ? getValue("otro_pais") : getValue("pais"), 
+              "Ciudad": getValue("ciudad") === 'Otra' ? getValue("otra_ciudad") : getValue("ciudad"), 
+              [document.getElementById("nitLabel").textContent.replace(' *', '')]: getValue("nit"), 
+              "Dirección": getValue("direccion"), 
+              "Tipo Entidad": getValue("tipo_entidad") === 'Otra' ? getValue("tipo_entidad_otra") : getValue("tipo_entidad"), 
+              "Carácter": getRadio("caracter_entidad"), 
+              "<h3>👔 Representante Legal</h3>": null, 
+              "Nombre": `${getValue("rep_legal_pnombre")} ${getValue("rep_legal_papellido")}`, 
+              "Email ": getValue("rep_legal_email"), 
+              "Cargo ": getValue("rep_legal_cargo"), 
+              "<h3>👤 Contacto Principal</h3>": null, 
+              "Nombres": `${getValue("pnombre")} ${getValue("papellido")}`, 
+              "Correo": getValue("email"), 
+              "Cargo": getValue("cargo"), 
+              "Teléfono": getPhone(iti_telefono), 
+              "WhatsApp": getPhone(iti_whatsapp) 
+          }; 
+          for (const label in previewData) { 
+              const value = previewData[label]; 
+              if (value === null) { 
+                  container.innerHTML += `<h3 class="font-bold text-xs uppercase tracking-wider text-indigo-400 pt-5 pb-2 border-b border-white/5 mt-2">${label.replace(/<[^>]+>/g, '')}</h3>`; 
+              } else { 
+                  const row = document.createElement("div"); 
+                  row.className = "flex justify-between py-2 text-xs border-b border-white/5 last:border-0"; 
+                  row.innerHTML = `<span class='font-bold text-slate-400'>${label.trim()}:</span><span class='text-slate-200 text-right font-medium'>${value || 'N/A'}</span>`; 
+                  container.appendChild(row); 
+              } 
+          } 
+      }
+
+      async function createClient() { 
+        const btn = document.getElementById("btnSubmit"); 
+        btn.disabled = true; 
+        btn.innerHTML = "<i class='fas fa-spinner fa-spin mr-2'></i> Procesando..."; 
+        
+        const token = getToken(); 
+        if (!token) { 
+            alert("❌ Sesión inválida. Por favor, inicie sesión de nuevo."); 
+            btn.disabled = false; 
+            btn.innerHTML = "<i class='fas fa-cloud-upload-alt mr-2'></i> Crear y Guardar Cliente"; 
+            return; 
+        } 
+
+        let data; 
+        let clientName = "Cliente"; 
+        
+        try { 
+          const getPhone = (itiInstance) => (itiInstance?.isValidNumber() ? itiInstance.getNumber() : ''); 
+          data = { 
+            nombre: `${document.getElementById("pnombre").value} ${document.getElementById("papellido").value}`, 
+            email: document.getElementById("email").value.trim(), 
+            tipo_documento: document.getElementById("nitLabel").textContent.replace(' *', ''), 
+            documento: document.getElementById("nit").value, 
+            profile: { 
+              razon_social: document.getElementById("razon_social").value, 
+              pais: document.getElementById("pais").value === 'Otro' ? document.getElementById("otro_pais").value : document.getElementById("pais").value, 
+              ciudad: document.getElementById("ciudad").value === 'Otra' ? document.getElementById("otra_ciudad").value : document.getElementById("ciudad").value, 
+              direccion: document.getElementById("direccion").value, 
+              tipo_entidad: document.getElementById("tipo_entidad").value, 
+              tipo_entidad_otra: document.getElementById("tipo_entidad_otra").value, 
+              caracter_entidad: document.querySelector('input[name="caracter_entidad"]:checked')?.value || "", 
+              rep_legal_pnombre: document.getElementById("rep_legal_pnombre").value, 
+              rep_legal_snombre: document.getElementById("rep_legal_snombre").value, 
+              rep_legal_papellido: document.getElementById("rep_legal_papellido").value, 
+              rep_legal_sapellido: document.getElementById("rep_legal_sapellido").value, 
+              rep_legal_email: document.getElementById("rep_legal_email").value, 
+              rep_legal_cargo: document.getElementById("rep_legal_cargo").value, 
+              contacto_com_pnombre: document.getElementById("pnombre").value, 
+              contacto_com_snombre: document.getElementById("snombre").value, 
+              contacto_com_papellido: document.getElementById("papellido").value, 
+              contacto_com_sapellido: document.getElementById("sapellido").value, 
+              contacto_com_email: document.getElementById("email").value, 
+              contacto_com_telefono: getPhone(iti_telefono), 
+              contacto_com_whatsapp: getPhone(iti_whatsapp), 
+              contacto_com_cargo: document.getElementById("cargo").value, 
+            } 
+          }; 
+          
+          clientName = data.profile.razon_social || data.nombre; 
+
+          const res = await fetch(API_CLIENTS, { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, 
+            body: JSON.stringify(data) 
+          }); 
+          if (!res.ok) { const errorData = await res.json(); throw new Error(errorData.detail || `Error al crear el cliente (${res.status})`); } 
+          
+          const userResponse = await res.json(); 
+          createdUserId = userResponse.user_id || userResponse.uid || userResponse.id; 
+          if (!createdUserId) { throw new Error("No se pudo obtener el ID del cliente creado."); } 
+
+          btn.innerHTML = "<i class='fas fa-file-upload mr-2'></i> Subiendo documentos..."; 
+          await uploadDocument("Certificado de Existencia", document.getElementById("doc_existencia")); 
+          await uploadDocument("Registro Tributario", document.getElementById("doc_rut")); 
+          await uploadDocument("Documento Representante Legal", document.getElementById("doc_identificacion")); 
+          
+          const docAdicionales = document.querySelectorAll("#documentos_adicionales_container .doc-adicional-item"); 
+          for (const item of docAdicionales) { 
+             const nombreInput = item.querySelector('input[type="text"]'); 
+             const fileInput = item.querySelector('input[type="file"]'); 
+             const tipoDoc = (nombreInput && nombreInput.value) ? nombreInput.value : "Documento Adicional"; 
+             if (fileInput && fileInput.files.length > 0) { 
+                 await uploadDocument(tipoDoc, fileInput); 
+             } 
+          } 
+
+          showNotification('success', `✅ Cliente "${clientName}" creado. Se ha enviado un enlace de activación a su correo.`);
+
+          localStorage.removeItem(FORM_CACHE_KEY); 
+          const targetUrl = new URL(REDIRECT_URL, window.location.href); 
+          targetUrl.searchParams.set('clientId', createdUserId); 
+          targetUrl.searchParams.set('clientName', encodeURIComponent(clientName)); 
+
+          if (window.parent && window.parent !== window) { 
+              window.parent.postMessage({ 
+                  type: 'navigateIframe', 
+                  url: 'projects/create.html' + targetUrl.search, 
+                  highlight: 'Crear Proyecto' 
+              }, 'https://gestordecursos.pegui.edu.co'); 
+          } else { 
+              window.location.href = targetUrl.href; 
+          } 
+
+        } catch (err) { 
+          alert(`❌ Hubo un error crítico: ${err.message}`); 
+          btn.disabled = false; 
+          btn.innerHTML = "<i class='fas fa-cloud-upload-alt mr-2'></i> Crear y Guardar Cliente"; 
+        } 
+      } 
+
+      async function uploadDocument(tipo, fileInputEl) { 
+        if (!fileInputEl || !fileInputEl.files.length) return; 
+        const token = getToken(); 
+        if (!token) throw new Error("Autenticación inválida para subir documentos."); 
+        const formData = new FormData(); 
+        formData.append("user_id", createdUserId); 
+        formData.append("tipo_documento", tipo); 
+        formData.append("file", fileInputEl.files[0]); 
+        const res = await fetch(API_DOCS, { 
+             method: "POST", 
+             headers: { "Authorization": `Bearer ${token}` }, 
+             body: formData 
+         }); 
+        if (!res.ok) { 
+             const errorData = await res.json(); 
+             throw new Error(errorData.detail || `Error subiendo doc: ${tipo}`); 
+         } 
+      } 
+
+      document.getElementById('clientForm').addEventListener('click', async (e) => { 
+        const target = e.target.closest('button'); if (!target) return; 
+        const action = target.dataset.action; const step = parseInt(target.dataset.step); 
+        if (action === 'save') { saveProgress(); } 
+        else if (action === 'next') { 
+            const currentSection = document.querySelector(`[data-step='${step}']`); 
+            if (validateStep(currentSection)) { 
+                const nextStep = step + 1; 
+                if (nextStep === totalSteps) { buildPreview(); } 
+                showStep(nextStep); 
+                saveProgress(); 
+            } else { 
+                alert("⚠️ Corrige los errores en los campos remarcados en rojo."); 
+            } 
+        } else if (action === 'back') { showStep(step - 1); } 
+        else if (action === 'clear') { clearStep(step); } 
+        else if (target.id === 'btnSubmit') { await createClient(); } 
+      }); 
+
+      document.getElementById('resetFormBtn').addEventListener('click', async () => { 
+          const confirmed = await openConfirmModal('¿Estás seguro de querer eliminar los datos temporales del formulario? Se limpiará la memoria.');
+          if (confirmed) { 
+              localStorage.removeItem(FORM_CACHE_KEY); 
+              window.location.reload(); 
+          } 
+      }); 
+
+      let ciudadesData = {};
+      fetch('/js/cities-data.json').then(r => r.json()).then(d => { ciudadesData = d; }).catch(() => {});
+      
+      const paisSelect = document.getElementById("pais"); 
+      Object.keys(paisesData).forEach(pais => paisSelect.add(new Option(pais, pais)));
+      if (!paisesData['Otro']) paisSelect.add(new Option('Otro', 'Otro')); 
+      paisSelect.addEventListener("change", e => { 
+          const selectedPais = e.target.value; 
+          const data = paisesData[selectedPais]; 
+          const ciudadSelect = document.getElementById("ciudad"); 
+          const nitInput = document.getElementById("nit"); 
+          const nitLabel = document.getElementById("nitLabel"); 
+          const otroPaisInput = document.getElementById("otro_pais"); 
+          
+          ciudadSelect.innerHTML = '<option value="">Seleccione...</option>'; 
+          if (selectedPais && data) { 
+              ciudadSelect.disabled = false; 
+              nitInput.disabled = false; 
+              nitLabel.innerHTML = `${data.nitLabel} <span class="text-rose-500">*</span>`; 
+              nitInput.placeholder = data.nitPlaceholder; 
+              const cities = ciudadesData[selectedPais] || data.ciudades || [];
+              cities.forEach(ciudad => ciudadSelect.add(new Option(ciudad, ciudad)));
+              if (!cities.includes('Otra')) ciudadSelect.add(new Option('Otra', 'Otra'));
+              otroPaisInput.classList.toggle('hidden', selectedPais !== 'Otro'); 
+          } else { 
+              ciudadSelect.disabled = true; 
+              nitInput.disabled = true; 
+              nitLabel.innerHTML = 'NIT / ID Tributario <span class="text-rose-500">*</span>'; 
+              nitInput.placeholder = "Seleccione un país primero"; 
+              otroPaisInput.classList.add('hidden'); 
+          } 
+      }); 
+
+      document.getElementById('ciudad').addEventListener('change', e => { 
+          document.getElementById('otra_ciudad').classList.toggle('hidden', e.target.value !== 'Otra'); 
+      }); 
+      document.getElementById('tipo_entidad').addEventListener('change', e => { 
+          document.getElementById('tipo_entidad_otra').classList.toggle('hidden', e.target.value !== 'Otra'); 
+      }); 
+
+      document.getElementById('heredar_datos').addEventListener('change', e => { 
+          const isChecked = e.target.checked; 
+          const fields = { 
+              pnombre: 'rep_legal_pnombre', 
+              snombre: 'rep_legal_snombre', 
+              papellido: 'rep_legal_papellido', 
+              sapellido: 'rep_legal_sapellido', 
+              email: 'rep_legal_email', 
+              cargo: 'rep_legal_cargo' 
+          }; 
+          for (const targetId in fields) { 
+              const targetEl = document.getElementById(targetId); 
+              const sourceEl = document.getElementById(fields[targetId]); 
+              if (isChecked) { 
+                  targetEl.value = sourceEl.value; 
+                  targetEl.disabled = true; 
+                  targetEl.classList.add('bg-slate-900/40', 'opacity-60'); 
+              } else { 
+                  targetEl.value = ''; 
+                  targetEl.disabled = false; 
+                  targetEl.classList.remove('bg-slate-900/40', 'opacity-60'); 
+              } 
+          } 
+      }); 
+
+      const iti_options = { 
+          utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/19.2.16/js/utils.js", 
+          initialCountry: "auto", 
+          geoIpLookup: function(callback) { 
+              fetch("https://ipapi.co/json").then(res => res.json()).then(data => callback(data.country_code)).catch(() => callback("co")); 
+          }, 
+          preferredCountries: ['co', 'mx', 'ar', 'cl', 'pe', 'ec', 'es', 'us'], 
+      }; 
+      iti_telefono = window.intlTelInput(document.querySelector("#telefono"), iti_options); 
+      iti_whatsapp = window.intlTelInput(document.querySelector("#whatsapp"), iti_options); 
+
+      document.getElementById('email').addEventListener('input', function() {
+          document.getElementById('activationEmailDisplay').textContent = this.value || 'electrónico';
+      });
+
+      document.getElementById('add_doc_btn').addEventListener('click', () => { 
+          const container = document.getElementById('documentos_adicionales_container'); 
+          const docItem = document.createElement('div'); 
+          docItem.className = 'doc-adicional-item grid grid-cols-1 md:grid-cols-3 gap-4 items-center bg-slate-900/50 p-5 rounded-2xl border border-white/5 transition-all'; 
+          
+          const nombreDiv = document.createElement('div'); 
+          nombreDiv.className = 'md:col-span-1'; 
+          nombreDiv.innerHTML = '<input type="text" placeholder="Nombre del Doc. (Ej: Contrato)" class="w-full" spellcheck="true" title="Nombre del documento adicional">'; 
+          
+          const fileDiv = document.createElement('div'); 
+          fileDiv.className = 'md:col-span-1'; 
+          fileDiv.innerHTML = '<input type="file" name="doc_adicional" accept=".pdf,.jpg,.png" title="Seleccione archivo del documento adicional" class="w-full text-xs text-slate-400 file:bg-indigo-500/10 file:text-indigo-400 file:border-0 file:rounded-xl file:px-4 file:py-2.5 hover:file:bg-indigo-500/20 cursor-pointer">'; 
+          
+          const removeDiv = document.createElement('div'); 
+          removeDiv.className = 'md:col-span-1 text-right'; 
+          const removeBtn = document.createElement('button'); 
+          removeBtn.type = 'button'; 
+          removeBtn.className = 'remove-doc-btn shadow-md'; 
+          removeBtn.innerHTML = '<i class="fas fa-trash-alt mr-1"></i> Eliminar'; 
+          removeBtn.onclick = () => { docItem.remove(); }; 
+          removeDiv.appendChild(removeBtn); 
+
+          docItem.appendChild(nombreDiv); 
+          docItem.appendChild(fileDiv); 
+          docItem.appendChild(removeDiv); 
+          container.appendChild(docItem); 
+      }); 
+
+      loadProgress(); 
+      if (!localStorage.getItem(FORM_CACHE_KEY)) { 
+          showStep(1); 
+      } 
+    });
+  </script>
+
+  <!-- Tooltips Dinámicos Estables -->
+  <script>
+      (function(){
+          if(window.__ttLoaded) return;
+          window.__ttLoaded=true;
+          let el=null;
+          document.addEventListener('mouseover',function(e){
+              var t=e.target.closest('[data-tooltip]');
+              if(!t)return;
+              var txt=t.getAttribute('data-tooltip');
+              if(!txt)return;
+              if(el)el.remove();
+              el=document.createElement('div');
+              el.className='vm-tooltip';
+              el.textContent=txt;
+              document.body.appendChild(el);
+              var r=t.getBoundingClientRect(),pos=t.getAttribute('data-tooltip-position')||'top';
+              requestAnimationFrame(function(){
+                  if(!el)return;
+                  var tr=el.getBoundingClientRect(),top=0,left=0;
+                  if(pos==='top'){
+                      top=r.top+window.scrollY-tr.height-8;
+                      left=r.left+window.scrollX+(r.width/2)-(tr.width/2);
+                  }else if(pos==='bottom'){
+                      top=r.bottom+window.scrollY+8;
+                      left=r.left+window.scrollX+(r.width/2)-(tr.width/2);
+                  }else if(pos==='left'){
+                      top=r.top+window.scrollY+(r.height/2)-(tr.height/2);
+                      left=r.left+window.scrollX-tr.width-8;
+                  }else if(pos==='right'){
+                      top=r.top+window.scrollY+(r.height/2)-(r.height/2);
+                      left=r.right+window.scrollX+8;
+                  }
+                  if(left<5)left=5;
+                  if(left+tr.width>window.innerWidth-5)left=window.innerWidth-tr.width-5;
+                  el.style.top=top+'px';
+                  el.style.left=left+'px';
+                  el.classList.add('visible');
+              });
+          });
+          document.addEventListener('mouseout',function(e){
+              if(e.target.closest('[data-tooltip]')&&el){
+                  el.classList.remove('visible');
+                  setTimeout(function(){if(el){el.remove();el=null}},150);
+              }
+          });
+      })();
+  </script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var tooltips = {
+      'razon_social': 'Nombre legal registrado de la empresa ante la cámara de comercio',
+      'pais': 'Selecciona el país donde está registrada la empresa',
+      'otro_pais': 'Escribe el nombre del país si no está en la lista',
+      'ciudad': 'Ciudad o estado donde tiene su sede la empresa',
+      'otra_ciudad': 'Escribe la ciudad si no está en la lista',
+      'nit': 'Número de identificación tributaria del país seleccionado',
+      'direccion': 'Dirección física de la sede principal de la empresa',
+      'tipo_entidad': 'Clasificación legal de la empresa según su constitución',
+      'tipo_entidad_otra': 'Describe el tipo de entidad si seleccionaste "Otra"',
+      'rep_legal_pnombre': 'Primer nombre del representante legal de la empresa',
+      'rep_legal_snombre': 'Segundo nombre del representante legal (si aplica)',
+      'rep_legal_papellido': 'Primer apellido del representante legal',
+      'rep_legal_sapellido': 'Segundo apellido del representante legal (si aplica)',
+      'rep_legal_email': 'Correo electrónico corporativo del representante legal',
+      'rep_legal_cargo': 'Cargo oficial que ocupa en la empresa (ej: Gerente General)',
+      'heredar_datos': 'Marca esta opción si el contacto principal es la misma persona que el representante legal',
+      'pnombre': 'Primer nombre de la persona de contacto para la plataforma',
+      'snombre': 'Segundo nombre del contacto (opcional)',
+      'papellido': 'Primer apellido del contacto principal',
+      'sapellido': 'Segundo apellido del contacto (opcional)',
+      'cargo': 'Cargo del contacto principal dentro de la empresa',
+      'email': 'Correo electrónico que usará el contacto para acceder a VirtualMind',
+      'telefono': 'Número de teléfono fijo de la empresa con código de país',
+      'whatsapp': 'Número de WhatsApp del contacto con código de país',
+      'doc_existencia': 'Certificado de existencia y representación legal (PDF/JPG)',
+      'doc_rut': 'Registro Único Tributario o equivalente (PDF/JPG)',
+      'doc_identificacion': 'Documento de identidad del representante legal (PDF/JPG)',
+      'add_doc_btn': 'Agrega un anexo adicional personalizado'
+    };
+    for (var id in tooltips) {
+      var el = document.getElementById(id);
+      if (el && !el.getAttribute('data-tooltip')) {
+        el.setAttribute('data-tooltip', tooltips[id]);
+        el.setAttribute('data-tooltip-position', 'top');
+      }
+    }
+  });
+  </script>
+</body>
+</html>

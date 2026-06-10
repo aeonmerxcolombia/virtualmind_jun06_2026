@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Diseño instruccional — Crear / Editar</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: "Inter", sans-serif; background:#f1f5f9; color:#0f172a; }
+    .card { background:#fff; border:1px solid #e2e8f0; border-radius:.75rem; box-shadow:0 1px 2px rgb(0 0 0 / .04); }
+    .inp{width:100%; background:#f1f5f9; border:2px solid transparent; border-radius:.5rem; padding:.5rem 1rem; transition:border-color .15s,background-color .15s}
+    .inp:focus{outline:none; background:#fff; border-color:#14b8a6}
+    .lab{display:block; font-size:.875rem; font-weight:700; color:#475569; margin-bottom:.5rem}
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.5rem 1rem; border-radius:.5rem; font-size:.875rem; font-weight:600; transition:all .15s}
+    .btn:disabled{opacity:.5; cursor:not-allowed}
+    .btn-p{background:#14b8a6; color:#fff}.btn-p:hover{background:#0d9488}
+    .btn-s{background:#e2e8f0; color:#0f172a}.btn-s:hover{background:#cbd5e1}
+    .btn-d{background:#e11d48; color:#fff}.btn-d:hover{background:#be123c}
+    .pill{background:#ccfbf1; color:#115e59; font-weight:600; border-radius:9999px; padding:.25rem .75rem; font-size:.75rem; display:inline-flex; align-items:center; gap:.5rem}
+    .del-pill{cursor:pointer; font-weight:700; color:#14b8a6}.del-pill:hover{color:#0d9488}
+    #notification-container{position:fixed; bottom:1.25rem; right:1.25rem; z-index:50; width:100%; max-width:24rem}
+    .notification{padding:1rem; border-radius:.75rem; box-shadow:0 10px 30px rgb(0 0 0 / .25); color:#fff; font-weight:700; display:flex; align-items:center; gap:.75rem; backdrop-filter: blur(6px)}
+    .kbd{border:1px solid #cbd5e1; background:#fff; border-bottom-width:2px; padding:.1rem .4rem; border-radius:.375rem; font-size:.75rem}
+    /* Inline errors */
+    .err{display:none; color:#e11d48; font-size:.75rem; margin-top:.25rem}
+    .err.show{display:block}
+    .invalid{border-color:#e11d48 !important; background:#fff !important}
+  </style>
+</head>
+<body>
+  <div id="notification-container"></div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
+      <div class="flex-1 min-w-0">
+        <h1 class="text-2xl md:text-3xl font-extrabold">Diseño instruccional</h1>
+        <p class="text-slate-600">Crea y edita el diseño instruccional de tus cursos sin escribir JSON.</p>
+      </div>
+      <span id="statusChip" class="ml-auto text-xs px-2 py-1 rounded border bg-gray-50">Nuevo</span>
+    </div>
+  </header>
+
+  <!-- Actions (arriba) -->
+  <section class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-2">
+      <button id="btnNew" class="btn btn-s">Nuevo</button>
+      <button id="btnSave" class="btn btn-p">Guardar</button>
+      <button id="btnDelete" class="btn btn-d hidden">Eliminar</button>
+      <div class="ml-auto text-xs text-gray-500">Atajo: <span class="kbd">Ctrl</span> + <span class="kbd">S</span></div>
+    </div>
+  </section>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <!-- Contexto -->
+    <section class="card p-4">
+      <h2 class="text-lg font-semibold">Contexto</h2>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Proyecto -->
+        <div class="md:col-span-2">
+          <label class="lab">Proyecto</label>
+          <div class="flex gap-2">
+            <select id="project_select" class="inp" title="Seleccionar proyecto">
+              <option value="">Cargando proyectos…</option>
+            </select>
+            <button id="btnReloadProjects" type="button" class="btn btn-s">Recargar</button>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Puedes pasar <code>?project_id=5</code> para preseleccionar.</p>
+        </div>
+
+        <!-- Hidden para payload -->
+        <input id="project_id" type="hidden" />
+
+        <!-- Curso -->
+        <div class="md:col-span-2">
+          <label class="lab">Curso / Programa</label>
+          <div class="flex gap-2">
+            <select id="course_select" class="inp" disabled title="Seleccionar curso">
+              <option value="">Selecciona un proyecto primero…</option>
+            </select>
+            <button id="btnReloadCourses" type="button" class="btn btn-s" disabled>Recargar</button>
+          </div>
+        </div>
+
+        <!-- Módulo -->
+        <div>
+          <label class="lab">Módulo</label>
+          <div class="flex gap-2">
+            <select id="module_select" class="inp" disabled title="Seleccionar módulo">
+              <option value="">Selecciona un curso primero…</option>
+            </select>
+            <button id="btnReloadModules" type="button" class="btn btn-s" disabled>Recargar</button>
+          </div>
+        </div>
+
+        <!-- Unidad -->
+        <div>
+          <label class="lab">Unidad</label>
+          <div class="flex gap-2">
+            <select id="unit_select" class="inp" disabled title="Seleccionar unidad">
+              <option value="">Selecciona un módulo primero…</option>
+            </select>
+            <button id="btnReloadUnits" type="button" class="btn btn-s" disabled>Recargar</button>
+          </div>
+        </div>
+
+        <!-- Ocultos (compat) -->
+        <input id="course_id"   type="hidden" />
+        <input id="course_name" type="hidden" />
+        <input id="module_id"   type="hidden" />
+        <input id="module_name" type="hidden" />
+        <input id="unit_id"     type="hidden" />
+        <input id="unit_name"   type="hidden" />
+      </div>
+    </section>
+
+    <!-- Objetivo / Mensaje -->
+    <section class="card p-4">
+      <h2 class="text-lg font-semibold">Objetivo instruccional & mensaje clave</h2>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="lab">Objetivo</label>
+          <textarea id="objetivo_instruccional" class="inp h-28" title="Objetivo instruccional"></textarea>
+        </div>
+        <div>
+          <label class="lab">Mensaje clave</label>
+          <textarea id="mensaje_clave" class="inp h-28" title="Mensaje clave"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- Narrativa / Estilos / Voz -->
+    <section class="card p-4">
+      <h2 class="text-lg font-semibold">Narrativa, estilos y voz</h2>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <p class="lab !mb-2">Persona narrativa</p>
+          <div class="space-y-2 text-sm">
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-pn="primera" title="Persona narrativa: primera">Primera</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-pn="segunda" title="Persona narrativa: segunda">Segunda</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-pn="tercera" title="Persona narrativa: tercera">Tercera</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-pn="omnisciente" title="Persona narrativa: omnisciente">Omnisciente</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-pn="testigo" title="Persona narrativa: testigo">Testigo</label>
+          </div>
+        </div>
+        <div>
+          <p class="lab !mb-2">Estilo narrativo</p>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-ne="expositiva" title="Estilo narrativo: expositiva">Expositiva</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-ne="descriptiva" title="Estilo narrativo: descriptiva">Descriptiva</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-ne="dialogada" title="Estilo narrativo: dialogada">Dialogada</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-ne="testimonial" title="Estilo narrativo: testimonial">Testimonial</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-ne="metaforica" title="Estilo narrativo: metafórica">Metafórica</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-ne="gamificada" title="Estilo narrativo: gamificada">Gamificada</label>
+            <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4" data-ne="storytelling" title="Estilo narrativo: storytelling">Storytelling</label>
+          </div>
+        </div>
+        <div>
+          <p class="lab !mb-2">Pantalla y voz</p>
+          <div class="space-y-2 text-sm">
+            <label class="flex items-center gap-2"><input id="texto_pantalla_inicio" type="checkbox" class="h-4 w-4" title="Texto en pantalla de inicio">Texto en pantalla de inicio</label>
+            <label class="flex items-center gap-2"><input id="voz_en_off" type="checkbox" class="h-4 w-4" title="Voz en off">Voz en off</label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recursos -->
+    <section class="card p-4">
+      <h2 class="text-lg font-semibold">Recursos</h2>
+      <div class="mt-4 space-y-6">
+        <!-- Visuales -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-base font-medium">Visuales</h3>
+            <button id="btnAddRecursoVisual" class="btn btn-s">Agregar</button>
+          </div>
+          <div class="overflow-x-auto border rounded">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50">
+                <tr>
+                  <th class="text-left px-3 py-2">Descripción</th>
+                  <th class="text-left px-3 py-2">Notas</th>
+                  <th class="w-20 px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody id="tbodyRV" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Multimedia -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-base font-medium">Multimedia</h3>
+            <button id="btnAddRecursoMM" class="btn btn-s">Agregar</button>
+          </div>
+          <div class="overflow-x-auto border rounded">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50">
+                <tr>
+                  <th class="text-left px-3 py-2">Tipo</th>
+                  <th class="text-left px-3 py-2">Formato / Instrucciones</th>
+                  <th class="text-left px-3 py-2">Duración</th>
+                  <th class="text-left px-3 py-2">Cantidad</th>
+                  <th class="w-20 px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody id="tbodyRMM" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interacciones / Actividades -->
+    <section class="card p-4">
+      <h2 class="text-lg font-semibold">Interacciones y actividades</h2>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-base font-medium">Interacciones</h3>
+            <button id="btnAddInteraccion" class="btn btn-s">Agregar</button>
+          </div>
+          <ul id="ulInteracciones" class="space-y-2"></ul>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-base font-medium">Actividades de aprendizaje</h3>
+            <button id="btnAddActividad" class="btn btn-s">Agregar</button>
+          </div>
+          <div class="overflow-x-auto border rounded">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50">
+                <tr>
+                  <th class="text-left px-3 py-2">Tipo</th>
+                  <th class="text-left px-3 py-2">Descripción</th>
+                  <th class="w-20 px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody id="tbodyActs" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Evaluación / Accesibilidad / Notas (sin JSON) -->
+    <section class="card p-4">
+      <h2 class="text-lg font-semibold">Evaluación, accesibilidad y notas</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
+        <!-- Evaluación (como en Autor) -->
+        <div>
+          <p class="lab !mb-2">Parámetros de Evaluación</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="lab !mb-1">Nota mínima</label>
+              <input id="eval_nota" type="number" step="0.1" min="0" max="5" class="inp" placeholder="0 a 5" title="Nota mínima de evaluación">
+              <p id="err_eval_nota" class="err"></p>
+            </div>
+            <div>
+              <label class="lab !mb-1">Intentos</label>
+              <input id="eval_intentos" type="number" min="1" class="inp" placeholder="≥ 1" title="Número de intentos permitidos">
+              <p id="err_eval_intentos" class="err"></p>
+            </div>
+            <div>
+              <label class="lab !mb-1">Tiempo (min)</label>
+              <input id="eval_tiempo" type="number" min="0" class="inp" placeholder="≥ 0" title="Tiempo límite en minutos">
+              <p id="err_eval_tiempo" class="err"></p>
+            </div>
+            <div>
+              <label class="lab !mb-1">Retroalimentación</label>
+              <input id="eval_retro" class="inp" placeholder="Inmediata / Diferida / Por pregunta..." title="Tipo de retroalimentación">
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <p class="lab !mb-2">Tipos de pregunta</p>
+            <div id="eval_tqp_group" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+              <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4 tqp" value="seleccion_multiple" title="Tipo de pregunta: selección múltiple">Selección múltiple</label>
+              <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4 tqp" value="falso_verdadero" title="Tipo de pregunta: falso o verdadero">Falso/Verdadero</label>
+              <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4 tqp" value="completar" title="Tipo de pregunta: completar">Completar</label>
+              <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4 tqp" value="relacionar" title="Tipo de pregunta: relacionar">Relacionar</label>
+              <label class="flex items-center gap-2"><input type="checkbox" class="h-4 w-4 tqp" value="abierta" title="Tipo de pregunta: abierta">Abierta</label>
+            </div>
+            <p id="err_eval_tqp" class="err mt-1"></p>
+          </div>
+        </div>
+
+        <!-- Accesibilidad -->
+        <div>
+          <p class="lab !mb-2">Accesibilidad</p>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <label class="flex items-center gap-2"><input class="h-4 w-4 acc" data-acc="subtitulos" type="checkbox" title="Accesibilidad: subtítulos">Subtítulos</label>
+            <label class="flex items-center gap-2"><input class="h-4 w-4 acc" data-acc="texto_alt" type="checkbox" title="Accesibilidad: texto alternativo">Texto alternativo</label>
+            <label class="flex items-center gap-2"><input class="h-4 w-4 acc" data-acc="teclado" type="checkbox" title="Accesibilidad: navegación por teclado">Teclado</label>
+            <label class="flex items-center gap-2"><input class="h-4 w-4 acc" data-acc="transcripciones" type="checkbox" title="Accesibilidad: transcripciones">Transcripciones</label>
+            <label class="flex items-center gap-2"><input class="h-4 w-4 acc" data-acc="lenguaje_claro" type="checkbox" title="Accesibilidad: lenguaje claro">Lenguaje claro</label>
+            <label class="flex items-center gap-2"><input class="h-4 w-4 acc" data-acc="alto_contraste" type="checkbox" title="Accesibilidad: alto contraste">Alto contraste</label>
+          </div>
+        </div>
+
+        <!-- Feedback / Notas -->
+        <div>
+          <label class="lab">Feedback</label>
+          <textarea id="feedback" class="inp h-28" title="Feedback de la evaluación"></textarea>
+          <label class="lab mt-3">Notas del productor</label>
+          <textarea id="notas_productor" class="inp h-28" title="Notas del productor"></textarea>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <label class="lab">Observaciones</label>
+        <textarea id="observaciones" class="inp h-28" title="Observaciones"></textarea>
+      </div>
+    </section>
+
+    <!-- Guardar abajo -->
+    <section class="card p-4">
+      <div class="flex items-center justify-end">
+        <button id="btnSaveBottom" class="btn btn-p">Guardar</button>
+      </div>
+    </section>
+
+    <!-- Preview -->
+    <section class="card p-4">
+      <details>
+        <summary class="text-sm font-semibold cursor-pointer select-none">Payload (preview) — clic para abrir</summary>
+        <pre id="jsonPreview" class="mt-3 bg-slate-900 text-slate-100 text-xs rounded p-3 overflow-auto max-h-80"></pre>
+        <button id="btnCopyJSON" class="mt-2 btn btn-s">Copiar JSON</button>
+      </details>
+    </section>
+
+    <!-- Listado -->
+    <section class="card p-4">
+      <details>
+        <summary class="text-sm font-semibold cursor-pointer select-none">Diseños del proyecto — clic para abrir</summary>
+        <div class="mt-3">
+          <div class="flex gap-2 items-end">
+            <div>
+              <label class="lab !mb-1">Proyecto (ID)</label>
+              <input id="projFilter" type="number" class="inp w-48" placeholder="Ej. 5" title="ID del proyecto para filtrar">
+            </div>
+            <button id="btnFilter" class="btn btn-s">Filtrar</button>
+            <button id="btnReload" class="btn btn-s">Recargar</button>
+          </div>
+          <ul id="listItems" class="mt-3 divide-y"></ul>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <!-- Templates -->
+  <template id="tplRV">
+    <tr>
+      <td class="px-3 py-2"><input class="inp text-sm desc" placeholder="Descripción (ej. diagrama PNG)" title="Descripción del recurso visual"></td>
+      <td class="px-3 py-2"><input class="inp text-sm notas" placeholder="Notas / referencia" title="Notas o referencia del recurso visual"></td>
+      <td class="px-3 py-2 text-right"><button class="btn btn-s !px-2 !py-1 text-xs btnDel">Quitar</button></td>
+    </tr>
+  </template>
+
+  <template id="tplRMM">
+    <tr>
+      <td class="px-3 py-2"><input class="inp text-sm tipo" placeholder="video / imagen / audio / infografía…" title="Tipo de recurso multimedia"></td>
+      <td class="px-3 py-2"><input class="inp text-sm instr" placeholder="Formato / instrucciones técnicas" title="Instrucciones técnicas del recurso"></td>
+      <td class="px-3 py-2"><input class="inp text-sm dur" placeholder="00:02:30" title="Duración del recurso"></td>
+      <td class="px-3 py-2"><input class="inp text-sm qty" type="number" min="0" value="1" title="Cantidad de recursos"></td>
+      <td class="px-3 py-2 text-right"><button class="btn btn-s !px-2 !py-1 text-xs btnDel">Quitar</button></td>
+    </tr>
+  </template>
+
+  <template id="tplAct">
+    <tr>
+      <td class="px-3 py-2">
+        <select class="inp text-sm tipo" title="Tipo de actividad">
+          <option value="diagnostico">Diagnóstico</option>
+          <option value="por_modulo">Por Módulo</option>
+          <option value="por_unidad">Por Unidad</option>
+          <option value="cierre_modulo">Cierre de Módulo</option>
+        </select>
+      </td>
+      <td class="px-3 py-2"><input class="inp text-sm desc" placeholder="Descripción / instrucciones…" title="Descripción de la actividad"></td>
+      <td class="px-3 py-2 text-right"><button class="btn btn-s !px-2 !py-1 text-xs btnDel">Quitar</button></td>
+    </tr>
+  </template>
+
+  <template id="tplInter">
+    <li class="flex items-center justify-between border rounded px-2 py-1.5">
+      <span class="text-sm texto"></span>
+      <button class="btn btn-s !px-2 !py-1 text-xs btnDel">Quitar</button>
+    </li>
+  </template>
+
+  <!-- Script -->
+  <script>
+    // ===== Config & helpers =====
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("tokend") || localStorage.getItem("token") || localStorage.getItem("access_token");
+    if (!token) { alert('No se encontró "tokend" en localStorage.'); }
+    const authHeaders = () => ({ "Content-Type":"application/json", "Authorization": `Bearer ${token}` });
+
+    const qsURL = new URLSearchParams(location.search);
+    const $  = (id) => document.getElementById(id);
+
+    const UI = {
+      notify(msg,type='info'){
+        const colors={info:'#0284c7',success:'#16a34a',error:'#e11d48'};
+        const n=document.createElement('div'); n.className='notification'; n.style.background=colors[type]||colors.info; n.textContent=msg;
+        document.getElementById('notification-container').appendChild(n);
+        setTimeout(()=>{ n.style.transition='opacity .5s'; n.style.opacity='0'; setTimeout(()=>n.remove(),500); }, 3500);
+      }
+    };
+
+    async function apiFetch(url, opts = {}, auth = true) {
+      const headers = auth ? { ...(opts.headers||{}), ...authHeaders() } : (opts.headers||{});
+      const finalOpts = { ...opts, headers };
+      const r = await fetch(url, finalOpts);
+      if (!r.ok) {
+        let msg = `HTTP ${r.status}`;
+        try { const j = await r.json(); msg = j.detail || j.message || msg; } catch {}
+        throw new Error(msg);
+      }
+      return r.status === 204 ? null : r.json();
+    }
+
+    function escapeHtml(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+
+    // ===== Estado / elementos =====
+    let currentFormId = null;
+
+    const statusChip = $("statusChip"), btnNew = $("btnNew"), btnSave = $("btnSave"), btnDelete = $("btnDelete");
+    const btnSaveBottom = $("btnSaveBottom");
+    const btnCopyJSON = $("btnCopyJSON"), btnReload = $("btnReload"), btnFilter = $("btnFilter");
+    const project_select = $("project_select"), btnReloadProjects = $("btnReloadProjects");
+    const project_id = $("project_id");
+
+    const course_select = $("course_select"), btnReloadCourses = $("btnReloadCourses");
+    const module_select = $("module_select"), btnReloadModules = $("btnReloadModules");
+    const unit_select   = $("unit_select"),   btnReloadUnits   = $("btnReloadUnits");
+
+    const course_id = $("course_id"), course_name = $("course_name");
+    const module_id = $("module_id"), module_name = $("module_name");
+    const unit_id   = $("unit_id"),   unit_name   = $("unit_name");
+
+    const objetivo_instruccional = $("objetivo_instruccional"), mensaje_clave = $("mensaje_clave");
+    const texto_pantalla_inicio = $("texto_pantalla_inicio"), voz_en_off = $("voz_en_off");
+    const feedback = $("feedback"), notas_productor = $("notas_productor"), observaciones = $("observaciones");
+    const jsonPreview = $("jsonPreview"), projFilter = $("projFilter"), listItems = $("listItems");
+
+    const tbodyRV = $("tbodyRV"), tbodyRMM = $("tbodyRMM"), tbodyActs = $("tbodyActs"), ulInteracciones = $("ulInteracciones");
+
+    // Evaluación (UI + errores)
+    const eval_tqp_group = $("eval_tqp_group");
+    const eval_nota = $("eval_nota");
+    const eval_intentos = $("eval_intentos");
+    const eval_tiempo = $("eval_tiempo");
+    const eval_retro = $("eval_retro");
+
+    const err_eval_nota = $("err_eval_nota");
+    const err_eval_intentos = $("err_eval_intentos");
+    const err_eval_tiempo = $("err_eval_tiempo");
+    const err_eval_tqp = $("err_eval_tqp");
+
+    // ===== Init =====
+    (async function init(){
+      await loadProjectsAndPopulateSelect();
+      addRowRV(); addRowRMM(); addRowAct();
+      attachValidationHandlers();
+      updatePreview();
+      if (project_id.value) { projFilter.value = project_id.value; await reloadList(); }
+      window.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); btnSave.click(); }
+      });
+      if (btnSaveBottom) btnSaveBottom.onclick = () => btnSave.click();
+    })();
+
+    // ===== Proyectos / Cursos / Módulos / Unidades (cascada con filtros) =====
+    async function loadProjectsAndPopulateSelect(preselectId=null){
+      try{
+        const projects = await apiFetch(`${API}/projects`);
+        project_select.innerHTML = `<option value="">— Selecciona un proyecto —</option>`;
+        (projects||[]).forEach(p=>{
+          const opt = new Option(`#${p.id} · ${p.name || "(sin nombre)"}`, p.id);
+          project_select.appendChild(opt);
+        });
+        const qsPid = qsURL.get("project_id");
+        const toSelect = preselectId || qsPid || project_id.value;
+        if (toSelect) {
+          project_select.value = String(toSelect);
+          project_id.value = String(toSelect);
+          await loadCoursesForProject(toSelect);
+        }
+        toggleCoursesControls(!!project_select.value);
+      }catch(e){
+        project_select.innerHTML = `<option value="">(Error cargando proyectos)</option>`;
+        UI.notify('No se pudieron cargar proyectos','error');
+        toggleCoursesControls(false);
+      }
+    }
+    btnReloadProjects.addEventListener("click", ()=>loadProjectsAndPopulateSelect());
+
+    function toggleCoursesControls(enabled){
+      course_select.disabled = !enabled; btnReloadCourses.disabled = !enabled;
+      module_select.disabled = true;     btnReloadModules.disabled = true;
+      unit_select.disabled   = true;     btnReloadUnits.disabled   = true;
+      if (!enabled) {
+        course_select.innerHTML = `<option value="">Selecciona un proyecto primero…</option>`;
+        module_select.innerHTML = `<option value="">Selecciona un curso primero…</option>`;
+        unit_select.innerHTML   = `<option value="">Selecciona un módulo primero…</option>`;
+        course_id.value = course_name.value = "";
+        module_id.value = module_name.value = "";
+        unit_id.value   = unit_name.value   = "";
+      }
+    }
+
+    project_select.addEventListener("change", async ()=>{
+      project_id.value = project_select.value || "";
+      course_select.innerHTML = `<option value="">${project_id.value ? "Cargando cursos…" : "Selecciona un proyecto primero…"}</option>`;
+      module_select.innerHTML = `<option value="">Selecciona un curso primero…</option>`;
+      unit_select.innerHTML   = `<option value="">Selecciona un módulo primero…</option>`;
+      course_id.value = course_name.value = "";
+      module_id.value = module_name.value = "";
+      unit_id.value   = unit_name.value   = "";
+      toggleCoursesControls(!!project_id.value);
+      if (project_id.value) await loadCoursesForProject(project_id.value);
+      updatePreview();
+    });
+
+    async function fetchCoursesByPlan(studyPlanId){
+      try{ return await apiFetch(`${API}/courses?study_plan_id=${encodeURIComponent(studyPlanId)}`); }catch{}
+      try{ return await apiFetch(`${API}/courses/study_plan/${encodeURIComponent(studyPlanId)}`); }catch{}
+      return [];
+    }
+    async function loadCoursesForProject(projectId){
+      course_select.disabled = true; btnReloadCourses.disabled = true;
+      course_select.innerHTML = `<option value="">Cargando cursos…</option>`;
+      module_select.innerHTML = `<option value="">Selecciona un curso primero…</option>`;
+      unit_select.innerHTML   = `<option value="">Selecciona un módulo primero…</option>`;
+      course_id.value = course_name.value = "";
+      module_id.value = module_name.value = "";
+      unit_id.value   = unit_name.value   = "";
+      try{
+        const plans = await apiFetch(`${API}/study_plans/project/${encodeURIComponent(projectId)}`);
+        let allCourses = [];
+        for (const sp of (plans||[])) {
+          const cs = await fetchCoursesByPlan(sp.id);
+          const tag = sp.name || `Plan #${sp.id}`;
+          (cs||[]).forEach(c=>{
+            allCourses.push({ id:c.id, name:c.name || c.titulo || `Curso #${c.id}`, study_plan_name:tag, study_plan_id:sp.id });
+          });
+        }
+        course_select.innerHTML = "";
+        if (!allCourses.length) { course_select.innerHTML = `<option value="">(Este proyecto no tiene cursos)</option>`; return; }
+        allCourses.sort((a,b)=>a.name.localeCompare(b.name, 'es'));
+        const byPlan = new Map(); allCourses.forEach(c=>{ if(!byPlan.has(c.study_plan_name)) byPlan.set(c.study_plan_name,[]); byPlan.get(c.study_plan_name).push(c); });
+        course_select.appendChild(new Option("— Selecciona un curso —",""));
+        for (const [planName, cursos] of byPlan.entries()){
+          const grp = document.createElement("optgroup"); grp.label = planName;
+          cursos.forEach(c=>{ const op=new Option(c.name,c.id); op.dataset.studyPlanId=c.study_plan_id; grp.appendChild(op); });
+          course_select.appendChild(grp);
+        }
+        course_select.disabled=false; btnReloadCourses.disabled=false;
+
+        course_select.onchange = async ()=>{
+          const sel = course_select.options[course_select.selectedIndex];
+          if (!sel || !sel.value) {
+            course_id.value = course_name.value = "";
+            module_select.disabled = true; module_select.innerHTML = `<option value="">Selecciona un curso primero…</option>`;
+            unit_select.disabled = true; unit_select.innerHTML = `<option value="">Selecciona un módulo primero…</option>`;
+          } else {
+            course_id.value = sel.value; course_name.value = sel.textContent.trim();
+            await loadModulesForCourse(sel.value);
+          }
+          updatePreview();
+        };
+      }catch(e){
+        course_select.innerHTML = `<option value="">(Error cargando cursos)</option>`;
+        UI.notify('No se pudieron cargar cursos','error');
+      }
+    }
+
+    async function fetchModulesByCourse(courseId) {
+      try { const out = await apiFetch(`${API}/modules?course_id=${encodeURIComponent(courseId)}`); return Array.isArray(out) ? out : []; } catch {}
+      try { const out = await apiFetch(`${API}/modules/course/${encodeURIComponent(courseId)}`); return Array.isArray(out) ? out : []; } catch {}
+      return [];
+    }
+    async function loadModulesForCourse(courseId) {
+      module_select.disabled = true; btnReloadModules.disabled = true;
+      module_select.innerHTML = `<option value="">Cargando módulos…</option>`;
+      unit_select.innerHTML   = `<option value="">Selecciona un módulo primero…</option>`;
+      module_id.value = module_name.value = ""; unit_id.value = unit_name.value = "";
+
+      try {
+        const modsRaw = await fetchModulesByCourse(courseId);
+        let mods = Array.isArray(modsRaw) ? modsRaw : [];
+        const hasCourseField = mods.some(m => m?.course_id != null || m?.course?.id != null || m?.courseId != null);
+        if (hasCourseField) {
+          mods = mods.filter(m => String(m?.course_id ?? m?.course?.id ?? m?.courseId) === String(courseId));
+        }
+
+        module_select.innerHTML = "";
+        if (!mods.length) {
+          module_select.innerHTML = `<option value="">(Este curso no tiene módulos)</option>`;
+          module_select.disabled = true; btnReloadModules.disabled = false;
+          unit_select.disabled   = true; btnReloadUnits.disabled   = true;
+          return;
+        }
+
+        mods.sort((a,b)=>(a.order||a.position||0)-(b.order||b.position||0) ||
+                         String(a.name||"").localeCompare(String(b.name||""),'es'));
+
+        module_select.appendChild(new Option("— Selecciona un módulo —",""));
+        mods.forEach(m => {
+          const name = m.name || m.titulo || `Módulo #${m.id}`;
+          module_select.appendChild(new Option(name, m.id));
+        });
+
+        module_select.disabled = false; btnReloadModules.disabled = false;
+        unit_select.disabled   = true;  btnReloadUnits.disabled   = true;
+
+        module_select.onchange = async () => {
+          const sel = module_select.options[module_select.selectedIndex];
+          if (!sel || !sel.value) {
+            module_id.value = module_name.value = "";
+            unit_select.disabled = true;
+            unit_select.innerHTML = `<option value="">Selecciona un módulo primero…</option>`;
+          } else {
+            module_id.value   = sel.value;
+            module_name.value = sel.textContent.trim();
+            await loadUnitsForModule(sel.value);
+          }
+          updatePreview();
+        };
+        btnReloadModules.onclick = async ()=> { if (course_id.value) await loadModulesForCourse(course_id.value); };
+
+      } catch (e) {
+        console.error(e);
+        module_select.innerHTML = `<option value="">(Error cargando módulos)</option>`;
+        module_select.disabled = true; btnReloadModules.disabled = false;
+      }
+    }
+
+    async function fetchUnitsByModule(moduleId) {
+      try { const out = await apiFetch(`${API}/units?module_id=${encodeURIComponent(moduleId)}`); return Array.isArray(out) ? out : []; } catch {}
+      try { const out = await apiFetch(`${API}/units/module/${encodeURIComponent(moduleId)}`); return Array.isArray(out) ? out : []; } catch {}
+      return [];
+    }
+    async function loadUnitsForModule(moduleId) {
+      unit_select.disabled = true; btnReloadUnits.disabled = true;
+      unit_select.innerHTML = `<option value="">Cargando unidades…</option>`;
+      unit_id.value = unit_name.value = "";
+
+      try {
+        const unitsRaw = await fetchUnitsByModule(moduleId);
+        let units = Array.isArray(unitsRaw) ? unitsRaw : [];
+        const hasModuleField = units.some(u => u?.module_id != null || u?.module?.id != null || u?.moduleId != null);
+        if (hasModuleField) {
+          units = units.filter(u => String(u?.module_id ?? u?.module?.id ?? u?.moduleId) === String(moduleId));
+        }
+
+        unit_select.innerHTML = "";
+        if (!units.length) {
+          unit_select.innerHTML = `<option value="">(Este módulo no tiene unidades)</option>`;
+          unit_select.disabled = true; btnReloadUnits.disabled = false;
+          return;
+        }
+
+        units.sort((a,b)=>(a.order||a.position||0)-(b.order||b.position||0) ||
+                           String(a.name||"").localeCompare(String(b.name||""),'es'));
+
+        unit_select.appendChild(new Option("— Selecciona una unidad —",""));
+        units.forEach(u => {
+          const name = u.name || u.titulo || `Unidad #${u.id}`;
+          unit_select.appendChild(new Option(name, u.id));
+        });
+
+        unit_select.disabled = false; btnReloadUnits.disabled = false;
+        unit_select.onchange = () => {
+          const sel = unit_select.options[unit_select.selectedIndex];
+          if (!sel || !sel.value) { unit_id.value = unit_name.value = ""; }
+          else { unit_id.value = sel.value; unit_name.value = sel.textContent.trim(); }
+          updatePreview();
+        };
+        btnReloadUnits.onclick = async ()=> { if (module_id.value) await loadUnitsForModule(module_id.value); };
+
+      } catch (e) {
+        console.error(e);
+        unit_select.innerHTML = `<option value="">(Error cargando unidades)</option>`;
+        unit_select.disabled = true; btnReloadUnits.disabled = false;
+      }
+    }
+
+    // ===== Filas dinámicas =====
+    function addRowRV(val={descripcion:"",notas:""}) {
+      const tr = document.getElementById("tplRV").content.cloneNode(true);
+      tr.querySelector(".desc").value = val.descripcion || "";
+      tr.querySelector(".notas").value = val.notas || "";
+      tr.querySelector(".btnDel").onclick = (e)=> e.target.closest("tr").remove();
+      tbodyRV.appendChild(tr);
+    }
+    function addRowRMM(val={tipo:"",instrucciones:"",duracion:"",cantidad:1}){
+      const tr = document.getElementById("tplRMM").content.cloneNode(true);
+      tr.querySelector(".tipo").value = val.tipo || "";
+      tr.querySelector(".instr").value = val.instrucciones || "";
+      tr.querySelector(".dur").value = val.duracion || "";
+      tr.querySelector(".qty").value = val.cantidad ?? 1;
+      tr.querySelector(".btnDel").onclick = (e)=> e.target.closest("tr").remove();
+      tbodyRMM.appendChild(tr);
+    }
+    function addRowAct(val={tipo:"por_modulo", descripcion:""}){
+      const tr = document.getElementById("tplAct").content.cloneNode(true);
+      tr.querySelector(".tipo").value = val.tipo || "por_modulo";
+      tr.querySelector(".desc").value = val.descripcion || "";
+      tr.querySelector(".btnDel").onclick = (e)=> e.target.closest("tr").remove();
+      tbodyActs.appendChild(tr);
+    }
+    function addChipInter(txt="clic"){
+      const li = document.getElementById("tplInter").content.cloneNode(true);
+      li.querySelector(".texto").textContent = txt;
+      li.querySelector(".btnDel").onclick = (e)=> e.target.closest("li").remove();
+      ulInteracciones.appendChild(li);
+    }
+    document.getElementById("btnAddRecursoVisual").onclick = ()=> addRowRV();
+    document.getElementById("btnAddRecursoMM").onclick = ()=> addRowRMM();
+    document.getElementById("btnAddActividad").onclick = ()=> addRowAct();
+    document.getElementById("btnAddInteraccion").onclick = ()=>{ const t = prompt("Interacción (clic, drag&drop, hotspot, timeline, H5P…)"); if (t) addChipInter(t.trim()); };
+
+    // ===== Evaluación helpers & Validaciones =====
+    function anyEvalFieldFilled(){
+      return (eval_nota.value.trim() !== "" ||
+              eval_intentos.value.trim() !== "" ||
+              eval_tiempo.value.trim() !== "" ||
+              eval_retro.value.trim() !== "" ||
+              eval_tqp_group.querySelectorAll('.tqp:checked').length > 0);
+    }
+
+    function clearErr(el, errEl){
+      el?.classList.remove('invalid'); errEl?.classList.remove('show'); if (errEl) errEl.textContent="";
+    }
+    function setErr(el, errEl, msg){
+      if (!el || !errEl) return;
+      el.classList.add('invalid'); errEl.textContent = msg; errEl.classList.add('show');
+    }
+
+    function validateEvaluation({show=true} = {}){
+      let valid = true; let firstInvalid = null;
+
+      // Nota mínima: 0..5 si se completa
+      clearErr(eval_nota, err_eval_nota);
+      if (eval_nota.value.trim() !== "") {
+        const v = Number(eval_nota.value);
+        if (Number.isNaN(v) || v < 0 || v > 5) {
+          valid = false; if (show) setErr(eval_nota, err_eval_nota, "La nota mínima debe estar entre 0 y 5.");
+          if (!firstInvalid) firstInvalid = eval_nota;
+        }
+      }
+
+      // Intentos: entero >=1 si se completa
+      clearErr(eval_intentos, err_eval_intentos);
+      if (eval_intentos.value.trim() !== "") {
+        const v = Number(eval_intentos.value);
+        if (!Number.isInteger(v) || v < 1) {
+          valid = false; if (show) setErr(eval_intentos, err_eval_intentos, "Los intentos deben ser un entero ≥ 1.");
+          if (!firstInvalid) firstInvalid = eval_intentos;
+        }
+      }
+
+      // Tiempo: entero >=0 si se completa
+      clearErr(eval_tiempo, err_eval_tiempo);
+      if (eval_tiempo.value.trim() !== "") {
+        const v = Number(eval_tiempo.value);
+        if (!Number.isInteger(v) || v < 0) {
+          valid = false; if (show) setErr(eval_tiempo, err_eval_tiempo, "El tiempo debe ser un entero ≥ 0.");
+          if (!firstInvalid) firstInvalid = eval_tiempo;
+        }
+      }
+
+      // Tipos de pregunta: si llenas cualquier otro campo pero no marcas tipos, avisa
+      err_eval_tqp.classList.remove('show'); err_eval_tqp.textContent="";
+      eval_tqp_group.classList.remove('invalid');
+      const anyTypes = eval_tqp_group.querySelectorAll('.tqp:checked').length > 0;
+      if (!anyTypes && (eval_nota.value || eval_intentos.value || eval_tiempo.value || eval_retro.value)) {
+        valid = false;
+        if (show) { err_eval_tqp.textContent = "Selecciona al menos un tipo de pregunta si defines otros parámetros de evaluación."; err_eval_tqp.classList.add('show'); }
+        if (!firstInvalid) firstInvalid = eval_tqp_group.querySelector('input.tqp') || eval_tqp_group;
+      }
+
+      return { valid, firstInvalid };
+    }
+
+    function buildEvaluacion(){
+      const tipos = Array.from(eval_tqp_group.querySelectorAll('.tqp:checked')).map(c=>c.value);
+      const obj = {
+        tipos_pregunta: tipos,
+        nota_minima: eval_nota.value ? Number(eval_nota.value) : undefined,
+        intentos: eval_intentos.value ? Number(eval_intentos.value) : undefined,
+        tiempo_limite_min: eval_tiempo.value ? Number(eval_tiempo.value) : undefined,
+        retro: (eval_retro.value || "").trim() || undefined
+      };
+      Object.keys(obj).forEach(k => obj[k] === undefined && delete obj[k]);
+      // si queda vacío, devolver undefined para no enviar evaluacion vacía
+      return Object.keys(obj).length ? obj : undefined;
+    }
+    function fillEvaluacion(ev){
+      // limpia primero
+      eval_tqp_group.querySelectorAll('.tqp').forEach(c => c.checked = false);
+      eval_nota.value = ""; eval_intentos.value = ""; eval_tiempo.value = ""; eval_retro.value = "";
+      clearErr(eval_nota, err_eval_nota); clearErr(eval_intentos, err_eval_intentos);
+      clearErr(eval_tiempo, err_eval_tiempo); err_eval_tqp.classList.remove('show'); err_eval_tqp.textContent="";
+
+      if (!ev || typeof ev !== 'object') return;
+      (ev.tipos_pregunta || ev.tipos || []).forEach(v=>{
+        const chk = eval_tqp_group.querySelector(`.tqp[value="${v}"]`);
+        if (chk) chk.checked = true;
+      });
+      if (ev.nota_minima != null) eval_nota.value = ev.nota_minima;
+      if (ev.intentos != null) eval_intentos.value = ev.intentos;
+      if (ev.tiempo_limite_min != null) eval_tiempo.value = ev.tiempo_limite_min;
+      if (ev.retro != null) eval_retro.value = ev.retro;
+    }
+
+    function attachValidationHandlers(){
+      [eval_nota, eval_intentos, eval_tiempo, eval_retro].forEach(el=>{
+        el.addEventListener('input', ()=> validateEvaluation({show:true}));
+      });
+      eval_tqp_group.addEventListener('change', ()=> validateEvaluation({show:true}));
+    }
+
+    // ===== Payload & preview =====
+    function buildPersonaNarrativa(){ const o={}; document.querySelectorAll("[data-pn]").forEach(chk=>o[chk.dataset.pn]=chk.checked); return o; }
+    function buildEstilos(){ const o={}; document.querySelectorAll("[data-ne]").forEach(chk=>o[chk.dataset.ne]=chk.checked); return o; }
+    function buildRV(){ const arr=[]; tbodyRV.querySelectorAll("tr").forEach(tr=>{ const d=tr.querySelector(".desc").value.trim(); const n=tr.querySelector(".notas").value.trim(); if(d) arr.push({descripcion:d, notas:n}); }); return arr; }
+    function buildRMM(){ const arr=[]; tbodyRMM.querySelectorAll("tr").forEach(tr=>{ const t=tr.querySelector(".tipo").value.trim(); if(!t) return; arr.push({tipo:t, instrucciones:tr.querySelector(".instr").value.trim(), duracion:tr.querySelector(".dur").value.trim(), cantidad:Number(tr.querySelector(".qty").value||0)}); }); return arr; }
+    function buildInteracciones(){ return Array.from(ulInteracciones.querySelectorAll(".texto")).map(x=>x.textContent.trim()); }
+    function buildActs(){ const arr=[]; tbodyActs.querySelectorAll("tr").forEach(tr=>{ const tipo=tr.querySelector(".tipo").value; const desc=tr.querySelector(".desc").value.trim(); if(desc) arr.push({tipo, descripcion:desc}); }); return arr; }
+
+    function buildPayload(){
+      const payload = {
+        project_id: Number(project_id.value || 0),
+        course_id:  course_id.value ? Number(course_id.value) : undefined,
+        course_name: (course_name.value || "").trim(),
+        module_id:  module_id.value ? Number(module_id.value) : undefined,
+        module_name: (module_name.value || "").trim() || null,
+        unit_id:    unit_id.value ? Number(unit_id.value) : undefined,
+        unit_name:  (unit_name.value || "").trim() || null,
+
+        objetivo_instruccional: objetivo_instruccional.value.trim() || null,
+        mensaje_clave: mensaje_clave.value.trim() || null,
+        persona_narrativa: buildPersonaNarrativa(),
+        narrador_estilo: buildEstilos(),
+        texto_pantalla_inicio: texto_pantalla_inicio.checked,
+        voz_en_off: voz_en_off.checked,
+        recursos_visuales: buildRV(),
+        recursos_multimedia: { items: buildRMM() },
+        interacciones: buildInteracciones(),
+        actividades_aprendizaje: buildActs(),
+        evaluacion: buildEvaluacion(),
+        accesibilidad: (()=>{ const a={}; document.querySelectorAll(".acc").forEach(chk=>a[chk.dataset.acc]=chk.checked); return a; })(),
+        feedback: feedback.value.trim() || null,
+        notas_productor: notas_productor.value.trim() || null,
+        observaciones: observaciones.value.trim() || null,
+      };
+      Object.keys(payload).forEach(k => (payload[k] === null || payload[k] === undefined) && delete payload[k]);
+      return payload;
+    }
+
+    function updatePreview(){ jsonPreview.textContent = JSON.stringify(buildPayload(), null, 2); }
+    document.addEventListener("input", (e)=>{ if (e.target.closest("main")) updatePreview(); });
+    document.addEventListener("change", (e)=>{ if (e.target.closest("main")) updatePreview(); });
+
+    // ===== CRUD =====
+    const ENDPOINT = `${API}/instructional_design_forms`;
+
+    btnNew.onclick = () => {
+      currentFormId = null; statusChip.textContent = "Nuevo"; btnDelete.classList.add("hidden");
+      document.querySelectorAll("input,textarea").forEach(el => el.type === "checkbox" ? el.checked = false : el.value = "");
+      project_id.value = project_select.value || "";
+      toggleCoursesControls(!!project_id.value);
+      if (project_id.value) loadCoursesForProject(project_id.value);
+      tbodyRV.innerHTML=""; tbodyRMM.innerHTML=""; tbodyActs.innerHTML=""; ulInteracciones.innerHTML="";
+      addRowRV(); addRowRMM(); addRowAct();
+      fillEvaluacion(null);
+      updatePreview(); window.scrollTo({top:0, behavior:"smooth"});
+    };
+
+    btnDelete.onclick = async () => {
+      if (!currentFormId) return;
+      if (!confirm("¿Eliminar este diseño instruccional?")) return;
+      try{
+        await apiFetch(`${ENDPOINT}/${currentFormId}`, { method:"DELETE" });
+        UI.notify("Eliminado.","success");
+        btnNew.click(); await reloadList();
+      }catch(e){ UI.notify("No se pudo eliminar: " + e.message, "error"); }
+    };
+
+    btnSave.onclick = async () => {
+      // Validación antes de guardar
+      const { valid, firstInvalid } = validateEvaluation({show:true});
+      if (!valid) {
+        UI.notify("Revisa los errores en Evaluación.","error");
+        // Llevar al primer inválido
+        if (firstInvalid?.scrollIntoView) firstInvalid.scrollIntoView({behavior:"smooth", block:"center"});
+        if (firstInvalid?.focus) setTimeout(()=>firstInvalid.focus(), 300);
+        return;
+      }
+
+      const payload = buildPayload();
+      if (!payload.project_id) { UI.notify("Selecciona un proyecto.","error"); return; }
+      if (!payload.course_id && !payload.course_name) { UI.notify("Selecciona un curso.","error"); return; }
+      try{
+        let data;
+        if (currentFormId) {
+          data = await apiFetch(`${ENDPOINT}/${currentFormId}`, { method:"PUT", body: JSON.stringify(payload) });
+        } else {
+          data = await apiFetch(ENDPOINT, { method:"POST", body: JSON.stringify(payload) });
+        }
+        currentFormId = data.id;
+        statusChip.textContent = `ID #${data.id}`;
+        btnDelete.classList.remove("hidden");
+        UI.notify("Guardado con éxito.","success");
+        await reloadList();
+      }catch(e){ UI.notify("No se pudo guardar: " + e.message, "error"); }
+    };
+
+    // ===== Listado =====
+    btnReload.onclick = reloadList; btnFilter.onclick = reloadList;
+
+    async function reloadList(){
+      listItems.innerHTML = `<li class="py-2 text-sm text-gray-500">Cargando…</li>`;
+      const pid = Number(projFilter.value || project_id.value || 0);
+      if (!pid) { listItems.innerHTML = `<li class="py-2 text-sm text-gray-500">Asigna un project_id.</li>`; return; }
+      try{
+        const arr = await apiFetch(`${ENDPOINT}?project_id=${pid}`);
+        if (!arr.length){ listItems.innerHTML = `<li class="py-2 text-sm text-gray-500">Sin resultados para el proyecto ${pid}.</li>`; return; }
+        listItems.innerHTML = "";
+        arr.forEach(it=>{
+          const li=document.createElement("li");
+          li.className="py-2 flex items-start justify-between gap-3";
+          li.innerHTML = `
+            <div>
+              <div class="font-medium text-sm">#${it.id} · ${escapeHtml(it.course_name||"")}</div>
+              <div class="text-xs text-gray-500">Mód: ${escapeHtml(it.module_name||"-")} · Unidad: ${escapeHtml(it.unit_name||"-")}</div>
+            </div>
+            <div><button class="btn btn-s !px-2 !py-1 text-xs">Editar</button></div>`;
+          li.querySelector("button").onclick = ()=> loadToForm(it.id);
+          listItems.appendChild(li);
+        });
+      }catch(e){ listItems.innerHTML = `<li class="py-2 text-sm text-red-600">Error: ${e.message}</li>`; }
+    }
+
+    async function loadToForm(id){
+      try{
+        const it = await apiFetch(`${ENDPOINT}/${id}`);
+        currentFormId = it.id; statusChip.textContent = `ID #${it.id}`; btnDelete.classList.remove("hidden");
+
+        // Proyecto -> Cursos -> Módulos -> Unidades
+        if (it.project_id) {
+          project_select.value = String(it.project_id);
+          project_id.value = String(it.project_id);
+          toggleCoursesControls(true);
+          await loadCoursesForProject(it.project_id);
+        }
+
+        // Curso
+        if (it.course_id) {
+          course_select.value = String(it.course_id);
+          const selC = course_select.options[course_select.selectedIndex];
+          course_id.value = selC ? selC.value : "";
+          course_name.value = selC ? selC.textContent.trim() : (it.course_name || "");
+          if (course_id.value) await loadModulesForCourse(course_id.value);
+        } else if (it.course_name) {
+          const opt = Array.from(course_select.options).find(o => o.textContent.trim() === it.course_name);
+          if (opt) { course_select.value = opt.value; course_id.value = opt.value; course_name.value = opt.textContent.trim(); await loadModulesForCourse(opt.value); }
+          else { course_id.value = ""; course_name.value = it.course_name; }
+        }
+
+        // Módulo
+        if (it.module_id) {
+          module_select.value = String(it.module_id);
+          const selM = module_select.options[module_select.selectedIndex];
+          module_id.value = selM ? selM.value : "";
+          module_name.value = selM ? selM.textContent.trim() : (it.module_name || "");
+          if (module_id.value) await loadUnitsForModule(module_id.value);
+        } else if (it.module_name) {
+          const optM = Array.from(module_select.options).find(o => o.textContent.trim() === it.module_name);
+          if (optM) { module_select.value = optM.value; module_id.value = optM.value; module_name.value = optM.textContent.trim(); await loadUnitsForModule(optM.value); }
+          else { module_id.value = ""; module_name.value = it.module_name; }
+        }
+
+        // Unidad
+        if (it.unit_id) {
+          unit_select.value = String(it.unit_id);
+          const selU = unit_select.options[unit_select.selectedIndex];
+          unit_id.value = selU ? selU.value : "";
+          unit_name.value = selU ? selU.textContent.trim() : (it.unit_name || "");
+        } else if (it.unit_name) {
+          const optU = Array.from(unit_select.options).find(o => o.textContent.trim() === it.unit_name);
+          if (optU) { unit_select.value = optU.value; unit_id.value = optU.value; unit_name.value = optU.textContent.trim(); }
+          else { unit_id.value = ""; unit_name.value = it.unit_name; }
+        }
+
+        // Resto del formulario
+        objetivo_instruccional.value = it.objetivo_instruccional ?? "";
+        mensaje_clave.value = it.mensaje_clave ?? "";
+        texto_pantalla_inicio.checked = !!it.texto_pantalla_inicio;
+        voz_en_off.checked = !!it.voz_en_off;
+
+        document.querySelectorAll("[data-pn]").forEach(chk => chk.checked = !!(it.persona_narrativa?.[chk.dataset.pn]));
+        document.querySelectorAll("[data-ne]").forEach(chk => chk.checked = !!(it.narrador_estilo?.[chk.dataset.ne]));
+
+        tbodyRV.innerHTML=""; (it.recursos_visuales||[]).forEach(row=>addRowRV({descripcion:row.descripcion||"", notas:row.notas||""})); if(!tbodyRV.children.length) addRowRV();
+        tbodyRMM.innerHTML=""; (it.recursos_multimedia?.items||[]).forEach(row=>addRowRMM({tipo:row.tipo||"", instrucciones:row.instrucciones||"", duracion:row.duracion||"", cantidad:row.cantidad??1})); if(!tbodyRMM.children.length) addRowRMM();
+        ulInteracciones.innerHTML=""; (it.interacciones||[]).forEach(txt=>addChipInter(txt));
+        tbodyActs.innerHTML=""; (it.actividades_aprendizaje||[]).forEach(a=>addRowAct(a)); if(!tbodyActs.children.length) addRowAct();
+
+        // Evaluación
+        fillEvaluacion(it.evaluacion);
+
+        // Accesibilidad y textos
+        document.querySelectorAll(".acc").forEach(chk => chk.checked = !!(it.accesibilidad?.[chk.dataset.acc]));
+        feedback.value = it.feedback ?? "";
+        notas_productor.value = it.notas_productor ?? "";
+        observaciones.value = it.observaciones ?? "";
+
+        updatePreview(); window.scrollTo({top:0, behavior:"smooth"});
+      }catch(e){ UI.notify("No se pudo cargar: "+e.message,"error"); }
+    }
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

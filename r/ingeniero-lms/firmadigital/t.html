@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firmador de Documentos Digital</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/4.0.5/signature_pad.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .upload-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px dashed #ddd;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section:hover {
+            border-color: #4facfe;
+            background: #f0f7ff;
+            transform: translateY(-2px);
+        }
+        
+        .upload-button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.6);
+        }
+        
+        .signature-section {
+            background: #fff8f0;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .signature-canvas {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            cursor: crosshair;
+            width: 100%;
+            height: 200px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .signature-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-clear {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .btn-clear:hover {
+            background: #ff5252;
+            transform: translateY(-1px);
+        }
+        
+        .btn-sign {
+            background: #4ecdc4;
+            color: white;
+        }
+        
+        .btn-sign:hover {
+            background: #45b7aa;
+            transform: translateY(-1px);
+        }
+        
+        .pdf-viewer {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .pdf-canvas {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            max-width: 100%;
+            margin: 0 auto;
+            display: block;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .download-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .btn-download {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+        }
+        
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.6);
+        }
+        
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+        
+        .signature-preview {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .signature-image {
+            max-width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Firmador Digital</h1>
+            <p>Firma tus documentos PDF de manera segura y profesional</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="upload-section">
+                <h3>📄 Cargar Documento</h3>
+                <p>Selecciona un archivo PDF para firmar</p>
+                <br>
+                <input type="file" id="pdfFile" accept=".pdf" style="display: none;">
+                <button class="upload-button" onclick="document.getElementById('pdfFile').click()">
+                    Seleccionar PDF
+                </button>
+                <div id="fileName" style="margin-top: 15px; font-weight: bold; color: #666;"></div>
+            </div>
+            
+            <div class="signature-section">
+                <h3>✍️ Crear Firma</h3>
+                <p>Dibuja tu firma en el área de abajo</p>
+                <br>
+                <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+                <div class="signature-controls">
+                    <button class="btn btn-clear" onclick="clearSignature()">Limpiar</button>
+                    <button class="btn btn-sign" onclick="saveSignature()">Guardar Firma</button>
+                </div>
+                <div class="signature-preview" id="signaturePreview" style="display: none;">
+                    <p>Firma guardada:</p>
+                    <img id="signatureImage" class="signature-image" alt="Firma">
+                </div>
+            </div>
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <div class="pdf-viewer" id="pdfViewer" style="display: none;">
+            <h3>📋 Vista Previa del Documento</h3>
+            <canvas id="pdfCanvas" class="pdf-canvas"></canvas>
+            <div class="download-section">
+                <button class="btn btn-download" id="downloadBtn" onclick="downloadSignedPDF()">
+                    📥 Descargar PDF Firmado
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let signaturePad;
+        let currentPdf = null;
+        let signatureDataUrl = null;
+        let signedPdfBytes = null;
+
+        // Inicializar el canvas de firma
+        function initializeSignaturePad() {
+            const canvas = document.getElementById('signatureCanvas');
+            signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'rgb(0, 0, 0)',
+                velocityFilterWeight: 0.7,
+                minWidth: 0.5,
+                maxWidth: 2.5,
+                throttle: 16
+            });
+
+            // Ajustar el tamaño del canvas
+            function resizeCanvas() {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext('2d').scale(ratio, ratio);
+                signaturePad.clear();
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+        }
+
+        // Limpiar firma
+        function clearSignature() {
+            signaturePad.clear();
+            document.getElementById('signaturePreview').style.display = 'none';
+            signatureDataUrl = null;
+        }
+
+        // Guardar firma
+        function saveSignature() {
+            if (signaturePad.isEmpty()) {
+                showStatus('Por favor, dibuje su firma primero.', 'error');
+                return;
+            }
+
+            signatureDataUrl = signaturePad.toDataURL();
+            const img = document.getElementById('signatureImage');
+            img.src = signatureDataUrl;
+            document.getElementById('signaturePreview').style.display = 'block';
+            showStatus('Firma guardada correctamente.', 'success');
+        }
+
+        // Mostrar estado
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        // Manejar carga de archivo PDF
+        document.getElementById('pdfFile').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.type !== 'application/pdf') {
+                showStatus('Por favor, seleccione un archivo PDF válido.', 'error');
+                return;
+            }
+
+            document.getElementById('fileName').textContent = file.name;
+            showStatus('Cargando documento...', 'info');
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                currentPdf = await PDFLib.PDFDocument.load(arrayBuffer);
+                await renderPDF();
+                showStatus('Documento cargado correctamente.', 'success');
+            } catch (error) {
+                console.error('Error al cargar PDF:', error);
+                showStatus('Error al cargar el archivo PDF.', 'error');
+            }
+        });
+
+        // Renderizar PDF
+        async function renderPDF() {
+            if (!currentPdf) return;
+
+            const pdfBytes = await currentPdf.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+
+            // Crear un iframe temporal para renderizar el PDF
+            const viewer = document.getElementById('pdfViewer');
+            const canvas = document.getElementById('pdfCanvas');
+            viewer.style.display = 'block';
+
+            // Usar PDF-lib para obtener la primera página como imagen
+            try {
+                const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+                const pages = pdfDoc.getPages();
+                const firstPage = pages[0];
+                const { width, height } = firstPage.getSize();
+                
+                // Configurar canvas
+                canvas.width = Math.min(width, 800);
+                canvas.height = (height * canvas.width) / width;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Mostrar mensaje de vista previa
+                ctx.fillStyle = '#333';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Vista previa del PDF', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.fillText('El documento se mostrará aquí una vez firmado', canvas.width / 2, canvas.height / 2 + 20);
+                
+            } catch (error) {
+                console.error('Error renderizando PDF:', error);
+            }
+
+            URL.revokeObjectURL(url);
+        }
+
+        // Descargar PDF firmado
+        async function downloadSignedPDF() {
+            if (!currentPdf || !signatureDataUrl) {
+                showStatus('Debe cargar un PDF y crear una firma primero.', 'error');
+                return;
+            }
+
+            showStatus('Agregando firma al documento...', 'info');
+
+            try {
+                // Crear una copia del documento PDF
+                const pdfDoc = await PDFLib.PDFDocument.load(await currentPdf.save());
+                
+                // Convertir la firma a bytes
+                const signatureImage = await pdfDoc.embedPng(signatureDataUrl);
+                
+                // Obtener la primera página
+                const pages = pdfDoc.getPages();
+                const firstPage = pages[0];
+                const { width, height } = firstPage.getSize();
+                
+                // Dimensiones de la firma
+                const signatureWidth = 150;
+                const signatureHeight = 75;
+                
+                // Posición de la firma (esquina inferior derecha)
+                const x = width - signatureWidth - 50;
+                const y = 100;
+                
+                // Agregar la firma
+                firstPage.drawImage(signatureImage, {
+                    x: x,
+                    y: y,
+                    width: signatureWidth,
+                    height: signatureHeight,
+                    opacity: 0.8
+                });
+                
+                // Agregar texto de firma
+                firstPage.drawText('Firmado digitalmente', {
+                    x: x,
+                    y: y - 15,
+                    size: 10,
+                    color: PDFLib.rgb(0.5, 0.5, 0.5)
+                });
+                
+                const now = new Date();
+                const dateString = now.toLocaleDateString('es-ES') + ' ' + now.toLocaleTimeString('es-ES');
+                firstPage.drawText(dateString, {
+                    x: x,
+                    y: y - 30,
+                    size: 8,
+                    color: PDFLib.rgb(0.5, 0.5, 0.5)
+                });
+                
+                // Guardar el PDF firmado
+                signedPdfBytes = await pdfDoc.save();
+                
+                // Crear y descargar el archivo
+                const blob = new Blob([signedPdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'documento_firmado.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showStatus('PDF firmado descargado correctamente.', 'success');
+                
+            } catch (error) {
+                console.error('Error al firmar PDF:', error);
+                showStatus('Error al procesar el documento.', 'error');
+            }
+        }
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSignaturePad();
+            showStatus('Aplicación lista. Cargue un PDF y cree su firma.', 'info');
+        });
+    </script>
+</body>
+</html>

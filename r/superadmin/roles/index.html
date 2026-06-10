@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Roles</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+    <style>
+        .modal {
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: fadeInScale 0.3s ease-out;
+        }
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 font-sans text-gray-900 min-h-screen">
+
+    <header class="bg-white shadow-lg border-b-4 border-indigo-500">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600 p-2 rounded-lg">
+                        <span class="text-2xl">⚙️</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">Gestión de Roles</h1>
+                        <p class="text-gray-600 text-sm">Administra roles y permisos del sistema</p>
+                    </div>
+                </div>
+                <button onclick="abrirModalCrear()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center space-x-2">
+                    <span>➕</span>
+                    <span>Crear Rol</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto mt-8 px-6">
+
+        <div id="mensaje" class="mb-6 hidden">
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow">
+                <span id="mensajeTexto"></span>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <div class="flex-1">
+                    <input type="text" id="busqueda" placeholder="🔍 Buscar roles por nombre..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+                <button onclick="cargarRoles()"
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    🔄 Actualizar
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Nombre del Rol</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Permisos</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Usuarios</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaRoles" class="divide-y divide-gray-200">
+                        </tbody>
+                </table>
+            </div>
+
+            <div id="loading" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <p class="mt-2 text-gray-600">Cargando roles...</p>
+            </div>
+
+            <div id="emptyState" class="text-center py-12 hidden">
+                <div class="text-6xl mb-4">📝</div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">No hay roles disponibles</h3>
+                <p class="text-gray-600 mb-4">Comienza creando tu primer rol</p>
+                <button onclick="abrirModalCrear()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg">
+                    Crear Primer Rol
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalCrear" class="fixed inset-0 bg-black bg-opacity-50 modal hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md modal-content">
+            <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-6 rounded-t-xl">
+                <h2 class="text-xl font-bold flex items-center">
+                    <span class="mr-2">➕</span>
+                    Crear Nuevo Rol
+                </h2>
+            </div>
+            <form id="formCrear" class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Rol *</label>
+                        <input type="text" id="nombreCrear" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                               placeholder="Ej: Administrador, Editor, Viewer...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Permisos</label>
+                        <div class="flex items-center space-x-2 mb-2 p-2 bg-gray-100 rounded-lg">
+                            <input type="checkbox" id="selectAllCrear"
+                                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            <label for="selectAllCrear" class="text-sm font-semibold text-gray-800">Seleccionar todos</label>
+                        </div>
+                        <div id="permisosCrear" class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                            </div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                    <button type="button" onclick="cerrarModal('modalCrear')"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                        Crear Rol
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalDetalle" class="fixed inset-0 bg-black bg-opacity-50 modal hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg modal-content">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-xl">
+                <h2 class="text-xl font-bold flex items-center">
+                    <span class="mr-2">👁️</span>
+                    Detalles del Rol
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="font-semibold text-gray-700">ID:</span>
+                        <span id="detalleId" class="text-gray-900"></span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span class="font-semibold text-gray-700">Nombre:</span>
+                        <span id="detalleNombre" class="text-gray-900 font-semibold"></span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700 block mb-2">Permisos Asignados:</span>
+                        <div id="detallePermisos" class="bg-gray-50 rounded-lg p-3 max-h-48 overflow-y-auto">
+                            </div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                    <button onclick="cerrarModal('modalDetalle')"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cerrar
+                    </button>
+                    <button onclick="editarDesdeDetalle()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                        Editar Rol
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditar" class="fixed inset-0 bg-black bg-opacity-50 modal hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md modal-content">
+            <div class="bg-gradient-to-r from-orange-600 to-orange-700 text-white p-6 rounded-t-xl">
+                <h2 class="text-xl font-bold flex items-center">
+                    <span class="mr-2">✏️</span>
+                    Editar Rol
+                </h2>
+            </div>
+            <form id="formEditar" class="p-6">
+                <input type="hidden" id="idEditar">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Rol *</label>
+                        <input type="text" id="nombreEditar" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Permisos</label>
+                        <div class="flex items-center space-x-2 mb-2 p-2 bg-gray-100 rounded-lg">
+                            <input type="checkbox" id="selectAllEditar"
+                                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            <label for="selectAllEditar" class="text-sm font-semibold text-gray-800">Seleccionar todos</label>
+                        </div>
+                        <div id="permisosEditar" class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                            </div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                    <button type="button" onclick="cerrarModal('modalEditar')"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEliminar" class="fixed inset-0 bg-black bg-opacity-50 modal hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md modal-content">
+            <div class="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-t-xl">
+                <h2 class="text-xl font-bold flex items-center">
+                    <span class="mr-2">⚠️</span>
+                    Confirmar Eliminación
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">🗑️</div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">¿Estás seguro?</h3>
+                    <p class="text-gray-600 mb-4">
+                        Estás a punto de eliminar el rol "<span id="nombreEliminar" class="font-semibold"></span>".
+                        Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="flex justify-center space-x-3 mt-6">
+                    <button onclick="cerrarModal('modalEliminar')"
+                            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button onclick="confirmarEliminar()"
+                            class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                        Sí, Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = "https://gestordecursos.pegui.edu.co:8000";
+        const token = localStorage.getItem("token");
+        if (!token) location.href = "/index.html";
+
+        const HEADERS = {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+        };
+
+        let permisos = [];
+        let usuarios = [];
+        let rolActual = null;
+        let idEliminar = null;
+
+        // Cargar permisos disponibles
+        async function cargarPermisos() {
+            try {
+                const res = await fetch(`${API}/permissions/`, { headers: HEADERS });
+                permisos = await res.json();
+            } catch (e) {
+                console.error("Error cargando permisos:", e);
+            }
+        }
+
+        // Cargar usuarios para contar roles
+        async function cargarUsuarios() {
+            try {
+                const res = await fetch(`${API}/users`, { headers: HEADERS });
+                if (res.ok) {
+                    usuarios = await res.json();
+                } else {
+                    console.error("Error al cargar usuarios:", res.status, res.statusText);
+                    usuarios = [];
+                }
+            } catch (e) {
+                console.error("Error cargando usuarios:", e);
+                usuarios = [];
+            }
+        }
+
+        // Contar usuarios por rol
+        function contarUsuariosPorRol(nombreRol) {
+            if (!usuarios || usuarios.length === 0) return 0;
+
+            return usuarios.filter(usuario => {
+                if (!usuario.roles || !Array.isArray(usuario.roles)) return false;
+                return usuario.roles.includes(nombreRol.toLowerCase());
+            }).length;
+        }
+
+        // Cargar y mostrar roles
+        async function cargarRoles() {
+            const loading = document.getElementById("loading");
+            const emptyState = document.getElementById("emptyState");
+            const tbody = document.getElementById("listaRoles");
+
+            loading.classList.remove("hidden");
+            emptyState.classList.add("hidden");
+            tbody.innerHTML = "";
+
+            try {
+                const [rolesRes] = await Promise.all([
+                    fetch(`${API}/roles/`, { headers: HEADERS }),
+                    cargarUsuarios()
+                ]);
+
+                const roles = await rolesRes.json();
+
+                loading.classList.add("hidden");
+
+                if (roles.length === 0) {
+                    emptyState.classList.remove("hidden");
+                    return;
+                }
+
+                roles.forEach(rol => {
+                    const permisos = rol.permissions ? rol.permissions.map(p => p.name).join(", ") : "Sin permisos";
+                    const permisosCortos = permisos.length > 50 ? permisos.substring(0, 50) + "..." : permisos;
+                    const conteoUsuarios = contarUsuariosPorRol(rol.name);
+
+                    tbody.insertAdjacentHTML("beforeend", `
+                        <tr class="hover:bg-gray-50 transition-colors fade-in">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs">#${rol.id}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">👤</span>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">${rol.name}</div>
+                                        <div class="text-sm text-gray-500">Rol del sistema</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600 max-w-xs">
+                                <span title="${permisos}">${permisosCortos}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span class="bg-${conteoUsuarios > 0 ? 'green' : 'gray'}-100 text-${conteoUsuarios > 0 ? 'green' : 'gray'}-800 px-2 py-1 rounded-full text-xs font-medium">
+                                    👥 ${conteoUsuarios} usuario${conteoUsuarios !== 1 ? 's' : ''}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                <div class="flex justify-center space-x-2">
+                                    <button onclick="verDetalle(${rol.id})"
+                                            class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-lg transition-colors"
+                                            title="Ver detalles">
+                                        👁️
+                                    </button>
+                                    <button onclick="abrirModalEditar(${rol.id})"
+                                            class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1 rounded-lg transition-colors"
+                                            title="Editar">
+                                        ✏️
+                                    </button>
+                                    <button onclick="abrirModalEliminar(${rol.id}, '${rol.name}')"
+                                            class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-lg transition-colors"
+                                            title="Eliminar">
+                                        🗑️
+                                    </button>
+                                    ${conteoUsuarios > 0 ? `
+                                    <button onclick="verUsuariosDelRol('${rol.name}')"
+                                            class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1 rounded-lg transition-colors"
+                                            title="Ver usuarios con este rol">
+                                        👥
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                });
+            } catch (e) {
+                loading.classList.add("hidden");
+                mostrarMensaje("Error al cargar los roles", "error");
+                console.error("Error cargando roles:", e);
+            }
+        }
+
+        // Mostrar mensaje de estado
+        function mostrarMensaje(texto, tipo = "success") {
+            const mensaje = document.getElementById("mensaje");
+            const mensajeTexto = document.getElementById("mensajeTexto");
+
+            mensajeTexto.textContent = texto;
+
+            let clases = "mb-6 px-4 py-3 rounded-lg shadow border";
+            if (tipo === "error") {
+                clases += " text-red-700 bg-red-100 border-red-400";
+            } else if (tipo === "info") {
+                clases += " text-blue-700 bg-blue-100 border-blue-400";
+            } else {
+                clases += " text-green-700 bg-green-100 border-green-400";
+            }
+
+            mensaje.className = clases;
+            mensaje.classList.remove("hidden");
+
+            setTimeout(() => {
+                mensaje.classList.add("hidden");
+            }, 5000);
+        }
+
+        // Funciones para manejar modales
+        function abrirModal(modalId) {
+            document.getElementById(modalId).classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function cerrarModal(modalId) {
+            document.getElementById(modalId).classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+
+        // Generar checkboxes de permisos
+        function generarPermisosCheckbox(containerId, permisosSeleccionados = []) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+
+            permisos.forEach(permiso => {
+                const checked = permisosSeleccionados.some(p => p.id === permiso.id) ? "checked" : "";
+                container.insertAdjacentHTML("beforeend", `
+                    <label class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <input type="checkbox" value="${permiso.id}" name="permisos" ${checked}
+                               class="permiso-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <div class="flex-1">
+                            <span class="text-sm font-medium text-gray-900">${permiso.name}</span>
+                            <p class="text-xs text-gray-500">${permiso.description || 'Sin descripción'}</p>
+                        </div>
+                    </label>
+                `);
+            });
+        }
+
+        // Lógica para el botón "Seleccionar todos"
+        function setupSelectAllListener(selectAllId, permissionsContainerId) {
+            const selectAllCheckbox = document.getElementById(selectAllId);
+            const permissionsContainer = document.getElementById(permissionsContainerId);
+
+            // Listener para el checkbox "Seleccionar todos"
+            selectAllCheckbox.addEventListener('change', (e) => {
+                const checkboxes = permissionsContainer.querySelectorAll('.permiso-checkbox');
+                checkboxes.forEach(cb => cb.checked = e.target.checked);
+            });
+
+            // Listener para los checkboxes individuales
+            permissionsContainer.addEventListener('change', () => {
+                const checkboxes = permissionsContainer.querySelectorAll('.permiso-checkbox');
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                selectAllCheckbox.checked = allChecked;
+            });
+        }
+
+        // Crear rol
+        async function abrirModalCrear() {
+            generarPermisosCheckbox("permisosCrear");
+            setupSelectAllListener("selectAllCrear", "permisosCrear");
+            document.getElementById("nombreCrear").value = "";
+            abrirModal("modalCrear");
+        }
+
+        document.getElementById("formCrear").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const nombre = document.getElementById("nombreCrear").value.trim();
+            const permisosSeleccionados = Array.from(document.querySelectorAll('#permisosCrear input[name="permisos"]:checked'))
+                                                .map(cb => parseInt(cb.value));
+
+            if (!nombre) {
+                mostrarMensaje("El nombre del rol es obligatorio", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API}/roles/`, {
+                    method: "POST",
+                    headers: HEADERS,
+                    body: JSON.stringify({
+                        name: nombre,
+                        permission_ids: permisosSeleccionados
+                    })
+                });
+
+                if (res.ok) {
+                    mostrarMensaje("✅ Rol creado exitosamente");
+                    cerrarModal("modalCrear");
+                    cargarRoles();
+                } else {
+                    const error = await res.json();
+                    mostrarMensaje(`Error: ${error.detail || 'No se pudo crear el rol'}`, "error");
+                }
+            } catch (e) {
+                mostrarMensaje("Error de conexión al crear el rol", "error");
+                console.error(e);
+            }
+        });
+
+        // Ver detalles
+        async function verDetalle(id) {
+            try {
+                const res = await fetch(`${API}/roles/${id}`, { headers: HEADERS });
+                const rol = await res.json();
+
+                document.getElementById("detalleId").textContent = rol.id;
+                document.getElementById("detalleNombre").textContent = rol.name;
+
+                const permisosContainer = document.getElementById("detallePermisos");
+                if (rol.permissions && rol.permissions.length > 0) {
+                    permisosContainer.innerHTML = rol.permissions.map(p =>
+                        `<span class="inline-block bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm mr-2 mb-2">${p.name}</span>`
+                    ).join("");
+                } else {
+                    permisosContainer.innerHTML = '<span class="text-gray-500 italic">Sin permisos asignados</span>';
+                }
+
+                const conteoUsuarios = contarUsuariosPorRol(rol.name);
+                const usuariosConRol = usuarios.filter(usuario => {
+                    if (!usuario.roles || !Array.isArray(usuario.roles)) return false;
+                    return usuario.roles.includes(rol.name.toLowerCase());
+                });
+
+                const detallesContainer = document.querySelector('#modalDetalle .space-y-4');
+                const usuariosSection = detallesContainer.querySelector('.usuarios-section');
+                if (usuariosSection) {
+                    usuariosSection.remove();
+                }
+
+                const usuariosHTML = `
+                    <div class="usuarios-section">
+                        <span class="font-semibold text-gray-700 block mb-2">Usuarios con este rol (${conteoUsuarios}):</span>
+                        <div class="bg-gray-50 rounded-lg p-3 max-h-32 overflow-y-auto">
+                            ${usuariosConRol.length > 0 ?
+                                usuariosConRol.map(usuario => `
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                                                ${(usuario.username || usuario.email || 'U').charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-900">${usuario.username || 'Sin nombre de usuario'}</p>
+                                                <p class="text-sm text-gray-600">${usuario.email || 'Sin email'}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-xs text-gray-500">ID: ${usuario.id}</p>
+                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                ${usuario.roles ? usuario.roles.map(rol =>
+                                                    `<span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">${rol}</span>`
+                                                ).join('') : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('') :
+                                '<span class="text-gray-500 italic text-sm">No hay usuarios asignados a este rol</span>'
+                            }
+                        </div>
+                    </div>
+                `;
+
+                detallesContainer.insertAdjacentHTML('beforeend', usuariosHTML);
+
+                rolActual = rol;
+                abrirModal("modalDetalle");
+            } catch (e) {
+                mostrarMensaje("Error al cargar los detalles del rol", "error");
+                console.error(e);
+            }
+        }
+
+        function editarDesdeDetalle() {
+            cerrarModal("modalDetalle");
+            abrirModalEditar(rolActual.id);
+        }
+
+        // Editar rol
+        async function abrirModalEditar(id) {
+            try {
+                const res = await fetch(`${API}/roles/${id}`, { headers: HEADERS });
+                const rol = await res.json();
+
+                document.getElementById("idEditar").value = rol.id;
+                document.getElementById("nombreEditar").value = rol.name;
+                generarPermisosCheckbox("permisosEditar", rol.permissions || []);
+                setupSelectAllListener("selectAllEditar", "permisosEditar");
+
+                abrirModal("modalEditar");
+            } catch (e) {
+                mostrarMensaje("Error al cargar el rol para editar", "error");
+                console.error(e);
+            }
+        }
+
+        document.getElementById("formEditar").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById("idEditar").value;
+            const nombre = document.getElementById("nombreEditar").value.trim();
+            const permisosSeleccionados = Array.from(document.querySelectorAll('#permisosEditar input[name="permisos"]:checked'))
+                                                .map(cb => parseInt(cb.value));
+
+            if (!nombre) {
+                mostrarMensaje("El nombre del rol es obligatorio", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API}/roles/${id}`, {
+                    method: "PUT",
+                    headers: HEADERS,
+                    body: JSON.stringify({
+                        name: nombre,
+                        permission_ids: permisosSeleccionados
+                    })
+                });
+
+                if (res.ok) {
+                    mostrarMensaje("✅ Rol actualizado exitosamente");
+                    cerrarModal("modalEditar");
+                    cargarRoles();
+                } else {
+                    const error = await res.json();
+                    mostrarMensaje(`Error: ${error.detail || 'No se pudo actualizar el rol'}`, "error");
+                }
+            } catch (e) {
+                mostrarMensaje("Error de conexión al actualizar el rol", "error");
+                console.error(e);
+            }
+        });
+
+        // Eliminar rol
+        function abrirModalEliminar(id, nombre) {
+            idEliminar = id;
+            document.getElementById("nombreEliminar").textContent = nombre;
+            abrirModal("modalEliminar");
+        }
+
+        async function confirmarEliminar() {
+            if (!idEliminar) return;
+
+            try {
+                const res = await fetch(`${API}/roles/${idEliminar}`, {
+                    method: "DELETE",
+                    headers: HEADERS
+                });
+
+                if (res.ok) {
+                    mostrarMensaje("✅ Rol eliminado exitosamente");
+                    cerrarModal("modalEliminar");
+                    cargarRoles();
+                } else {
+                    const error = await res.json();
+                    mostrarMensaje(`Error: ${error.detail || 'No se pudo eliminar el rol'}`, "error");
+                }
+            } catch (e) {
+                mostrarMensaje("Error de conexión al eliminar el rol", "error");
+                console.error(e);
+            }
+
+            idEliminar = null;
+        }
+
+        // Ver usuarios de un rol específico
+        function verUsuariosDelRol(nombreRol) {
+            const usuariosDelRol = usuarios.filter(usuario => {
+                if (!usuario.roles || !Array.isArray(usuario.roles)) return false;
+                return usuario.roles.includes(nombreRol.toLowerCase());
+            });
+
+            if (usuariosDelRol.length === 0) {
+                mostrarMensaje(`No hay usuarios asignados al rol "${nombreRol}"`, "info");
+                return;
+            }
+
+            const modalHTML = `
+                <div id="modalUsuarios" class="fixed inset-0 bg-black bg-opacity-50 modal z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl modal-content">
+                        <div class="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-t-xl">
+                            <h2 class="text-xl font-bold flex items-center">
+                                <span class="mr-2">👥</span>
+                                Usuarios con rol "${nombreRol}" (${usuariosDelRol.length})
+                            </h2>
+                        </div>
+                        <div class="p-6 max-h-96 overflow-y-auto">
+                            <div class="space-y-3">
+                                ${usuariosDelRol.map(usuario => `
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                                                ${(usuario.username || usuario.email || 'U').charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-900">${usuario.username || 'Sin nombre de usuario'}</p>
+                                                <p class="text-sm text-gray-600">${usuario.email || 'Sin email'}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-xs text-gray-500">ID: ${usuario.id}</p>
+                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                ${usuario.roles ? usuario.roles.map(rol =>
+                                                    `<span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">${rol}</span>`
+                                                ).join('') : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="flex justify-end p-6 pt-4 border-t">
+                            <button onclick="cerrarModalUsuarios()"
+                                    class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function cerrarModalUsuarios() {
+            const modal = document.getElementById('modalUsuarios');
+            if (modal) {
+                modal.remove();
+                document.body.classList.remove("overflow-hidden");
+            }
+        }
+        document.getElementById("busqueda").addEventListener("input", (e) => {
+            const filtro = e.target.value.toLowerCase();
+            const filas = document.querySelectorAll("#listaRoles tr");
+
+            filas.forEach(fila => {
+                const nombre = fila.querySelector("td:nth-child(2)").textContent.toLowerCase();
+                fila.style.display = nombre.includes(filtro) ? "" : "none";
+            });
+        });
+
+        // Cerrar modales con Escape
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                document.querySelectorAll(".modal").forEach(modal => {
+                    if (!modal.classList.contains("hidden")) {
+                        cerrarModal(modal.id);
+                    }
+                });
+            }
+        });
+
+        // Inicializar al cargar la página
+        window.addEventListener("DOMContentLoaded", async () => {
+            console.log("🚀 Iniciando carga de datos...");
+
+            try {
+                document.getElementById("loading").classList.remove("hidden");
+
+                await Promise.all([
+                    cargarPermisos(),
+                    cargarUsuarios()
+                ]);
+
+                console.log("✅ Permisos cargados:", permisos.length);
+                console.log("✅ Usuarios cargados:", usuarios.length);
+
+                await cargarRoles();
+
+                console.log("✅ Sistema de roles inicializado correctamente");
+            } catch (error) {
+                console.error("❌ Error al inicializar:", error);
+                mostrarMensaje("Error al inicializar el sistema", "error");
+            }
+        });
+    </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

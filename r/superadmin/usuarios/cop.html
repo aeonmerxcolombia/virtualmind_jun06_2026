@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestión de Usuarios - VirtualMind</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/assets/logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'inter': ['Inter', 'sans-serif'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-in-out',
+            'slide-up': 'slideUp 0.3s ease-out',
+            'pulse-soft': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          backdropBlur: { 'xs': '2px' }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass-effect { background: rgba(255,255,255, 0.25); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.18); }
+    .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    .modal-bg { background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); }
+    .action-btn { cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; margin-right: 0.25rem; }
+    .action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .gradient-border { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2px; border-radius: 12px; }
+    .gradient-border-content { background: white; border-radius: 10px; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+    .table-row { transition: all 0.2s ease; }
+    .table-row:hover { background: rgba(99, 102, 241, 0.05); transform: translateX(4px); }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+    .status-active { background: rgba(34, 197, 94, 0.1); color: rgb(21, 128, 61); border: 1px solid rgba(34, 197, 94, 0.2); }
+    .status-inactive { background: rgba(239, 68, 68, 0.1); color: rgb(185, 28, 28); border: 1px solid rgba(239, 68, 68, 0.2); }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen font-inter">
+  <header class="glass-effect border-b border-white/20 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <div class="flex items-center gap-4">
+          <div class="relative">
+            <img src="/assets/logo.png" class="w-12 h-12 rounded-xl shadow-lg ring-2 ring-white/30" alt="VirtualMind Logo"/>
+            <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse-soft"></div>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-white">VirtualMind</h1>
+            <p class="text-sm text-white/70">Gestión de Usuarios</p>
+          </div>
+        </div>
+        <div class="hidden sm:flex items-center gap-2 text-white/70 text-sm">
+          <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+          <span>Sistema Activo</span>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="glass-card rounded-2xl shadow-2xl p-6 sm:p-8 animate-fade-in">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h2 class="text-3xl font-bold text-white mb-2">Usuarios del Sistema</h2>
+          <p class="text-white/70">Administra y gestiona todos los usuarios de VirtualMind</p>
+        </div>
+        <button id="btnCreate" class="hidden bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+          <span class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            Crear Usuario
+          </span>
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="relative">
+          <input id="filtroTexto" type="text" placeholder="Buscar usuarios..." class="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+          <svg class="absolute left-4 top-3.5 w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <select id="filtroRol" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+          <option value="" class="text-gray-900">Todos los roles</option>
+        </select>
+        <select id="filtroEstado" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+          <option value="todos" class="text-gray-900">Todos los estados</option>
+          <option value="activo" class="text-gray-900">Activos</option>
+          <option value="inactivo" class="text-gray-900">Inactivos</option>
+        </select>
+      </div>
+      <div id="msg" class="text-sm text-green-400 mb-4 font-medium"></div>
+      <div class="overflow-hidden rounded-xl border border-white/20">
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm">
+              <tr>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wide">Usuario</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wide">Documento</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wide">Email</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wide">Roles</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-white uppercase tracking-wide">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody" class="bg-white/5 backdrop-blur-sm divide-y divide-white/10"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div id="modalCreate" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50 p-4">
+    <div class="glass-card rounded-2xl shadow-2xl w-full max-w-2xl p-8 animate-slide-up">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+        </div>
+        <div>
+          <h3 class="text-2xl font-bold text-white">Crear Nuevo Usuario</h3>
+          <p class="text-white/70">Completa la información del nuevo usuario</p>
+        </div>
+      </div>
+      <form id="userCreateForm" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-white/90 mb-2">Nombre Completo</label>
+            <input name="nombre" placeholder="Ingresa el nombre completo" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" required/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-white/90 mb-2">Tipo de Documento</label>
+            <input name="tipo_documento" placeholder="CC, TI, etc." class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" required/>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-white/90 mb-2">Número de Documento</label>
+            <input name="documento" placeholder="Número de documento" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" required/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-white/90 mb-2">Correo Electrónico</label>
+            <input name="email" type="email" placeholder="usuario@ejemplo.com" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" required/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-white/90 mb-2">Contraseña</label>
+          <input name="password" type="password" placeholder="Contraseña segura" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" required/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-white/90 mb-2">Roles del Sistema</label>
+          <select name="role_ids" id="createRoleSelect" multiple class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 h-32"></select>
+          <p class="text-xs text-white/60 mt-1">Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples roles</p>
+        </div>
+        <div class="flex justify-end gap-4 pt-6">
+          <button type="button" id="closeCreateModalBtn" class="px-6 py-3 text-white/70 hover:text-white transition-colors duration-200 font-medium">Cancelar</button>
+          <button type="submit" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">Crear Usuario</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div id="modalEdit" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50 p-4">
+    <div class="glass-card rounded-2xl shadow-2xl w-full max-w-2xl p-8 animate-slide-up">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        </div>
+        <div>
+          <h3 class="text-2xl font-bold text-white">Editar Usuario</h3>
+          <p class="text-white/70">Modifica la información del usuario</p>
+        </div>
+      </div>
+      <form id="userEditForm" data-uid="" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-white/90 mb-2">Nombre Completo</label>
+            <input id="edit_nombre" name="nombre" placeholder="Nombre completo" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200" required/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-white/90 mb-2">Tipo de Documento</label>
+            <input id="edit_tipo_documento" name="tipo_documento" placeholder="CC, TI, etc." class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200" required/>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-white/90 mb-2">Número de Documento</label>
+            <input id="edit_documento" name="documento" placeholder="Número de documento" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200" required/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-white/90 mb-2">Correo Electrónico</label>
+            <input id="edit_email" name="email" type="email" placeholder="usuario@ejemplo.com" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200" required/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-white/90 mb-2">Nueva Contraseña (opcional)</label>
+          <input id="edit_password" name="password" type="password" placeholder="Dejar vacío para mantener la actual" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-white/90 mb-2">Roles del Sistema</label>
+          <select name="role_ids" id="editRoleSelect" multiple class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 h-32"></select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-white/90 mb-2">Estado</label>
+          <label class="inline-flex items-center gap-2 text-white/90">
+            <input id="edit_estado" name="estado" type="checkbox" class="h-4 w-4 rounded border-white/30 bg-white/10">
+            <span>Activo</span>
+          </label>
+        </div>
+        <div class="flex justify-end gap-4 pt-6">
+          <button type="button" id="closeEditModalBtn" class="px-6 py-3 text-white/70 hover:text-white transition-colors duration-200 font-medium">Cancelar</button>
+          <button type="submit" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div id="modalView" class="fixed inset-0 modal-bg flex items-center justify-center hidden z-50 p-4">
+    <div class="glass-card rounded-2xl shadow-2xl w-full max-w-lg p-8 animate-slide-up">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        </div>
+        <div>
+          <h3 class="text-2xl font-bold text-white">Detalle de Usuario</h3>
+          <p class="text-white/70">Información completa del usuario</p>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+          <label class="text-sm font-medium text-white/70 uppercase tracking-wide">UID</label>
+          <p class="text-white font-mono text-sm" id="view_uid"></p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-white/5 rounded-xl p-4 border border-white/10"><label class="text-sm font-medium text-white/70 uppercase tracking-wide">Nombre</label><p class="text-white font-medium" id="view_nombre"></p></div>
+          <div class="bg-white/5 rounded-xl p-4 border border-white/10"><label class="text-sm font-medium text-white/70 uppercase tracking-wide">Documento</label><p class="text-white font-medium" id="view_documento"></p></div>
+        </div>
+        <div class="bg-white/5 rounded-xl p-4 border border-white/10"><label class="text-sm font-medium text-white/70 uppercase tracking-wide">Email</label><p class="text-white font-medium" id="view_email"></p></div>
+        <div class="bg-white/5 rounded-xl p-4 border border-white/10"><label class="text-sm font-medium text-white/70 uppercase tracking-wide">Roles</label><p class="text-white font-medium" id="view_roles"></p></div>
+        <div class="bg-white/5 rounded-xl p-4 border border-white/10"><label class="text-sm font-medium text-white/70 uppercase tracking-wide">Estado</label><p class="text-white font-medium" id="view_estado"></p></div>
+      </div>
+      <div class="flex justify-end mt-8">
+        <button id="closeViewModalBtn" class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">Cerrar</button>
+      </div>
+    </div>
+  </div>
+  <div class="fixed bottom-6 right-6 z-50">
+    <button id="controlLectura" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-110 group">
+      <svg class="w-6 h-6 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 14.142M8.464 8.464A5 5 0 1115.536 15.536M5.636 5.636a9 9 0 0012.728 12.728"/></svg>
+    </button>
+  </div>
+  <script>
+    const API_USERS = "https://gestordecursos.pegui.edu.co:8000/users";
+    const API_ROLES = "https://gestordecursos.pegui.edu.co:8000/roles";
+    const token = localStorage.getItem("token");
+    if (!token) location.href = "/index.html";
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const rolesJwt = payload.roles || [payload.role];
+    let perms = payload.permissions || [];
+    if (rolesJwt.includes("superadmin")) perms.push("user:read", "user:create", "user:update", "user:delete");
+
+    const canRead = perms.includes("user:read");
+    const canCreate = perms.includes("user:create");
+    const canUpdate = perms.includes("user:update");
+    const canDelete = perms.includes("user:delete");
+    if (!canRead) { alert("Sin permiso"); logout(); }
+    if (canCreate) document.getElementById("btnCreate").classList.remove("hidden");
+
+    // ---- Helpers ----
+    async function parseApiError(res) {
+        let msg = `Error ${res.status} ${res.statusText}`;
+        try {
+            const data = await res.json();
+            if (Array.isArray(data?.detail)) {
+                msg = data.detail.map(d => {
+                    const loc = Array.isArray(d.loc) ? d.loc.join('.') : '';
+                    const typ = d.type || '';
+                    const m = d.msg || JSON.stringify(d);
+                    return `${loc} — ${m}${typ ? ` (${typ})` : ''}`;
+                }).join(' | ');
+            } else if (data?.detail) {
+                msg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+            } else {
+                msg = JSON.stringify(data);
+            }
+        } catch {
+            try { msg = await res.text() || msg; } catch {}
+        }
+        return msg;
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      location.href = "/index.html";
+    }
+
+    let todosLosUsuarios = [];
+
+    async function fetchUsers() {
+      const res = await fetch(API_USERS, { headers: { "Authorization": "Bearer " + token } });
+      if (!res.ok) { console.error("Error users", await parseApiError(res)); return; }
+      todosLosUsuarios = await res.json();
+      renderizarUsuarios();
+    }
+    
+    function renderizarUsuarios() {
+        const texto = document.getElementById("filtroTexto").value.toLowerCase();
+        const rol = document.getElementById("filtroRol").value;
+        const estado = document.getElementById("filtroEstado").value;
+        const tbody = document.getElementById("userTableBody");
+        tbody.innerHTML = "";
+
+        const usuariosFiltrados = todosLosUsuarios.filter(u => {
+            const mt = (u.nombre || '').toLowerCase().includes(texto) ||
+                       (u.email || '').toLowerCase().includes(texto) ||
+                       String(u.documento ?? '').toLowerCase().includes(texto);
+            const mr = rol === "" || (Array.isArray(u.roles) && u.roles.includes(rol));
+            const me = estado === "todos" || (estado === "activo" && u.estado) || (estado === "inactivo" && !u.estado);
+            return mt && mr && me;
+        });
+
+        usuariosFiltrados.forEach(u => {
+            let acciones = "";
+            if (canRead) acciones += `<button class="action-btn view-btn bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 border border-blue-500/30" data-uid="${u.uid}" title="Ver detalles"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>`;
+            if (canUpdate) acciones += `<button class="action-btn edit-btn bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/30" data-uid="${u.uid}" title="Editar usuario"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>`;
+            if (canDelete) acciones += `<button class="action-btn delete-btn bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/30" data-uid="${u.uid}" title="Desactivar usuario"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636M18.364 18.364l-12.728-12.728"/></svg></button>`;
+
+            const estadoBadge = u.estado
+              ? '<span class="status-badge status-active"><div class="w-2 h-2 bg-green-500 rounded-full"></div>Activo</span>'
+              : '<span class="status-badge status-inactive"><div class="w-2 h-2 bg-red-500 rounded-full"></div>Inactivo</span>';
+
+            tbody.innerHTML += `
+              <tr class="table-row">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-semibold">${(u.nombre || '').charAt(0).toUpperCase()}</div>
+                    <div>
+                      <div class="font-medium text-white">${u.nombre || ''}</div>
+                      <div class="text-sm text-white/60">${estadoBadge}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="font-medium text-white/90">${u.tipo_documento || ''}</div>
+                  <div class="text-sm text-white/60">${u.documento || ''}</div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <span class="text-white/90">${u.email || ''}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex flex-wrap gap-1">${(u.roles || []).map(role => `<span class="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30">${role}</span>`).join('')}</div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-1">${acciones}</div>
+                </td>
+              </tr>`;
+        });
+        tbody.querySelectorAll('.edit-btn').forEach(b => b.addEventListener('click', function() { openEditModal(this.getAttribute('data-uid')); }));
+        tbody.querySelectorAll('.delete-btn').forEach(b => b.addEventListener('click', function() { deactivateUser(this.getAttribute('data-uid')); }));
+        tbody.querySelectorAll('.view-btn').forEach(b => b.addEventListener('click', function() { openViewModal(this.getAttribute('data-uid')); }));
+    }
+
+    async function fetchRoles() {
+      const res = await fetch(API_ROLES, { headers: { "Authorization": "Bearer " + token } });
+      if (!res.ok) { console.error("Error roles", await parseApiError(res)); return; }
+      const roles = await res.json();
+      ["createRoleSelect", "editRoleSelect"].forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = "";
+        roles.forEach(r => {
+          const opt = document.createElement("option");
+          opt.value = r.id;
+          opt.text = r.name;
+          opt.className = "text-gray-900";
+          sel.appendChild(opt);
+        });
+      });
+      const filtroRol = document.getElementById("filtroRol");
+      roles.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.name;
+        opt.text = r.name;
+        opt.className = "text-gray-900";
+        filtroRol.appendChild(opt);
+      });
+    }
+
+    async function deactivateUser(uid) {
+      if (!confirm("¿Desactivar este usuario?")) return;
+      const res = await fetch(`${API_USERS}/${uid}`, { method: "DELETE", headers: { "Authorization": "Bearer " + token } });
+      if (!res.ok) { alert(await parseApiError(res)); return; }
+      document.getElementById("msg").innerHTML = `
+        <div class="flex items-center gap-2 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+          <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span class="text-green-400 font-medium">Usuario desactivado exitosamente</span>
+        </div>`;
+      setTimeout(() => document.getElementById("msg").innerHTML = "", 3000);
+      fetchUsers();
+    }
+
+    // ---- Crear Usuario ----
+    function closeCreateModal() {
+      document.getElementById("modalCreate").classList.add("hidden");
+    }
+
+    document.getElementById("btnCreate").addEventListener("click", () => {
+      document.getElementById("modalCreate").classList.remove("hidden");
+    });
+
+    document.getElementById("closeCreateModalBtn").addEventListener("click", closeCreateModal);
+
+    document.getElementById("userCreateForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const f = e.target;
+      const nuevo = {
+        nombre: f.nombre.value,
+        tipo_documento: f.tipo_documento.value,
+        documento: f.documento.value,
+        email: f.email.value,
+        password: f.password.value,
+        role_ids: Array.from(f.role_ids.selectedOptions).map(o => Number(o.value)).filter(Number.isFinite)
+      };
+
+      const res = await fetch(API_USERS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify(nuevo)
+      });
+
+      if (res.ok) {
+        await res.json();
+        document.getElementById("msg").innerHTML = `
+          <div class="flex items-center gap-2 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span class="text-green-400 font-medium">Usuario creado exitosamente</span>
+          </div>`;
+        setTimeout(() => document.getElementById("msg").innerHTML = "", 3000);
+        closeCreateModal();
+        f.reset();
+        fetchUsers();
+      } else {
+        alert(await parseApiError(res));
+      }
+    });
+
+    // ---- Editar Usuario ----
+    async function openEditModal(uid) {
+      const res = await fetch(`${API_USERS}/${uid}`, { headers: { "Authorization": "Bearer " + token } });
+      if (!res.ok) {
+        alert(await parseApiError(res));
+        return;
+      }
+      const u = await res.json();
+      
+      const f = document.getElementById("userEditForm");
+      if (!f) { console.error("Formulario de edición no encontrado."); return; }
+      
+      f.dataset.uid = uid;
+      f.nombre.value = u.nombre || '';
+      f.tipo_documento.value = u.tipo_documento || '';
+      f.documento.value = u.documento || '';
+      f.email.value = u.email || '';
+      f.password.value = "";
+      
+      const estadoCheckbox = document.getElementById("edit_estado");
+      if (estadoCheckbox) {
+          estadoCheckbox.checked = !!u.estado;
+      }
+
+      const sel = document.getElementById("editRoleSelect");
+      if (sel) {
+          Array.from(sel.options).forEach(opt => {
+              opt.selected = Array.isArray(u.roles) ? u.roles.includes(opt.text) : false;
+          });
+      }
+
+      document.getElementById("modalEdit").classList.remove("hidden");
+    }
+
+    function closeEditModal() {
+      document.getElementById("modalEdit").classList.add("hidden");
+    }
+
+    document.getElementById("closeEditModalBtn").addEventListener("click", closeEditModal);
+
+    document.getElementById("userEditForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const f = e.target;
+      const uid = f.dataset.uid;
+      
+      const upd = {
+        nombre: f.nombre.value,
+        tipo_documento: f.tipo_documento.value,
+        documento: f.documento.value,
+        email: f.email.value,
+        estado: document.getElementById('edit_estado').checked,
+        // Corrección definitiva para el 'body missing'
+        password: f.password.value.trim() !== '' ? f.password.value : null,
+        ...(Array.from(f.role_ids.selectedOptions).length ? { role_ids: Array.from(f.role_ids.selectedOptions).map(o => Number(o.value)).filter(Number.isFinite) } : {})
+      };
+
+      const res = await fetch(`${API_USERS}/${uid}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify(upd)
+      });
+
+      if (res.ok) {
+        document.getElementById("msg").innerHTML = `
+          <div class="flex items-center gap-2 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span class="text-green-400 font-medium">Usuario actualizado exitosamente</span>
+          </div>`;
+        setTimeout(() => document.getElementById("msg").innerHTML = "", 3000);
+        closeEditModal();
+        fetchUsers();
+      } else {
+        alert(await parseApiError(res));
+      }
+    });
+
+    // ---- Ver Detalles ----
+    async function openViewModal(uid) {
+      const res = await fetch(`${API_USERS}/${uid}`, { headers: { "Authorization": "Bearer " + token } });
+      if (!res.ok) {
+        alert(await parseApiError(res));
+        return;
+      }
+      const u = await res.json();
+
+      document.getElementById("view_uid").innerText = u.uid || '';
+      document.getElementById("view_nombre").innerText = u.nombre || '';
+      document.getElementById("view_documento").innerText = `${u.tipo_documento || ''} ${u.documento || ''}`.trim();
+      document.getElementById("view_email").innerText = u.email || '';
+      document.getElementById("view_roles").innerText = Array.isArray(u.roles) ? u.roles.join(", ") : '';
+      document.getElementById("view_estado").innerText = u.estado ? "Activo" : "Inactivo";
+      document.getElementById("modalView").classList.remove("hidden");
+    }
+
+    function closeViewModal() {
+      document.getElementById("modalView").classList.add("hidden");
+    }
+
+    document.getElementById("closeViewModalBtn").addEventListener("click", closeViewModal);
+    
+    // Listeners
+    document.getElementById("filtroTexto").addEventListener("input", renderizarUsuarios);
+    document.getElementById("filtroRol").addEventListener("change", renderizarUsuarios);
+    document.getElementById("filtroEstado").addEventListener("change", renderizarUsuarios);
+    
+    // Init
+    (async function init() {
+      await fetchRoles();
+      await fetchUsers();
+    })();
+    
+    // Lectura
+    let lecturaHabilitada = false;
+    let ultimaLectura = "";
+    function controlarLectura() {
+      const boton = document.getElementById("controlLectura");
+      if (lecturaHabilitada) {
+        boton.innerHTML = '<svg class="w-6 h-6 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 14.142M8.464 8.464A5 5 0 1115.536 15.536M5.636 5.636a9 9 0 0012.728 12.728"/></svg>';
+        boton.title = "Activar Lectura";
+      } else {
+        boton.innerHTML = '<svg class="w-6 h-6 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-3a1 1 0 011-1h1.586l4.707-4.707C10.923 4.663 12 5.109 12 6v12c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>';
+        boton.title = "Desactivar Lectura";
+      }
+      lecturaHabilitada = !lecturaHabilitada;
+    }
+    document.getElementById("controlLectura").addEventListener("click", controlarLectura);
+    function leerTexto(texto) {
+      if (!lecturaHabilitada || texto === ultimaLectura) return;
+      speechSynthesis.cancel();
+      ultimaLectura = texto;
+      const mensaje = new SpeechSynthesisUtterance(texto);
+      mensaje.lang = "es-ES";
+      speechSynthesis.speak(mensaje);
+    }
+    document.addEventListener("mouseover", (e) => {
+      const texto = e.target.innerText || e.target.textContent;
+      if (texto && texto.trim().length > 3) leerTexto(texto.trim());
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP - Asistente IA VirtualMind (Ollama)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/fetch-con-token.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chat-messages { max-height: 250px; overflow-y: auto; }
+        .typing-indicator span { animation: bounce 1.4s infinite ease-in-out both; }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-green-400">🤖 MCP VirtualMind con Ollama</h1>
+                <p class="text-gray-400 text-sm">Asistente de IA Local con acceso completo a BD (56 herramientas)</p>
+            </div>
+            <div class="flex gap-2">
+                <select id="model-select" class="bg-gray-800 text-white px-3 py-1.5 rounded text-sm border border-gray-600">
+                    <option value="llama3.2:1b">Llama 3.2 (1B)</option>
+                    <option value="llama3.2:latest">Llama 3.2 (3B)</option>
+                    <option value="llama3:instruct">Llama 3 (8B)</option>
+                    <option value="deepseek-coder-v2:lite">DeepSeek Coder</option>
+                    <option value="deepseek-coder:latest">DeepSeek Coder (1B)</option>
+                </select>
+                <button onclick="testConnection()" class="bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded text-sm">🔄 Conectar</button>
+            </div>
+        </div>
+
+        <div id="status" class="bg-gray-800 rounded-lg p-2 mb-3 flex items-center gap-2 text-sm">
+            <span id="status-icon">⏳</span>
+            <span id="status-text">Conectando...</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+            <div class="lg:col-span-3 bg-gray-800 rounded-lg p-3">
+                <h2 class="text-base font-semibold mb-2">💬 Chat con IA Local</h2>
+                <div id="chat-messages" class="chat-messages bg-gray-900 rounded p-2 mb-2 min-h-[250px] text-sm"></div>
+                <div class="flex gap-1 mb-2">
+                    <input type="text" id="chat-input" placeholder="Ej: Muéstrame los usuarios..." 
+                        class="flex-1 bg-gray-700 rounded px-2 py-1 text-sm focus:outline-none"
+                        onkeypress="if(event.key==='Enter')sendMessage()">
+                    <button onclick="sendMessage()" class="bg-green-600 px-3 py-1 rounded">➤</button>
+                    <button id="mic-btn" onclick="toggleVoiceInput()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded" title="Grabar con voz">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-1">
+                    <button onclick="quickChat('Muéstrame el dashboard')" class="text-xs bg-gray-700 px-1.5 py-0.5 rounded hover:bg-gray-600">Dashboard</button>
+                    <button onclick="quickChat('Muéstrame todos los usuarios')" class="text-xs bg-gray-700 px-1.5 py-0.5 rounded hover:bg-gray-600">Usuarios</button>
+                    <button onclick="quickChat('Muéstrame todos los proyectos')" class="text-xs bg-gray-700 px-1.5 py-0.5 rounded hover:bg-gray-600">Proyectos</button>
+                    <button onclick="quickChat('Muéstrame todos los clientes')" class="text-xs bg-gray-700 px-1.5 py-0.5 rounded hover:bg-gray-600">Clientes</button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-6 space-y-3">
+                <div class="bg-gray-800 rounded-lg p-3">
+                    <h2 class="text-base font-semibold mb-2">📊 Resultados de Base de Datos</h2>
+                    <div id="result" class="bg-gray-900 rounded p-2 min-h-[200px] max-h-[350px] overflow-auto text-xs">
+                        <span class="text-gray-500">Pídele a la IA que consulte o cree información...</span>
+                    </div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-3">
+                    <h2 class="text-base font-semibold mb-2">📈 Gráfico Analítico</h2>
+                    <canvas id="resultChart" height="120"></canvas>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3 space-y-3">
+                <div class="bg-gray-800 rounded-lg p-3">
+                    <h2 class="text-base font-semibold mb-2">📋 Tools Disponibles</h2>
+                    <input type="text" id="search-tools" placeholder="Buscar herramienta..." 
+                        class="w-full bg-gray-700 rounded px-2 py-1 mb-2 text-sm" oninput="filterTools()">
+                    <div id="tools-list" class="space-y-1 max-h-[400px] overflow-y-auto text-xs"></div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-3">
+                    <h2 class="text-base font-semibold mb-2">📈 Modelos Disponibles</h2>
+                    <div id="models-list" class="space-y-1 max-h-[150px] overflow-y-auto text-xs text-gray-400"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MCP_SERVER = 'https://gestordecursos.pegui.edu.co:8002';
+        const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+        
+        let tools = [];
+        let chartInstance = null;
+        let chatHistory = [];
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        document.getElementById('chat-messages').innerHTML = `
+            <div class="flex justify-start mb-2"><div class="bg-green-900 rounded p-2 max-w-[90%] text-gray-200">
+                <p class="text-xs font-bold mb-1">¡Hola! Soy la IA local de VirtualMind.</p>
+                <p class="text-xs">Uso modelos Ollama locales con acceso completo a la base de datos. Puedes pedirme:</p>
+                <ul class="text-xs mt-1 list-disc ml-4 text-gray-300">
+                    <li>"Muéstrame todos los usuarios"</li>
+                    <li>"Crea un proyecto llamado Demo"</li>
+                    <li>"Cuántos proyectos hay?"</li>
+                </ul>
+            </div></div>`;
+
+        async function testConnection() {
+            try {
+                document.getElementById('status-icon').textContent = '⏳';
+                document.getElementById('status-text').textContent = 'Conectando a MCP Ollama...';
+                
+                const res = await fetch(`${MCP_SERVER}/health`);
+                const data = await res.json();
+                
+                document.getElementById('status-icon').textContent = '✅';
+                document.getElementById('status-text').textContent = `Ollama Conectado - ${data.ollama}`;
+                document.getElementById('status').className = 'bg-green-900 rounded-lg p-2 mb-3 flex items-center gap-2 text-sm';
+                
+                loadModels();
+                loadTools();
+            } catch (e) {
+                document.getElementById('status-icon').textContent = '❌';
+                document.getElementById('status-text').textContent = 'Error al conectar con Ollama';
+                document.getElementById('status').className = 'bg-red-900 rounded-lg p-2 mb-3 flex items-center gap-2 text-sm';
+            }
+        }
+
+        async function loadModels() {
+            try {
+                const res = await fetch(`${MCP_SERVER}/models`);
+                const data = await res.json();
+                const models = data.models || [];
+                document.getElementById('models-list').innerHTML = models.map(m => 
+                    `<div class="flex justify-between"><span class="text-green-400">${m.name}</span><span class="text-gray-500">${(m.size/1000000000).toFixed(1)}GB</span></div>`
+                ).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function loadTools() {
+            try {
+                const res = await fetch(`${MCP_SERVER}/tools`);
+                const data = await res.json();
+                tools = data.tools || [];
+                renderTools(tools);
+            } catch (e) { 
+                console.error('Error cargando tools:', e); 
+            }
+        }
+
+        function renderTools(toolsToRender) {
+            const container = document.getElementById('tools-list');
+            container.innerHTML = toolsToRender.map(tool => 
+                `<div class="w-full text-left p-1.5 rounded bg-gray-700 mb-1 border-l-2 border-green-500">
+                    <div class="font-bold text-green-400">${tool.name}</div>
+                    <div class="text-gray-400 text-[10px] truncate">${tool.description || ''}</div>
+                </div>`
+            ).join('');
+        }
+
+        function filterTools() {
+            const query = document.getElementById('search-tools').value.toLowerCase();
+            renderTools(tools.filter(t => t.name.toLowerCase().includes(query)));
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+            
+            const chat = document.getElementById('chat-messages');
+            const model = document.getElementById('model-select').value;
+            
+            chat.innerHTML += `<div class="flex justify-end mb-2"><div class="bg-green-600 rounded-xl rounded-tr-none p-2 text-xs max-w-[85%] text-white shadow-md">${msg}</div></div>`;
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+            
+            const typingId = 'typing-' + Date.now();
+            chat.innerHTML += `<div id="${typingId}" class="flex justify-start mb-2"><div class="bg-gray-700 rounded-xl rounded-tl-none p-2 text-xs text-gray-400">🧠 Procesando con ${model}...</div></div>`;
+            chat.scrollTop = chat.scrollHeight;
+
+            const result = await processWithOllama(msg, model);
+            
+            document.getElementById(typingId).remove();
+            
+            chat.innerHTML += `<div class="flex justify-start mb-2"><div class="bg-gray-700 border border-gray-600 rounded-xl rounded-tl-none p-2 text-xs max-w-[95%] text-gray-200 shadow-md">${result.message}</div></div>`;
+            chat.scrollTop = chat.scrollHeight;
+            
+            if (result.data) {
+                document.getElementById('result').innerHTML = renderTable(result.data, result.toolName);
+                renderChart(result.data, result.toolName);
+            }
+        }
+
+        function detectToolFromMessage(msg) {
+            const lower = msg.toLowerCase();
+            for (const tool of tools) {
+                for (const keyword of tool.name.replace(/_/g, ' ').split(' ')) {
+                    if (keyword.length > 3 && lower.includes(keyword)) {
+                        return tool;
+                    }
+                }
+            }
+            return null;
+        }
+
+        async function processWithOllama(userText, model) {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                chatHistory.push({ role: "user", content: userText });
+                
+                const systemPrompt = `Eres el asistente inteligente de VirtualMind. Tienes acceso a la base de datos mediante herramientas (tools).
+Tus herramientas disponibles son:
+${tools.map(t => `- ${t.name}: ${t.description} (parámetros: ${JSON.stringify(t.params || {})})`).join('\n')}
+
+REGLAS:
+1. SIEMPRE que el usuario pida ver/listar/consultar datos, DEBES responder ÚNICAMENTE con el nombre de la herramienta a usar.
+2. Si pide crear/actualizar/eliminar, responde ÚNICAMENTE con el nombre de la herramienta.
+3. Si es un saludo o conversación general, responde normalmente.
+4. Responde solo con el nombre de la herramienta cuando sea una consulta de datos.`;
+
+                const res = await fetch(`${MCP_SERVER}/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: userText,
+                        model: model,
+                        system: systemPrompt,
+                        temperature: 0.1,
+                        max_tokens: 100
+                    })
+                });
+                const data = await res.json();
+                const responseText = (data.response || '').trim();
+                
+                const matchedTool = tools.find(t => responseText.includes(t.name) || t.name.includes(responseText));
+                
+                if (matchedTool) {
+                    resultDiv.innerHTML = `<span class="text-green-400 animate-pulse">⚙️ Ejecutando <b>${matchedTool.name}</b> en la base de datos...</span>`;
+                    
+                    const mcpRes = await fetch(`${MCP_SERVER}/mcp/tools`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tool_name: matchedTool.name, params: {} })
+                    });
+                    
+                    const mcpData = await mcpRes.json();
+                    const mcpResult = mcpData.result || mcpData;
+                    
+                    const count = Array.isArray(mcpResult) ? mcpResult.length : (mcpResult.total || (mcpResult.success ? 1 : 0));
+                    chatHistory.push({ role: "assistant", content: `Ejecuté ${matchedTool.name} y obtuve ${count} resultados.` });
+                    
+                    const isWrite = matchedTool.name.includes('create_') || matchedTool.name.includes('update_') || matchedTool.name.includes('delete_');
+                    if (isWrite) {
+                        resultDiv.innerHTML = `<div class="p-3 bg-green-900/30 border border-green-700 text-green-400 rounded">✔️ Éxito: ${JSON.stringify(mcpResult)}</div>`;
+                        return { message: `✅ Operación completada. Ejecuté <code>${matchedTool.name}</code> correctamente.`, data: null, toolName: matchedTool.name };
+                    }
+                    return { message: `✅ Encontré ${count} registros con <code>${matchedTool.name}</code>.`, data: mcpResult, toolName: matchedTool.name };
+                }
+                
+                chatHistory.push({ role: "assistant", content: responseText });
+                return { message: responseText || 'No entendí. Intenta ser más específico.', data: null };
+                
+            } catch (e) {
+                console.error(e);
+                return { message: `<span class="text-red-400">Error: ${e.message}</span>`, data: null };
+            }
+        }
+
+        function quickChat(text) {
+            document.getElementById('chat-input').value = text;
+            sendMessage();
+        }
+
+        function renderTable(data, toolName) {
+            if (!data) return '<span class="text-gray-500">Sin datos</span>';
+            if (typeof data === 'object' && !Array.isArray(data)) {
+                let html = '<table class="w-full text-xs"><tbody>';
+                for (const [k, v] of Object.entries(data)) {
+                    html += `<tr class="border-b border-gray-700 hover:bg-gray-800"><td class="py-1.5 px-2 text-green-400 font-medium capitalize">${k.replace(/_/g, ' ')}</td><td class="py-1.5 px-2 text-gray-300">${typeof v === 'object' ? JSON.stringify(v) : v}</td></tr>`;
+                }
+                return html + '</tbody></table>';
+            }
+            if (!Array.isArray(data) || data.length === 0) return '<span class="text-gray-500">No hay registros.</span>';
+            
+            const importantFields = {
+                'get_all_clients': ['razon_social', 'nit', 'ciudad', 'tipo_entidad'],
+                'get_all_users': ['nombre', 'email', 'rol', 'estado'],
+                'get_all_projects': ['name', 'estado', 'tipo_proyecto', 'etapa'],
+                'get_pending_tasks': ['titulo', 'estado', 'prioridad']
+            };
+            const fields = importantFields[toolName] || Object.keys(data[0]).slice(0, 5);
+            const keys = fields.filter(f => data[0].hasOwnProperty(f)).slice(0, 5);
+            if (keys.length === 0) keys.push(...Object.keys(data[0]).slice(0, 5));
+            
+            let html = '<div class="overflow-x-auto"><table class="w-full text-xs border-collapse"><thead><tr class="bg-gray-700/50">';
+            keys.forEach(k => html += `<th class="py-2 px-2 text-left text-green-400 uppercase tracking-wider text-[10px]">${k.replace(/_/g, ' ')}</th>`);
+            html += '</tr></thead><tbody>';
+            data.forEach(row => {
+                html += '<tr class="border-b border-gray-700/50 hover:bg-gray-700/80 transition-colors">';
+                keys.forEach(k => {
+                    let val = row[k];
+                    if (typeof val === 'object') val = JSON.stringify(val).substring(0, 20) + '...';
+                    html += `<td class="py-2 px-2 text-gray-300 truncate max-w-[150px]">${val || '-'}</td>`;
+                });
+                html += '</tr>';
+            });
+            return html + '</tbody></table></div>';
+        }
+
+        function renderChart(data, toolName) {
+            const canvas = document.getElementById('resultChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+            
+            let config = null;
+            if (toolName === 'get_dashboard_stats' && data.proyectos) {
+                config = { type: 'doughnut', data: { labels: ['Proyectos', 'Usuarios', 'Cursos', 'Tareas'], datasets: [{ data: [data.proyectos.total||0, data.usuarios.total||0, data.cursos.total||0, data.tareas.pendientes||0], backgroundColor: ['#3B82F6','#10B981','#F59E0B','#EF4444'], borderWidth: 0 }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#9CA3AF', font: {size: 10}, boxWidth: 12 } } }, cutout: '70%' } };
+            } else if (toolName === 'get_all_users' && Array.isArray(data)) {
+                const estados = {1: 'Activos', 0: 'Inactivos'}; const counts = {}; data.forEach(u => { const e = estados[u.estado] || 'Otro'; counts[e] = (counts[e]||0)+1; });
+                config = { type: 'pie', data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#10B981','#EF4444','#F59E0B'], borderWidth: 0 }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#9CA3AF', font: {size: 10}, boxWidth: 12 } } } } };
+            } else if (toolName === 'get_all_projects' && Array.isArray(data)) {
+                const estados = {}; data.forEach(p => { const e = p.estado || 'N/A'; estados[e] = (estados[e]||0)+1; });
+                config = { type: 'bar', data: { labels: Object.keys(estados), datasets: [{ label: 'Proyectos', data: Object.values(estados), backgroundColor: '#10B981', borderRadius: 4 }] }, options: { maintainAspectRatio: false, plugins: { legend: {display:false} }, scales: { x: { ticks: {color:'#9CA3AF', font: {size: 9}}, grid: {display:false} }, y: { ticks: {color:'#9CA3AF', font: {size: 9}}, grid: {color:'#374151', borderDash: [2, 4]} } } } };
+            } else {
+                canvas.style.display = 'none';
+                return;
+            }
+            canvas.style.display = 'block';
+            chartInstance = new Chart(ctx, config);
+        }
+
+        async function toggleVoiceInput() {
+            if (isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                document.getElementById('mic-btn').className = 'bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded';
+                return;
+            }
+            
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Tu navegador no soporta grabación de voz.');
+                return;
+            }
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                audioChunks = [];
+                isRecording = true;
+                document.getElementById('mic-btn').className = 'bg-red-600 hover:bg-red-700 px-3 py-1 rounded';
+                
+                mediaRecorder.ondataavailable = e => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    stream.getTracks().forEach(t => t.stop());
+                    isRecording = false;
+                    document.getElementById('mic-btn').className = 'bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded';
+                    
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    if (blob.size < 100) return;
+                    
+                    const chat = document.getElementById('chat-messages');
+                    chat.innerHTML += `<div class="flex justify-start mb-2"><div class="bg-gray-700 rounded-xl rounded-tl-none p-2 text-xs text-gray-400">🎤 Transcribiendo audio...</div></div>`;
+                    chat.scrollTop = chat.scrollHeight;
+                    
+                    const formData = new FormData();
+                    formData.append('audio', blob, 'grabacion.webm');
+                    
+                    try {
+                        const res = await fetch(`${API_URL}/whisper/transcribir`, {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Bearer ' + getToken() },
+                            body: formData
+                        });
+                        const data = await res.json();
+                        document.querySelector('#chat-messages .flex:last-child').remove();
+                        
+                        if (data.texto) {
+                            document.getElementById('chat-input').value = data.texto;
+                            sendMessage();
+                        }
+                    } catch (e) {
+                        document.querySelector('#chat-messages .flex:last-child').remove();
+                        console.error('Error transcribiendo:', e);
+                    }
+                };
+                
+                mediaRecorder.start();
+                setTimeout(() => {
+                    if (isRecording) {
+                        mediaRecorder.stop();
+                    }
+                }, 10000);
+            } catch (e) {
+                isRecording = false;
+                document.getElementById('mic-btn').className = 'bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded';
+                alert('Error al acceder al micrófono: ' + e.message);
+            }
+        }
+
+        testConnection();
+    </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = '/'; return; }
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+    } catch(e) { window.location.href = '/'; }
+});
+</script>
+<script>
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+        };
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) el.style.display = 'none';
+        });
+    } catch(e) {}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Estadísticas - Superadmin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans p-6">
+
+  <div class="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <h1 class="text-2xl font-bold text-indigo-700 mb-6 text-center">📊 Panel de Estadísticas</h1>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-center">
+
+      <div class="bg-indigo-100 p-4 rounded-lg shadow">
+        <h2 class="text-lg font-semibold">👥 Total de Usuarios</h2>
+        <p id="totalUsuarios" class="text-3xl font-bold text-indigo-700">0</p>
+      </div>
+
+      <div class="bg-green-100 p-4 rounded-lg shadow">
+        <h2 class="text-lg font-semibold">✅ Usuarios Activos</h2>
+        <p id="usuariosActivos" class="text-3xl font-bold text-green-700">0</p>
+      </div>
+
+      <div class="bg-red-100 p-4 rounded-lg shadow">
+        <h2 class="text-lg font-semibold">⛔ Usuarios Inactivos</h2>
+        <p id="usuariosInactivos" class="text-3xl font-bold text-red-600">0</p>
+      </div>
+
+      <div class="bg-yellow-100 p-4 rounded-lg shadow">
+        <h2 class="text-lg font-semibold">🔐 Total de Roles</h2>
+        <p id="totalRoles" class="text-3xl font-bold text-yellow-700">0</p>
+      </div>
+
+      <div class="bg-purple-100 p-4 rounded-lg shadow">
+        <h2 class="text-lg font-semibold">🛂 Total de Permisos</h2>
+        <p id="totalPermisos" class="text-3xl font-bold text-purple-700">0</p>
+      </div>
+    </div>
+
+    <h2 class="text-xl font-bold mt-10 text-gray-800 mb-4">📈 Usuarios por Rol</h2>
+    <ul id="usuariosPorRol" class="space-y-2 list-disc list-inside text-sm text-gray-700"></ul>
+  </div>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const headers = {
+      "Authorization": "Bearer " + localStorage.getItem("token")
+    };
+
+    async function cargarEstadisticas() {
+      try {
+        const resUsers = await fetch(`${API}/users/`, { headers });
+        const users = await resUsers.json();
+
+        document.getElementById("totalUsuarios").textContent = users.length;
+        document.getElementById("usuariosActivos").textContent = users.filter(u => u.estado).length;
+        document.getElementById("usuariosInactivos").textContent = users.filter(u => !u.estado).length;
+
+        // Usuarios por rol
+        const rolesConteo = {};
+        users.forEach(user => {
+          user.roles.forEach(rol => {
+            rolesConteo[rol] = (rolesConteo[rol] || 0) + 1;
+          });
+        });
+
+        const lista = document.getElementById("usuariosPorRol");
+        lista.innerHTML = "";
+        for (const [rol, cantidad] of Object.entries(rolesConteo)) {
+          lista.innerHTML += `<li><strong>${rol}:</strong> ${cantidad}</li>`;
+        }
+
+        // Roles
+        const resRoles = await fetch(`${API}/roles/`, { headers });
+        const roles = await resRoles.json();
+        document.getElementById("totalRoles").textContent = roles.length;
+
+        // Permisos
+        const resPerms = await fetch(`${API}/permissions/`, { headers });
+        const permisos = await resPerms.json();
+        document.getElementById("totalPermisos").textContent = permisos.length;
+
+      } catch (err) {
+        alert("❌ Error al cargar estadísticas.");
+        console.error(err);
+      }
+    }
+
+    cargarEstadisticas();
+  </script>
+
+</body>
+</html>
+

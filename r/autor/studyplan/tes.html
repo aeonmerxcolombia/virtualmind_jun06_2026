@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planes de Estudio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#64748b'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b-4 border-primary">
+        <div class="container mx-auto px-6 py-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">📚 Planes de Estudio</h1>
+            <p class="text-gray-600">Gestión académica y curricular</p>
+        </div>
+    </header>
+
+    <!-- Loading State -->
+    <div id="loading" class="flex justify-center items-center py-20">
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent"></div>
+        <span class="ml-4 text-xl text-gray-600">Cargando planes de estudio...</span>
+    </div>
+
+    <!-- Error State -->
+    <div id="error" class="hidden container mx-auto px-6 py-12">
+        <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
+            <div class="flex items-center">
+                <span class="text-2xl mr-3">⚠️</span>
+                <div>
+                    <h3 class="text-lg font-semibold text-red-800">Error al cargar los datos</h3>
+                    <p class="text-red-600 mt-1" id="error-message"></p>
+                </div>
+            </div>
+            <button onclick="loadStudyPlans()" class="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                Reintentar
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Stats -->
+        <div id="stats" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="flex items-center">
+                    <span class="text-3xl mr-4">📊</span>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700">Total Planes</h3>
+                        <p class="text-2xl font-bold text-blue-600" id="total-plans">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <span class="text-3xl mr-4">📚</span>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700">Con Módulos</h3>
+                        <p class="text-2xl font-bold text-green-600" id="plans-with-modules">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="flex items-center">
+                    <span class="text-3xl mr-4">🎯</span>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700">Horas Promedio</h3>
+                        <p class="text-2xl font-bold text-purple-600" id="avg-hours">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div id="filters" class="hidden bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar por nombre</label>
+                    <input type="text" id="search-input" placeholder="Filtrar planes..." 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Modalidad</label>
+                    <select id="modalidad-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">Todas las modalidades</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Sincronía</label>
+                    <select id="sincronia-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Study Plans Grid -->
+        <div id="study-plans-grid" class="hidden grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+            <!-- Plans will be inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-20">
+            <span class="text-6xl mb-4 block">📚</span>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-2">No se encontraron planes de estudio</h3>
+            <p class="text-gray-500">Verifica la conexión con el servidor o ajusta los filtros de búsqueda.</p>
+        </div>
+    </main>
+
+    <!-- Modal para ver detalles -->
+    <div id="detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800" id="modal-title"></h2>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+            </div>
+            <div class="p-6" id="modal-content">
+                <!-- Content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'https://gestordecursos.pegui.edu.co:8000'; // Ajusta esta URL según tu configuración
+        
+        let allPlans = [];
+        let filteredPlans = [];
+
+        // Utility functions
+        function formatDate(dateString) {
+            if (!dateString) return 'No disponible';
+            return new Date(dateString).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function truncateText(text, maxLength = 150) {
+            if (!text || text.length <= maxLength) return text || 'No disponible';
+            return text.substring(0, maxLength) + '...';
+        }
+
+        function getModalityIcon(modalidad) {
+            const icons = {
+                'Presencial': '🏫',
+                'Virtual': '💻',
+                'B-Learning': '🔄',
+                'Autoformación': '📖'
+            };
+            return icons[modalidad] || '📚';
+        }
+
+        function getSyncIcon(sincronia) {
+            return sincronia === 'Sincrono' ? '⏰' : '🕐';
+        }
+
+        // API Functions
+        async function loadStudyPlans() {
+            try {
+                showLoading();
+                
+                const response = await fetch(`${API_BASE_URL}/study_plans/`);
+                
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                allPlans = data;
+                filteredPlans = [...allPlans];
+                
+                hideLoading();
+                displayPlans();
+                updateStats();
+                setupFilters();
+                
+            } catch (error) {
+                console.error('Error loading study plans:', error);
+                showError(error.message);
+            }
+        }
+
+        // Display Functions
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('stats').classList.add('hidden');
+            document.getElementById('filters').classList.add('hidden');
+            document.getElementById('study-plans-grid').classList.add('hidden');
+            document.getElementById('empty-state').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        function showError(message) {
+            hideLoading();
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+
+        function updateStats() {
+            const totalPlans = allPlans.length;
+            const plansWithModules = allPlans.filter(plan => plan.modules && plan.modules.length > 0).length;
+            
+            // Calculate average hours
+            const validHours = allPlans
+                .map(plan => parseInt(plan.horas_estudio) || 0)
+                .filter(hours => hours > 0);
+            const avgHours = validHours.length > 0 
+                ? Math.round(validHours.reduce((a, b) => a + b, 0) / validHours.length)
+                : 0;
+
+            document.getElementById('total-plans').textContent = totalPlans;
+            document.getElementById('plans-with-modules').textContent = plansWithModules;
+            document.getElementById('avg-hours').textContent = avgHours + 'h';
+            
+            document.getElementById('stats').classList.remove('hidden');
+        }
+
+        function setupFilters() {
+            // Populate filter options
+            const modalidades = [...new Set(allPlans.map(plan => plan.modalidad).filter(Boolean))];
+            const sincronias = [...new Set(allPlans.map(plan => plan.sincronia).filter(Boolean))];
+
+            const modalidadSelect = document.getElementById('modalidad-filter');
+            const sincroniaSelect = document.getElementById('sincronia-filter');
+
+            modalidades.forEach(modalidad => {
+                const option = document.createElement('option');
+                option.value = modalidad;
+                option.textContent = modalidad;
+                modalidadSelect.appendChild(option);
+            });
+
+            sincronias.forEach(sincronia => {
+                const option = document.createElement('option');
+                option.value = sincronia;
+                option.textContent = sincronia;
+                sincroniaSelect.appendChild(option);
+            });
+
+            // Add event listeners
+            document.getElementById('search-input').addEventListener('input', applyFilters);
+            document.getElementById('modalidad-filter').addEventListener('change', applyFilters);
+            document.getElementById('sincronia-filter').addEventListener('change', applyFilters);
+
+            document.getElementById('filters').classList.remove('hidden');
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const modalidadFilter = document.getElementById('modalidad-filter').value;
+            const sincroniaFilter = document.getElementById('sincronia-filter').value;
+
+            filteredPlans = allPlans.filter(plan => {
+                const matchesSearch = !searchTerm || 
+                    plan.name.toLowerCase().includes(searchTerm) ||
+                    (plan.description && plan.description.toLowerCase().includes(searchTerm));
+                
+                const matchesModalidad = !modalidadFilter || plan.modalidad === modalidadFilter;
+                const matchesSincronia = !sincroniaFilter || plan.sincronia === sincroniaFilter;
+
+                return matchesSearch && matchesModalidad && matchesSincronia;
+            });
+
+            displayPlans();
+        }
+
+        function displayPlans() {
+            const grid = document.getElementById('study-plans-grid');
+            const emptyState = document.getElementById('empty-state');
+
+            if (filteredPlans.length === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.classList.remove('hidden');
+
+            grid.innerHTML = filteredPlans.map(plan => `
+                <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
+                    <!-- Header -->
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">${plan.name}</h3>
+                                <div class="flex items-center gap-4 text-sm text-gray-600">
+                                    <span class="flex items-center gap-1">
+                                        ${getModalityIcon(plan.modalidad)} ${plan.modalidad}
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        ${getSyncIcon(plan.sincronia)} ${plan.sincronia}
+                                    </span>
+                                </div>
+                            </div>
+                            <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                                ID: ${plan.id}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4 leading-relaxed">
+                            ${truncateText(plan.description)}
+                        </p>
+
+                        <!-- Details Grid -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Duración</span>
+                                <p class="text-lg font-semibold text-gray-800">${plan.duracion} semanas</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Horas</span>
+                                <p class="text-lg font-semibold text-gray-800">${plan.horas_estudio}h</p>
+                            </div>
+                        </div>
+
+                        <!-- Modules -->
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700">Módulos</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                                    ${plan.modules ? plan.modules.length : 0}
+                                </span>
+                            </div>
+                            ${plan.modules && plan.modules.length > 0 ? `
+                                <div class="mt-2 space-y-1">
+                                    ${plan.modules.slice(0, 2).map(module => `
+                                        <div class="flex items-center text-sm text-gray-600">
+                                            <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                                            ${module.name}
+                                        </div>
+                                    `).join('')}
+                                    ${plan.modules.length > 2 ? `
+                                        <div class="text-xs text-gray-500 ml-4">
+                                            +${plan.modules.length - 2} módulos más
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : `
+                                <p class="text-sm text-gray-500 mt-2">Sin módulos asignados</p>
+                            `}
+                        </div>
+
+                        <!-- Updated -->
+                        <div class="text-xs text-gray-500 mb-4">
+                            Última actualización: ${formatDate(plan.ultima_actualizacion)}
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="px-6 pb-6">
+                        <button onclick="showPlanDetails(${plan.id})" 
+                                class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                            <span>👁️</span>
+                            Ver detalles completos
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Modal Functions
+        function showPlanDetails(planId) {
+            const plan = allPlans.find(p => p.id === planId);
+            if (!plan) return;
+
+            document.getElementById('modal-title').textContent = plan.name;
+            
+            const modalContent = document.getElementById('modal-content');
+            modalContent.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Basic Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Información General</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Descripción:</span>
+                                    <p class="text-gray-700">${plan.description || 'No disponible'}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Modalidad:</span>
+                                    <p class="text-gray-700">${getModalityIcon(plan.modalidad)} ${plan.modalidad}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Sincronía:</span>
+                                    <p class="text-gray-700">${getSyncIcon(plan.sincronia)} ${plan.sincronia}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Duración:</span>
+                                    <p class="text-gray-700">${plan.duracion} semanas</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Horas de estudio:</span>
+                                    <p class="text-gray-700">${plan.horas_estudio} horas</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">Objetivos</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Objetivo General:</span>
+                                    <p class="text-gray-700">${truncateText(plan.objetivo_general, 200)}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-500">Objetivos Específicos:</span>
+                                    <p class="text-gray-700">${truncateText(plan.objetivos_especificos, 200)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modules -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">
+                            Módulos (${plan.modules ? plan.modules.length : 0})
+                        </h4>
+                        ${plan.modules && plan.modules.length > 0 ? `
+                            <div class="space-y-4">
+                                ${plan.modules.map(module => `
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h5 class="font-semibold text-gray-800">${module.name}</h5>
+                                            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                                                ${module.number}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mb-2">${module.short_name}</p>
+                                        <div class="flex items-center justify-between text-xs text-gray-500">
+                                            <span>Autor: ${module.author}</span>
+                                            <span>Actualizado: ${formatDate(module.fecha_actualizacion)}</span>
+                                        </div>
+                                        ${module.palabras_clave && module.palabras_clave.length > 0 ? `
+                                            <div class="mt-2 flex flex-wrap gap-1">
+                                                ${module.palabras_clave.map(keyword => `
+                                                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                                        ${keyword}
+                                                    </span>
+                                                `).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : `
+                            <p class="text-gray-500 italic">Este plan no tiene módulos asignados.</p>
+                        `}
+                    </div>
+
+                    <!-- Resources -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Recursos y Evaluaciones</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h5 class="font-medium text-gray-700 mb-2">Recursos</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div>
+                                        <span class="font-medium">Libros:</span>
+                                        <p class="text-gray-600">${truncateText(plan.recursos_libros, 100)}</p>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium">Artículos:</span>
+                                        <p class="text-gray-600">${truncateText(plan.recursos_articulos, 100)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h5 class="font-medium text-gray-700 mb-2">Evaluaciones</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div>
+                                        <span class="font-medium">Cuestionarios:</span>
+                                        <p class="text-gray-600">${truncateText(plan.evaluaciones_cuestionarios, 100)}</p>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium">Exámenes:</span>
+                                        <p class="text-gray-600">${truncateText(plan.evaluaciones_examenes, 100)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStudyPlans();
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

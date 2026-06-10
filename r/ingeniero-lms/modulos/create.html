@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot para Creación de Módulo eLearning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .chat-box { scroll-behavior: smooth; }
+        .chat-box::-webkit-scrollbar { display: none; }
+        .chat-box { -ms-overflow-style: none; scrollbar-width: none; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="chat-container w-full max-w-2xl bg-white shadow-xl rounded-2xl overflow-hidden flex flex-col h-[90vh]">
+        <header class="p-6 bg-gradient-to-r from-blue-600 to-indigo-700 text-white text-center font-bold text-xl md:text-2xl shadow-md">
+            Creador de Módulo eLearning
+        </header>
+        <main id="chat-box" class="flex-grow p-6 overflow-y-auto space-y-4">
+        </main>
+        <footer class="p-4 bg-gray-50 border-t border-gray-200 flex items-center">
+            <input
+                type="text"
+                id="user-input"
+                placeholder="Escribe tu respuesta aquí..."
+                class="flex-grow px-4 py-3 rounded-full bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-gray-800"
+                autofocus
+            />
+            <button
+                onclick="handleSendClick()"
+                id="send-button"
+                class="ml-3 px-6 py-3 rounded-full bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+            >
+                Enviar
+            </button>
+        </footer>
+    </div>
+
+<script>
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+
+    // --- ESTADO Y DATOS DEL FORMULARIO ---
+    let conversationState = 'obtener_cursos';
+    let formData = {};
+    let availableCourses = [];
+    let availableUsers = [];
+    let tempObjectives = [];
+    let tempActivities = [];
+
+    // --- CONFIGURACIÓN DE ENDPOINTS ---
+    const BASE_API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+    const apiEndpoint = `${BASE_API_URL}/modules`;
+    const coursesEndpoint = `${BASE_API_URL}/courses/`;
+    const usersEndpoint = `${BASE_API_URL}/users/`;
+    const iaGeneracionEndpoint = `${BASE_API_URL}/chat/generar-contenido`;
+
+    // --- TOKEN DE AUTENTICACIÓN ---
+    // Se toma del localStorage, como me indicaste
+    const AUTH_TOKEN = localStorage.getItem('token');
+    if (!AUTH_TOKEN) {
+        console.error("Error: No se encontró el token de autenticación en el localStorage.");
+        addMessage("Error: No se pudo iniciar el chat. Por favor, asegúrate de haber iniciado sesión y de que el token de autenticación esté disponible.", 'bot');
+        // Esto deshabilitará la entrada del usuario si no hay token
+        userInput.disabled = true;
+        sendButton.disabled = true;
+    }
+
+    // --- FLUJO DE PREGUNTAS ---
+    const questions = {
+        'obtener_cursos': 'Conectando con el gestor de cursos...',
+        'select_course': '¡Hola! Por favor, selecciona el curso para el nuevo módulo. Aquí están los disponibles:',
+        'select_user': 'Perfecto. Ahora, selecciona al autor o responsable del módulo:',
+        // INICIO DE CORRECCIONES Y ADICIONES
+        'organizacion_institucion': '¿A qué organización o institución pertenece el módulo?',
+        'derechos_patrimoniales': '¿El módulo tendrá derechos patrimoniales? (Sí/No)',
+        'derechos_intelectuales': '¿Se usará la propiedad intelectual del autor? (Sí/No)',
+        // FIN DE CORRECCIONES Y ADICIONES
+        'nombre_del_modulo': '¡Excelente! Ahora, ¿cómo se llama tu módulo? (Ej. Como cosechar café a 1.600 metros)',
+        'nombre_corto_del_modulo': 'Genial. Ahora, ¿cuál sería un nombre corto para este módulo? (Ej. Cosechar Café)',
+        'version': 'Perfecto. ¿Cuál es la versión actual del módulo? (Ej. Vers 1.0)',
+        'palabras_clave_decision': '¿Quieres que la IA genere las palabras clave basándose en el nombre del módulo, o prefieres escribirlas tú? (Escribe "generar" o "escribir")',
+        'generar_palabras_clave_ia': 'Entendido. Generando palabras clave con IA...',
+        'escribir_palabras_clave_manual': 'Por favor, dame las palabras clave, separadas por comas.',
+        'objetivo_general': 'Muy bien. Ahora pasemos a los objetivos. ¿Cuál es el objetivo general del módulo?',
+        'objetivos_especificos_decision': '¿Quieres que la IA genere los objetivos específicos basándose en el objetivo general, o prefieres escribirlos tú? (Escribe "generar" o "escribir")',
+        'generar_objetivos_especificos_ia': 'De acuerdo. Generando objetivos específicos con IA...',
+        'escribir_objetivos_especificos_manual': '¿Cuáles son los objetivos específicos? (Escribe uno y presiona Enviar. Cuando termines, escribe "listo")',
+        'objetivos_especificos_list': 'Objetivo añadido. ¿Tienes otro objetivo específico? (di "listo" para terminar)',
+        'publico_objetivo': '¿Cuál es el público objetivo del módulo?',
+        'duracion_estimada': '¿Cuál es la duración estimada del módulo en minutos u horas?',
+        'requisitos_previos': '¿Existen requisitos previos para tomar este módulo?',
+        'criterios_de_logro': '¿Cuáles son los resultados esperados o criterios de logro?',
+        'numero_unidades': 'Pasemos a la estructura. ¿Cuántas unidades o lecciones tendrá el módulo?',
+        'lista_unidades_temas': 'Ahora, lista los temas o títulos de cada unidad, separando cada uno con una coma.',
+        'orden_unidades': '¿El orden de las unidades es secuencial o libre?',
+        'tiempo_estimado_por_unidad': '¿Cuál es el tiempo estimado por unidad?',
+        'tipo_letra': 'Ahora hablemos del diseño. ¿Qué tipo de letra o familia tipográfica usarás?',
+        'tamano_letra': '¿Qué tamaño de letra usarás para los títulos y para el texto?',
+        'estilos_texto': '¿Usarás estilos de texto como negrita o cursiva?',
+        'colores_principales': '¿Cuáles son los colores principales de la paleta?',
+        'logotipo': '¿Se usará un logotipo? (Sí/No)',
+        'tiene_portada': '¿El módulo tendrá una portada de inicio? (Sí/No)',
+        'tipo_portada': '¿Qué tipo de portada será? (imagen/video/animación)',
+        'creditos_en_portada': '¿Incluirá créditos en la portada? (Sí/No)',
+        'texto_de_portada': '¿Qué texto de portada (título/subtítulo) llevará?',
+        'infografias_estaticas': 'Pasemos a los recursos. ¿Cuántas infografías estáticas tendrá el módulo?',
+        'infografias_animadas': '¿Cuántas infografías animadas? (escribe "0" si no habrá)',
+        'imagenes': '¿Cuántas imágenes?',
+        'videos': '¿Cuántos videos y cuál es su duración total?',
+        'microvideos_cortos': '¿Habrá microvideos cortos? (Sí/No)',
+        'audios': '¿Cuántos audios o podcasts y cuál es su duración?',
+        'animaciones': '¿Cuántas animaciones?',
+        'storytelling': '¿Se usará storytelling narrado o dramatizado? (Sí/No)',
+        'presentaciones_interactivas': '¿Habrá presentaciones interactivas? (Sí/No)',
+        'portada_animada': '¿Habrá portada animada? (Sí/No)',
+        'gamificacion': '¿Se incluirá gamificación? (Sí/No)',
+        'simulaciones': '¿Se usarán simulaciones? (Sí/No)',
+        'realidad_aumentada': '¿Habrá realidad aumentada, 3D o 360º? (Sí/No)',
+        'lineas_tiempo_interactivas': '¿Se usarán líneas de tiempo interactivas? (Sí/No)',
+        'mapas_interactivos': '¿Habrá mapas interactivos? (Sí/No)',
+        'galerias_imagenes': '¿Se incluirán galerías de imágenes navegables? (Sí/No)',
+        'elementos_descargables': '¿Habrá elementos descargables como guías o plantillas? (Sí/No)',
+        'otros_recursos': '¿Hay otros recursos multimedia adicionales?',
+        'actividades_aprendizaje_unidad': 'Ahora sobre las actividades. ¿Habrá actividades de aprendizaje por unidad? (Sí/No)',
+        'actividades_cierre_modulo': '¿Habrá actividades de cierre al final del módulo? (Sí/No)',
+        'tipos_actividades_decision': '¿Quieres que la IA genere los tipos de actividades o prefieres escribirlos tú? (Escribe "generar" o "escribir")',
+        'generar_tipos_actividades_ia': 'Generando tipos de actividades...',
+        'escribir_tipos_actividades_manual': '¿Qué tipos de actividades se usarán? (ej. Cuestionario, Foro, etc. Escribe uno y di "listo" para terminar)',
+        'tipos_actividades_list': 'Tipo de actividad añadido. ¿Tienes otro? (di "listo" para terminar)',
+        'tipos_preguntas': 'Pasemos a la evaluación. ¿Qué tipo de preguntas habrá?',
+        'numero_total_preguntas': '¿Cuál es el número total de preguntas?',
+        'nota_minima_aprobacion': '¿Cuál es la nota mínima de aprobación?',
+        'intentos_permitidos': '¿Cuántos intentos permitidos?',
+        'tiempo_limite': '¿Cuál es el tiempo límite de la evaluación en minutos?',
+        'retroalimentacion': '¿La retroalimentación para el estudiante será inmediata, al final o ambas?',
+        'subtitulos_videos': 'Casi terminamos. ¿Habrá subtítulos en los videos? (Sí/No)',
+        'transcripciones_audio': '¿Habrá transcripciones de audio? (Sí/No)',
+        'navegacion_teclado': '¿Será compatible con navegación con teclado? (Sí/No)',
+        'lectura_pantalla_compatible': '¿Será compatible con lectura de pantalla? (Sí/No)',
+        'idiomas_disponibles': '¿Qué idiomas estarán disponibles? (separados por coma)',
+        'plataforma_destino': 'Pasemos a la entrega. ¿Cuál es la plataforma o LMS de destino? (ej. Moodle, Canvas, etc.)',
+        'dispositivos_objetivo': '¿En qué dispositivos se usará? (Móvil, tableta, PC, separados por coma)',
+        'modo_uso': '¿El modo de uso será en línea o sin conexión?',
+        'tamano_aproximado': '¿Cuál es el tamaño aproximado del módulo en MB?',
+        'entrega_fuentes': '¿Se entregarán las fuentes? (Sí/No)',
+        'entrega_scorm': '¿Se entregará el SCORM? (Sí/No)',
+        'entrega_multimedia': '¿Se entregará el multimedia? (Sí/No)',
+        'entrega_version_pdf': '¿Se entregará la versión en PDF? (Sí/No)',
+        'notas_adicionales': 'Por último, ¿tienes alguna nota u observación adicional? Escribe "listo" para crear el módulo.',
+        'finalizar': 'finalizar'
+    };
+
+    // --- FUNCIONES AUXILIARES ---
+    function addMessage(text, sender, isLoading = false) {
+        const messageId = `msg-${Date.now()}`;
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+        messageDiv.id = messageId;
+
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = `rounded-xl px-4 py-2 max-w-sm break-words ${sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`;
+        
+        if (isLoading) {
+            bubbleDiv.innerHTML = '<div class="loader"></div>';
+        } else {
+            bubbleDiv.innerHTML = text.replace(/\n/g, '<br>');
+        }
+        
+        messageDiv.appendChild(bubbleDiv);
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return messageId;
+    }
+
+    function updateMessage(messageId, newText) {
+        const messageBubble = document.querySelector(`#${messageId} > div`);
+        if (messageBubble) {
+            messageBubble.innerHTML = newText.replace(/\n/g, '<br>');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    }
+    
+    function toggleUserInput(enabled) {
+        userInput.disabled = !enabled;
+        sendButton.disabled = !enabled;
+        userInput.placeholder = enabled ? "Escribe tu respuesta aquí..." : "Esperando respuesta...";
+    }
+
+    function parseYesNo(input) {
+        const cleanInput = input.trim().toLowerCase();
+        return cleanInput === 'sí' || cleanInput === 'si';
+    }
+
+    // --- LÓGICA DE API Y IA ---
+    async function fetchFromAPI(endpoint, requiresAuth = false, options = {}) {
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (requiresAuth) {
+                headers['Authorization'] = `Bearer ${AUTH_TOKEN}`;
+            }
+            const finalOptions = { ...options, headers: { ...headers, ...options.headers } };
+            
+            const response = await fetch(endpoint, finalOptions);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: 'Error desconocido' }));
+                throw new Error(errorData.detail || `Error ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error(`Error en la llamada a ${endpoint}:`, error);
+            addMessage(`Ocurrió un error de conexión con el servidor. Por favor, intenta de nuevo más tarde.`, 'bot');
+            return null;
+        }
+    }
+
+    async function getCourses() {
+        addMessage(questions.obtener_cursos, 'bot');
+        availableCourses = await fetchFromAPI(coursesEndpoint);
+        if (availableCourses && availableCourses.length > 0) {
+            let courseList = availableCourses.map((course, index) => `${index + 1}. ${course.name}`).join('\n');
+            addMessage(questions.select_course + "\n\n" + courseList, 'bot');
+            conversationState = 'select_course';
+        } else {
+            addMessage('No se encontraron cursos disponibles. Por favor, crea un curso primero.', 'bot');
+            conversationState = 'error_fatal';
+        }
+    }
+    
+    async function getUsers() {
+        addMessage('Obteniendo la lista de responsables...', 'bot');
+        availableUsers = await fetchFromAPI(usersEndpoint, true); // true indica que requiere autenticación
+        if (availableUsers && availableUsers.length > 0) {
+            // CORRECCIÓN: Usar 'user.nombre' en lugar de 'user.full_name' para mostrar el nombre.
+            let userList = availableUsers.map((user, index) => `${index + 1}. ${user.nombre} (${user.email})`).join('\n');
+            addMessage(questions.select_user + "\n\n" + userList, 'bot');
+            conversationState = 'select_user';
+        } else {
+            addMessage('No se pudo obtener la lista de responsables. No podrás continuar.', 'bot');
+            conversationState = 'error_fatal';
+        }
+    }
+
+    async function sendToIA(prompt) {
+        const loaderId = addMessage('', 'bot', true);
+        toggleUserInput(false);
+        try {
+            const response = await fetch(`${iaGeneracionEndpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            });
+
+            if (!response.ok) {
+                updateMessage(loaderId, 'La IA no pudo generar el contenido. Por favor, ingrésalo manualmente.');
+                return { success: false, data: 'Error de la IA' };
+            }
+            
+            const data = await response.json();
+            const rawText = data.respuesta;
+            
+            // Intenta extraer un JSON del texto, incluso si está rodeado de otras palabras
+            const jsonMatch = rawText.match(/\[.*\]|\{.*\}/s);
+            if (jsonMatch) {
+                try {
+                    const parsedJson = JSON.parse(jsonMatch[0]);
+                    updateMessage(loaderId, `Contenido generado: ${parsedJson.join(', ')}`);
+                    return { success: true, data: parsedJson };
+                } catch (e) {
+                    updateMessage(loaderId, 'La IA devolvió un formato incorrecto. Por favor, ingresa los datos manualmente.');
+                    return { success: false, data: 'Formato incorrecto' };
+                }
+            } else {
+                updateMessage(loaderId, rawText);
+                return { success: false, data: rawText };
+            }
+        } catch (error) {
+            updateMessage(loaderId, 'Ocurrió un error al conectar con el servidor de la IA.');
+            return { success: false, data: 'Error de conexión' };
+        } finally {
+            toggleUserInput(true);
+        }
+    }
+
+    // --- LÓGICA PRINCIPAL DE PROCESAMIENTO ---
+    async function processResponse(message) {
+        let nextQuestion = '';
+
+        switch (conversationState) {
+            case 'select_course':
+                const courseIndex = parseInt(message, 10) - 1;
+                const selectedCourse = availableCourses[courseIndex];
+                if (selectedCourse) {
+                    formData.course_id = selectedCourse.id;
+                    addMessage(`Has seleccionado el curso: ${selectedCourse.name}`, 'bot');
+                    formData.codigo_id_del_modulo = 'ID_' + new Date().getTime();
+                    // Siguiente paso: seleccionar el usuario responsable
+                    getUsers();
+                } else {
+                    addMessage('Selección inválida. Por favor, ingresa el número de un curso de la lista.', 'bot');
+                }
+                break;
+            case 'select_user':
+                const userIndex = parseInt(message, 10) - 1;
+                const selectedUser = availableUsers[userIndex];
+                if (selectedUser) {
+                    // CORRECCIÓN: Usar 'selectedUser.nombre' en lugar de 'selectedUser.full_name'.
+                    formData.autor_responsable = selectedUser.nombre;
+                    formData.responsable_id = selectedUser.uid; // Usar el campo 'uid' como ID del responsable.
+                    addMessage(`Has seleccionado a ${selectedUser.nombre} como responsable.`, 'bot');
+                    
+                    // AÑADIDO: Nuevas preguntas sobre derechos y organización
+                    nextQuestion = questions.organizacion_institucion;
+                    conversationState = 'organizacion_institucion';
+                } else {
+                    addMessage('Selección inválida. Por favor, ingresa el número de un responsable de la lista.', 'bot');
+                }
+                break;
+            // INICIO DE ADICIONES AL FLUJO
+            case 'organizacion_institucion':
+                formData.organizacion_institucion = message;
+                nextQuestion = questions.derechos_patrimoniales;
+                conversationState = 'derechos_patrimoniales';
+                break;
+            case 'derechos_patrimoniales':
+                formData.derechos_patrimoniales = parseYesNo(message);
+                nextQuestion = questions.derechos_intelectuales;
+                conversationState = 'derechos_intelectuales';
+                break;
+            case 'derechos_intelectuales':
+                formData.derechos_intelectuales = parseYesNo(message);
+                // Volver al flujo original
+                nextQuestion = questions.nombre_del_modulo;
+                conversationState = 'nombre_del_modulo';
+                break;
+            // FIN DE ADICIONES
+            case 'nombre_del_modulo':
+                formData.nombre_del_modulo = message;
+                nextQuestion = questions.nombre_corto_del_modulo;
+                conversationState = 'nombre_corto_del_modulo';
+                break;
+            case 'nombre_corto_del_modulo':
+                formData.nombre_corto_del_modulo = message;
+                nextQuestion = questions.version;
+                conversationState = 'version';
+                break;
+            case 'version':
+                formData.version = message;
+                nextQuestion = questions.palabras_clave_decision;
+                conversationState = 'palabras_clave_decision';
+                break;
+            case 'palabras_clave_decision':
+                if (message.toLowerCase() === 'generar') {
+                    const prompt = `Genera 5 palabras clave para un módulo de e-learning llamado "${formData.nombre_del_modulo}". Responde solo con una lista JSON de strings, sin texto adicional.`;
+                    const iaResult = await sendToIA(prompt);
+                    if (iaResult.success) {
+                        formData.palabras_clave = iaResult.data.join(', ');
+                        nextQuestion = questions.objetivo_general;
+                        conversationState = 'objetivo_general';
+                    } else {
+                        addMessage('Ocurrió un error con la IA. Por favor, ingresa las palabras clave manualmente.', 'bot');
+                        nextQuestion = questions.escribir_palabras_clave_manual;
+                        conversationState = 'palabras_clave';
+                    }
+                } else {
+                    nextQuestion = questions.escribir_palabras_clave_manual;
+                    conversationState = 'palabras_clave';
+                }
+                break;
+            case 'palabras_clave':
+                formData.palabras_clave = message;
+                nextQuestion = questions.objetivo_general;
+                conversationState = 'objetivo_general';
+                break;
+            case 'objetivo_general':
+                formData.objetivo_general = message;
+                nextQuestion = questions.objetivos_especificos_decision;
+                conversationState = 'objetivos_especificos_decision';
+                break;
+            case 'objetivos_especificos_decision':
+                if (message.toLowerCase() === 'generar') {
+                    const prompt = `Genera 5 objetivos específicos para un módulo de e-learning con el objetivo general: "${formData.objetivo_general}". Responde solo con una lista JSON de strings, sin texto adicional.`;
+                    const iaResult = await sendToIA(prompt);
+                    if (iaResult.success) {
+                        formData.objetivos_especificos = iaResult.data.join(', ');
+                        nextQuestion = questions.publico_objetivo;
+                        conversationState = 'publico_objetivo';
+                    } else {
+                        addMessage('Ocurrió un error con la IA. Por favor, ingresa los objetivos manualmente.', 'bot');
+                        nextQuestion = questions.escribir_objetivos_especificos_manual;
+                        conversationState = 'objetivos_especificos_list';
+                    }
+                } else {
+                    nextQuestion = questions.escribir_objetivos_especificos_manual;
+                    conversationState = 'objetivos_especificos_list';
+                }
+                break;
+            case 'objetivos_especificos_list':
+                if (message.toLowerCase() === 'listo') {
+                    formData.objetivos_especificos = tempObjectives.join(', ');
+                    tempObjectives = [];
+                    nextQuestion = questions.publico_objetivo;
+                    conversationState = 'publico_objetivo';
+                } else {
+                    tempObjectives.push(message);
+                    nextQuestion = questions.objetivos_especificos_list;
+                }
+                break;
+            case 'publico_objetivo':
+                formData.publico_objetivo = message;
+                nextQuestion = questions.duracion_estimada;
+                conversationState = 'duracion_estimada';
+                break;
+            case 'duracion_estimada':
+                formData.duracion_estimada = message;
+                nextQuestion = questions.requisitos_previos;
+                conversationState = 'requisitos_previos';
+                break;
+            case 'requisitos_previos':
+                formData.requisitos_previos = message;
+                nextQuestion = questions.criterios_de_logro;
+                conversationState = 'criterios_de_logro';
+                break;
+            case 'criterios_de_logro':
+                formData.criterios_de_logro = message;
+                nextQuestion = questions.numero_unidades;
+                conversationState = 'numero_unidades';
+                break;
+            case 'numero_unidades':
+                formData.numero_unidades = parseInt(message, 10) || 0;
+                nextQuestion = questions.lista_unidades_temas;
+                conversationState = 'lista_unidades_temas';
+                break;
+            case 'lista_unidades_temas':
+                formData.lista_unidades_temas = message;
+                nextQuestion = questions.orden_unidades;
+                conversationState = 'orden_unidades';
+                break;
+            case 'orden_unidades':
+                formData.orden_unidades = message;
+                nextQuestion = questions.tiempo_estimado_por_unidad;
+                conversationState = 'tiempo_estimado_por_unidad';
+                break;
+            case 'tiempo_estimado_por_unidad':
+                formData.tiempo_estimado_por_unidad = message;
+                nextQuestion = questions.tipo_letra;
+                conversationState = 'tipo_letra';
+                break;
+            case 'tipo_letra':
+                formData.tipo_letra = message;
+                nextQuestion = questions.tamano_letra;
+                conversationState = 'tamano_letra';
+                break;
+            case 'tamano_letra':
+                formData.tamano_letra = message;
+                nextQuestion = questions.estilos_texto;
+                conversationState = 'estilos_texto';
+                break;
+            case 'estilos_texto':
+                formData.estilos_texto = message;
+                nextQuestion = questions.colores_principales;
+                conversationState = 'colores_principales';
+                break;
+            case 'colores_principales':
+                formData.colores_principales = message;
+                nextQuestion = questions.logotipo;
+                conversationState = 'logotipo';
+                break;
+            case 'logotipo':
+                // CORRECCIÓN: el backend espera un string "si" o "no", no un booleano.
+                formData.logotipo = message.toLowerCase() === 'si' ? 'Sí' : 'No';
+                nextQuestion = questions.tiene_portada;
+                conversationState = 'tiene_portada';
+                break;
+            case 'tiene_portada':
+                formData.tiene_portada = parseYesNo(message);
+                nextQuestion = questions.tipo_portada;
+                conversationState = 'tipo_portada';
+                break;
+            case 'tipo_portada':
+                formData.tipo_portada = message;
+                nextQuestion = questions.creditos_en_portada;
+                conversationState = 'creditos_en_portada';
+                break;
+            case 'creditos_en_portada':
+                formData.creditos_en_portada = parseYesNo(message);
+                nextQuestion = questions.texto_de_portada;
+                conversationState = 'texto_de_portada';
+                break;
+            case 'texto_de_portada':
+                formData.texto_de_portada = message;
+                nextQuestion = questions.infografias_estaticas;
+                conversationState = 'infografias_estaticas';
+                break;
+            case 'infografias_estaticas':
+                formData.infografias_estaticas = parseInt(message, 10) || 0;
+                nextQuestion = questions.infografias_animadas;
+                conversationState = 'infografias_animadas';
+                break;
+            case 'infografias_animadas':
+                formData.infografias_animadas = parseInt(message, 10) || 0;
+                nextQuestion = questions.imagenes;
+                conversationState = 'imagenes';
+                break;
+            case 'imagenes':
+                formData.imagenes = parseInt(message, 10) || 0;
+                nextQuestion = questions.videos;
+                conversationState = 'videos';
+                break;
+            case 'videos':
+                formData.videos = message;
+                nextQuestion = questions.microvideos_cortos;
+                conversationState = 'microvideos_cortos';
+                break;
+            case 'microvideos_cortos':
+                formData.microvideos_cortos = parseYesNo(message);
+                nextQuestion = questions.audios;
+                conversationState = 'audios';
+                break;
+            case 'audios':
+                formData.audios = message;
+                nextQuestion = questions.animaciones;
+                conversationState = 'animaciones';
+                break;
+            case 'animaciones':
+                formData.animaciones = parseInt(message, 10) || 0;
+                nextQuestion = questions.storytelling;
+                conversationState = 'storytelling';
+                break;
+            case 'storytelling':
+                formData.storytelling = parseYesNo(message);
+                nextQuestion = questions.presentaciones_interactivas;
+                conversationState = 'presentaciones_interactivas';
+                break;
+            case 'presentaciones_interactivas':
+                formData.presentaciones_interactivas = parseYesNo(message);
+                nextQuestion = questions.portada_animada;
+                conversationState = 'portada_animada';
+                break;
+            case 'portada_animada':
+                formData.portada_animada = parseYesNo(message);
+                nextQuestion = questions.gamificacion;
+                conversationState = 'gamificacion';
+                break;
+            case 'gamificacion':
+                formData.gamificacion = parseYesNo(message);
+                nextQuestion = questions.simulaciones;
+                conversationState = 'simulaciones';
+                break;
+            case 'simulaciones':
+                formData.simulaciones = parseYesNo(message);
+                nextQuestion = questions.realidad_aumentada;
+                conversationState = 'realidad_aumentada';
+                break;
+            case 'realidad_aumentada':
+                formData.realidad_aumentada = parseYesNo(message);
+                nextQuestion = questions.lineas_tiempo_interactivas;
+                conversationState = 'lineas_tiempo_interactivas';
+                break;
+            case 'lineas_tiempo_interactivas':
+                formData.lineas_tiempo_interactivas = parseYesNo(message);
+                nextQuestion = questions.mapas_interactivos;
+                conversationState = 'mapas_interactivos';
+                break;
+            case 'mapas_interactivos':
+                formData.mapas_interactivos = parseYesNo(message);
+                nextQuestion = questions.galerias_imagenes;
+                conversationState = 'galerias_imagenes';
+                break;
+            case 'galerias_imagenes':
+                formData.galerias_imagenes = parseYesNo(message);
+                nextQuestion = questions.elementos_descargables;
+                conversationState = 'elementos_descargables';
+                break;
+            case 'elementos_descargables':
+                // CORRECCIÓN: el backend espera un string "si" o "no", no un booleano.
+                formData.elementos_descargables = message.toLowerCase() === 'si' ? 'Sí' : 'No';
+                nextQuestion = questions.otros_recursos;
+                conversationState = 'otros_recursos';
+                break;
+            case 'otros_recursos':
+                formData.otros_recursos = message;
+                nextQuestion = questions.actividades_aprendizaje_unidad;
+                conversationState = 'actividades_aprendizaje_unidad';
+                break;
+            case 'actividades_aprendizaje_unidad':
+                // CORRECCIÓN: el backend espera un string "si" o "no", no un booleano.
+                formData.actividades_aprendizaje_unidad = message.toLowerCase() === 'si' ? 'Sí' : 'No';
+                nextQuestion = questions.actividades_cierre_modulo;
+                conversationState = 'actividades_cierre_modulo';
+                break;
+            case 'actividades_cierre_modulo':
+                // CORRECCIÓN: el backend espera un string "si" o "no", no un booleano.
+                formData.actividades_cierre_modulo = message.toLowerCase() === 'si' ? 'Sí' : 'No';
+                nextQuestion = questions.tipos_actividades_decision;
+                conversationState = 'tipos_actividades_decision';
+                break;
+            case 'tipos_actividades_decision':
+                if (message.toLowerCase() === 'generar') {
+                    const prompt = `Genera una lista de 5 tipos de actividades de aprendizaje para un módulo de e-learning. Responde solo con una lista JSON de strings, sin texto adicional.`;
+                    const iaResult = await sendToIA(prompt);
+                    if (iaResult.success) {
+                        formData.tipos_actividades = iaResult.data.join(', ');
+                        nextQuestion = questions.tipos_preguntas;
+                        conversationState = 'tipos_preguntas';
+                    } else {
+                        addMessage('Ocurrió un error con la IA. Por favor, ingresa los tipos de actividades manualmente.', 'bot');
+                        nextQuestion = questions.escribir_tipos_actividades_manual;
+                        conversationState = 'tipos_actividades_list';
+                    }
+                } else {
+                    nextQuestion = questions.escribir_tipos_actividades_manual;
+                    conversationState = 'tipos_actividades_list';
+                }
+                break;
+            case 'tipos_actividades_list':
+                if (message.toLowerCase() === 'listo') {
+                    formData.tipos_actividades = tempActivities.join(', ');
+                    tempActivities = [];
+                    nextQuestion = questions.tipos_preguntas;
+                    conversationState = 'tipos_preguntas';
+                } else {
+                    tempActivities.push(message);
+                    nextQuestion = questions.tipos_actividades_list;
+                }
+                break;
+            case 'tipos_preguntas':
+                formData.tipos_preguntas = message;
+                nextQuestion = questions.numero_total_preguntas;
+                conversationState = 'numero_total_preguntas';
+                break;
+            case 'numero_total_preguntas':
+                formData.numero_total_preguntas = parseInt(message, 10) || 0;
+                nextQuestion = questions.nota_minima_aprobacion;
+                conversationState = 'nota_minima_aprobacion';
+                break;
+            case 'nota_minima_aprobacion':
+                formData.nota_minima_aprobacion = parseFloat(message) || 0;
+                nextQuestion = questions.intentos_permitidos;
+                conversationState = 'intentos_permitidos';
+                break;
+            case 'intentos_permitidos':
+                formData.intentos_permitidos = parseInt(message, 10) || 0;
+                nextQuestion = questions.tiempo_limite;
+                conversationState = 'tiempo_limite';
+                break;
+            case 'tiempo_limite':
+                formData.tiempo_limite = message;
+                nextQuestion = questions.retroalimentacion;
+                conversationState = 'retroalimentacion';
+                break;
+            case 'retroalimentacion':
+                formData.retroalimentacion = message;
+                nextQuestion = questions.subtitulos_videos;
+                conversationState = 'subtitulos_videos';
+                break;
+            case 'subtitulos_videos':
+                formData.subtitulos_videos = parseYesNo(message);
+                nextQuestion = questions.transcripciones_audio;
+                conversationState = 'transcripciones_audio';
+                break;
+            case 'transcripciones_audio':
+                formData.transcripciones_audio = parseYesNo(message);
+                nextQuestion = questions.navegacion_teclado;
+                conversationState = 'navegacion_teclado';
+                break;
+            case 'navegacion_teclado':
+                formData.navegacion_teclado = parseYesNo(message);
+                nextQuestion = questions.lectura_pantalla_compatible;
+                conversationState = 'lectura_pantalla_compatible';
+                break;
+            case 'lectura_pantalla_compatible':
+                formData.lectura_pantalla_compatible = parseYesNo(message);
+                nextQuestion = questions.idiomas_disponibles;
+                conversationState = 'idiomas_disponibles';
+                break;
+            case 'idiomas_disponibles':
+                formData.idiomas_disponibles = message;
+                nextQuestion = questions.plataforma_destino;
+                conversationState = 'plataforma_destino';
+                break;
+            case 'plataforma_destino':
+                formData.plataforma_destino = message;
+                nextQuestion = questions.dispositivos_objetivo;
+                conversationState = 'dispositivos_objetivo';
+                break;
+            case 'dispositivos_objetivo':
+                formData.dispositivos_objetivo = message;
+                nextQuestion = questions.modo_uso;
+                conversationState = 'modo_uso';
+                break;
+            case 'modo_uso':
+                formData.modo_uso = message;
+                nextQuestion = questions.tamano_aproximado;
+                conversationState = 'tamano_aproximado';
+                break;
+            case 'tamano_aproximado':
+                formData.tamano_aproximado = message;
+                nextQuestion = questions.entrega_fuentes;
+                conversationState = 'entrega_fuentes';
+                break;
+            case 'entrega_fuentes':
+                formData.entrega_fuentes = parseYesNo(message);
+                nextQuestion = questions.entrega_scorm;
+                conversationState = 'entrega_scorm';
+                break;
+            case 'entrega_scorm':
+                formData.entrega_scorm = parseYesNo(message);
+                nextQuestion = questions.entrega_multimedia;
+                conversationState = 'entrega_multimedia';
+                break;
+            case 'entrega_multimedia':
+                formData.entrega_multimedia = parseYesNo(message);
+                nextQuestion = questions.entrega_version_pdf;
+                conversationState = 'entrega_version_pdf';
+                break;
+            case 'entrega_version_pdf':
+                formData.entrega_version_pdf = parseYesNo(message);
+                nextQuestion = questions.notas_adicionales;
+                conversationState = 'notas_adicionales';
+                break;
+            case 'notas_adicionales':
+                formData.notas_adicionales = message;
+                await submitForm();
+                conversationState = 'obtener_cursos';
+                break;
+            case 'error_fatal':
+                addMessage('No se puede continuar. Por favor, revisa la consola para más detalles.', 'bot');
+                break;
+            default:
+                addMessage('Lo siento, no entiendo. Por favor, reinicia el chat.', 'bot');
+                break;
+        }
+
+        if (nextQuestion) {
+            addMessage(nextQuestion, 'bot');
+        }
+    }
+
+    async function submitForm() {
+        addMessage('Compilando la información y enviando...', 'bot');
+        toggleUserInput(false);
+        // Quitar la clave responsable_id si no es necesaria para el payload final
+        const finalPayload = { ...formData };
+        delete finalPayload.responsable_id; 
+
+        const options = {
+            method: 'POST',
+            body: JSON.stringify(finalPayload),
+            headers: { 'Content-Type': 'application/json' }
+        };
+        const response = await fetchFromAPI(apiEndpoint, true, options);
+
+        if (response) {
+            addMessage(`¡Formulario enviado con éxito! El módulo con ID ${response.id} ha sido creado.`, 'bot');
+            console.log('JSON enviado:', finalPayload);
+            console.log('Respuesta del servidor:', response);
+        } else {
+            addMessage(`Error al enviar el formulario. Por favor, revisa la consola para más detalles.`, 'bot');
+        }
+        toggleUserInput(true);
+    }
+
+    function handleSendClick() {
+        const message = userInput.value.trim();
+        if (message) {
+            addMessage(message, 'user');
+            processResponse(message);
+            userInput.value = '';
+        }
+    }
+
+    userInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            handleSendClick();
+        }
+    });
+    
+    // Iniciar el chat si hay token
+    if (AUTH_TOKEN) {
+        getCourses();
+    }
+</script>
+</body>
+</html>

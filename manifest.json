@@ -1,0 +1,18 @@
+{
+  "name": "VirtualMind",
+  "short_name": "VMind",
+  "description": "Una aplicación educativa para el aprendizaje virtual",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4CAF50",
+  "icons": [
+    {
+      "src": "https://gestordecursos.pegui.edu.co:8000/static/uploads/e0014a4d-9f79-4f68-89c0-1ff429a9168d.png",
+      "sizes": "1024x1024", // <-- Declara el tamaño real de tu imagen
+      "type": "image/png"
+    }
+    // Dejamos solo la declaración del icono existente con su tamaño real.
+    // Aunque lo ideal es tener 192x192 y 512x512, probaremos así.
+  ]
+}

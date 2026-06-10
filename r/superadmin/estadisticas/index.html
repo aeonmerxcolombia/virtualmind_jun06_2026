@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Estadísticas - Superadmin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .stat-card { transition: all 0.3s ease; }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+    .chart-container { position: relative; height: 300px; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen p-6">
+
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold text-indigo-800 mb-2 text-center">📊 Panel de Estadísticas</h1>
+    <p class="text-gray-500 text-center mb-8">Resumen general del sistema VirtualMind</p>
+
+    <!-- Tarjetas de estadísticas -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div class="stat-card bg-gradient-to-br from-indigo-500 to-indigo-600 p-5 rounded-xl shadow-lg text-white">
+        <div class="text-4xl font-bold" id="totalUsuarios">0</div>
+        <div class="text-indigo-100 text-sm mt-1">👥 Total Usuarios</div>
+      </div>
+
+      <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 p-5 rounded-xl shadow-lg text-white">
+        <div class="text-4xl font-bold" id="usuariosActivos">0</div>
+        <div class="text-green-100 text-sm mt-1">✅ Activos</div>
+      </div>
+
+      <div class="stat-card bg-gradient-to-br from-red-500 to-red-600 p-5 rounded-xl shadow-lg text-white">
+        <div class="text-4xl font-bold" id="usuariosInactivos">0</div>
+        <div class="text-red-100 text-sm mt-1">⛔ Inactivos</div>
+      </div>
+
+      <div class="stat-card bg-gradient-to-br from-yellow-500 to-yellow-600 p-5 rounded-xl shadow-lg text-white">
+        <div class="text-4xl font-bold" id="totalRoles">0</div>
+        <div class="text-yellow-100 text-sm mt-1">🔐 Roles</div>
+      </div>
+
+      <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 p-5 rounded-xl shadow-lg text-white">
+        <div class="text-4xl font-bold" id="totalPermisos">0</div>
+        <div class="text-purple-100 text-sm mt-1">🛂 Permisos</div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <!-- Usuarios por Rol -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">👥 Usuarios por Rol</h2>
+        <div class="chart-container">
+          <canvas id="chartUsuariosRol"></canvas>
+        </div>
+      </div>
+
+      <!-- Distribución de Estados -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">📈 Estado de Usuarios</h2>
+        <div class="chart-container">
+          <canvas id="chartEstado"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla detallada -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Detalle por Rol</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold text-gray-700">Rol</th>
+              <th class="px-4 py-3 text-center font-semibold text-gray-700">Usuarios</th>
+              <th class="px-4 py-3 text-center font-semibold text-gray-700">Porcentaje</th>
+              <th class="px-4 py-3 text-center font-semibold text-gray-700">Barra</th>
+            </tr>
+          </thead>
+          <tbody id="tablaRoles"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    let chartUsuariosRol = null;
+    let chartEstado = null;
+
+    const headers = {
+      "Authorization": "Bearer " + localStorage.getItem("token")
+    };
+
+    async function cargarEstadisticas() {
+      try {
+        const resUsers = await fetch(`${API}/users/`, { headers });
+        const users = await resUsers.json();
+
+        const total = users.length;
+        const activos = users.filter(u => u.estado).length;
+        const inactivos = total - activos;
+
+        document.getElementById("totalUsuarios").textContent = total;
+        document.getElementById("usuariosActivos").textContent = activos;
+        document.getElementById("usuariosInactivos").textContent = inactivos;
+
+        // Usuarios por rol
+        const rolesConteo = {};
+        users.forEach(user => {
+          user.roles.forEach(rol => {
+            rolesConteo[rol] = (rolesConteo[rol] || 0) + 1;
+          });
+        });
+
+        // Gráfico de Usuarios por Rol
+        const labelsRol = Object.keys(rolesConteo);
+        const dataRol = Object.values(rolesConteo);
+        
+        if (chartUsuariosRol) chartUsuariosRol.destroy();
+        chartUsuariosRol = new Chart(document.getElementById('chartUsuariosRol'), {
+          type: 'bar',
+          data: {
+            labels: labelsRol,
+            datasets: [{
+              label: 'Usuarios',
+              data: dataRol,
+              backgroundColor: [
+                '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981',
+                '#3b82f6', '#ef4444', '#14b8a6', '#f97316', '#06b6d4'
+              ],
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+          }
+        });
+
+        // Gráfico circular de estados
+        if (chartEstado) chartEstado.destroy();
+        chartEstado = new Chart(document.getElementById('chartEstado'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Activos', 'Inactivos'],
+            datasets: [{
+              data: [activos, inactivos],
+              backgroundColor: ['#10b981', '#ef4444'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+
+        // Tabla detallada
+        const tabla = document.getElementById("tablaRoles");
+        tabla.innerHTML = "";
+        for (const [rol, cantidad] of Object.entries(rolesConteo)) {
+          const porcentaje = total > 0 ? ((cantidad / total) * 100).toFixed(1) : 0;
+          tabla.innerHTML += `
+            <tr class="border-b hover:bg-gray-50">
+              <td class="px-4 py-3 font-medium text-gray-800 capitalize">${rol.replace(/-/g, ' ')}</td>
+              <td class="px-4 py-3 text-center">${cantidad}</td>
+              <td class="px-4 py-3 text-center text-gray-600">${porcentaje}%</td>
+              <td class="px-4 py-3 w-32">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-indigo-600 h-2 rounded-full" style="width: ${porcentaje}%"></div>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
+
+        // Roles
+        const resRoles = await fetch(`${API}/roles/`, { headers });
+        const roles = await resRoles.json();
+        document.getElementById("totalRoles").textContent = roles.length;
+
+        // Permisos
+        const resPerms = await fetch(`${API}/permissions/`, { headers });
+        const permisos = await resPerms.json();
+        document.getElementById("totalPermisos").textContent = permisos.length;
+
+      } catch (err) {
+        alert("❌ Error al cargar estadísticas.");
+        console.error(err);
+      }
+    }
+
+    cargarEstadisticas();
+  </script>
+
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor + IA</title>
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+
+    <!-- -------------------------------------------------------------
+         ESTILOS/Tailwind (animaciones, efectos “glass”, etc.)
+         ------------------------------------------------------------- -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s ease-in-out infinite',
+                        'gradient': 'gradient 15s ease infinite',
+                    },
+                    keyframes: {
+                        float: { '0%,100%': {transform:'translateY(0px)'}, '50%':{transform:'translateY(-10px)'} },
+                        gradient: { '0%,100%':{backgroundPosition:'0% 50%'}, '50%':{backgroundPosition:'100% 50%'} }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .gradient-bg { background:black; background-size:400% 400%; animation:gradient 15s ease infinite; }
+        .glass       { background:rgba(255,255,255,.1); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.2); }
+        .hover-lift  { transition:all .3s cubic-bezier(.4,0,.2,1); }
+        .hover-lift:hover { transform:translateY(-8px); box-shadow:0 25px 50px -12px rgba(0,0,0,.25); }
+        .glow        { box-shadow:0 0 20px rgba(102,126,234,.3); }
+        .typing::after { content:'|'; animation:blink 1s infinite; }
+        @keyframes blink { 0%,50%{opacity:1} 51%,100%{opacity:0} }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+
+    <!-- ====================== PARTICULAS DECORATIVAS ====================== -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-1/4 left-1/4 w-4 h-4 bg-white rounded-full opacity-20 animate-float"></div>
+        <div class="absolute top-1/3 right-1/4 w-6 h-6 bg-purple-300 rounded-full opacity-30 animate-float" style="animation-delay:2s;"></div>
+        <div class="absolute bottom-1/3 left-1/3 w-3 h-3 bg-blue-300 rounded-full opacity-25 animate-float" style="animation-delay:4s;"></div>
+    </div>
+
+    <div class="container mx-auto p-6 max-w-6xl relative z-10">
+
+        <!-- ====================== HEADER ====================== -->
+        <div class="text-center mb-12">
+            <h1 class="text-6xl font-black text-white mb-4 drop-shadow-2xl">
+                <span class="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                    Editor Avanzado
+                </span>
+            </h1>
+            <h2 class="text-2xl font-light text-white/80 mb-6">
+                Potenciado por Agentes de Inteligencia Artificial
+            </h2>
+            <div class="w-24 h-1 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto rounded-full"></div>
+        </div>
+
+        <!-- ====================== IFRAME CON EL EDITOR ====================== -->
+        <div class="glass rounded-3xl p-8 mb-8 hover-lift glow">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-white flex items-center">
+                    <svg class="w-8 h-8 mr-3 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                    </svg>
+                    Editor de Texto
+                </h3>
+                <div class="flex space-x-2">
+                    <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                    <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                    <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                </div>
+            </div>
+
+            <!-- -------------- IFRAME -------------- -->
+            <iframe
+                id="remote-editor"
+                src="https://gestordecursos.pegui.edu.co/r/superadmin/editor/"
+                title="Editor remoto"
+                class="w-full h-[500px] border-none"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-modals">
+            </iframe>
+        </div>
+
+        <!-- ====================== PANEL DE AGENTES IA ====================== -->
+        <div class="glass rounded-3xl p-8 mb-8 hover-lift">
+            <h3 class="text-2xl font-bold text-white mb-6 text-center flex items-center justify-center">
+                <svg class="w-8 h-8 mr-3 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Agentes de IA Disponibles
+            </h3>
+
+            <div class="grid md:grid-cols-3 gap-6">
+
+                <!-- GEMINI -->
+                <div class="group">
+                    <button id="btn-gemini"
+                        class="w-full bg-gradient-to-br from-green-400 to-green-600 text-white rounded-2xl p-6 font-bold text-lg shadow-xl hover:shadow-2xl transform transition-all duration-300 hover:scale-105 hover:-rotate-1">
+                        <div class="flex flex-col items-center">
+                            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 group-hover:animate-pulse">
+                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            </div>
+                            <span class="text-xl font-bold mb-2">Gemini</span>
+                            <span class="text-sm opacity-90">Corrección y Mejora</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- KIMIK2 -->
+                <div class="group">
+                    <button id="btn-kimik2"
+                        class="w-full bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-2xl p-6 font-bold text-lg shadow-xl hover:shadow-2xl transform transition-all duration-300 hover:scale-105 hover:rotate-1">
+                        <div class="flex flex-col items-center">
+                            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 group-hover:animate-pulse">
+                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/></svg>
+                            </div>
+                            <span class="text-xl font-bold mb-2">KimiK2</span>
+                            <span class="text-sm opacity-90">Traducción Inteligente</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- OPENAI -->
+                <div class="group">
+                    <button id="btn-openai"
+                        class="w-full bg-gradient-to-br from-purple-400 to-purple-600 text-white rounded-2xl p-6 font-bold text-lg shadow-xl hover:shadow-2xl transform transition-all duration-300 hover:scale-105 hover:-rotate-1">
+                        <div class="flex flex-col items-center">
+                            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 group-hover:animate-pulse">
+                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            </div>
+                            <span class="text-xl font-bold mb-2">OpenAI</span>
+                            <span class="text-sm opacity-90">Estilo Académico</span>
+                        </div>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ====================== RESULTADOS IA ====================== -->
+        <div class="glass rounded-3xl p-8 hover-lift">
+            <div class="flex items-center mb-6">
+                <svg class="w-8 h-8 mr-3 text-green-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 011 1v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-1zM3 7a1 1 0 011-1h12a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V7zM9 9a1 1 0 000 2h6a1 1 0 100-2H9z"/></svg>
+                <h3 class="text-2xl font-bold text-white">Resultados de IA</h3>
+            </div>
+
+            <div id="results"
+                 class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 min-h-[200px] border border-white/20">
+                <div class="flex flex-col items-center justify-center h-full text-white/70">
+                    <svg class="w-16 h-16 mb-4 animate-pulse-slow" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a3 3 0 003 3h2a3 3 0 003-3V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm8 5a1 1 0 100-2 1 1 0 000 2z"/></svg>
+                    <p class="text-lg italic text-center">Los resultados de los agentes IA aparecerán aquí…</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================== FOOTER ====================== -->
+        <div class="text-center mt-12 text-white/60">
+            <p class="text-sm">✨ Potenciado por tecnología de vanguardia en IA</p>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         =====================   JAVASCRIPT   =======================
+         ============================================================== -->
+    <script>
+        // -----------------------------------------------------------------
+        // 0️⃣  CONFIGURACIÓN (origen permitido)
+        // -----------------------------------------------------------------
+        const PARENT_ORIGIN = 'https://gestordecursos.pegui.edu.co'; // <-- mismo dominio
+
+        // -----------------------------------------------------------------
+        // 1️⃣  VARIABLES GLOBALES
+        // -----------------------------------------------------------------
+        let remoteEditorReady = false;       // ¿El iframe ya envió “ready”?
+        let remoteEditorWindow = null;       // referencia a la ventana del iframe
+        let lastResult = '';                 // guarda el HTML devuelto por la IA
+
+        // -----------------------------------------------------------------
+        // 2️⃣  ESCUCHAR MENSAJES DEL IFRAME (ready, content)
+        // -----------------------------------------------------------------
+        window.addEventListener('message', ev => {
+            if (ev.origin !== PARENT_ORIGIN) return;           // seguridad
+
+            const data = ev.data;
+            if (!data || typeof data !== 'object') return;
+
+            if (data.type === 'ready') {
+                remoteEditorReady = true;
+                remoteEditorWindow = ev.source;               // guardamos la ventana del iframe
+                console.log('✅ Editor remoto listo');
+                return;
+            }
+
+            if (data.type === 'content') {
+                // Guardamos el contenido que nos envía el iframe; será usado por la IA
+                window.__remoteEditorContent = data.payload;   // HTML string
+            }
+        });
+
+        /** Pide al iframe que envíe su contenido (devuelve una Promise). */
+        function requestEditorContent() {
+            if (!remoteEditorReady) {
+                showNotification('El editor aún no está listo.', 'warning');
+                return Promise.reject('editor-not-ready');
+            }
+
+            // Solicitamos al iframe el contenido actual
+            remoteEditorWindow.postMessage({type:'getContent'}, PARENT_ORIGIN);
+
+            // Esperamos máximo 8 s a que llegue la respuesta
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject('timeout'), 8000);
+                const check = () => {
+                    if (window.__remoteEditorContent !== undefined) {
+                        clearTimeout(timeout);
+                        const html = window.__remoteEditorContent;
+                        delete window.__remoteEditorContent;
+                        resolve(html);
+                    } else {
+                        setTimeout(check, 200);
+                    }
+                };
+                check();
+            });
+        }
+
+        // -----------------------------------------------------------------
+        // 3️⃣  UTILIDADES DE UI (spinner, notificaciones, formateo)
+        // -----------------------------------------------------------------
+        function showLoading(agentName) {
+            document.getElementById('results').innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-white">
+                    <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-white mb-4"></div>
+                    <p class="text-lg font-semibold typing">Procesando con ${agentName}</p>
+                    <p class="text-sm opacity-70 mt-2">Por favor espera…</p>
+                </div>`;
+        }
+
+        function showNotification(message, type) {
+            const notif = document.createElement('div');
+            const colors = { warning:'bg-yellow-500', error:'bg-red-500', success:'bg-green-500' };
+            notif.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            setTimeout(()=> notif.style.transform='translateX(0)', 100);
+            setTimeout(()=> {
+                notif.style.transform='translateX(100%)';
+                setTimeout(()=> notif.remove(), 300);
+            }, 3000);
+        }
+
+        /** Convierte texto plano devuelto por la IA en HTML bonito (muy simple). */
+        function formatTextToHTML(text) {
+            if (!text) return '';
+            // Aquí puedes añadir las reglas que necesites (bold, listas, etc.)
+            let html = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/^\* (.+)$/gm, '<li>$1</li>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
+            // Si hay listas, las envolvemos en <ul>
+            if (html.includes('<li>')) {
+                html = `<ul>${html}</ul>`;
+            } else {
+                html = `<p>${html}</p>`;
+            }
+            return html;
+        }
+
+        /** Envío genérico a los micro‑servicios de IA. */
+        async function sendRequest(endpoint, body) {
+            try {
+                const resp = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(body)
+                });
+                if (!resp.ok) throw new Error(`Error ${resp.status}`);
+                const txt = await resp.text();
+
+                // Intentamos parsear JSON; si falla, usamos texto puro
+                try {
+                    const json = JSON.parse(txt);
+                    const raw = json.mensaje || json.result || json.respuesta || JSON.stringify(json);
+                    return formatTextToHTML(raw);
+                } catch {
+                    return formatTextToHTML(txt);
+                }
+            } catch (e) {
+                console.error(e);
+                return `<div class="text-red-300 p-4 bg-red-500/20 rounded-lg border border-red-400/30">
+                    <strong>Error de conexión:</strong> ${e.message}
+                </div>`;
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 4️⃣  MANEJO DE LOS BOTONES DE AGENTES IA
+        // -----------------------------------------------------------------
+        async function handleAgentRequest(agent) {
+            // 1️⃣  Obtener contenido del editor embebido
+            let editorContent = '';
+            try {
+                editorContent = await requestEditorContent();          // ← mensaje al iframe
+                editorContent = editorContent.trim();
+                if (!editorContent) {
+                    showNotification('El editor está vacío.', 'warning');
+                    return;
+                }
+            } catch (e) {
+                console.error(e);
+                showNotification('No se pudo leer el contenido del editor.', 'error');
+                return;
+            }
+
+            // 2️⃣  Definir endpoint / payload según agente
+            let endpoint = '', body = {}, title = '', agentName = '', color = '';
+            switch (agent) {
+                case 'gemini':
+                    endpoint   = 'https://gestordecursos.pegui.edu.co:8000/chat/gemini';
+                    body       = {prompt: editorContent};
+                    title      = 'Respuesta del Agente Gemini';
+                    agentName  = 'Gemini';
+                    color      = 'green';
+                    break;
+                case 'kimik2':
+                    endpoint   = 'https://gestordecursos.pegui.edu.co:8000/chat/kimi';
+                    body       = {mensaje: editorContent};
+                    title      = 'Respuesta del Agente KimiK2';
+                    agentName  = 'KimiK2';
+                    color      = 'blue';
+                    break;
+                case 'openai':
+                    endpoint   = 'https://gestordecursos.pegui.edu.co:8000/chat/openai';
+                    body       = {mensaje: editorContent};
+                    title      = 'Respuesta del Agente OpenAI';
+                    agentName  = 'OpenAI';
+                    color      = 'purple';
+                    break;
+                default:
+                    showNotification('Agente desconocido', 'error');
+                    return;
+            }
+
+            // 3️⃣  Spinner mientras esperamos la IA
+            showLoading(agentName);
+
+            // 4️⃣  Llamada al endpoint y render del resultado
+            const resultHTML = await sendRequest(endpoint, body);
+            lastResult = resultHTML;   // guardamos para los botones de copiar/insertar
+
+            document.getElementById('results').innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-3 pb-4 border-b border-white/20">
+                        <div class="w-6 h-6 bg-${color}-400 rounded-full animate-pulse flex items-center justify-center">
+                            <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white">${title}</h2>
+                        <div class="flex-1"></div>
+                        <div class="text-xs text-white/50 bg-white/10 px-3 py-1 rounded-full">
+                            ${new Date().toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-white/10 to-white/5 rounded-2xl p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
+                        <div class="prose prose-lg max-w-none">
+                            ${resultHTML}
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center space-x-4">
+                        <button onclick="copyToClipboard()"
+                                class="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg transition-all duration-300 border border-white/20">
+                            📋 Copiar Resultado
+                        </button>
+                        <button onclick="insertToEditor()"
+                                class="bg-${color}-500/30 hover:bg-${color}-500/50 text-white px-6 py-2 rounded-lg transition-all duration-300 border border-${color}-400/30">
+                            📝 Insertar al Editor
+                        </button>
+                    </div>
+                </div>`;
+        }
+
+        // -----------------------------------------------------------------
+        // 5️⃣  Botones: feedback visual + llamado a la función anterior
+        // -----------------------------------------------------------------
+        function addButtonFeedback(btnId, handler) {
+            const btn = document.getElementById(btnId);
+            btn.addEventListener('click', async () => {
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => btn.style.transform = '', 150);
+                await handler();
+            });
+        }
+        addButtonFeedback('btn-gemini', () => handleAgentRequest('gemini'));
+        addButtonFeedback('btn-kimik2', () => handleAgentRequest('kimik2'));
+        addButtonFeedback('btn-openai', () => handleAgentRequest('openai'));
+
+        // -----------------------------------------------------------------
+        // 6️⃣  Copiar / Insertar resultados
+        // -----------------------------------------------------------------
+        window.copyToClipboard = function () {
+            const el = document.querySelector('#results .prose');
+            if (!el) return;
+            const txt = el.innerText || el.textContent;
+            navigator.clipboard.writeText(txt)
+                .then(() => showNotification('✅ Resultado copiado', 'success'))
+                .catch(() => showNotification('❌ Error al copiar', 'error'));
+        };
+
+        /** Inserta el HTML devuelto por la IA dentro del editor embebido */
+        window.insertToEditor = function () {
+            if (!remoteEditorReady) {
+                showNotification('El editor no está listo', 'warning');
+                return;
+            }
+            // Enviamos al iframe el HTML que queremos insertar
+            remoteEditorWindow.postMessage(
+                {type:'insertHTML', payload: lastResult},
+                PARENT_ORIGIN
+            );
+            showNotification('✅ Resultado insertado en el editor', 'success');
+        };
+    </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Videollamada VirtualMind</title>
+    <script src="https://8x8.vc/vpaas-magic-cookie-d45c8107f37a4d70a21bf1932daaf52d/external_api.js" async></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #jaas-container { height: 100%; width: 100%; }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+    <button onclick="iniciarVideollamada()" class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:bg-green-700 transition">
+        Iniciar Prueba de Videollamada
+    </button>
+
+    <div id="jitsi-modal" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-0">
+        <div class="relative w-full h-full flex flex-col">
+            <div class="bg-gray-900 text-white p-3 flex justify-between items-center">
+                <span class="font-semibold">Sesión de Videollamada - VirtualMind</span>
+                <button onclick="cerrarLlamada()" class="bg-red-600 hover:bg-red-700 px-4 py-1 rounded text-sm">Salir</button>
+            </div>
+            <div id="jaas-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let apiJitsi = null;
+
+        function iniciarVideollamada() {
+            const modal = document.getElementById("jitsi-modal");
+            modal.classList.remove("hidden");
+
+            // Instancia de Jitsi
+            apiJitsi = new JitsiMeetExternalAPI("8x8.vc", {
+                roomName: "vpaas-magic-cookie-d45c8107f37a4d70a21bf1932daaf52d/SampleAppElectronicRightsFrightenProbably",
+                parentNode: document.querySelector('#jaas-container'),
+                configOverwrite: {
+                    startWithAudioMuted: false,
+                    startWithVideoMuted: false,
+                    disableModeratorIndicator: true
+                },
+                interfaceConfigOverwrite: {
+                    SHOW_JITSI_WATERMARK: false,
+                    BRAND_WATERMARK_URL: '', // Aquí cargará tu logo automáticamente al estar autenticado
+                    TOOLBAR_BUTTONS: [
+                        'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                        'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
+                        'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
+                        'videoquality', 'filmstrip', 'stats', 'tileview', 'help', 'mute-everyone'
+                    ]
+                }
+            });
+
+            // Listener para cerrar al salir
+            apiJitsi.addListener('videoConferenceLeft', () => {
+                cerrarLlamada();
+            });
+        }
+
+        function cerrarLlamada() {
+            const modal = document.getElementById("jitsi-modal");
+            modal.classList.add("hidden");
+            
+            if (apiJitsi) {
+                apiJitsi.dispose();
+                apiJitsi = null;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>401 - No Autorizado | VirtualMind</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .container { text-align: center; padding: 40px; max-width: 600px; }
+    .error-code {
+      font-size: 120px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 32px; margin-bottom: 15px; color: #e5e7eb; }
+    .emoji { font-size: 80px; margin-bottom: 20px; }
+    .causa {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    .causa h3 { color: #93c5fd; margin-bottom: 10px; font-size: 16px; }
+    .causa ul { list-style: none; padding: 0; }
+    .causa li { padding: 5px 0; color: #d1d5db; font-size: 14px; }
+    .causa li::before { content: "🔐 "; }
+    p { font-size: 18px; color: #9ca3af; margin-bottom: 30px; line-height: 1.6; }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6); }
+    .logo { margin-bottom: 30px; }
+    .logo span { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo"><span>VirtualMind</span></div>
+    <div class="emoji">🔐</div>
+    <div class="error-code">401</div>
+    <h1>No Autorizado</h1>
+    <p>Tu sesión no es válida o ha expirado. Necesitas iniciar sesión para continuar.</p>
+    <div class="causa">
+      <h3>¿Qué pudo haber pasado?</h3>
+      <ul>
+        <li>Tu sesión ha expirado por tiempo de inactividad</li>
+        <li>Iniciaste sesión en otro dispositivo</li>
+        <li>Las credenciales ya no son válidas</li>
+        <li>El token de seguridad ha vencido</li>
+      </ul>
+    </div>
+    <a href="https://gestordecursos.pegui.edu.co/index.html" class="btn">Iniciar Sesión</a>
+  </div>
+</body>
+</html>

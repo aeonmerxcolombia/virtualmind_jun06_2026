@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ver Cronograma</title>
+<script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script>
+tailwind.config = {
+    theme: {
+        extend: {
+            animation: {
+                'fade-in': 'fadeIn 0.5s ease-out',
+                'slide-up': 'slideUp 0.6s ease-out',
+                'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+                fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+            },
+            colors: {
+                'custom-start': '#4F46E5',
+                'custom-end': '#9333EA',
+            }
+        }
+    }
+}
+</script>
+<style>
+body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+.glass-card { background: rgba(255,255,255,0.2); backdrop-filter: blur(15px); border:1px solid rgba(255,255,255,0.3); box-shadow:0 4px 6px rgba(0,0,0,0.1);}
+.timeline-container { position: relative; padding-left: 20px; }
+.timeline-line { position: absolute; left:0; top:0; bottom:0; width:4px; background: linear-gradient(to bottom, #4F46E5, #9333EA); border-radius:2px; }
+.timeline-point { position: relative; margin-bottom: 24px; }
+.timeline-dot { position: absolute; left:-18px; top:0; width:12px; height:12px; background-color:#4F46E5; border-radius:50%; border:2px solid white; transform: translateX(-50%);}
+</style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+<div class="p-4 sm:ml-64">
+    <div class="p-4 border-2 border-dashed border-gray-200 rounded-lg mt-14">
+
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-custom-start to-custom-end text-white py-12 px-6 mb-8 rounded-2xl shadow-lg animate-fade-in text-center">
+            <div class="inline-block p-4 bg-white/20 rounded-full mb-4 animate-pulse-slow">
+                <i class="fas fa-calendar-alt text-4xl"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4">Cronograma del Proyecto</h1>
+            <p class="text-xl opacity-90 font-light">Visualiza cada fase y sus responsables.</p>
+        </header>
+
+        <!-- Volver -->
+        <div class="max-w-6xl mx-auto mb-8">
+            <a href="https://gestordecursos.pegui.edu.co/r/superadmin/cronograma" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg shadow-md hover:bg-gray-300 transition-colors flex items-center justify-center w-full md:w-auto mx-auto">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Volver al inicio de cronogramas
+            </a>
+        </div>
+
+        <!-- Contenido -->
+        <main class="max-w-6xl mx-auto">
+            <div id="loading-spinner" class="text-center py-12 animate-fade-in">
+                <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-custom-start"></div>
+                <p class="mt-4 text-gray-600 font-medium">Cargando cronograma...</p>
+            </div>
+
+            <div id="schedule-content" class="opacity-0 transition-opacity duration-500"></div>
+
+            <div id="empty-state" class="hidden text-center py-12 animate-slide-up">
+                <div class="glass-card p-8 rounded-3xl shadow-md max-w-xl mx-auto">
+                    <div class="text-6xl mb-6 text-gray-400">📅</div>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">No se encontró cronograma</h3>
+                    <p class="text-gray-600 mb-6">Parece que no hay cronogramas asignados a este proyecto.</p>
+                </div>
+            </div>
+
+            <div id="error-state" class="hidden text-center py-12 animate-slide-up">
+                <div class="glass-card p-8 rounded-3xl shadow-md max-w-xl mx-auto bg-red-50/50">
+                    <div class="text-5xl mb-6 text-red-500"><i class="fas fa-exclamation-triangle"></i></div>
+                    <h3 class="text-2xl font-semibold text-red-800 mb-4">Error al cargar</h3>
+                    <p id="error-message" class="text-red-600 mb-6">Ocurrió un problema de conexión. Por favor, intenta de nuevo.</p>
+                    <button id="retry-btn" class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition flex items-center gap-2 mx-auto">
+                        <i class="fas fa-redo"></i> Reintentar
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+const loadingSpinner = document.getElementById("loading-spinner");
+const scheduleContent = document.getElementById("schedule-content");
+const emptyState = document.getElementById("empty-state");
+const errorState = document.getElementById("error-state");
+const errorMessage = document.getElementById("error-message");
+const retryBtn = document.getElementById("retry-btn");
+
+function mostrarEstado(estado, mensajeError=null){
+    loadingSpinner.style.display = estado==='loading'?'block':'none';
+    scheduleContent.style.opacity = estado==='success'?'1':'0';
+    emptyState.style.display = estado==='empty'?'block':'none';
+    errorState.style.display = estado==='error'?'block':'none';
+    if(mensajeError) errorMessage.textContent = mensajeError;
+}
+
+const fetchWithTimeout = async (url, options={}, timeout=10000) => {
+    const controller = new AbortController();
+    const id = setTimeout(()=>controller.abort(), timeout);
+    try{
+        const response = await fetch(url,{...options, signal:controller.signal});
+        clearTimeout(id);
+        return response;
+    }catch(e){ clearTimeout(id); throw e; }
+};
+
+function getProjectIdFromUrl(){
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('project_id');
+}
+
+async function cargarCronograma(projectId){
+    try{
+        mostrarEstado('loading');
+        const token = localStorage.getItem('token');
+
+        // Cronogramas
+        const resCrono = await fetchWithTimeout(`${API_BASE}/cronogramas/project/${projectId}`, {headers:{'Authorization':`Bearer ${token}`}});
+        if(!resCrono.ok) { if(resCrono.status===404){ mostrarEstado('empty'); return; } throw new Error('No se pudieron cargar cronogramas'); }
+        const cronogramas = await resCrono.json();
+
+        if(!Array.isArray(cronogramas) || cronogramas.length===0){ mostrarEstado('empty'); return; }
+
+        // Renderizar cada cronograma
+        let contenido = '';
+        cronogramas.forEach((c,index)=>{
+            contenido += `
+            <div class="glass-card p-6 rounded-3xl shadow-xl mb-12 animate-slide-up">
+                <div class="flex justify-between items-start mb-6 border-b border-gray-200 pb-4">
+                    <h4 class="text-xl font-bold text-gray-900">Cronograma #${index+1}</h4>
+                    <span class="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-semibold">${c.created_at?new Date(c.created_at).toLocaleDateString():'-'}</span>
+                </div>
+                <div class="timeline-container">
+                    <div class="timeline-line"></div>
+
+                    ${['inicio','desarrollo','final'].map((faseKey,idx)=> {
+                        const responsablesStr = c[`responsables_${faseKey}`] || '';
+                        const responsables = responsablesStr ? responsablesStr.split(',').map(r=>r.trim()).join(', ') : 'No asignado';
+                        const mes = c[`mes_${faseKey}`] || 'N/A';
+                        const diaInicio = c[`dia_inicio_${faseKey}`] || '-';
+                        const diaFin = c[`dia_fin_${faseKey}`] || '-';
+                        const nombreFase = faseKey.charAt(0).toUpperCase() + faseKey.slice(1);
+                        return `
+                        <div class="timeline-point group">
+                            <div class="timeline-dot"></div>
+                            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-custom-start ml-4 transition-all duration-300 transform group-hover:scale-[1.01] group-hover:shadow-lg">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h6 class="font-bold text-gray-800 text-lg">${nombreFase}</h6>
+                                    <span class="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-semibold">#${idx+1}</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-500 font-medium mt-4">
+                                    <div><i class="fas fa-calendar-alt mr-2"></i>Fecha: del ${diaInicio} al ${diaFin} de ${mes}</div>
+                                    <div><i class="fas fa-user-circle mr-2"></i>Responsables: ${responsables}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+
+                </div>
+            </div>`;
+        });
+
+        scheduleContent.innerHTML = contenido;
+        mostrarEstado('success');
+
+    }catch(e){ console.error(e); mostrarEstado('error', e.message); }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+    const projectId = getProjectIdFromUrl();
+    if(projectId){
+        cargarCronograma(projectId);
+        retryBtn.addEventListener('click',()=>cargarCronograma(projectId));
+    }else{
+        mostrarEstado('error','No se proporcionó un ID de proyecto en la URL.');
+    }
+});
+</script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

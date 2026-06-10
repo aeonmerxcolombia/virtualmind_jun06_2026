@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Proyectos & Gestión - VirtualMind</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    
+    /* Estilos Compartidos y de Tarjetas */
+    .gradient-bg { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); }
+    .card-glass { background: rgba(255,255,255,.95); backdrop-filter: blur(10px); border:1px solid rgba(255,255,255,.2); }
+    .card-project { transition: all 0.3s ease; }
+    .card-project:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    .section-card { transition: all .3s ease; }
+    .section-card:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(0,0,0,.1); }
+    .input-focus { transition: all .3s ease; }
+    .input-focus:focus { transform: translateY(-1px); box-shadow: 0 10px 25px rgba(0,0,0,.1); }
+    
+    /* Checkboxes & Radios Customizados */
+    .checkbox-custom { position: relative; cursor: pointer; }
+    .checkbox-custom input[type=checkbox] { opacity:0; position:absolute; }
+    .checkbox-custom .checkmark { display:inline-block;width:20px;height:20px;background:#f3f4f6;border:2px solid #d1d5db;border-radius:4px;margin-right:8px;transition:all .3s ease; }
+    .checkbox-custom input:checked+.checkmark { background:#667eea;border-color:#667eea; }
+    .checkbox-custom input:checked+.checkmark:after { content:"✓";color:#fff;font-size:14px;position:absolute;left:3px;top:0; }
+    
+    .radio-custom { position: relative; cursor: pointer; }
+    .radio-custom input[type=radio] { opacity:0; position:absolute; }
+    .radio-custom .radiomark { display:inline-block;width:20px;height:20px;background:#f3f4f6;border:2px solid #d1d5db;border-radius:50%;margin-right:8px;transition:all .3s ease; }
+    .radio-custom input:checked+.radiomark { background:#667eea;border-color:#667eea; }
+    .radio-custom input:checked+.radiomark:after { content:"";width:8px;height:8px;border-radius:50%;background:#fff;position:absolute;left:6px;top:6px; }
+    
+    /* Badges & Animaciones */
+    .badge { @apply px-3 py-1 rounded-full text-xs font-semibold; }
+    .badge-planificado { @apply bg-blue-100 text-blue-700 border border-blue-200; }
+    .badge-desarrollo { @apply bg-yellow-100 text-yellow-700 border border-yellow-200; }
+    .badge-aprobado { @apply bg-green-100 text-green-700 border border-green-200; }
+    .badge-aplazado { @apply bg-orange-100 text-orange-700 border border-orange-200; }
+    .badge-finalizado { @apply bg-emerald-100 text-emerald-700 border border-emerald-200; }
+    .badge-cancelado { @apply bg-red-100 text-red-700 border border-red-200; }
+    
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .loading-spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    
+    .hidden-view { display: none !important; }
+    
+    /* Estilo de Pestaña Activa */
+    .tab-active { background-color: rgba(255, 255, 255, 0.3); border-bottom: 2px solid white; }
+    .tab-inactive { background-color: rgba(255, 255, 255, 0.1); border-bottom: 2px solid transparent; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50">
+
+  <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 shadow-xl sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="p-2 bg-white/20 rounded-xl text-white text-xl">🚀</span>
+          <div>
+            <h1 class="text-2xl font-bold text-white">VirtualMind</h1>
+            <p class="text-indigo-100 text-sm">Gestión de proyectos E-learning</p>
+          </div>
+        </div>
+        
+        <div class="flex gap-2">
+          <button onclick="switchView('dashboard')" id="btnTabDashboard" class="tab-active text-white px-5 py-2.5 rounded-t-lg font-semibold transition-all shadow-sm">
+            📊 Tablero
+          </button>
+          <button onclick="switchView('creacion')" id="btnTabCreacion" class="tab-inactive hover:bg-white/20 text-white px-5 py-2.5 rounded-t-lg font-semibold transition-all shadow-sm">
+            ➕ Crear Proyecto
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="vistaDashboard" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-in">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+      <div class="flex flex-wrap gap-3 w-full md:w-auto">
+        <div class="relative">
+          <select id="filtroEstado" title="Filtra los proyectos por estado" class="appearance-none bg-slate-50 text-gray-700 px-4 py-3 pr-10 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+            <option value="">📋 Todos los estados</option>
+            <option value="Planificado">📋 Planificado</option>
+            <option value="En desarrollo">⚡ En desarrollo</option>
+            <option value="Aprobado">✅ Aprobado</option>
+            <option value="Aplazado">⏸️ Aplazado</option>
+            <option value="Finalizado">🎉 Finalizado</option>
+            <option value="Cancelado">❌ Cancelado</option>
+          </select>
+          <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+        </div>
+        <input type="text" id="filtroCliente" title="Busca proyectos por cliente" placeholder="🔍 Buscar por Cliente..." class="bg-slate-50 text-gray-700 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 w-full md:w-48">
+        <input type="text" id="filtroNombre" title="Busca proyectos por nombre" placeholder="🔍 Buscar Proyecto..." class="bg-slate-50 text-gray-700 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 w-full md:w-48">
+      </div>
+      
+      <div class="flex gap-3">
+        <button onclick="cargarProyectos()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all border border-indigo-200">
+          <span>🔄</span> Actualizar
+        </button>
+        <button onclick="exportarPDF()" class="bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all shadow-lg">
+          <span>📄</span> Exportar PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-center justify-center">
+        <div class="text-3xl font-bold text-indigo-600" id="statTotal">0</div>
+        <div class="text-sm text-gray-500 font-medium uppercase tracking-wider text-center mt-1">Total Proyectos</div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-center justify-center">
+        <div class="text-3xl font-bold text-blue-600" id="statPlanificado">0</div>
+        <div class="text-sm text-gray-500 font-medium uppercase tracking-wider text-center mt-1">Planificados</div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-center justify-center">
+        <div class="text-3xl font-bold text-yellow-600" id="statDesarrollo">0</div>
+        <div class="text-sm text-gray-500 font-medium uppercase tracking-wider text-center mt-1">En Desarrollo</div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-center justify-center">
+        <div class="text-3xl font-bold text-green-600" id="statFinalizado">0</div>
+        <div class="text-sm text-gray-500 font-medium uppercase tracking-wider text-center mt-1">Finalizados</div>
+      </div>
+    </div>
+
+    <div id="proyectosGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div class="col-span-full py-20 text-center">
+        <div class="inline-flex items-center gap-3 text-gray-400 text-lg">
+          <div class="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full loading-spinner"></div>
+          Cargando proyectos desde el servidor...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="vistaCreacion" class="max-w-6xl mx-auto px-4 py-8 hidden-view fade-in">
+    <div class="card-glass rounded-3xl shadow-xl p-8 bg-white">
+      
+      <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 border-b border-gray-100 pb-6">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-md">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+          </div>
+          <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Crear Nuevo Proyecto
+          </h2>
+        </div>
+        <button type="button" onclick="verTutorial('crear_proyecto')" class="group flex items-center gap-2 bg-indigo-50/80 hover:bg-indigo-100 px-5 py-2.5 rounded-full border border-indigo-200 shadow-sm transition-all text-indigo-700 font-bold cursor-pointer">
+          <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm">?</span>
+          <span>Ver Tutorial</span>
+        </button>
+      </div>
+
+      <form id="formProyecto" class="space-y-8">
+        
+        <div class="section-card bg-slate-50/50 rounded-2xl p-6 border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </span>
+            Información Básica del Proyecto
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="name">Nombre del Proyecto</label>
+              <div class="flex gap-2">
+                <input id="name" name="name" title="Nombre del proyecto" required class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" placeholder="Ingresa el nombre del proyecto"/>
+                <button type="button" onclick="generarNombreConIA()" id="btnGenerarNombreIA" class="px-4 py-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 flex items-center gap-2 transition-colors">
+                  🤖 IA
+                </button>
+              </div>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="clienteSelect">Cliente</label>
+              <select id="clienteSelect" title="Nombre del cliente asociado al proyecto" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Seleccione un cliente…</option>
+              </select>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="clientId">ID Cliente (uid)</label>
+              <input id="clientId" name="client_id" title="ID único del cliente" readonly required class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-500 cursor-not-allowed"/>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="codigoReferencia">Código Interno/Referencia</label>
+              <input id="codigoReferencia" name="codigo_referencia" title="Código de referencia interno del proyecto" readonly class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-500 cursor-not-allowed"/>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="start_date">Fecha de Inicio</label>
+              <input id="start_date" name="start_date" title="Fecha de inicio del proyecto" type="date" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+            
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="end_date">Fecha de Finalización</label>
+              <input id="end_date" name="end_date" title="Fecha estimada de finalización" type="date" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+            
+            <div class="space-y-2 md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700" for="tipoProyecto">Tipo de Proyecto</label>
+              <select id="tipoProyecto" name="tipo_proyecto" title="Tipo de proyecto educativo" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Selecciona...</option>
+                <optgroup label="Cursos">
+                  <option value="Curso virtual">Curso virtual</option>
+                  <option value="Mooc">MOOC</option>
+                  <option value="OVA">OVA</option>
+                  <option value="Microlearning">Microlearning</option>
+                  <option value="VideoLearning">Video learning</option>
+                  <option value="Gamificados">Gamificados</option>
+                </optgroup>
+                <optgroup label="Otros">
+                    <option value="AppEducativa">App Educativa</option>
+                    <option value="Podcast">Podcast</option>
+                    <option value="EbookEducativo">Ebook</option>
+                    <option value="Otro">Otro (especificar)</option>
+                </optgroup>
+              </select>
+            </div>
+            
+            <div id="divTipoProyectoPersonalizado" style="display:none;" class="space-y-2 md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700" for="tipoProyectoPersonalizado">Tipo de Proyecto Personalizado</label>
+              <input id="tipoProyectoPersonalizado" name="tipo_proyecto_personalizado" title="Especifica el tipo de proyecto personalizado" placeholder="Especifique el tipo" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+            </div>
+            
+            <div class="space-y-2 md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700" for="estado">Estado Inicial</label>
+              <select id="estado" name="estado" title="Estado inicial del proyecto" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="Planificado">Planificado</option>
+                <option value="En desarrollo">En desarrollo</option>
+                <option value="Aprobado">Aprobado</option>
+                <option value="Finalizado">Finalizado</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="mt-6 space-y-2">
+            <label class="block text-sm font-semibold text-gray-700" for="description">Descripción</label>
+            <div class="relative">
+              <textarea id="description" name="description" title="Descripción detallada del proyecto" rows="4" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus resize-none" placeholder="Describe brevemente..."></textarea>
+              <button type="button" onclick="generarDescripcionConIA()" id="btnGenerarDescIA" class="absolute top-2 right-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 text-sm flex items-center gap-1 transition-colors">
+                🤖 IA
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card bg-slate-50/50 rounded-2xl p-6 border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg></span>
+            Configuración de Lenguaje e Inclusión
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+              <h4 class="font-semibold text-gray-700">Lenguaje Inclusivo</h4>
+              <div class="flex space-x-6">
+                <label class="radio-custom flex items-center"><input type="radio" name="lenguaje_incluyente" value="true" id="incluyenteSi" title="Usar lenguaje incluyente"><span class="radiomark"></span> Sí</label>
+                <label class="radio-custom flex items-center"><input type="radio" name="lenguaje_incluyente" value="false" id="incluyenteNo" title="No usar lenguaje incluyente" checked><span class="radiomark"></span> No</label>
+              </div>
+              <select name="lenguaje_inclusivo_tipo" id="tipoLenguajeSelect" title="Tipo de lenguaje inclusivo" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                <option value="">Selecciona…</option><option value="Tradicional">Tradicional</option><option value="Doble mención">Doble mención</option><option value="Neutro">Neutro</option><option value="No binario">No binario</option><option value="Otro">Otro</option>
+              </select>
+              <input id="otroLenguajeInput" name="lenguaje_inclusivo_otro" title="Especifica otro tipo de lenguaje inclusivo" disabled class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus" placeholder="Especificar"/>
+            </div>
+            <div class="space-y-4">
+              <h4 class="font-semibold text-gray-700">Idioma</h4>
+              <div class="flex flex-wrap gap-4">
+                <label class="radio-custom flex items-center"><input type="radio" name="idioma" value="Español" checked id="idiomaEs" title="Idioma: Español"><span class="radiomark"></span> Español</label>
+                <label class="radio-custom flex items-center"><input type="radio" name="idioma" value="Inglés" id="idiomaEn" title="Idioma: Inglés"><span class="radiomark"></span> Inglés</label>
+                <label class="radio-custom flex items-center"><input type="radio" name="idioma" value="Bilingüe" id="idiomaBi" title="Idioma: Bilingüe"><span class="radiomark"></span> Bilingüe</label>
+              </div>
+              <input name="idioma_otro" title="Otro idioma del proyecto" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus" placeholder="Otro idioma (Opcional)"/>
+            </div>
+          </div>
+          <div class="mt-8 space-y-4">
+            <h4 class="font-semibold text-gray-700">Inclusión Digital</h4>
+            <div class="flex space-x-6 mb-4">
+                <label class="radio-custom flex items-center"><input type="radio" name="inclusion_digital" value="true" id="inclusionSi" title="Incluir inclusión digital"><span class="radiomark"></span> Sí</label>
+                <label class="radio-custom flex items-center"><input type="radio" name="inclusion_digital" value="false" id="inclusionNo" title="No incluir inclusión digital" checked><span class="radiomark"></span> No</label>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label class="checkbox-custom flex items-center"><input type="checkbox" name="inclusion_digital_web" value="true" id="inclWeb" title="Accesibilidad web"><span class="checkmark"></span> Accesibilidad web</label>
+              <label class="checkbox-custom flex items-center"><input type="checkbox" name="inclusion_digital_asistiva" value="true" id="inclAsist" title="Tecnología asistiva"><span class="checkmark"></span> Tecnología asistiva</label>
+              <label class="checkbox-custom flex items-center"><input type="checkbox" name="inclusion_digital_universal" value="true" id="inclUniv" title="Diseño universal"><span class="checkmark"></span> Diseño universal</label>
+              <label class="checkbox-custom flex items-center"><input type="checkbox" name="inclusion_digital_educativa" value="true" id="inclEdu" title="Educación digital inclusiva"><span class="checkmark"></span> Educación digital inclusiva</label>
+            </div>
+            <input name="inclusion_digital_otro" title="Otra opción de inclusión digital" class="w-full mt-2 px-4 py-3 border border-gray-200 rounded-xl input-focus" placeholder="Otro (especificar)"/>
+          </div>
+        </div>
+
+        <div class="section-card bg-slate-50/50 rounded-2xl p-6 border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+            </span>
+            Diseño Visual y Tipografía
+          </h3>
+          
+          <div class="space-y-6">
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-3">Tipografía de Título</h4>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                <div>
+                  <label class="text-sm font-medium text-gray-700 block mb-1">Fuente</label>
+                  <select id="tituloFuente" name="tipografia_titulo_fuente" title="Fuente tipográfica para títulos" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                      <option>Inter</option><option>Roboto</option><option>Open Sans</option><option>Lato</option><option>Montserrat</option><option>Poppins</option><option>Merriweather</option><option>Playfair Display</option><option>Nunito</option><option>Otro</option>
+                  </select>
+                  <input id="tituloFuenteOtro" title="Otra fuente para títulos" placeholder="Fuente" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-gray-700 block mb-1">Tamaño</label>
+                  <select id="tituloTamano" name="tipografia_titulo_tamano" title="Tamaño de fuente para títulos" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                      <option>24px</option><option>28px</option><option>32px</option><option>36px</option><option>40px</option><option>48px</option><option>Otro</option>
+                  </select>
+                  <input id="tituloTamanoOtro" title="Otro tamaño para títulos" placeholder="Ej: 34px" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+                </div>
+                <label class="checkbox-custom flex items-center mt-7"><input type="checkbox" name="tipografia_titulo_negrita" value="true" title="Aplicar negrita a títulos"><span class="checkmark"></span> Negrita</label>
+                <label class="checkbox-custom flex items-center mt-7"><input type="checkbox" name="tipografia_titulo_cursiva" value="true" title="Aplicar cursiva a títulos"><span class="checkmark"></span> Cursiva</label>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-3">Tipografía de Subtítulo</h4>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                <div>
+                  <label class="text-sm font-medium text-gray-700 block mb-1">Fuente</label>
+                  <select id="subtituloFuente" name="tipografia_subtitulo_fuente" title="Fuente tipográfica para subtítulos" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                      <option>Inter</option><option>Roboto</option><option>Open Sans</option><option>Lato</option><option>Montserrat</option><option>Poppins</option><option>Merriweather</option><option>Playfair Display</option><option>Nunito</option><option>Otro</option>
+                  </select>
+                  <input id="subtituloFuenteOtro" title="Otra fuente para subtítulos" placeholder="Fuente" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-gray-700 block mb-1">Tamaño</label>
+                  <select id="subtituloTamano" name="tipografia_subtitulo_tamano" title="Tamaño de fuente para subtítulos" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                      <option>18px</option><option>20px</option><option>24px</option><option>28px</option><option>Otro</option>
+                  </select>
+                  <input id="subtituloTamanoOtro" title="Otro tamaño para subtítulos" placeholder="Ej: 22px" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+                </div>
+                <label class="checkbox-custom flex items-center mt-7"><input type="checkbox" name="tipografia_subtitulo_negrita" value="true" title="Aplicar negrita a subtítulos"><span class="checkmark"></span> Negrita</label>
+                <label class="checkbox-custom flex items-center mt-7"><input type="checkbox" name="tipografia_subtitulo_cursiva" value="true" title="Aplicar cursiva a subtítulos"><span class="checkmark"></span> Cursiva</label>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-3">Tipografía de Párrafo</h4>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                <div>
+                  <label class="text-sm font-medium text-gray-700 block mb-1">Fuente</label>
+                  <select id="parrafoFuente" name="tipografia_parrafo_fuente" title="Fuente tipográfica para párrafos" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                      <option>Inter</option><option>Roboto</option><option>Open Sans</option><option>Lato</option><option>Montserrat</option><option>Poppins</option><option>Merriweather</option><option>Playfair Display</option><option>Nunito</option><option>Otro</option>
+                  </select>
+                  <input id="parrafoFuenteOtro" title="Otra fuente para párrafos" placeholder="Fuente" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-gray-700 block mb-1">Tamaño</label>
+                  <select id="parrafoTamano" name="tipografia_parrafo_tamano" title="Tamaño de fuente para párrafos" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus">
+                      <option>12px</option><option>14px</option><option>16px</option><option>18px</option><option>Otro</option>
+                  </select>
+                  <input id="parrafoTamanoOtro" title="Otro tamaño para párrafos" placeholder="Ej: 16px" disabled class="mt-2 hidden w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+                </div>
+                <label class="checkbox-custom flex items-center mt-7"><input type="checkbox" name="tipografia_parrafo_negrita" value="true" title="Aplicar negrita a párrafos"><span class="checkmark"></span> Negrita</label>
+                <label class="checkbox-custom flex items-center mt-7"><input type="checkbox" name="tipografia_parrafo_cursiva" value="true" title="Aplicar cursiva a párrafos"><span class="checkmark"></span> Cursiva</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div class="section-card bg-slate-50/50 rounded-2xl p-6 border border-gray-100 h-full">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+              <span class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3"><svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>
+              Configuración de Tiempo
+            </h3>
+            <div class="space-y-4">
+              <div class="space-y-2"><label for="horas_curso" class="block text-sm font-semibold">Total Horas del Curso</label><input id="horas_curso" name="horas_curso" title="Total de horas del curso" type="number" min="0" step="0.1" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/></div>
+              <div class="space-y-2"><label for="horas_autonomo" class="block text-sm font-semibold">Horas Autónomas</label><input id="horas_autonomo" name="horas_aprendizaje_autonomo_virtual" title="Horas de aprendizaje autónomo" type="number" min="0" step="0.1" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/></div>
+              <div class="space-y-2"><label for="horas_actividades" class="block text-sm font-semibold">Horas en Actividades</label><input id="horas_actividades" name="horas_actividades_aprendizaje" title="Horas en actividades de aprendizaje" type="number" min="0" step="0.1" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus"/></div>
+            </div>
+          </div>
+
+          <div class="section-card bg-slate-50/50 rounded-2xl p-6 border border-gray-100 h-full">
+            <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+              <span class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3"><svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg></span>
+              Derechos y Entregas
+            </h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-semibold mb-2">Cesión de Derechos</label>
+                  <div class="flex space-x-4">
+                    <label class="radio-custom flex items-center"><input type="radio" name="cesion_derechos" value="true" id="cesionSi" title="Cesión de derechos: sí"><span class="radiomark"></span> Sí</label>
+                    <label class="radio-custom flex items-center"><input type="radio" name="cesion_derechos" value="false" checked id="cesionNo" title="Cesión de derechos: no"><span class="radiomark"></span> No</label>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold mb-2">Derechos Patrimon.</label>
+                  <div class="flex space-x-4">
+                    <label class="radio-custom flex items-center"><input type="radio" name="derechos_patrimoniales_autor" value="true" title="Derechos patrimoniales: sí"><span class="radiomark"></span> Sí</label>
+                    <label class="radio-custom flex items-center"><input type="radio" name="derechos_patrimoniales_autor" value="false" checked title="Derechos patrimoniales: no"><span class="radiomark"></span> No</label>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold mb-2">Confidencialidad</label>
+                  <div class="flex space-x-4">
+                    <label class="radio-custom flex items-center"><input type="radio" name="acuerdo_confidencialidad" value="true" title="Acuerdo de confidencialidad: sí"><span class="radiomark"></span> Sí</label>
+                    <label class="radio-custom flex items-center"><input type="radio" name="acuerdo_confidencialidad" value="false" checked title="Acuerdo de confidencialidad: no"><span class="radiomark"></span> No</label>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-semibold mb-2">Entrega Fuentes</label>
+                  <div class="flex space-x-4">
+                    <label class="radio-custom flex items-center"><input type="radio" name="entrega_fuentes" value="true" title="Entrega de fuentes: sí"><span class="radiomark"></span> Sí</label>
+                    <label class="radio-custom flex items-center"><input type="radio" name="entrega_fuentes" value="false" checked title="Entrega de fuentes: no"><span class="radiomark"></span> No</label>
+                  </div>
+                </div>
+                <div>
+                   <label class="block text-sm font-semibold mb-2">Escrito Autor</label>
+                   <div class="flex space-x-4">
+                     <label class="radio-custom flex items-center"><input type="radio" name="entrega_escrito_autor" value="true" title="Escrito del autor: sí"><span class="radiomark"></span> Sí</label>
+                     <label class="radio-custom flex items-center"><input type="radio" name="entrega_escrito_autor" value="false" checked title="Escrito del autor: no"><span class="radiomark"></span> No</label>
+                   </div>
+                </div>
+                <div>
+                   <label class="block text-sm font-semibold mb-2">Diseño Instruccional</label>
+                   <div class="flex space-x-4">
+                     <label class="radio-custom flex items-center"><input type="radio" name="entrega_diseno_instruccional" value="true" title="Diseño instruccional: sí"><span class="radiomark"></span> Sí</label>
+                     <label class="radio-custom flex items-center"><input type="radio" name="entrega_diseno_instruccional" value="false" checked title="Diseño instruccional: no"><span class="radiomark"></span> No</label>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card bg-slate-50/50 rounded-2xl p-6 border border-gray-100">
+          <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
+            <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+              <span class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3"><svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></span>
+              Público Objetivo
+            </h3>
+            <button type="button" onclick="generarPublicoObjetivoConIA()" id="btnGenerarPublicoIA" class="px-4 py-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 flex items-center gap-2 text-sm transition-colors">
+              🤖 Sugerir con IA
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 rounded-xl p-4 bg-white border border-gray-100 shadow-sm">
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Primera infancia" title="Primera infancia (0-5)"><span class="checkmark"></span> Primera infancia (0-5)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Niños 6 a 11 años" title="Niños (6-11)"><span class="checkmark"></span> Niños (6-11)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Adolescentes" title="Adolescentes (12-17)"><span class="checkmark"></span> Adolescentes (12-17)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Jóvenes" title="Jóvenes (18-25)"><span class="checkmark"></span> Jóvenes (18-25)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Adultos" title="Adultos (26-59)"><span class="checkmark"></span> Adultos (26-59)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Mayores" title="Mayores (60+)"><span class="checkmark"></span> Mayores (60+)</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Docentes" title="Docentes / Educadores"><span class="checkmark"></span> Docentes / Educadores</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Empresas" title="Empresas / Equipos"><span class="checkmark"></span> Empresas / Equipos</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Instituciones educativas" title="Instituciones educativas"><span class="checkmark"></span> Instituciones</label>
+            <label class="checkbox-custom flex items-center"><input type="checkbox" name="publico_objetivo" value="Público general" title="Público general"><span class="checkmark"></span> Público general</label>
+          </div>
+          <input name="publico_objetivo_otro" title="Otro público objetivo" placeholder="Otro (especificar)" class="w-full mt-4 px-4 py-3 border border-gray-200 rounded-xl input-focus"/>
+        </div>
+
+        <div class="section-card bg-slate-50/50 rounded-2xl p-6 border border-gray-100">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Observaciones Adicionales</h3>
+            <textarea id="observaciones" name="observaciones" title="Observaciones adicionales del proyecto" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl input-focus resize-none"></textarea>
+        </div>
+
+        <div id="form-message" class="mt-4 text-center"></div>
+        
+        <div class="text-center pt-4">
+          <button type="submit" id="submitButton" class="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-bold rounded-2xl hover:shadow-2xl transition-all transform hover:-translate-y-1">
+            <span id="submitButtonText">💾 Crear Proyecto</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalDetalles" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-t-2xl">
+        <div class="flex justify-between items-center text-white">
+          <h2 class="text-2xl font-bold" id="modalTitulo text-white">Detalles del Proyecto</h2>
+          <button onclick="cerrarModal()" class="text-white/80 hover:text-white text-3xl leading-none">×</button>
+        </div>
+      </div>
+      <div class="p-6" id="modalContenido"></div>
+    </div>
+  </div>
+
+  <div id="tutorialModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity" onclick="cerrarTutorial()"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-gray-200">
+                <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2"><span>🎓</span> <span id="tutTitle">Tutorial</span></h3>
+                    <button type="button" class="text-indigo-100 hover:text-white text-2xl leading-none focus:outline-none" onclick="cerrarTutorial()">&times;</button>
+                </div>
+                <div class="px-6 py-6">
+                    <div id="tutVideoContainer" class="aspect-video w-full rounded-xl overflow-hidden bg-black mb-6 shadow-md hidden">
+                        <iframe id="tutVideoFrame" class="w-full h-full" src="" title="Video Tutorial" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                    <div class="space-y-4">
+                        <h4 class="font-semibold text-gray-800 border-b pb-2">Pasos a seguir:</h4>
+                        <ul id="tutSteps" class="list-none space-y-3 text-sm text-gray-600"></ul>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-6 py-3 flex justify-end">
+                    <button type="button" class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500" onclick="cerrarTutorial()">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <script>
+    // Variables Globales
+    const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+    const API_GEMINI = `${API_URL}/chat/gemini`;
+    
+    // Almacenamiento de proyectos y caché
+    let todosProyectos = [];
+    let clientesCache = {};
+    let peticionesEnCurso = {};
+
+    function getToken() {
+      return localStorage.getItem('token') || sessionStorage.getItem('token');
+    }
+
+    // ==================== LÓGICA DE NAVEGACIÓN (TABS) ====================
+    function switchView(viewName) {
+      const vistaDashboard = document.getElementById('vistaDashboard');
+      const vistaCreacion = document.getElementById('vistaCreacion');
+      const btnTabDashboard = document.getElementById('btnTabDashboard');
+      const btnTabCreacion = document.getElementById('btnTabCreacion');
+
+      if(viewName === 'dashboard') {
+        vistaDashboard.classList.remove('hidden-view');
+        vistaCreacion.classList.add('hidden-view');
+        
+        btnTabDashboard.classList.add('tab-active');
+        btnTabDashboard.classList.remove('tab-inactive');
+        btnTabCreacion.classList.add('tab-inactive');
+        btnTabCreacion.classList.remove('tab-active', 'hover:bg-white/20');
+        
+        cargarProyectos(); // Refresca lista siempre que entras al dashboard
+      } else {
+        vistaDashboard.classList.add('hidden-view');
+        vistaCreacion.classList.remove('hidden-view');
+        
+        btnTabCreacion.classList.add('tab-active');
+        btnTabCreacion.classList.remove('tab-inactive');
+        btnTabDashboard.classList.add('tab-inactive');
+        btnTabDashboard.classList.remove('tab-active', 'hover:bg-white/20');
+      }
+    }
+
+    // ==================== FUNCIONES DEL DASHBOARD (VISTA 1) ====================
+    function getBadge(estado) {
+      const badges = {
+        'Planificado': 'badge-planificado',
+        'En desarrollo': 'badge-desarrollo',
+        'Aprobado': 'badge-aprobado',
+        'Aplazado': 'badge-aplazado',
+        'Finalizado': 'badge-finalizado',
+        'Cancelado': 'badge-cancelado'
+      };
+      return badges[estado] || 'bg-gray-100 text-gray-700';
+    }
+
+    async function getNombreCliente(client_id) {
+      if (!client_id) return 'Sin cliente';
+      if (clientesCache[client_id]) return clientesCache[client_id];
+      if (peticionesEnCurso[client_id]) return peticionesEnCurso[client_id];
+
+      peticionesEnCurso[client_id] = (async () => {
+        try {
+          const resp = await fetch(`${API_URL}/users/${client_id}`, {
+            headers: { "Authorization": "Bearer " + getToken() }
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const nombre = data.name || data.nombre || 'Cliente';
+            clientesCache[client_id] = nombre;
+            return nombre;
+          }
+        } catch (e) {
+          console.warn("Error cargando cliente:", client_id);
+        } finally {
+          delete peticionesEnCurso[client_id];
+        }
+        return 'Cliente';
+      })();
+
+      return peticionesEnCurso[client_id];
+    }
+
+    async function cargarProyectos() {
+      const grid = document.getElementById('proyectosGrid');
+      const token = getToken();
+      if (!token) { window.location.href = '/login.html'; return; }
+
+      grid.innerHTML = `
+        <div class="col-span-full py-20 text-center">
+          <div class="inline-flex items-center gap-3 text-gray-400 text-lg">
+            <div class="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full loading-spinner"></div>
+            Consultando API...
+          </div>
+        </div>
+      `;
+
+      try {
+        const resp = await fetch(`${API_URL}/projects/`, {
+            headers: { 
+              "Authorization": "Bearer " + token,
+              "Content-Type": "application/json"
+            }
+        });
+        
+        if (!resp.ok) throw new Error("Error en la autenticación o servidor");
+        todosProyectos = await resp.json();
+        
+        const promesasClientes = [...new Set(todosProyectos.map(p => p.client_id))]
+            .filter(id => id)
+            .map(id => getNombreCliente(id));
+            
+        await Promise.all(promesasClientes);
+
+        renderProyectos();
+        actualizarStats();
+      } catch (e) {
+        grid.innerHTML = `
+          <div class="col-span-full py-20 text-center">
+            <div class="text-red-500 text-4xl mb-4">⚠️</div>
+            <div class="text-red-600 text-xl font-bold">Error de Conexión</div>
+            <p class="text-gray-500 mt-2">${e.message}</p>
+            <button onclick="cargarProyectos()" class="mt-6 bg-indigo-600 text-white px-8 py-3 rounded-xl hover:bg-indigo-700 transition-all shadow-lg">Reintentar</button>
+          </div>
+        `;
+      }
+    }
+
+    function renderProyectos() {
+      const grid = document.getElementById('proyectosGrid');
+      const estadoFiltro = document.getElementById('filtroEstado').value;
+      const clienteFiltro = document.getElementById('filtroCliente').value.toLowerCase();
+      const nombreFiltro = document.getElementById('filtroNombre').value.toLowerCase();
+
+      let proyectos = todosProyectos.filter(p => {
+        const nombreCliente = (clientesCache[p.client_id] || '').toLowerCase();
+        const matchEstado = !estadoFiltro || p.estado === estadoFiltro;
+        const matchCliente = !clienteFiltro || nombreCliente.includes(clienteFiltro);
+        const matchNombre = !nombreFiltro || (p.name || '').toLowerCase().includes(nombreFiltro);
+        return matchEstado && matchCliente && matchNombre;
+      });
+
+      if (!proyectos.length) {
+        grid.innerHTML = `
+          <div class="col-span-full py-20 text-center text-gray-400">
+             <span class="text-6xl block mb-4">📋</span>
+             <p class="text-xl">No se encontraron proyectos con estos criterios.</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = proyectos.map((proj, idx) => {
+        const clienteNombre = clientesCache[proj.client_id] || 'Cliente VirtualMind';
+        const inicial = clienteNombre.charAt(0).toUpperCase();
+        
+        return `
+          <div class="card-project bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden fade-in" style="animation-delay: ${idx * 0.03}s">
+            <div class="bg-gradient-to-r from-slate-50 to-indigo-50 p-4 border-b border-slate-100">
+              <div class="flex justify-between items-start">
+                <div class="flex items-center">
+                  <span class="inline-flex items-center justify-center w-7 h-7 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-sm">${proj.id}</span>
+                  <span class="ml-2 badge ${getBadge(proj.estado)}">${proj.estado || 'Planificado'}</span>
+                </div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${proj.tipo_proyecto || 'E-learning'}</span>
+              </div>
+            </div>
+            
+            <div class="p-5">
+              <h3 class="font-bold text-lg text-gray-800 mb-3 line-clamp-1">${proj.name || 'Sin título'}</h3>
+              
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-md">${inicial}</div>
+                <div>
+                  <div class="text-sm font-semibold text-gray-700">${clienteNombre}</div>
+                  <div class="text-[11px] text-gray-400 font-mono">${proj.codigo_referencia || 'VM-PROJECT'}</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 text-xs mb-4">
+                <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                  <div class="text-gray-400 mb-1">📅 Inicio</div>
+                  <div class="font-bold text-gray-700">${proj.start_date || '—'}</div>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                  <div class="text-gray-400 mb-1">🏁 Fin</div>
+                  <div class="font-bold text-gray-700">${proj.end_date || '—'}</div>
+                </div>
+              </div>
+
+              <p class="text-sm text-gray-500 line-clamp-2 mb-5 h-10 italic">"${proj.description || 'Sin descripción disponible'}"</p>
+
+              <div class="flex flex-wrap gap-2">
+                <button onclick="verProyecto(${proj.id})" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95">👁️ Ver</button>
+                <button onclick="actualizarProyecto(${proj.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold transition-all">✏️ Editar</button>
+                <button onclick="crearPlanFormacion(${proj.id})" title="Plan de Formación" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2.5 rounded-xl text-sm transition-all border border-emerald-100">📋 Plan</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function actualizarStats() {
+      const total = todosProyectos.length;
+      const planificado = todosProyectos.filter(p => p.estado === 'Planificado').length;
+      const desarrollo = todosProyectos.filter(p => p.estado === 'En desarrollo').length;
+      const finalizado = todosProyectos.filter(p => p.estado === 'Finalizado').length;
+
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statPlanificado').textContent = planificado;
+      document.getElementById('statDesarrollo').textContent = desarrollo;
+      document.getElementById('statFinalizado').textContent = finalizado;
+    }
+
+    function verProyecto(id) { window.location.href = `read.html?id=${id}`; }
+    function actualizarProyecto(id) { window.location.href = `edit.html?id=${id}`; }
+    function crearPlanFormacion(id) { window.location.href = `../studyplan/index.html?project_id=${id}`; }
+    function cerrarModal() { document.getElementById('modalDetalles').classList.add('hidden'); }
+
+    function exportarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(20);
+      doc.setTextColor(79, 70, 229);
+      doc.text("Reporte General de Proyectos - VirtualMind", 14, 20);
+      
+      const data = todosProyectos.map(p => [
+        p.id, p.name || 'N/A', clientesCache[p.client_id] || 'N/A', p.estado || 'N/A', p.start_date || '—'
+      ]);
+
+      doc.autoTable({
+        head: [['ID', 'Proyecto', 'Cliente', 'Estado', 'Fecha Inicio']],
+        body: data,
+        startY: 30,
+        theme: 'grid',
+        headStyles: { fillColor: [79, 70, 229] }
+      });
+      doc.save(`VirtualMind_Proyectos_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
+    // Escuchadores de Filtros
+    document.getElementById('filtroEstado').addEventListener('change', renderProyectos);
+    document.getElementById('filtroCliente').addEventListener('input', renderProyectos);
+    document.getElementById('filtroNombre').addEventListener('input', renderProyectos);
+
+
+    // ==================== FUNCIONES DEL FORMULARIO (VISTA 2) ====================
+    
+    // Funciones IA
+    async function generarNombreConIA() {
+      const tipoProyecto = document.getElementById('tipoProyecto').value;
+      const clienteSelect = document.getElementById('clienteSelect');
+      const clienteNombre = clienteSelect.options[clienteSelect.selectedIndex]?.text || '';
+      const descripcion = document.getElementById('description').value;
+
+      if (!tipoProyecto && !descripcion) {
+        alert('Por favor, selecciona un tipo de proyecto o escribe una descripción para que la IA genere un nombre.');
+        return;
+      }
+
+      const btn = document.getElementById('btnGenerarNombreIA');
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳...';
+
+      const prompt = `Eres un experto en naming de proyectos educativos. Genera un nombre creativo y profesional para un proyecto educativo.
+${tipoProyecto ? `Tipo de proyecto: ${tipoProyecto}` : ''}${clienteNombre ? `Cliente: ${clienteNombre}` : ''}${descripcion ? `Descripción: ${descripcion}` : ''}
+Genera SOLO el nombre del proyecto, sin explicaciones ni comillas. El nombre debe ser corto (máximo 6 palabras) y descriptivo.`;
+      try {
+        const response = await fetch(API_GEMINI, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+          body: JSON.stringify({ prompt })
+        });
+
+        if (!response.ok) throw new Error('Error al contactar la IA');
+        const data = await response.json();
+        const nombre = (data.respuesta || '').trim().replace(/^[""]|[""]$/g, '');
+        if (nombre) document.getElementById('name').value = nombre;
+      } catch (error) {
+        alert('Error al generar nombre: ' + error.message);
+      }
+      btn.disabled = false;
+      btn.innerHTML = originalHTML;
+    }
+
+    async function generarDescripcionConIA() {
+      const nombre = document.getElementById('name').value;
+      const tipoProyecto = document.getElementById('tipoProyecto').value;
+
+      if (!nombre && !tipoProyecto) {
+        alert('Por favor, escribe el nombre del proyecto o selecciona un tipo para generar la descripción.');
+        return;
+      }
+
+      const btn = document.getElementById('btnGenerarDescIA');
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳';
+
+      const prompt = `Eres un experto en redacción de proyectos educativos. Genera una descripción profesional y concisa (máximo 200 palabras) para un proyecto.
+${nombre ? `Nombre del proyecto: ${nombre}` : ''}${tipoProyecto ? `Tipo: ${tipoProyecto}` : ''}
+La descripción debe ser clara, atractiva y profesional.`;
+      try {
+        const response = await fetch(API_GEMINI, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+          body: JSON.stringify({ prompt })
+        });
+
+        if (!response.ok) throw new Error('Error al contactar la IA');
+        const data = await response.json();
+        const descripcion = (data.respuesta || '').trim();
+        if (descripcion) document.getElementById('description').value = descripcion;
+      } catch (error) {
+        alert('Error al generar descripción: ' + error.message);
+      }
+      btn.disabled = false;
+      btn.innerHTML = originalHTML;
+    }
+
+    async function generarPublicoObjetivoConIA() {
+      const nombre = document.getElementById('name').value;
+      const descripcion = document.getElementById('description').value;
+      const tipoProyecto = document.getElementById('tipoProyecto').value;
+
+      if (!nombre && !descripcion && !tipoProyecto) {
+        alert('Por favor, completa al menos el nombre o descripción del proyecto.');
+        return;
+      }
+
+      const btn = document.getElementById('btnGenerarPublicoIA');
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Generando...';
+
+      const prompt = `Eres un experto en diseño instruccional. Basado en el siguiente proyecto educativo, indica qué público objetivo es el más apropiado. Selecciona de esta lista:
+- Primera infancia (0-5 años)- Niños 6 a 11 años- Adolescentes (12-17 años)- Jóvenes (18-25 años)- Adultos (26-59 años)- Mayores (60+)- Docentes / Educadores- Empresas / Equipos- Instituciones educativas- Público general
+Proyecto: ${nombre || 'Por definir'}Tipo: ${tipoProyecto || 'Por definir'}Descripción: ${descripcion || 'Por definir'}
+Responde SOLO con los nombres del público objetivo, uno por línea, sin números ni viñetas. Selecciona entre 1 y 3 opciones.`;
+      const opcionesValidas = [
+        'Primera infancia', 'Niños 6 a 11 años', 'Adolescentes', 'Jóvenes',
+        'Adultos', 'Mayores', 'Docentes', 'Empresas', 'Instituciones educativas', 'Público general'
+      ];
+      try {
+        const response = await fetch(API_GEMINI, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+          body: JSON.stringify({ prompt })
+        });
+
+        if (!response.ok) throw new Error('Error al contactar la IA');
+        const data = await response.json();
+        const respuesta = (data.respuesta || '').trim();
+        const lineas = respuesta.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        
+        document.querySelectorAll('input[name="publico_objetivo"]').forEach(cb => { cb.checked = false; });
+        lineas.forEach(linea => {
+          const limpio = linea.replace(/^[\d\.\)\-\*\•]+\s*/, '').trim();
+          opcionesValidas.forEach(opcion => {
+            if (limpio.toLowerCase().includes(opcion.toLowerCase()) || opcion.toLowerCase().includes(limpio.toLowerCase())) {
+              const cb = document.querySelector(`input[name="publico_objetivo"][value="${opcion}"]`);
+              if (cb) cb.checked = true;
+            }
+          });
+        });
+      } catch (error) {
+        alert('Error al generar público objetivo: ' + error.message);
+      }
+      btn.disabled = false;
+      btn.innerHTML = originalHTML;
+    }
+
+    // Utilidades del Form
+    function generarCodigoReferencia(length = 12) {
+      const array = new Uint8Array(length / 2);
+      crypto.getRandomValues(array);
+      return Array.from(array, b => b.toString(16).padStart(2, "0")).join("");
+    }
+    
+    function getRadioValue(form, name) {
+      const radios = form.querySelectorAll(`input[name="${name}"]`);
+      for (const radio of radios) { if (radio.checked) return radio.value; }
+      return null;
+    }
+    
+    function getCheckboxValue(form, name) {
+      const checkbox = form.querySelector(`input[name="${name}"]`);
+      return checkbox ? checkbox.checked : false;
+    }
+
+    // Tutoriales
+    const tutorialDatabase = {
+      'crear_proyecto': {
+        title: 'Guía: Crear Nuevo Proyecto',
+        videoUrl: '',
+        steps: [
+          '1️⃣ <b>Cliente:</b> Selecciona el cliente. Si vienes del CRM, estará pre-seleccionado.',
+          '2️⃣ <b>Fechas:</b> Fecha de inicio es obligatoria. Fin es opcional.',
+          '3️⃣ <b>Tipo:</b> Define si es Curso, App, etc. Si eliges "Otro", especifica.',
+          '4️⃣ <b>Diseño:</b> Selecciona fuentes y tamaños base.',
+          '5️⃣ <b>Tiempos:</b> Las horas totales son clave para el cronograma.',
+          '6️⃣ <b>Derechos:</b> Marca Cesión y Confidencialidad si aplican.',
+          '7️⃣ <b>Público:</b> Selecciona a quién va dirigido.',
+          '8️⃣ <b>Finalizar:</b> Al crear, irás a definir el Plan de Estudios.'
+        ]
+      }
+    };
+    
+    window.verTutorial = function(key) {
+      const data = tutorialDatabase[key];
+      if (!data) return;
+      document.getElementById('tutTitle').textContent = data.title;
+      const vidCont = document.getElementById('tutVideoContainer');
+      const vidFrame = document.getElementById('tutVideoFrame');
+      if (data.videoUrl) {
+        vidCont.classList.remove('hidden');
+        vidFrame.src = data.videoUrl;
+      } else {
+        vidCont.classList.add('hidden');
+        vidFrame.src = "";
+      }
+      const list = document.getElementById('tutSteps');
+      list.innerHTML = "";
+      data.steps.forEach(step => {
+        const li = document.createElement('li');
+        li.className = "flex items-start gap-2";
+        li.innerHTML = `<span class="text-indigo-500 mt-0.5">🔹</span> <span>${step}</span>`;
+        list.appendChild(li);
+      });
+      document.getElementById('tutorialModal').classList.remove('hidden');
+    };
+    
+    window.cerrarTutorial = function() {
+      document.getElementById('tutorialModal').classList.add('hidden');
+      document.getElementById('tutVideoFrame').src = "";
+    };
+
+    // Cargar Clientes para el Select
+    async function loadClients() {
+      try {
+        const r = await fetch(`${API_URL}/users/`, { headers: { Authorization: 'Bearer ' + getToken() } });
+        if (!r.ok) return [];
+        const users = await r.json();
+        return users.filter(u => Array.isArray(u.roles) && u.roles.includes('cliente') && u.estado);
+      } catch (e) {
+        console.error('Error cargando clientes:', e);
+        return [];
+      }
+    }
+
+    function populateClientSelect(clientes) {
+      const sel = document.getElementById('clienteSelect');
+      sel.innerHTML = '<option value="">Seleccione un cliente…</option>';
+      clientes.forEach(c => {
+        sel.innerHTML += `<option value="${c.uid}">${c.nombre || c.name} (${c.email})</option>`;
+      });
+      sel.addEventListener('change', e => {
+        document.getElementById('clientId').value = e.target.value;
+        document.getElementById('codigoReferencia').value = generarCodigoReferencia(12);
+      });
+    }
+
+    function setupToggleOtro(selectId, inputId) {
+      const sel = document.getElementById(selectId);
+      const inp = document.getElementById(inputId);
+      if (!sel || !inp) return;
+      const apply = () => {
+        if (sel.value === 'Otro') {
+          inp.classList.remove('hidden');
+          inp.disabled = false;
+          inp.required = true;
+        } else {
+          inp.classList.add('hidden');
+          inp.disabled = true;
+          inp.required = false;
+          inp.value = '';
+        }
+      };
+      sel.addEventListener('change', apply);
+      apply();
+    }
+
+    // Validadores Visuales Formulario
+    function setupLenguajeInclusivo() {
+      const incl1 = document.getElementById('incluyenteSi');
+      const incl0 = document.getElementById('incluyenteNo');
+      const tipoLenguaje = document.getElementById('tipoLenguajeSelect');
+      const otroLenguaje = document.getElementById('otroLenguajeInput');
+      if (!incl1 || !incl0 || !tipoLenguaje || !otroLenguaje) return;
+      incl1.addEventListener('change', () => { tipoLenguaje.disabled = false; });
+      incl0.addEventListener('change', () => { tipoLenguaje.disabled = true; tipoLenguaje.value = ''; otroLenguaje.disabled = true; otroLenguaje.value = ''; });
+      tipoLenguaje.addEventListener('change', () => {
+        otroLenguaje.disabled = tipoLenguaje.value !== 'Otro';
+        if (tipoLenguaje.value !== 'Otro') otroLenguaje.value = '';
+      });
+    }
+
+    function setupInclusionDigital() {
+      const inclSi = document.getElementById('inclusionSi');
+      const inclNo = document.getElementById('inclusionNo');
+      const checkboxes = document.querySelectorAll('input[name^="inclusion_digital_"]');
+      const otroInput = document.querySelector('input[name="inclusion_digital_otro"]');
+      if (!inclSi || !inclNo) return;
+      function setEnabled(enabled) {
+        checkboxes.forEach(ch => { ch.disabled = !enabled; if (!enabled) ch.checked = false; });
+        if (otroInput) { otroInput.disabled = !enabled; if (!enabled) otroInput.value = ''; }
+      }
+      inclSi.addEventListener('change', () => setEnabled(true));
+      inclNo.addEventListener('change', () => setEnabled(false));
+      setEnabled(inclSi.checked);
+    }
+
+    function setupTipoProyecto() {
+      const sel = document.getElementById('tipoProyecto');
+      const div = document.getElementById('divTipoProyectoPersonalizado');
+      const inp = document.getElementById('tipoProyectoPersonalizado');
+      if (!sel || !div || !inp) return;
+      sel.addEventListener('change', () => {
+        if (sel.value === 'Otro') { div.style.display = 'block'; inp.required = true; } 
+        else { div.style.display = 'none'; inp.required = false; inp.value = ''; }
+      });
+    }
+
+    // ==================== SUBMIT DE PROYECTO ====================
+    document.getElementById('formProyecto').addEventListener('submit', async e => {
+      e.preventDefault();
+      const token = getToken();
+      if (!token) return;
+
+      const submitButton = document.getElementById('submitButton');
+      const mensajeDiv = document.getElementById('form-message');
+      submitButton.disabled = true;
+      document.getElementById('submitButtonText').textContent = "⏳ Creando Proyecto...";
+      mensajeDiv.innerHTML = "";
+
+      const f = e.target;
+      const lenguajeIncl = getRadioValue(f, 'lenguaje_incluyente') === 'true';
+      const inclusionDig = getRadioValue(f, 'inclusion_digital') === 'true';
+      const publico = Array.from(f.querySelectorAll('input[name="publico_objetivo"]:checked')).map(c => c.value);
+      
+      const tipoLenguajeSelect = document.getElementById('tipoLenguajeSelect');
+      const otroLenguajeInput = document.getElementById('otroLenguajeInput');
+      const tipoLeng = lenguajeIncl ? (tipoLenguajeSelect?.value || null) : null;
+      const tipoLengOtro = lenguajeIncl && tipoLeng === 'Otro' ? (otroLenguajeInput?.value || null) : null;
+
+      function getSelectConOtro(selectId, inputId) {
+        const sel = document.getElementById(selectId);
+        const inp = document.getElementById(inputId);
+        if (!sel) return null;
+        if (sel.value === 'Otro') return inp?.value || null;
+        return sel.value || null;
+      }
+
+      const data = {
+        name: f.name.value,
+        client_id: document.getElementById('clientId').value,
+        codigo_referencia: document.getElementById('codigoReferencia').value,
+        start_date: f.start_date.value,
+        end_date: f.end_date.value || null,
+        tipo_proyecto: f.tipo_proyecto.value,
+        tipo_proyecto_personalizado: f.tipo_proyecto.value === 'Otro' ? (f.tipo_proyecto_personalizado.value || null) : null,
+        estado: f.estado.value,
+        description: f.description.value || null,
+        lenguaje_incluyente: lenguajeIncl,
+        lenguaje_inclusivo_tipo: tipoLeng,
+        lenguaje_inclusivo_otro: tipoLengOtro,
+        inclusion_digital: inclusionDig,
+        inclusion_digital_web: getCheckboxValue(f, 'inclusion_digital_web'),
+        inclusion_digital_asistiva: getCheckboxValue(f, 'inclusion_digital_asistiva'),
+        inclusion_digital_universal: getCheckboxValue(f, 'inclusion_digital_universal'),
+        inclusion_digital_educativa: getCheckboxValue(f, 'inclusion_digital_educativa'),
+        inclusion_digital_otro: f['inclusion_digital_otro']?.value || null,
+        idioma: getRadioValue(f, 'idioma'),
+        idioma_otro: f['idioma_otro']?.value || null,
+        tipografia_titulo_fuente: getSelectConOtro('tituloFuente', 'tituloFuenteOtro'),
+        tipografia_titulo_tamano: getSelectConOtro('tituloTamano', 'tituloTamanoOtro'),
+        tipografia_titulo_negrita: getCheckboxValue(f, 'tipografia_titulo_negrita'),
+        tipografia_titulo_cursiva: getCheckboxValue(f, 'tipografia_titulo_cursiva'),
+        tipografia_subtitulo_fuente: getSelectConOtro('subtituloFuente', 'subtituloFuenteOtro'),
+        tipografia_subtitulo_tamano: getSelectConOtro('subtituloTamano', 'subtituloTamanoOtro'),
+        tipografia_subtitulo_negrita: getCheckboxValue(f, 'tipografia_subtitulo_negrita'),
+        tipografia_subtitulo_cursiva: getCheckboxValue(f, 'tipografia_subtitulo_cursiva'),
+        tipografia_parrafo_fuente: getSelectConOtro('parrafoFuente', 'parrafoFuenteOtro'),
+        tipografia_parrafo_tamano: getSelectConOtro('parrafoTamano', 'parrafoTamanoOtro'),
+        tipografia_parrafo_negrita: getCheckboxValue(f, 'tipografia_parrafo_negrita'),
+        tipografia_parrafo_cursiva: getCheckboxValue(f, 'tipografia_parrafo_cursiva'),
+        horas_curso: f.horas_curso.value ? parseFloat(f.horas_curso.value) : null,
+        horas_aprendizaje_autonomo_virtual: f.horas_aprendizaje_autonomo_virtual.value ? parseFloat(f.horas_aprendizaje_autonomo_virtual.value) : null,
+        horas_actividades_aprendizaje: f.horas_actividades_aprendizaje.value ? parseFloat(f.horas_actividades_aprendizaje.value) : null,
+        cesion_derechos: getRadioValue(f, 'cesion_derechos') === 'true',
+        derechos_patrimoniales_autor: getRadioValue(f, 'derechos_patrimoniales_autor') === 'true',
+        acuerdo_confidencialidad: getRadioValue(f, 'acuerdo_confidencialidad') === 'true',
+        entrega_fuentes: getRadioValue(f, 'entrega_fuentes') === 'true',
+        entrega_escrito_autor: getRadioValue(f, 'entrega_escrito_autor') === 'true',
+        entrega_diseno_instruccional: getRadioValue(f, 'entrega_diseno_instruccional') === 'true',
+        publico_objetivo: publico,
+        publico_objetivo_otro: f['publico_objetivo_otro']?.value || null,
+        observaciones: f.observaciones?.value || null
+      };
+
+      try {
+        const res = await fetch(`${API_URL}/projects/`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.detail || `Error ${res.status}`);
+        }
+
+        const proyecto = await res.json();
+        const project_id = proyecto.id;
+        const project_name = encodeURIComponent(data.name || '');
+        const project_desc = encodeURIComponent(data.description || '');
+        const project_horas = data.horas_curso || '';
+
+        mensajeDiv.innerHTML = `<p class="text-lg font-semibold text-green-600">✅ Proyecto creado con éxito (ID: ${project_id}). Redirigiendo a planificación...</p>`;
+        
+        // Redirección conservada
+        const urlHijo = "https://gestordecursos.pegui.edu.co/r/superadmin/studyplan/";
+        setTimeout(() => {
+          window.location.href = `${urlHijo}?project_id=${project_id}&project_name=${project_name}&project_desc=${project_desc}&project_horas=${project_horas}`;
+        }, 2000);
+
+      } catch (err) {
+        console.error('Error al crear proyecto:', err);
+        mensajeDiv.innerHTML = `<p class="text-red-600 font-semibold mb-2">❌ Error: ${err.message}</p>`;
+        submitButton.disabled = false;
+        document.getElementById('submitButtonText').textContent = '💾 Crear Proyecto';
+      }
+    });
+
+    // ==================== INICIALIZACIÓN PRINCIPAL ====================
+    window.addEventListener('DOMContentLoaded', async () => {
+      const token = getToken();
+      if (!token) {
+        window.location.href = '/';
+        return;
+      }
+      
+      // Iniciar V1 (Dashboard)
+      cargarProyectos();
+
+      // Iniciar V2 (Formulario)
+      const clientes = await loadClients();
+      populateClientSelect(clientes);
+
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('start_date').min = today;
+      document.getElementById('start_date').value = today;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const clientIdFromUrl = urlParams.get('clientId');
+      const clientNameFromUrl = decodeURIComponent(urlParams.get('clientName') || '');
+
+      if (clientIdFromUrl) {
+        const clienteSelect = document.getElementById('clienteSelect');
+        const clientIdInput = document.getElementById('clientId');
+        if (clientNameFromUrl && !clienteSelect.querySelector(`option[value="${clientIdFromUrl}"]`)) {
+          const newOption = new Option(`${clientNameFromUrl} (ID: ${clientIdFromUrl})`, clientIdFromUrl, true, true);
+          clienteSelect.appendChild(newOption);
+        }
+        clienteSelect.value = clientIdFromUrl;
+        clientIdInput.value = clientIdFromUrl;
+        document.getElementById('codigoReferencia').value = generarCodigoReferencia(12);
+        clienteSelect.disabled = true;
+        clienteSelect.classList.add("bg-gray-100", "text-gray-500", "cursor-not-allowed");
+        
+        // Si viene con cliente del CRM pre-cargado, ir directo a Crear Proyecto
+        switchView('creacion');
+      }
+
+      setupLenguajeInclusivo();
+      setupInclusionDigital();
+      setupTipoProyecto();
+      setupToggleOtro('tituloFuente', 'tituloFuenteOtro');
+      setupToggleOtro('tituloTamano', 'tituloTamanoOtro');
+      setupToggleOtro('subtituloFuente', 'subtituloFuenteOtro');
+      setupToggleOtro('subtituloTamano', 'subtituloTamanoOtro');
+      setupToggleOtro('parrafoFuente', 'parrafoFuenteOtro');
+      setupToggleOtro('parrafoTamano', 'parrafoTamanoOtro');
+    });
+
+  </script>
+
+  <script src="/js/roles.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        const permissions = payload.permissions || [];
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+
+        // Permisos de menú combinados (puedes ajustar el display de IDs que estén en tu Layout general)
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_linguistica_usar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) el.style.display = 'none';
+        });
+
+      } catch(e) {
+        console.error("Error validando token/roles: ", e);
+      }
+    });
+  </script>
+</body>
+</html>

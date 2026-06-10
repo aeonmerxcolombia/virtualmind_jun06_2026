@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editor Visual Avanzado</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    body { margin: 0; font-family: 'Inter', sans-serif; }
+    #toolbar {
+      background: #222; color: white; padding: 10px; display: flex; gap: 10px;
+      align-items: center; flex-wrap: wrap;
+    }
+    #toolbar button, #toolbar select, #toolbar input {
+      padding: 5px 10px; border: none; border-radius: 4px; font-size: 14px;
+    }
+    #canvas-wrapper { height: calc(100vh - 50px); }
+    canvas { border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+
+<div id="toolbar">
+  <button onclick="addRect()">Rectángulo</button>
+  <button onclick="addCircle()">Círculo</button>
+  <button onclick="addText()">Texto</button>
+  <button onclick="addImage()">Imagen</button>
+  <input type="file" id="imgLoader" accept="image/*" style="display:none" onchange="loadImage(event)">
+  <button onclick="bringToFront()">Traer al frente</button>
+  <button onclick="sendToBack()">Enviar al fondo</button>
+  <button onclick="deleteObject()">Eliminar</button>
+  <button onclick="saveCanvas()">Guardar</button>
+  <button onclick="loadCanvas()">Cargar</button>
+  <button onclick="exportPNG()">Exportar PNG</button>
+  <input type="file" id="jsonLoader" accept=".json" style="display:none" onchange="loadJSON(event)">
+</div>
+
+<div id="canvas-wrapper">
+  <canvas id="editor-canvas" width="1600" height="800"></canvas>
+</div>
+
+<script>
+  const canvas = new fabric.Canvas('editor-canvas', {
+    selection: true,
+    preserveObjectStacking: true
+  });
+
+  function addRect() {
+    const rect = new fabric.Rect({
+      left: 100, top: 100, fill: 'lightblue', width: 120, height: 80,
+      stroke: 'black', strokeWidth: 2, rx: 5, ry: 5,
+      hasControls: true, hasBorders: true
+    });
+    canvas.add(rect);
+  }
+
+  function addCircle() {
+    const circle = new fabric.Circle({
+      left: 150, top: 150, fill: 'lightgreen', radius: 50,
+      stroke: 'black', strokeWidth: 2
+    });
+    canvas.add(circle);
+  }
+
+  function addText() {
+    const text = new fabric.IText('Texto editable', {
+      left: 200, top: 200,
+      fontFamily: 'Inter', fontSize: 24,
+      fill: 'black'
+    });
+    canvas.add(text);
+  }
+
+  function addImage() {
+    document.getElementById('imgLoader').click();
+  }
+
+  function loadImage(e) {
+    const reader = new FileReader();
+    reader.onload = function (f) {
+      fabric.Image.fromURL(f.target.result, function (img) {
+        img.set({ left: 250, top: 250, scaleX: 0.5, scaleY: 0.5 });
+        canvas.add(img);
+      });
+    };
+    reader.readAsDataURL(e.target.files[0]);
+  }
+
+  function bringToFront() {
+    const active = canvas.getActiveObject();
+    if (active) canvas.bringToFront(active);
+  }
+
+  function sendToBack() {
+    const active = canvas.getActiveObject();
+    if (active) canvas.sendToBack(active);
+  }
+
+  function deleteObject() {
+    const active = canvas.getActiveObject();
+    if (active) canvas.remove(active);
+  }
+
+  function saveCanvas() {
+    const json = JSON.stringify(canvas.toJSON());
+    const blob = new Blob([json], { type: 'application/json' });
+    saveAs(blob, 'canvas.json');
+  }
+
+  function loadCanvas() {
+    document.getElementById('jsonLoader').click();
+  }
+
+  function loadJSON(e) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const json = event.target.result;
+      canvas.loadFromJSON(json, canvas.renderAll.bind(canvas));
+    };
+    reader.readAsText(e.target.files[0]);
+  }
+
+  function exportPNG() {
+    const dataURL = canvas.toDataURL({ format: 'png' });
+    const link = document.createElement('a');
+    link.download = 'canvas.png';
+    link.href = dataURL;
+    link.click();
+  }
+</script>
+
+</body>
+</html>

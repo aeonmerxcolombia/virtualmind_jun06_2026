@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi Drive Personal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">📁 Mi Drive Personal</h1>
+
+    <!-- Subida de archivos -->
+    <div class="bg-white p-4 rounded-lg shadow mb-6">
+      <form id="uploadForm" class="flex flex-wrap gap-4 items-center">
+        <input type="file" id="fileInput" name="file" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+        <select id="folderSelect" name="folder_id" class="px-3 py-2 border rounded text-sm">
+          <option value="">Selecciona una carpeta</option>
+        </select>
+        <input type="text" id="nombreArchivo" name="nombre_archivo" placeholder="Nombre del archivo" class="px-3 py-2 border rounded text-sm">
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Subir</button>
+      </form>
+    </div>
+
+    <!-- Vista de carpetas -->
+    <div id="carpetasContainer" class="space-y-4"></div>
+  </div>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const TOKEN = localStorage.getItem("token");
+
+    async function cargarCarpetas() {
+      const res = await fetch(API + "/folders?include_general=false", {
+        headers: { Authorization: "Bearer " + TOKEN }
+      });
+      const carpetas = await res.json();
+      mostrarCarpetas(carpetas);
+      llenarSelect(carpetas);
+    }
+
+    function mostrarCarpetas(carpetas) {
+      const container = document.getElementById("carpetasContainer");
+      container.innerHTML = "";
+      carpetas.forEach(folder => {
+        const card = document.createElement("div");
+        card.className = "bg-white rounded shadow p-4";
+        card.innerHTML = `
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="font-semibold text-lg">📁 ${folder.nombre}</h2>
+              <p class="text-sm text-gray-500">${folder.descripcion}</p>
+            </div>
+            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${folder.archivos.length} archivos</span>
+          </div>
+          <div class="mt-4 space-y-2">
+            ${folder.archivos.map(file => `
+              <div class="flex justify-between items-center bg-gray-50 px-3 py-2 rounded hover:bg-gray-100">
+                <a href="${file.url}" target="_blank" class="text-blue-600 hover:underline text-sm">${file.nombre_archivo}</a>
+                <button onclick="eliminarArchivo(${file.id})" class="text-red-500 hover:text-red-700 text-xs">🗑️</button>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function llenarSelect(carpetas) {
+      const select = document.getElementById("folderSelect");
+      select.innerHTML = "<option value=''>Selecciona una carpeta</option>";
+      carpetas.forEach(folder => {
+        const opt = document.createElement("option");
+        opt.value = folder.id;
+        opt.textContent = folder.nombre;
+        select.appendChild(opt);
+      });
+    }
+
+    async function eliminarArchivo(id) {
+      if (!confirm("¿Eliminar este archivo?")) return;
+      await fetch(API + "/archivos/" + id, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + TOKEN }
+      });
+      cargarCarpetas();
+    }
+
+    document.getElementById("uploadForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const form = new FormData();
+      form.append("file", document.getElementById("fileInput").files[0]);
+      form.append("folder_id", document.getElementById("folderSelect").value);
+      form.append("nombre_archivo", document.getElementById("nombreArchivo").value);
+      const res = await fetch(API + "/archivos/", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + TOKEN },
+        body: form
+      });
+      if (res.ok) {
+        document.getElementById("uploadForm").reset();
+        cargarCarpetas();
+      } else {
+        alert("Error al subir archivo");
+      }
+    });
+
+    cargarCarpetas();
+  </script>
+
+</body>
+</html>

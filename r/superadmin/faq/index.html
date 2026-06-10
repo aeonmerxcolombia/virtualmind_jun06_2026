@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Preguntas Frecuentes – VirtualMind</title>
+<!-- Tailwind via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+</head>
+<body class="bg-gray-50 font-sans leading-relaxed text-gray-800">
+  <header class="bg-purple-700 text-white py-6 shadow-md">
+    <div class="container mx-auto px-4">
+      <h1 class="text-3xl font-bold">Preguntas Frecuentes</h1>
+      <p class="mt-1 text-purple-200">Conoce cómo usar la plataforma VirtualMind y resuelve tus dudas comunes.</p>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 space-y-8">
+    <!-- Question 1 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Cómo inicio sesión en la plataforma?</h2>
+      <p class="mt-2 text-gray-700">Para acceder a VirtualMind visita <strong>gestordecursos.pegui.edu.co</strong> y escribe tu correo electrónico y contraseña en el formulario de inicio. Si olvidaste tu contraseña, haz clic en "¿Olvidaste tu contraseña?" y sigue las instrucciones. También puedes ingresar con tu cuenta de Google o Facebook.</p>
+    </section>
+
+    <!-- Question 2 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Cómo cambio de rol?</h2>
+      <p class="mt-2 text-gray-700">Después de iniciar sesión, utiliza el selector "Cambiar de rol" en la parte superior. Selecciona el rol deseado y, si es necesario, escribe la URL <code>/r/&lt;nombre del rol&gt;/</code> en el navegador (ejemplo: <code>/r/admin/</code>) para cargar la interfaz de ese perfil.</p>
+    </section>
+
+    <!-- Question 3 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Qué puedo hacer como administrador?</h2>
+      <p class="mt-2 text-gray-700">El rol <em>Administrador</em> tiene acceso completo: crear proyectos y cursos, gestionar módulos, unidades y actividades de aprendizaje, programar tareas y evaluaciones, organizar cronogramas, firmar documentos digitalmente, revisar bitácoras de actividad y auditar el sistema. También puede generar estadísticas y paneles de seguimiento, acceder a utilidades de IA (imagen, audio y texto) y gestionar autores y diseños instruccionales.</p>
+    </section>
+
+    <!-- Question 4 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Cómo creo un proyecto nuevo?</h2>
+      <p class="mt-2 text-gray-700">Como administrador, dirígete a <strong>Proyectos → Crear Proyecto</strong> y llena el formulario con nombre, cliente, fecha de inicio y fin, fase y etapa, tipo de proyecto y otros campos. Guarda para que el proyecto aparezca en la lista de proyectos detallados.</p>
+    </section>
+
+    <!-- Question 5 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Dónde consulto los proyectos existentes?</h2>
+      <p class="mt-2 text-gray-700">En la sección <strong>Proyectos → Consultar Proyectos</strong> encontrarás un listado de proyectos con filtros por estado, cliente y nombre. Cada proyecto ofrece acciones como ver en detalle, actualizar, crear cronograma, plan de estudio y exportar un PDF.</p>
+    </section>
+
+    <!-- Question 6 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Para qué sirve la sección "Planes de Formación"?</h2>
+      <p class="mt-2 text-gray-700">Muestra estadísticas generales de los planes de formación activos, cuántos cursos incluyen y su progreso. Desde aquí puedes explorar cada plan de estudios, asociar cursos y ver estadísticas de avance.</p>
+    </section>
+
+    <!-- Question 7 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Cómo gestiono cursos, módulos y unidades?</h2>
+      <p class="mt-2 text-gray-700">En <strong>Proyectos → Cursos</strong> puedes crear y administrar cursos, asignarles módulos y unidades. En la subsección <strong>Módulos</strong> verás estadísticas de módulos, número de unidades y acciones para ver, editar o eliminar. En <strong>Unidades y Actividades</strong> puedes crear actividades dentro de las unidades.</p>
+    </section>
+
+    <!-- Question 8 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Cómo creo y administro tareas?</h2>
+      <p class="mt-2 text-gray-700">En la sección <strong>Tareas</strong> encontrarás un panel para crear tareas nuevas, asignarlas a proyectos, establecer responsables y prioridades. Puedes filtrar por estado y ver estadísticas de tareas completadas vs. pendientes.</p>
+    </section>
+
+    <!-- Question 9 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Qué son las Evaluaciones Inteligentes?</h2>
+      <p class="mt-2 text-gray-700">Es un módulo para crear evaluaciones con una variedad de parámetros: número de preguntas, fecha de entrega, duración, intentos, área de conocimiento, nivel educativo y temas clave. Te permite configurar evaluaciones adaptativas y generar analíticas de resultados.</p>
+    </section>
+
+    <!-- Question 10 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Qué contiene la sección "Reportes"?</h2>
+      <p class="mt-2 text-gray-700">La sección de reportes ofrece paneles de estadísticas y seguimiento con métricas globales: total de proyectos, usuarios activos, cronogramas creados, progreso global y KPIs inteligentes como eficiencia, riesgo y potencial de mejora. También contiene distribuciones de roles y cuadros con sugerencias generadas por IA.</p>
+    </section>
+
+    <!-- Question 11 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Cómo utilizo las herramientas de IA?</h2>
+      <p class="mt-2 text-gray-700">En <strong>Utilidades</strong> encontrarás herramientas como <em>Producción de Imagen con IA</em>, <em>Producción de Audio con IA</em>, <em>IA Lingüística</em>, <em>Crear Podcast</em>, <em>Crear Video-Podcast</em> y <em>Crear Animación 3D</em>. Al seleccionar cada opción se cargará una interfaz donde puedes describir la imagen o audio que deseas generar, editar podcasts o trabajar en animaciones. Estas funciones utilizan la API de IA integrada en VirtualMind.</p>
+    </section>
+
+    <!-- Question 12 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Dónde firmo documentos digitalmente?</h2>
+      <p class="mt-2 text-gray-700">En <strong>Administración y seguridad → Firma Digital de Documentos</strong> puedes cargar un archivo PDF, dibujar o subir tu firma, colocarla en el documento y descargar el PDF firmado. Esta funcionalidad es útil para aprobar proyectos o acuerdos.</p>
+    </section>
+
+    <!-- Question 13 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Cómo accedo a las estadísticas de usuarios y permisos?</h2>
+      <p class="mt-2 text-gray-700">El módulo de <em>Gestión de usuarios y permisos</em> (disponible para administradores) te muestra los roles existentes y la cantidad de usuarios en cada rol. Desde allí puedes gestionar permisos y revisar estadísticas de actividad.</p>
+    </section>
+
+    <!-- Question 14 -->
+    <section class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-2xl font-semibold text-purple-700">¿Qué incluye la sección "Zona de Capacitación"?</h2>
+      <p class="mt-2 text-gray-700">Actualmente, las opciones <strong>Microcursos sobre la plataforma</strong>, <strong>Buenas prácticas por perfil</strong>, <strong>Tutoriales en Video</strong> y <strong>Preguntas Frecuentes</strong> están en construcción. Aparecen como páginas no encontradas (404). Consulta regularmente para ver futuras actualizaciones.</p>
+    </section>
+  </main>
+
+  <footer class="bg-gray-100 py-4 text-center text-sm text-gray-500">
+    <p>© 2025 VirtualMind – Plataforma de gestión de proyectos y cursos.</p>
+  </footer>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

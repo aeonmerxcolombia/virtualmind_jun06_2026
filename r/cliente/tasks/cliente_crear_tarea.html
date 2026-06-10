@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cliente - Crear Tarea</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { /* ... Configuración de Tailwind (sin cambios) ... */ }
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
+  
+  <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-2xl">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="bg-white/20 backdrop-blur-sm rounded-full p-3">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+          </div>
+          <div>
+            <h1 class="text-4xl font-bold text-white tracking-tight">Crear Nueva Tarea</h1>
+            <p class="text-blue-100 text-lg">Asigna una tarea a uno de tus proyectos</p>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center space-x-6 text-blue-100">
+          <a href="https://gestordecursos.pegui.edu.co/r/cliente/tasks" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <span>Volver a la lista</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden">
+      <div class="p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Detalles de la Nueva Tarea</h2>
+        <form id="formNuevaTarea" enctype="multipart/form-data" autocomplete="off" class="space-y-6">
+          <div class="bg-gray-50 rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2"><span>Información básica</span></h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Título *</label>
+                <input type="text" name="titulo" required placeholder="Ingresa el título de la tarea" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
+                <textarea name="descripcion" placeholder="Describe los detalles de la tarea" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2"><span>Proyecto y Asignación</span></h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Proyecto *</label>
+                <select name="project_id" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                  <option value="">Cargando tus proyectos...</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Responsable *</label>
+                <select name="asignado" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                  <option value="">Cargando usuarios...</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Seguidores</label>
+                <select name="seguidores" multiple class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-32">
+                  <option value="">Cargando usuarios...</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Mantén Ctrl/Cmd para seleccionar múltiples</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2"><span>Configuración</span></h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Estado *</label>
+                <select name="estado" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                  <option value="Nuevo" selected>Nuevo</option>
+                  <option value="En curso">En curso</option>
+                  <option value="En revisión">En revisión</option>
+                  <option value="Resuelto">Resuelto</option>
+                  <option value="Cerrado">Cerrado</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Prioridad *</label>
+                <select name="prioridad" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                  <option value="Baja">Baja</option>
+                  <option value="Media" selected>Media</option>
+                  <option value="Alta">Alta</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Fase *</label>
+                <select name="fase_id" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"><option value="">Selecciona un proyecto</option></select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Etapa</label>
+                <select name="etapa_id" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"><option value="">Selecciona una fase</option></select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Adjuntos</label>
+                <input type="file" name="adjuntos" multiple class="w-full p-3 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2"><span>Fechas importantes</span></h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de inicio</label><input type="date" name="fecha_inicio" id="fecha_inicio" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" /></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de entrega</label><input type="date" name="fecha_entrega" id="fecha_entrega" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" /></div>
+            </div>
+            <div id="fecha-error" class="mt-2 text-sm text-red-600 hidden"></div>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3 pt-4">
+            <a href="https://gestordecursos.pegui.edu.co/r/cliente/tasks" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2"><span>Cancelar</span></a>
+            <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2"><span>Crear Tarea</span></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const API_URL = "https://gestordecursos.pegui.edu.co:8000/tareas/";
+    const USERS_URL = "https://gestordecursos.pegui.edu.co:8000/users/";
+    const PROJECTS_URL = "https://gestordecursos.pegui.edu.co:8000/projects/";
+    const CRONOGRAMAS_URL = "https://gestordecursos.pegui.edu.co:8000/cronogramas/";
+
+    let listaUsuarios = [];
+    let listaProyectos = []; // ** Contendrá solo los proyectos del cliente **
+    let mapaProyectoACronograma = {};
+    let mapaCronogramaAEstructura = {};
+    let fechaInicioEtapa = null;
+    let fechaFinEtapa = null;
+    
+    // --- LÓGICA DE AUTENTICACIÓN Y FILTRADO (Añadida) ---
+    function parseJwt(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) { console.error("Error decodificando token:", e); return null; }
+    }
+
+    function getAuthHeaders() {
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = "/index.html"; return null; }
+        return { 'Authorization': `Bearer ${token}` };
+    }
+
+    // --- LÓGICA DE CARGA DEL FORMULARIO (Modificada) ---
+    async function inicializarFormularioCliente() {
+      const headers = getAuthHeaders();
+      const token = localStorage.getItem('token');
+      if (!token || !headers) return;
+      
+      const payload = parseJwt(token);
+      const userIdFromToken = payload.user_id || payload.uid;
+      
+      if (!userIdFromToken) {
+        mostrarNotificacion('Error: No se pudo identificar al usuario en el token.', 'error');
+        return;
+      }
+      
+      try {
+        // Cargar todos los datos necesarios en paralelo
+        const [proyectosResponse, cronogramasResponse, usersResponse] = await Promise.all([
+          fetch(PROJECTS_URL, { headers }),
+          fetch(CRONOGRAMAS_URL, { headers }),
+          fetch(USERS_URL, { headers })
+        ]);
+        
+        if (!proyectosResponse.ok || !cronogramasResponse.ok || !usersResponse.ok) {
+            throw new Error('No se pudieron cargar los datos iniciales.');
+        }
+
+        const todosLosProyectos = await proyectosResponse.json();
+        const listaCronogramas = await cronogramasResponse.json();
+        listaUsuarios = await usersResponse.json();
+
+        // ** CAMBIO CLAVE: Filtrar los proyectos que pertenecen al cliente **
+        listaProyectos = todosLosProyectos.filter(p => p.client_id === userIdFromToken);
+        
+        // Construir mapas de cronogramas (lógica original sin cambios)
+        listaCronogramas.forEach(c => {
+            mapaProyectoACronograma[c.project_id] = c.id;
+            mapaCronogramaAEstructura[c.id] = c.estructura || [];
+        });
+        
+        // Poblar los selects con los datos filtrados y completos
+        actualizarSelectProyectos();
+        actualizarSelectUsuarios();
+        
+        // Asignar el manejador del evento submit
+        document.getElementById('formNuevaTarea').onsubmit = enviarNuevaTarea;
+        
+      } catch(error) {
+        console.error("Error inicializando el formulario:", error);
+        mostrarNotificacion(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    // --- LÓGICA ORIGINAL (conservada y sin cambios) ---
+    
+    function actualizarSelectProyectos() {
+      const selectProyecto = document.querySelector('select[name="project_id"]');
+      selectProyecto.innerHTML = '<option value="">Selecciona tu proyecto</option>';
+      if (listaProyectos.length === 0) {
+        selectProyecto.innerHTML = '<option value="">No tienes proyectos asignados</option>';
+        return;
+      }
+      listaProyectos.forEach(proyecto => {
+        selectProyecto.innerHTML += `<option value="${proyecto.id}">${proyecto.nombre || proyecto.name}</option>`;
+      });
+    }
+    
+    function actualizarSelectUsuarios() {
+        const options = listaUsuarios.map(u => `<option value="${u.nombre || u.username}">${u.nombre || u.username}</option>`).join('');
+        document.querySelector('select[name="asignado"]').innerHTML = '<option value="">Selecciona responsable</option>' + options;
+        document.querySelector('select[name="seguidores"]').innerHTML = options;
+    }
+
+    function actualizarSelectFases(projectId) {
+        // ... (Toda la lógica de fases, etapas y fechas se mantiene idéntica a tu archivo original)
+        const selectFase = document.querySelector('select[name="fase_id"]');
+        const selectEtapa = document.querySelector('select[name="etapa_id"]');
+        resetearFechas();
+        if (!projectId) {
+            selectFase.innerHTML = '<option value="">Selecciona un proyecto</option>';
+            selectEtapa.innerHTML = '<option value="">Selecciona una fase</option>';
+            return;
+        }
+        const cronogramaId = mapaProyectoACronograma[projectId];
+        if (!cronogramaId) {
+            selectFase.innerHTML = '<option value="">Proyecto sin cronograma</option>';
+            selectEtapa.innerHTML = '<option value="">Proyecto sin cronograma</option>';
+            return;
+        }
+        const fases = (mapaCronogramaAEstructura[cronogramaId] || []).map(item => ({ id: item.fase_id, nombre: item.nombre_fase }));
+        if (fases.length === 0) {
+            selectFase.innerHTML = '<option value="">Sin fases definidas</option>';
+        } else {
+            selectFase.innerHTML = '<option value="">Selecciona fase</option>';
+            fases.forEach(f => selectFase.innerHTML += `<option value="${f.id}">${f.nombre}</option>`);
+        }
+        selectEtapa.innerHTML = '<option value="">Selecciona una fase</option>';
+    }
+
+    function actualizarSelectEtapas(projectId, faseId) {
+        const selectEtapa = document.querySelector('select[name="etapa_id"]');
+        resetearFechas();
+        if (!projectId || !faseId) {
+            selectEtapa.innerHTML = '<option value="">Selecciona una fase</option>';
+            return;
+        }
+        const cronogramaId = mapaProyectoACronograma[projectId];
+        if (!cronogramaId) return;
+        const faseSeleccionada = (mapaCronogramaAEstructura[cronogramaId] || []).find(item => item.fase_id == faseId);
+        const etapas = faseSeleccionada ? faseSeleccionada.etapas : [];
+        if (!etapas || etapas.length === 0) {
+            selectEtapa.innerHTML = '<option value="">Sin etapas en esta fase</option>';
+        } else {
+            selectEtapa.innerHTML = '<option value="">Selecciona etapa (opcional)</option>';
+            etapas.forEach(e => selectEtapa.innerHTML += `<option value="${e.etapa_id}" data-fecha-inicio="${e.fecha_inicio}" data-fecha-fin="${e.fecha_fin}">${e.nombre_etapa}</option>`);
+        }
+    }
+    
+    function establecerRestriccionesFechas(etapaOption) {
+        const errorDiv = document.getElementById('fecha-error');
+        const fechaInicioInput = document.getElementById('fecha_inicio');
+        const fechaEntregaInput = document.getElementById('fecha_entrega');
+        resetearFechas();
+        if (!etapaOption || !etapaOption.dataset.fechaInicio || !etapaOption.dataset.fechaFin) {
+            fechaInicioInput.value = '';
+            fechaEntregaInput.value = '';
+            return;
+        }
+        fechaInicioEtapa = etapaOption.dataset.fechaInicio;
+        fechaFinEtapa = etapaOption.dataset.fechaFin;
+        fechaInicioInput.min = fechaFinEtapa;
+        fechaEntregaInput.max = fechaFinEtapa;
+        errorDiv.textContent = `Las fechas deben estar entre ${fechaInicioEtapa} y ${fechaFinEtapa}.`;
+        errorDiv.classList.remove('hidden');
+    }
+    
+    function resetearFechas() {
+        const errorDiv = document.getElementById('fecha-error');
+        const fechaInicioInput = document.getElementById('fecha_inicio');
+        const fechaEntregaInput = document.getElementById('fecha_entrega');
+        fechaInicioEtapa = null;
+        fechaFinEtapa = null;
+        errorDiv.classList.add('hidden');
+        fechaInicioInput.min = '';
+        fechaInicioInput.max = '';
+        fechaEntregaInput.min = '';
+        fechaEntregaInput.max = '';
+    }
+
+    function validarFechasFormulario() {
+        const fechaInicio = document.getElementById('fecha_inicio').value;
+        const fechaEntrega = document.getElementById('fecha_entrega').value;
+        if (fechaInicio && fechaEntrega && fechaEntrega < fechaInicio) {
+            document.getElementById('fecha-error').textContent = 'La fecha de entrega no puede ser anterior a la de inicio.';
+            document.getElementById('fecha-error').classList.remove('hidden');
+            return false;
+        }
+        if (fechaInicioEtapa && fechaFinEtapa) {
+            if ((fechaInicio && (fechaInicio < fechaInicioEtapa || fechaInicio > fechaFinEtapa)) || (fechaEntrega && (fechaEntrega < fechaInicioEtapa || fechaEntrega > fechaFinEtapa))) {
+                document.getElementById('fecha-error').textContent = `Las fechas deben estar entre ${fechaInicioEtapa} y ${fechaFinEtapa}.`;
+                document.getElementById('fecha-error').classList.remove('hidden');
+                return false;
+            }
+        }
+        document.getElementById('fecha-error').classList.add('hidden');
+        return true;
+    }
+
+    function enviarNuevaTarea(e) {
+        e.preventDefault();
+        if (!validarFechasFormulario()) return;
+
+        const form = e.target;
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        if (!formData.get('project_id') || !formData.get('fase_id')) {
+            mostrarNotificacion('Debes seleccionar un proyecto y una fase válidos.', 'error');
+            return;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span>Creando...</span>`;
+
+        fetch(API_URL, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: formData
+        })
+        .then(res => res.ok ? res.json() : res.json().then(err => Promise.reject(err)))
+        .then(data => {
+            mostrarNotificacion('¡Tarea creada exitosamente!', 'success');
+            setTimeout(() => { window.location.href = 'cliente_tareas.html'; }, 2000);
+        })
+        .catch(err => {
+            mostrarNotificacion(`Error: ${err.detail || 'No se pudo crear la tarea.'}`, 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<span>Crear Tarea</span>`;
+        });
+    }
+
+    function mostrarNotificacion(mensaje, tipo = 'info') {
+      // ... (La función de notificación se mantiene idéntica)
+      const colores = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
+      const notificacion = document.createElement('div');
+      notificacion.className = `fixed top-4 right-4 z-[60] ${colores[tipo]} text-white px-6 py-4 rounded-lg shadow-2xl`;
+      notificacion.textContent = mensaje;
+      document.body.appendChild(notificacion);
+      setTimeout(() => notificacion.remove(), 4000);
+    }
+
+    // Event listeners para la lógica de Fases y Etapas
+    document.addEventListener('change', function(e) {
+      if (e.target.name === 'project_id') actualizarSelectFases(e.target.value);
+      if (e.target.name === 'fase_id') actualizarSelectEtapas(document.querySelector('select[name="project_id"]').value, e.target.value);
+      if (e.target.name === 'etapa_id') establecerRestriccionesFechas(e.target.options[e.target.selectedIndex]);
+    });
+
+    // Inicializar la aplicación
+    document.addEventListener('DOMContentLoaded', inicializarFormularioCliente);
+  </script>
+
+</body>
+</html>

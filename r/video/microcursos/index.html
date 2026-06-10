@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Microcursos de la Plataforma – Virtualmind</title>
+  <meta name="description" content="Microcursos cortos y prácticos para dominar Virtualmind: proyectos, cronogramas, evaluaciones inteligentes, IA, firma digital, reportes y seguridad.">
+  <meta name="keywords" content="Virtualmind, microcursos, capacitación, proyectos, IA, firma digital, reportes, seguridad, auditoría, cursos cortos">
+  <meta name="author" content="Virtualmind">
+  <link rel="icon" href="/assets/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Config Tailwind (tipografía + colores) 
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca'
+            },
+            accent: {
+              50: '#fdf2f8',
+              500: '#ec4899',
+              600: '#db2777'
+            }
+          }
+        }
+      },
+      darkMode: 'class'
+    }
+  </script>
+
+  <!-- OpenGraph -->
+  <meta property="og:title" content="Microcursos de la Plataforma – Virtualmind">
+  <meta property="og:description" content="Domina Virtualmind con microcursos cortos por rol: Admin, Coordinador, Autor, Abogado y más.">
+  <meta property="og:image" content="https://gestordecursos.pegui.edu.co/assets/login-bg.jpg">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://gestordecursos.pegui.edu.co/capacitacion/microcursos">
+
+  <!-- JSON-LD (schema.org Course + ItemList) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Microcursos Virtualmind",
+    "itemListElement": [
+      {
+        "@type": "Course",
+        "name": "Onboarding de Virtualmind",
+        "description": "Inicio rápido: roles, navegación y buenas prácticas.",
+        "provider": {"@type":"Organization","name":"Virtualmind"}
+      },
+      {
+        "@type": "Course",
+        "name": "Gestión de Proyectos y Cronogramas",
+        "description": "Crear proyectos, fases, cronogramas y calendario.",
+        "provider": {"@type":"Organization","name":"Virtualmind"}
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    .container-xxl{max-width:120rem}
+    .glass { background: rgba(255,255,255,.7); backdrop-filter: blur(6px); }
+    .dark .glass { background: rgba(17,24,39,.7); }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+
+  <!-- Topbar -->
+  <header class="sticky top-0 z-40 border-b border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/70 backdrop-blur">
+    <div class="mx-auto container-xxl px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="/assets/logo.png" alt="Virtualmind" class="w-10 h-10 rounded-full shadow">
+        <div>
+          <p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Zona de Capacitación</p>
+          <h1 class="text-lg font-semibold">Microcursos de la Plataforma</h1>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button id="darkToggle" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <svg id="iconSun" class="w-5 h-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414m12.728 0l-1.414-1.414M7.05 7.05L5.636 5.636M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg id="iconMoon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
+          <span class="text-sm">Tema</span>
+        </button>
+        <a href="/r/superadmin/" class="text-sm text-brand-600 dark:text-brand-400 hover:underline">Volver al panel</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-brand-600 to-accent-600 opacity-10 dark:opacity-20"></div>
+    <div class="mx-auto container-xxl px-4 py-10 lg:py-14 relative">
+      <div class="grid lg:grid-cols-3 gap-6 items-center">
+        <div class="lg:col-span-2">
+          <h2 class="text-3xl lg:text-4xl font-bold leading-tight">Aprende Virtualmind <span class="text-brand-600 dark:text-brand-400">a tu ritmo</span> con microcursos prácticos</h2>
+          <p class="mt-3 text-gray-600 dark:text-gray-300">Cursos cortos (5–20 min) para dominar procesos clave: creación de proyectos, cronogramas, evaluaciones inteligentes, firma digital, utilidades de IA, reportes, seguridad y más. Filtra por <strong>rol</strong> y <strong>nivel</strong>.</p>
+          <div class="mt-5 flex flex-wrap gap-3">
+            <span class="px-3 py-1 rounded-full text-xs bg-brand-50 dark:bg-gray-800 text-brand-700 dark:text-brand-300 border border-brand-100 dark:border-gray-700">Actualizado 2025</span>
+            <span class="px-3 py-1 rounded-full text-xs bg-accent-50 dark:bg-gray-800 text-accent-700 dark:text-accent-300 border border-accent-100 dark:border-gray-700">Contenido por rol</span>
+            <span class="px-3 py-1 rounded-full text-xs bg-emerald-50 dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-gray-700">Certificado interno</span>
+          </div>
+        </div>
+        <div class="glass rounded-xl p-5 lg:p-6 shadow">
+          <label for="q" class="text-sm font-medium text-gray-700 dark:text-gray-300">Buscador (atajo: /)</label>
+          <div class="mt-2 flex items-center gap-2">
+            <input id="q" type="search" placeholder="Busca temas: 'cronogramas', 'firma', 'IA'…" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/50 focus:outline-none focus:ring-2 focus:ring-brand-500 text-gray-800 dark:text-gray-100">
+            <button id="clearQ" class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" title="Limpiar">⌫</button>
+          </div>
+
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-gray-500">Rol</label>
+              <select id="fRol" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/50">
+                <option value="">Todos</option>
+                <option>Superadmin</option>
+                <option>Admin</option>
+                <option>Coordinador</option>
+                <option>Autor</option>
+                <option>Abogado</option>
+                <option>Cliente</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500">Nivel</label>
+              <select id="fNivel" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/50">
+                <option value="">Cualquiera</option>
+                <option>Básico</option>
+                <option>Intermedio</option>
+                <option>Avanzado</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500">Duración</label>
+              <select id="fDuracion" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/50">
+                <option value="">Todas</option>
+                <option value="<=10">≤ 10 min</option>
+                <option value="<=20">≤ 20 min</option>
+                <option value=">20">&gt; 20 min</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500">Ordenar por</label>
+              <select id="fOrden" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/50">
+                <option value="recientes">Más recientes</option>
+                <option value="duracion">Duración</option>
+                <option value="rating">Mejor valorados</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-4 flex gap-2">
+            <button id="btnAplicar" class="flex-1 px-4 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold">Aplicar</button>
+            <button id="btnReset" class="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">Reiniciar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="mx-auto container-xxl px-4 py-6">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass rounded-xl p-4 border border-gray-200/60 dark:border-gray-800/60">
+        <p class="text-xs text-gray-500">Microcursos</p>
+        <p id="statCursos" class="text-2xl font-bold">–</p>
+      </div>
+      <div class="glass rounded-xl p-4 border border-gray-200/60 dark:border-gray-800/60">
+        <p class="text-xs text-gray-500">Horas totales</p>
+        <p id="statHoras" class="text-2xl font-bold">–</p>
+      </div>
+      <div class="glass rounded-xl p-4 border border-gray-200/60 dark:border-gray-800/60">
+        <p class="text-xs text-gray-500">Completados por ti</p>
+        <p id="statCompletados" class="text-2xl font-bold">–</p>
+      </div>
+      <div class="glass rounded-xl p-4 border border-gray-200/60 dark:border-gray-800/60">
+        <p class="text-xs text-gray-500">Satisfacción promedio</p>
+        <p id="statRating" class="text-2xl font-bold">–</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tracks por rol -->
+  <section class="mx-auto container-xxl px-4 py-2">
+    <div class="glass rounded-xl p-4 border border-gray-200/60 dark:border-gray-800/60">
+      <h3 class="text-base font-semibold mb-2">Rutas recomendadas por rol</h3>
+      <div class="flex flex-wrap gap-2">
+        <button data-track="Superadmin" class="track-btn px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-brand-50 dark:hover:bg-gray-800">Superadmin</button>
+        <button data-track="Admin" class="track-btn px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-brand-50 dark:hover:bg-gray-800">Admin</button>
+        <button data-track="Coordinador" class="track-btn px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-brand-50 dark:hover:bg-gray-800">Coordinador</button>
+        <button data-track="Autor" class="track-btn px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-brand-50 dark:hover:bg-gray-800">Autor</button>
+        <button data-track="Abogado" class="track-btn px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-brand-50 dark:hover:bg-gray-800">Abogado</button>
+        <button data-track="Cliente" class="track-btn px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 hover:bg-brand-50 dark:hover:bg-gray-800">Cliente</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Grid de cursos -->
+  <main class="mx-auto container-xxl px-4 py-6">
+    <div id="gridCursos" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+    <div id="noResults" class="hidden mt-10 text-center text-gray-500">No se encontraron microcursos con los filtros aplicados.</div>
+  </main>
+
+  <!-- Testimonios / FAQ -->
+  <section class="mx-auto container-xxl px-4 py-10 grid lg:grid-cols-2 gap-6">
+    <div class="glass rounded-xl p-6 border border-gray-200/60 dark:border-gray-800/60">
+      <h3 class="text-xl font-semibold mb-4">Testimonios</h3>
+      <ul class="space-y-4">
+        <li class="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+          <p class="text-sm">“En 40 minutos pasé de cero a crear y publicar un cronograma completo.”</p>
+          <p class="mt-1 text-xs text-gray-500">— Coordinador de proyectos</p>
+        </li>
+        <li class="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+          <p class="text-sm">“La firma digital me ahorró 3 días de idas y venidas con documentos.”</p>
+          <p class="mt-1 text-xs text-gray-500">— Abogado</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="glass rounded-xl p-6 border border-gray-200/60 dark:border-gray-800/60" id="faq">
+      <h3 class="text-xl font-semibold mb-4">Preguntas frecuentes</h3>
+      <details class="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+        <summary class="font-medium cursor-pointer">¿Cómo se guarda mi progreso?</summary>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Localmente en tu navegador (localStorage). Si cambias de equipo, exporta/importa tu progreso desde el menú ⋮ de cada curso.</p>
+      </details>
+      <details class="p-4 rounded-lg border border-gray-200 dark:border-gray-800 mt-3">
+        <summary class="font-medium cursor-pointer">¿Hay certificación interna?</summary>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Sí. Completa el track de tu rol (80% o más) y solicita tu certificado al área de Talento.</p>
+      </details>
+      <details class="p-4 rounded-lg border border-gray-200 dark:border-gray-800 mt-3">
+        <summary class="font-medium cursor-pointer">¿Qué roles contempla la ruta?</summary>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Superadmin, Admin, Coordinador, Autor, Abogado y Cliente. Cada microcurso indica a qué roles aplica.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="mx-auto container-xxl px-4 py-10">
+    <div class="glass rounded-xl p-6 border border-gray-200/60 dark:border-gray-800/60 flex flex-col lg:flex-row gap-4 items-center justify-between">
+      <div>
+        <h4 class="font-semibold">¿Necesitas ayuda?</h4>
+        <p class="text-sm text-gray-600 dark:text-gray-300">Escríbenos a soporte o agenda una sesión guiada.</p>
+      </div>
+      <div class="flex gap-3">
+        <a href="mailto:soporte@pegui.edu.co" class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">Soporte</a>
+        <a href="/capacitacion/buenas-practicas.html" class="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white">Buenas prácticas por rol</a>
+      </div>
+    </div>
+    <p class="mt-6 text-center text-xs text-gray-500">© 2025 Virtualmind – Zona de Capacitación</p>
+  </footer>
+
+  <!-- Modal de curso -->
+  <div id="modal" class="hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-black/50" data-close></div>
+    <div class="mx-auto container-xxl px-4 h-full flex items-center">
+      <div class="w-full max-w-3xl mx-auto glass rounded-2xl border border-gray-200/60 dark:border-gray-800/60 overflow-hidden">
+        <div class="p-5 border-b border-gray-200 dark:border-gray-800 flex items-start justify-between">
+          <div>
+            <p id="mRol" class="text-xs text-gray-500"></p>
+            <h4 id="mTitulo" class="text-xl font-semibold"></h4>
+            <p id="mSub" class="text-sm text-gray-600 dark:text-gray-300"></p>
+          </div>
+          <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" data-close title="Cerrar">✕</button>
+        </div>
+        <div class="p-5 grid lg:grid-cols-3 gap-5">
+          <div class="lg:col-span-2 space-y-4">
+            <div class="aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <span class="text-gray-400 text-sm">Video de muestra / captura</span>
+            </div>
+            <div>
+              <h5 class="font-semibold mb-2">Temario</h5>
+              <ol id="mTemario" class="list-decimal list-inside space-y-1 text-sm"></ol>
+            </div>
+            <div>
+              <h5 class="font-semibold mb-2">Resultados de aprendizaje</h5>
+              <ul id="mOutcomes" class="list-disc list-inside space-y-1 text-sm"></ul>
+            </div>
+          </div>
+          <aside class="space-y-3">
+            <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-800">
+              <p class="text-sm"><span class="font-medium">Duración:</span> <span id="mDur"></span></p>
+              <p class="text-sm"><span class="font-medium">Nivel:</span> <span id="mNivel"></span></p>
+              <p class="text-sm"><span class="font-medium">Rating:</span> <span id="mRating"></span> ★</p>
+              <div id="mTags" class="mt-2 flex flex-wrap gap-1"></div>
+            </div>
+            <button id="mStart" class="w-full px-4 py-2.5 rounded-lg bg-accent-600 hover:bg-accent-600/90 text-white font-semibold">Empezar</button>
+            <button id="mMarkDone" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700">Marcar como completado</button>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ------ Tema persistente
+  const root = document.documentElement;
+  const darkToggle = document.getElementById('darkToggle');
+  const iconSun = document.getElementById('iconSun');
+  const iconMoon = document.getElementById('iconMoon');
+  function setTheme(mode){
+    if(mode==='dark'){ root.classList.add('dark'); iconSun.classList.remove('hidden'); iconMoon.classList.add('hidden'); }
+    else { root.classList.remove('dark'); iconSun.classList.add('hidden'); iconMoon.classList.remove('hidden'); }
+    localStorage.setItem('vm-theme', mode);
+  }
+  setTheme(localStorage.getItem('vm-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light'));
+  darkToggle.addEventListener('click', ()=> setTheme(root.classList.contains('dark')?'light':'dark'));
+
+  // ------ Dataset de microcursos
+  const cursos = [
+    {
+      id:'onboarding', titulo:'Onboarding de Virtualmind',
+      subtitulo:'Navegación, roles, seguridad y tips para acelerar tu curva de aprendizaje.',
+      nivel:'Básico', dur:12, rating:4.8,
+      roles:['Superadmin','Admin','Coordinador','Autor','Abogado','Cliente'],
+      tags:['inicio','seguridad','roles'],
+      temario:[
+        'Estructura de la plataforma y navegación',
+        'Modelo de roles y permisos',
+        'Buenas prácticas de seguridad',
+        'Dónde encontrar ayuda y documentación'
+      ],
+      outcomes:[
+        'Reconocer las áreas clave del sistema',
+        'Aplicar higiene básica de seguridad',
+        'Identificar tu ruta de microcursos por rol'
+      ],
+      href:'#'
+    },
+    {
+      id:'proyectos', titulo:'Gestión de Proyectos y Cronogramas',
+      subtitulo:'Crea proyectos, fases/etapas, cronogramas y usa el calendario.',
+      nivel:'Intermedio', dur:18, rating:4.7,
+      roles:['Admin','Coordinador'],
+      tags:['proyectos','fases','cronograma','calendario'],
+      temario:[
+        'Crear proyecto y asociar cliente',
+        'Fases y etapas: estructura y plantillas',
+        'Gestor de cronogramas y % de avance',
+        'Calendario de tareas y dependencias'
+      ],
+      outcomes:[
+        'Planificar proyectos de punta a punta',
+        'Ajustar cronogramas y comunicar hitos',
+        'Evitar cuellos de botella'
+      ],
+      href:'#'
+    },
+    {
+      id:'evaluaciones', titulo:'Evaluaciones Inteligentes',
+      subtitulo:'Crea evaluaciones con bancos de preguntas y niveles adaptativos.',
+      nivel:'Intermedio', dur:14, rating:4.6,
+      roles:['Admin','Coordinador','Autor'],
+      tags:['evaluaciones','bancos','Ia'],
+      temario:[
+        'Crear evaluación: parámetros clave',
+        'Banco de preguntas y niveles',
+        'Intentos, fechas y calificación',
+        'Seguimiento y reportes'
+      ],
+      outcomes:[
+        'Configurar evaluaciones flexibles',
+        'Medir desempeño y detectar gaps',
+        'Exportar resultados'
+      ],
+      href:'#'
+    },
+    {
+      id:'autor-modulos', titulo:'Autoría: Cursos, Módulos y Unidades',
+      subtitulo:'Estructura pedagógica, subida de contenidos y actividades.',
+      nivel:'Intermedio', dur:20, rating:4.5,
+      roles:['Autor','Coordinador','Admin'],
+      tags:['autor','didáctica','contenidos'],
+      temario:[
+        'Crear curso y programar módulos',
+        'Unidades y actividades de aprendizaje',
+        'Tareas, rúbricas y retroalimentación',
+        'Buenas prácticas de diseño instruccional'
+      ],
+      outcomes:[
+        'Publicar cursos consistentes',
+        'Medir la participación de estudiantes',
+        'Acelerar revisiones de QA'
+      ],
+      href:'#'
+    },
+    {
+      id:'firma', titulo:'Firma Digital de Documentos',
+      subtitulo:'Sube, firma y descarga documentos firmados legalmente.',
+      nivel:'Básico', dur:8, rating:4.9,
+      roles:['Abogado','Admin','Superadmin'],
+      tags:['legal','firma','documentos'],
+      temario:[
+        'Subir PDF y crear tu firma',
+        'Posicionar la firma y sellado temporal',
+        'Descargar/compartir firmado',
+        'Bitácora y evidencia'
+      ],
+      outcomes:[
+        'Reducir ciclos legales',
+        'Trazabilidad de documentos',
+        'Cumplimiento interno'
+      ],
+      href:'#'
+    },
+    {
+      id:'drive', titulo:'Gestión de Archivos (Drive Personal/Global)',
+      subtitulo:'Carpetas, permisos y repositorio público.',
+      nivel:'Básico', dur:10, rating:4.4,
+      roles:['Superadmin','Admin','Coordinador','Autor','Cliente'],
+      tags:['archivos','permisos','repositorio'],
+      temario:[
+        'Mi Drive Personal',
+        'Drive Global y repositorio público',
+        'Compartición segura',
+        'Versionado y orden'
+      ],
+      outcomes:[
+        'Estandarizar tu repositorio',
+        'Minimizar pérdidas de versiones',
+        'Compartir con seguridad'
+      ],
+      href:'#'
+    },
+    {
+      id:'reportes', titulo:'Reportes y Analytics',
+      subtitulo:'Paneles, métricas operativas y descarga de datos.',
+      nivel:'Intermedio', dur:16, rating:4.6,
+      roles:['Superadmin','Admin','Coordinador'],
+      tags:['reportes','metricas','descargas'],
+      temario:[
+        'Dashboard Analytics Pro',
+        'KPIs clave y segmentación',
+        'Descarga CSV/Excel',
+        'Alertas e insights'
+      ],
+      outcomes:[
+        'Medir progreso real',
+        'Tomar decisiones con datos',
+        'Anticipar riesgos'
+      ],
+      href:'#'
+    },
+    {
+      id:'chat', titulo:'Chat y Videoconferencia',
+      subtitulo:'Colabora en tiempo real con canales y videollamadas.',
+      nivel:'Básico', dur:9, rating:4.3,
+      roles:['Todos'],
+      tags:['comunicación','video','canales'],
+      temario:[
+        'Chat 1:1 y grupal',
+        'Canales temáticos',
+        'Reuniones por Jitsi',
+        'Buenas prácticas de comunicación'
+      ],
+      outcomes:[
+        'Centralizar conversaciones',
+        'Reducir fricción operativa',
+        'Registrar acuerdos'
+      ],
+      href:'#'
+    },
+    {
+      id:'ia-imagen', titulo:'IA – Producción de Imagen',
+      subtitulo:'Genera imágenes con prompts y estilos.',
+      nivel:'Básico', dur:7, rating:4.2,
+      roles:['Autor','Coordinador','Admin'],
+      tags:['IA','imagen','prompts'],
+      temario:[
+        'Conceptos de prompt',
+        'Estilos y variaciones',
+        'Derechos de uso',
+        'Exportación y formatos'
+      ],
+      outcomes:[
+        'Acelerar materiales',
+        'Mantener estética consistente',
+        'Evitar riesgos legales'
+      ],
+      href:'#'
+    },
+    {
+      id:'seguridad', titulo:'Seguridad y Auditoría',
+      subtitulo:'Buenas prácticas, bitácora de actividad y bloqueo por fase.',
+      nivel:'Avanzado', dur:15, rating:4.7,
+      roles:['Superadmin','Admin','Abogado'],
+      tags:['seguridad','auditoría','cumplimiento'],
+      temario:[
+        'Políticas de acceso y 2FA',
+        'Bitácora de actividad y retención',
+        'Bloqueo por fase finalizada',
+        'Gestión de incidentes'
+      ],
+      outcomes:[
+        'Reducir superficie de ataque',
+        'Auditar cambios críticos',
+        'Cumplir regulaciones'
+      ],
+      href:'#'
+    }
+  ];
+
+  // ------ Estado / almacenamiento
+  const LSKEY = 'vm-microcursos-progress';
+  const progress = JSON.parse(localStorage.getItem(LSKEY) || '{}');
+
+  // ------ Utilidades
+  const $ = sel => document.querySelector(sel);
+  const grid = $('#gridCursos');
+  const statCursos = $('#statCursos'), statHoras = $('#statHoras'), statCompletados = $('#statCompletados'), statRating = $('#statRating');
+
+  function minutosToHoras(min){ return (min/60).toFixed(1); }
+
+  function computeStats(list){
+    const total = list.length;
+    const horas = list.reduce((a,c)=>a+c.dur,0);
+    const ratings = list.reduce((a,c)=>a+c.rating,0)/Math.max(1,total);
+    const completados = Object.values(progress).filter(Boolean).length;
+    statCursos.textContent = total;
+    statHoras.textContent = minutosToHoras(horas) + ' h';
+    statCompletados.textContent = completados;
+    statRating.textContent = ratings.toFixed(1);
+  }
+
+  function tagPill(txt){
+    return `<span class="px-2 py-0.5 rounded-full text-[11px] border border-gray-200 dark:border-gray-700">${txt}</span>`;
+  }
+
+  // ------ Render
+  function render(list){
+    grid.innerHTML = '';
+    if(!list.length){ $('#noResults').classList.remove('hidden'); computeStats(list); return; }
+    $('#noResults').classList.add('hidden');
+    list.forEach(c=>{
+      const done = !!progress[c.id];
+      const roles = c.roles.includes('Todos') ? 'Todos' : c.roles.join(', ');
+      const card = document.createElement('article');
+      card.className = "rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden hover:shadow-md transition bg-white/70 dark:bg-gray-900/40";
+      card.innerHTML = `
+        <div class="p-4 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="text-[11px] text-gray-500">${roles} • ${c.nivel} • ${c.dur} min</p>
+              <h4 class="font-semibold leading-snug">${c.titulo}</h4>
+            </div>
+            <button class="text-sm px-2 py-1 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" data-menu="${c.id}" title="Opciones">⋮</button>
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-300">${c.subtitulo}</p>
+          <div class="flex flex-wrap gap-1">${c.tags.map(tagPill).join('')}</div>
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center gap-1"><span class="text-yellow-500">★</span> ${c.rating.toFixed(1)}</div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs ${done?'text-emerald-600':'text-gray-400'}">${done?'Completado':'Pendiente'}</span>
+              <label class="inline-flex items-center gap-1 text-xs cursor-pointer">
+                <input type="checkbox" class="accent-emerald-600" ${done?'checked':''} data-check="${c.id}">
+                Hecho
+              </label>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button class="px-3 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm" data-open="${c.id}">Ver temario</button>
+            <a href="${c.href}" class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-center text-sm hover:bg-gray-50 dark:hover:bg-gray-800">Empezar</a>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+    computeStats(list);
+  }
+
+  // ------ Filtros y búsqueda
+  const q = $('#q'), clearQ = $('#clearQ');
+  const fRol = $('#fRol'), fNivel = $('#fNivel'), fDuracion = $('#fDuracion'), fOrden = $('#fOrden');
+  function pasaDur(c){
+    const v = fDuracion.value;
+    if(!v) return true;
+    if(v==='<=10') return c.dur<=10;
+    if(v==='<=20') return c.dur<=20;
+    if(v==='>20') return c.dur>20;
+    return true;
+  }
+  function apply(){
+    const term = q.value.trim().toLowerCase();
+    let list = cursos.filter(c=>{
+      const t = [c.titulo,c.subtitulo,c.tags.join(' '),(c.roles||[]).join(' ')].join(' ').toLowerCase();
+      const okQ = !term || t.includes(term);
+      const okRol = !fRol.value || c.roles.includes(fRol.value) || c.roles.includes('Todos');
+      const okNivel = !fNivel.value || c.nivel===fNivel.value;
+      const okDur = pasaDur(c);
+      return okQ && okRol && okNivel && okDur;
+    });
+    if(fOrden.value==='duracion') list.sort((a,b)=>a.dur-b.dur);
+    else if(fOrden.value==='rating') list.sort((a,b)=>b.rating-a.rating);
+    else list = list; // recientes (orden dataset)
+    render(list);
+  }
+  document.getElementById('btnAplicar').addEventListener('click', apply);
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    q.value=''; fRol.value=''; fNivel.value=''; fDuracion.value=''; fOrden.value='recientes'; apply();
+  });
+  clearQ.addEventListener('click', ()=>{ q.value=''; apply(); });
+  window.addEventListener('keydown', (e)=>{ if(e.key==='/'){ e.preventDefault(); q.focus(); } });
+
+  // Tracks por rol (atajo rápido)
+  document.querySelectorAll('.track-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ fRol.value = btn.dataset.track; apply(); window.scrollTo({top: document.querySelector('main').offsetTop - 20, behavior:'smooth'}); });
+  });
+
+  // ------ Interacciones (hecho, modal)
+  grid.addEventListener('change', (e)=>{
+    const id = e.target.getAttribute('data-check');
+    if(!id) return;
+    progress[id] = e.target.checked;
+    localStorage.setItem(LSKEY, JSON.stringify(progress));
+    apply();
+  });
+
+  // Modal
+  const modal = document.getElementById('modal');
+  const mTitulo = document.getElementById('mTitulo');
+  const mSub = document.getElementById('mSub');
+  const mRol = document.getElementById('mRol');
+  const mTemario = document.getElementById('mTemario');
+  const mOut = document.getElementById('mOutcomes');
+  const mDur = document.getElementById('mDur');
+  const mNivel = document.getElementById('mNivel');
+  const mRating = document.getElementById('mRating');
+  const mTags = document.getElementById('mTags');
+  const mStart = document.getElementById('mStart');
+  const mMarkDone = document.getElementById('mMarkDone');
+
+  function openModal(c){
+    mTitulo.textContent = c.titulo;
+    mSub.textContent = c.subtitulo;
+    mRol.textContent = (c.roles.includes('Todos')?'Todos':c.roles.join(', '));
+    mTemario.innerHTML = c.temario.map(i=>`<li>${i}</li>`).join('');
+    mOut.innerHTML = c.outcomes.map(i=>`<li>${i}</li>`).join('');
+    mDur.textContent = `${c.dur} min`;
+    mNivel.textContent = c.nivel;
+    mRating.textContent = c.rating.toFixed(1);
+    mTags.innerHTML = c.tags.map(tagPill).join('');
+    mStart.onclick = ()=> location.href = c.href || '#';
+    mMarkDone.onclick = ()=>{
+      progress[c.id] = true; localStorage.setItem(LSKEY, JSON.stringify(progress));
+      modal.classList.add('hidden'); apply();
+    };
+    modal.classList.remove('hidden');
+  }
+  grid.addEventListener('click', (e)=>{
+    const id = e.target.getAttribute('data-open');
+    if(!id){ return; }
+    const curso = cursos.find(x=>x.id===id);
+    if(curso) openModal(curso);
+  });
+  modal.addEventListener('click', (e)=>{ if(e.target.hasAttribute('data-close')) modal.classList.add('hidden'); });
+  document.querySelectorAll('#modal [data-close]').forEach(btn=> btn.addEventListener('click', ()=> modal.classList.add('hidden')));
+
+  // Menú ⋮ exportar/importar progreso
+  grid.addEventListener('click', (e)=>{
+    const id = e.target.getAttribute('data-menu');
+    if(!id) return;
+    const ok = confirm('Exportar tu progreso a portapapeles? (Aceptar)\n\nPara importar, usa pegar en la consola (o contacta a soporte).');
+    if(ok){
+      navigator.clipboard.writeText(JSON.stringify(progress, null, 2));
+      alert('Progreso copiado. ¡Guárdalo en un lugar seguro!');
+    }
+  });
+
+  // Render inicial
+  render(cursos);
+  // Aplicar automáticamente cuando se cambien selects
+  [fRol,fNivel,fDuracion,fOrden].forEach(el=> el.addEventListener('change', apply));
+  q.addEventListener('input', ()=>{ apply(); });
+</script>
+</body>
+</html>
+

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Fases y Etapas</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5rem; font-weight: 300; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .section-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); }
+        .section-title { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; color: #333; }
+        .section-title i { font-size: 1.5rem; color: #667eea; }
+        .section-title h2 { font-size: 1.8rem; font-weight: 600; }
+        .form-container { background: #f8f9ff; padding: 25px; border-radius: 15px; margin-bottom: 25px; border: 2px dashed #e1e5f3; transition: all 0.3s ease; }
+        .form-container:hover { border-color: #667eea; background: #f0f2ff; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .form-group { position: relative; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-input, .form-select { width: 100%; padding: 12px 16px; border: 2px solid #e1e5f3; border-radius: 12px; font-size: 14px; transition: all 0.3s ease; background: white; font-family: inherit; }
+        .form-input:focus, .form-select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        .form-input::placeholder { color: #9ca3af; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102,126,234,0.3); }
+        .btn-primary:active { transform: translateY(0); }
+        .data-table { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .table-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 25px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 14px; }
+        .table-content { max-height: 400px; overflow-y: auto; }
+        .data-row { display: grid; grid-template-columns: 60px 2fr 3fr 1fr; align-items: center; padding: 20px 25px; border-bottom: 1px solid #f3f4f6; transition: all 0.2s ease; }
+        .etapa-row { grid-template-columns: 60px 2fr 3fr 1fr 120px; }
+        .data-row:hover { background: #f8f9ff; }
+        .data-row:last-child { border-bottom: none; }
+        .row-id { display: flex; align-items: center; justify-content: center; width: 35px; height: 35px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; font-weight: bold; font-size: 12px; }
+        .row-field { padding: 8px 12px; border: 2px solid transparent; border-radius: 8px; background: transparent; transition: all 0.3s ease; cursor: text; }
+        .row-field:hover { background: #f8f9ff; border-color: #e1e5f3; }
+        .row-field:focus { outline: none; background: white; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        .row-field.empty { color: #9ca3af; font-style: italic; }
+        .phase-badge { display: inline-flex; align-items: center; padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
+        .btn-delete:hover { background: #dc2626; transform: translateY(-1px); }
+        .empty-state { text-align: center; padding: 40px 20px; color: #6b7280; }
+        .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; background: #10b981; color: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transform: translateX(400px); transition: all 0.3s ease; z-index: 1000; }
+        .notification.show { transform: translateX(0); }
+        .notification.error { background: #ef4444; }
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; gap: 20px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .data-row, .etapa-row { grid-template-columns: 1fr; gap: 10px; text-align: center; }
+            .header h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-project-diagram"></i> Gestión de Fases y Etapas</h1>
+            <p>Administra las fases y etapas de tus proyectos de manera eficiente</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- FASES -->
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-layer-group"></i>
+                    <h2>Fases</h2>
+                </div>
+                <div class="form-container">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <input type="text" id="faseNombre" class="form-input" placeholder="Nombre de la fase">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="faseDescripcion" class="form-input" placeholder="Descripción">
+                        </div>
+                    </div>
+                    <button onclick="createFase()" class="btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Crear Fase
+                    </button>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-header">
+                        <i class="fas fa-list"></i> Lista de Fases
+                    </div>
+                    <div class="table-content" id="fasesTable">
+                        <div class="empty-state">
+                            <i class="fas fa-layer-group"></i>
+                            <p>No hay fases creadas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ETAPAS -->
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-tasks"></i>
+                    <h2>Etapas</h2>
+                </div>
+                <div class="form-container">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <input type="text" id="etapaNombre" class="form-input" placeholder="Nombre de la etapa">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="etapaDescripcion" class="form-input" placeholder="Descripción">
+                        </div>
+                        <div class="form-group full-width">
+                            <select id="faseSelect" class="form-select">
+                                <option value="">Seleccionar fase...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="createEtapa()" class="btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Crear Etapa
+                    </button>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-header">
+                        <i class="fas fa-list-ul"></i> Lista de Etapas
+                    </div>
+                    <div class="table-content" id="etapasTable">
+                        <div class="empty-state">
+                            <i class="fas fa-tasks"></i>
+                            <p>No hay etapas creadas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
+
+<script>
+const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+
+// --- Notificaciones ---
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    const text = document.getElementById('notificationText');
+    text.textContent = message;
+    notification.className = `notification ${type} show`;
+    setTimeout(() => notification.classList.remove('show'), 3000);
+}
+
+function clearForm(formType) {
+    if (formType === 'fase') {
+        document.getElementById('faseNombre').value = '';
+        document.getElementById('faseDescripcion').value = '';
+    } else {
+        document.getElementById('etapaNombre').value = '';
+        document.getElementById('etapaDescripcion').value = '';
+        document.getElementById('faseSelect').value = '';
+    }
+}
+
+// ---------- FASES ----------
+async function loadFases() {
+    try {
+        const res = await fetch(`${API_BASE}/fases`);
+        if (!res.ok) throw new Error('Error al cargar las fases');
+        const data = await res.json();
+
+        const container = document.getElementById('fasesTable');
+        const select = document.getElementById('faseSelect');
+
+        if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-layer-group"></i>
+                    <p>No hay fases creadas</p>
+                </div>`;
+        } else {
+            container.innerHTML = data.map(fase => `
+                <div class="data-row">
+                    <div class="row-id">${fase.id}</div>
+                    <div class="row-field" contenteditable="true" onblur="updateFase(${fase.id}, this, 'nombre')">${fase.nombre}</div>
+                    <div class="row-field ${!fase.descripcion ? 'empty' : ''}" contenteditable="true" onblur="updateFase(${fase.id}, this, 'descripcion')">${fase.descripcion || 'Sin descripción'}</div>
+                    <button class="btn-delete" onclick="deleteFase(${fase.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // dropdown
+        select.innerHTML = '<option value="">Seleccionar fase...</option>' +
+            (Array.isArray(data) ? data.map(f => `<option value="${f.id}">${f.nombre}</option>`).join('') : '');
+
+    } catch (error) {
+        showNotification('Error al cargar las fases: ' + error.message, 'error');
+    }
+}
+
+async function createFase() {
+    const nombre = document.getElementById('faseNombre').value.trim();
+    const descripcion = document.getElementById('faseDescripcion').value.trim();
+
+    if (!nombre) {
+        showNotification('El nombre de la fase es requerido', 'error');
+        return;
+    }
+
+    const payload = { nombre, descripcion: descripcion || null };
+    try {
+        const res = await fetch(`${API_BASE}/fases`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const msg = (body && body.detail) ? JSON.stringify(body.detail) : (res.status + ' ' + res.statusText);
+            throw new Error(msg);
+        }
+
+        showNotification('Fase creada exitosamente');
+        clearForm('fase');
+        await loadFases();
+        await loadEtapas();
+    } catch (error) {
+        showNotification('Error al crear la fase: ' + error.message, 'error');
+    }
+}
+
+async function updateFase(id, el, field) {
+    const value = el.innerText.trim();
+
+    if (field === 'descripcion' && value === 'Sin descripción') {
+        el.innerText = '';
+        return;
+    }
+    if (field === 'nombre' && !value) {
+        showNotification('El nombre no puede estar vacío', 'error');
+        loadFases();
+        return;
+    }
+
+    try {
+        const otherField = field === 'nombre'
+            ? el.parentElement.children[2].innerText
+            : el.parentElement.children[1].innerText;
+
+        const payload = field === 'nombre'
+            ? { nombre: value, descripcion: otherField === 'Sin descripción' ? null : otherField.trim() }
+            : { nombre: otherField.trim(), descripcion: value };
+
+        const res = await fetch(`${API_BASE}/fases/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const msg = (body && body.detail) ? JSON.stringify(body.detail) : (res.status + ' ' + res.statusText);
+            throw new Error(msg);
+        }
+
+        showNotification('Fase actualizada exitosamente');
+        await loadFases();
+        await loadEtapas();
+    } catch (error) {
+        showNotification('Error al actualizar la fase: ' + error.message, 'error');
+        loadFases();
+    }
+}
+
+async function deleteFase(id) {
+    if (!confirm('¿Eliminar esta fase? Esto también eliminará todas las etapas asociadas.')) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/fases/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error('Error al eliminar la fase');
+        showNotification('Fase eliminada exitosamente');
+        await loadFases();
+        await loadEtapas();
+    } catch (error) {
+        showNotification('Error al eliminar la fase: ' + error.message, 'error');
+    }
+}
+
+// ---------- ETAPAS ----------
+async function loadEtapas() {
+    try {
+        const res = await fetch(`${API_BASE}/etapas`);
+        if (!res.ok) throw new Error('Error al cargar las etapas');
+        const data = await res.json();
+
+        const container = document.getElementById('etapasTable');
+
+        if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-tasks"></i>
+                    <p>No hay etapas creadas</p>
+                </div>`;
+        } else {
+            // fases para mostrar badge
+            const fasesRes = await fetch(`${API_BASE}/fases`);
+            const fases = fasesRes.ok ? await fasesRes.json() : [];
+            const fasesMap = Object.fromEntries((fases || []).map(f => [f.id, f.nombre]));
+
+            container.innerHTML = data.map(etapa => `
+                <div class="data-row etapa-row">
+                    <div class="row-id">${etapa.id}</div>
+                    <div class="row-field" contenteditable="true" onblur="updateEtapa(${etapa.id}, this, 'nombre')">${etapa.nombre}</div>
+                    <div class="row-field ${!etapa.descripcion ? 'empty' : ''}" contenteditable="true" onblur="updateEtapa(${etapa.id}, this, 'descripcion')">${etapa.descripcion || 'Sin descripción'}</div>
+                    <div class="phase-badge">${fasesMap[etapa.fase_id] || 'Fase #' + etapa.fase_id}</div>
+                    <button class="btn-delete" onclick="deleteEtapa(${etapa.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        showNotification('Error al cargar las etapas: ' + error.message, 'error');
+    }
+}
+
+async function createEtapa() {
+    const nombre = document.getElementById('etapaNombre').value.trim();
+    const descripcion = document.getElementById('etapaDescripcion').value.trim();
+    const fase_id = document.getElementById('faseSelect').value;
+
+    if (!nombre) { showNotification('El nombre de la etapa es requerido', 'error'); return; }
+    if (!fase_id) { showNotification('Debes seleccionar una fase', 'error'); return; }
+
+    try {
+        const res = await fetch(`${API_BASE}/etapas`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ nombre, descripcion: descripcion || null, fase_id: parseInt(fase_id) })
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const msg = (body && body.detail) ? JSON.stringify(body.detail) : (res.status + ' ' + res.statusText);
+            throw new Error(msg);
+        }
+
+        showNotification('Etapa creada exitosamente');
+        clearForm('etapa');
+        await loadEtapas();
+    } catch (error) {
+        showNotification('Error al crear la etapa: ' + error.message, 'error');
+    }
+}
+
+async function updateEtapa(id, el, field) {
+    const value = el.innerText.trim();
+
+    if (field === 'descripcion' && value === 'Sin descripción') { el.innerText=''; return; }
+    if (field === 'nombre' && !value) { showNotification('El nombre no puede estar vacío', 'error'); loadEtapas(); return; }
+
+    try {
+        const otherField = field === 'nombre'
+            ? el.parentElement.children[2].innerText
+            : el.parentElement.children[1].innerText;
+
+        const payload = field === 'nombre'
+            ? { nombre: value, descripcion: otherField === 'Sin descripción' ? null : otherField.trim() }
+            : { nombre: otherField.trim(), descripcion: value };
+
+        const res = await fetch(`${API_BASE}/etapas/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const msg = (body && body.detail) ? JSON.stringify(body.detail) : (res.status + ' ' + res.statusText);
+            throw new Error(msg);
+        }
+
+        showNotification('Etapa actualizada exitosamente');
+        await loadEtapas();
+    } catch (error) {
+        showNotification('Error al actualizar la etapa: ' + error.message, 'error');
+        loadEtapas();
+    }
+}
+
+async function deleteEtapa(id) {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta etapa?')) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/etapas/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error('Error al eliminar la etapa');
+        showNotification('Etapa eliminada exitosamente');
+        await loadEtapas();
+    } catch (error) {
+        showNotification('Error al eliminar la etapa: ' + error.message, 'error');
+    }
+}
+
+// ---------- INICIALIZACIÓN ----------
+document.addEventListener('DOMContentLoaded', () => {
+    loadFases();
+    loadEtapas();
+});
+</script>
+</body>
+</html>
+

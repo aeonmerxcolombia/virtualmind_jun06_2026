@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repositorio Público</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3b82f6',
+            secondary: '#60a5fa',
+            dark: '#1e40af',
+            light: '#dbeafe',
+            accent: '#8b5cf6'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    }
+    .card {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .file-icon {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+      font-size: 1.5rem;
+    }
+    .image-preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .loading-spinner {
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 3px solid rgba(59, 130, 246, 0.2);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+  <div class="max-w-6xl mx-auto p-4 md:p-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <i class="fas fa-folder-open text-primary"></i>
+          Repositorio Público
+        </h1>
+        <p class="text-gray-600 mt-2">Almacena y accede a archivos compartidos</p>
+      </div>
+      <div class="bg-white p-3 rounded-xl shadow-sm flex items-center gap-2">
+        <div class="bg-blue-100 p-2 rounded-lg">
+          <i class="fas fa-cloud-upload-alt text-primary"></i>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500">Archivos disponibles</p>
+          <p class="font-semibold" id="fileCount">Cargando...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subida de archivo -->
+    <div class="bg-white p-6 card rounded-2xl mb-8">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fas fa-file-upload text-primary"></i>
+        Subir nuevo archivo
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Seleccionar archivo</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-file text-gray-400"></i>
+            </div>
+            <input id="file" type="file" class="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del archivo</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-tag text-gray-400"></i>
+            </div>
+            <input id="nombre" type="text" placeholder="Nombre del archivo" 
+                   class="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tipo (opcional)</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-folder text-gray-400"></i>
+            </div>
+            <input id="tipo" type="text" placeholder="Tipo" 
+                   class="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+        </div>
+
+        <div class="flex items-end">
+          <button onclick="subirArchivo()" 
+                  class="w-full bg-gradient-to-r from-primary to-dark hover:from-dark hover:to-primary text-white p-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-all duration-300">
+            <i class="fas fa-cloud-upload-alt"></i>
+            Subir Archivo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros y estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="md:col-span-3">
+        <div class="bg-white p-4 card rounded-2xl">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+              <i class="fas fa-filter text-primary"></i>
+              Filtros
+            </h2>
+            <div class="flex flex-wrap gap-2">
+              <div class="flex items-center">
+                <label for="filtro" class="font-medium mr-2 text-gray-700">Filtrar por tipo:</label>
+                <select id="filtro" onchange="listarArchivos()" class="border p-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                  <option value="">Todos</option>
+                  <option value="image">Imágenes</option>
+                  <option value="application/pdf">PDF</option>
+                  <option value="video">Videos</option>
+                  <option value="audio">Audios</option>
+                  <option value="text">Documentos</option>
+                  <option value="application/zip">Archivos comprimidos</option>
+                </select>
+              </div>
+              <button onclick="listarArchivos()" class="bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg flex items-center gap-1">
+                <i class="fas fa-sync-alt"></i> Actualizar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 md:grid-cols-1 gap-4">
+        <div class="bg-white p-4 card rounded-2xl text-center">
+          <div class="text-2xl font-bold text-primary" id="totalFiles">0</div>
+          <div class="text-sm text-gray-600">Total Archivos</div>
+        </div>
+        <div class="bg-white p-4 card rounded-2xl text-center">
+          <div class="text-2xl font-bold text-accent" id="imageFiles">0</div>
+          <div class="text-sm text-gray-600">Imágenes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de archivos -->
+    <div class="bg-white card rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <i class="fas fa-file-alt text-primary"></i>
+          Archivos Disponibles
+        </h2>
+        <div class="text-sm text-gray-500" id="resultsCount">
+          Mostrando 0 resultados
+        </div>
+      </div>
+      
+      <div id="archivos" class="p-6">
+        <div class="text-center py-12">
+          <div class="flex flex-col items-center justify-center">
+            <div class="loading-spinner mb-4"></div>
+            <p class="text-gray-600">Cargando archivos...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://gestordecursos.pegui.edu.co:8000';
+
+    // Función para obtener el icono según el tipo de archivo
+    function getFileIcon(tipo) {
+      if (!tipo) return 'far fa-file';
+      
+      if (tipo.includes('image')) return 'far fa-file-image text-blue-500';
+      if (tipo.includes('pdf')) return 'far fa-file-pdf text-red-500';
+      if (tipo.includes('video')) return 'far fa-file-video text-purple-500';
+      if (tipo.includes('audio')) return 'far fa-file-audio text-yellow-500';
+      if (tipo.includes('zip') || tipo.includes('rar')) return 'far fa-file-archive text-green-500';
+      if (tipo.includes('text') || tipo.includes('word')) return 'far fa-file-word text-blue-600';
+      if (tipo.includes('excel') || tipo.includes('sheet')) return 'far fa-file-excel text-green-600';
+      if (tipo.includes('powerpoint') || tipo.includes('presentation')) return 'far fa-file-powerpoint text-orange-500';
+      
+      return 'far fa-file';
+    }
+    
+    // Función para obtener el color de fondo según el tipo de archivo
+    function getFileBgColor(tipo) {
+      if (!tipo) return 'bg-gray-100';
+      
+      if (tipo.includes('image')) return 'bg-blue-100';
+      if (tipo.includes('pdf')) return 'bg-red-100';
+      if (tipo.includes('video')) return 'bg-purple-100';
+      if (tipo.includes('audio')) return 'bg-yellow-100';
+      if (tipo.includes('zip') || tipo.includes('rar')) return 'bg-green-100';
+      if (tipo.includes('text') || tipo.includes('word')) return 'bg-blue-50';
+      if (tipo.includes('excel') || tipo.includes('sheet')) return 'bg-green-50';
+      if (tipo.includes('powerpoint') || tipo.includes('presentation')) return 'bg-orange-100';
+      
+      return 'bg-gray-100';
+    }
+    
+    // Función para formatear el tamaño del archivo
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Función para previsualizar imagen
+    function previewImage(url, tipo) {
+      if (tipo && tipo.includes('image')) {
+        return `<img src="${url}" alt="Previsualización" class="image-preview">`;
+      }
+      return '';
+    }
+    
+    async function listarArchivos() {
+      try {
+        const res = await fetch(`${API}/archivos/globales`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const archivos = await res.json();
+        const filtro = document.getElementById('filtro').value;
+        const contenedor = document.getElementById('archivos');
+        
+        if (!Array.isArray(archivos)) throw new Error("Respuesta inesperada del backend");
+        
+        // Filtrar archivos
+        const archivosFiltrados = archivos.filter(a => {
+          if (!filtro) return true;
+          return a.tipo && a.tipo.includes(filtro);
+        });
+        
+        // Actualizar estadísticas
+        document.getElementById('totalFiles').textContent = archivos.length;
+        document.getElementById('imageFiles').textContent = archivos.filter(a => a.tipo && a.tipo.includes('image')).length;
+        document.getElementById('resultsCount').textContent = `Mostrando ${archivosFiltrados.length} de ${archivos.length} resultados`;
+        document.getElementById('fileCount').textContent = `${archivos.length} archivos`;
+        
+        if (archivosFiltrados.length === 0) {
+          contenedor.innerHTML = `
+            <div class="text-center py-12">
+              <div class="flex flex-col items-center justify-center">
+                <div class="bg-gray-100 p-4 rounded-full mb-3">
+                  <i class="fas fa-file-search text-3xl text-gray-400"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-1">No se encontraron archivos</h3>
+                <p class="text-gray-500 max-w-md">No hay archivos que coincidan con los criterios de búsqueda</p>
+              </div>
+            </div>
+          `;
+          return;
+        }
+        
+        // Generar lista de archivos
+        contenedor.innerHTML = '';
+        archivosFiltrados.forEach((a, index) => {
+          const delay = index * 50; // Efecto de aparición escalonada
+          const div = document.createElement('div');
+          div.className = `fade-in mb-4 p-4 bg-white rounded-xl border border-gray-200 flex flex-col md:flex-row gap-4 items-start md:items-center`;
+          div.style.animationDelay = `${delay}ms`;
+          
+          div.innerHTML = `
+            <div class="file-icon ${getFileBgColor(a.tipo)}">
+              <i class="${getFileIcon(a.tipo)}"></i>
+            </div>
+            <div class="flex-1">
+              <p class="font-semibold text-gray-900">${a.nombre_archivo}</p>
+              <p class="text-sm text-gray-600 mt-1">Tipo: ${a.tipo || 'No definido'}</p>
+              <p class="text-xs text-gray-500 mt-1">Subido el: ${new Date(a.fecha_subida).toLocaleString()}</p>
+              ${previewImage(a.url, a.tipo)}
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <a href="${a.url}" target="_blank" 
+                 class="bg-primary hover:bg-dark text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                <i class="fas fa-eye"></i> Ver
+              </a>
+              <a href="${a.url}" download 
+                 class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                <i class="fas fa-download"></i> Descargar
+              </a>
+            </div>
+          `;
+          contenedor.appendChild(div);
+        });
+      } catch (err) {
+        console.error('Error al listar archivos:', err);
+        document.getElementById('archivos').innerHTML = `
+          <div class="text-center py-12">
+            <div class="flex flex-col items-center justify-center">
+              <div class="bg-red-100 p-4 rounded-full mb-3">
+                <i class="fas fa-exclamation-triangle text-3xl text-red-500"></i>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900 mb-1">Error al cargar archivos</h3>
+              <p class="text-gray-500 max-w-md">No se pudieron cargar los archivos. Intente nuevamente más tarde.</p>
+              <button onclick="listarArchivos()" class="mt-4 bg-primary hover:bg-dark text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i> Reintentar
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    async function subirArchivo() {
+      const archivo = document.getElementById('file').files[0];
+      const nombre = document.getElementById('nombre').value;
+      const tipo = document.getElementById('tipo').value;
+      
+      if (!archivo || !nombre) {
+        alert('Por favor completa todos los campos requeridos');
+        return;
+      }
+
+      const form = new FormData();
+      form.append('nombre_archivo', nombre);
+      form.append('tipo', tipo);
+      form.append('file', archivo);
+
+      try {
+        const res = await fetch(`${API}/archivos/global`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: form
+        });
+        
+        if (!res.ok) throw new Error('Error al subir');
+        
+        // Limpiar formulario
+        document.getElementById('file').value = '';
+        document.getElementById('nombre').value = '';
+        document.getElementById('tipo').value = '';
+        
+        alert('Archivo subido correctamente');
+        listarArchivos();
+      } catch (err) {
+        console.error('Error al subir archivo:', err);
+        alert('Error al subir archivo: ' + err.message);
+      }
+    }
+
+    // Inicializar cuando se carga la página
+    document.addEventListener('DOMContentLoaded', function() {
+      listarArchivos();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ver Cronograma</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.6s ease-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+  <!-- Header con gradiente -->
+  <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-12 px-6 mb-8">
+    <div class="max-w-6xl mx-auto text-center">
+      <div class="inline-block p-3 bg-white/10 rounded-2xl mb-4 backdrop-blur-sm">
+        <i class="fas fa-calendar-alt text-3xl"></i>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">
+        Ver Cronograma
+      </h1>
+      <p class="text-xl opacity-90 animate-fade-in">
+        Visualiza el cronograma completo de tu proyecto
+      </p>
+    </div>
+  </div>
+
+  <!-- Contenedor principal -->
+  <div class="max-w-6xl mx-auto px-6 pb-12">
+    <!-- Loading spinner -->
+    <div id="loading-spinner" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <p class="mt-4 text-gray-600">Cargando cronograma y usuarios...</p>
+    </div>
+
+    <!-- Contenedor del cronograma -->
+    <div id="schedule-content" class="opacity-0 transition-opacity duration-500"></div>
+    
+    <!-- Estado vacío -->
+    <div id="empty-state" class="hidden text-center py-12 animate-fade-in">
+      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 max-w-md mx-auto">
+        <div class="text-6xl mb-4">📋</div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay cronograma</h3>
+        <p class="text-gray-600 mb-6">Este proyecto no tiene un cronograma definido.</p>
+        <a href="index.html" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition">
+          <i class="fas fa-arrow-left mr-2"></i>Volver
+        </a>
+      </div>
+    </div>
+
+    <!-- Estado de error -->
+    <div id="error-state" class="hidden text-center py-12 animate-fade-in">
+      <div class="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md mx-auto">
+        <div class="text-red-500 text-4xl mb-4">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-red-800 mb-2">Error de conexión</h3>
+        <p id="error-message" class="text-red-600 mb-6">No se pudo cargar el cronograma. Verifica tu conexión.</p>
+        <button id="retry-btn" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition">
+          <i class="fas fa-redo mr-2"></i>Reintentar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+
+    // Elementos del DOM
+    const loadingSpinner = document.getElementById("loading-spinner");
+    const scheduleContent = document.getElementById("schedule-content");
+    const emptyState = document.getElementById("empty-state");
+    const errorState = document.getElementById("error-state");
+    const errorMessage = document.getElementById("error-message");
+    const retryBtn = document.getElementById("retry-btn");
+
+    // Cache para usuarios
+    let usuariosCache = {};
+
+    // Función para mostrar estados
+    function mostrarEstado(estado, mensajeError = null) {
+      loadingSpinner.style.display = estado === 'loading' ? 'block' : 'none';
+      scheduleContent.style.opacity = estado === 'success' ? '1' : '0';
+      emptyState.style.display = estado === 'empty' ? 'block' : 'none';
+      errorState.style.display = estado === 'error' ? 'block' : 'none';
+      if (mensajeError && errorMessage) {
+        errorMessage.textContent = mensajeError;
+      }
+      // Ensure schedule content is cleared when not in success state
+      if (estado !== 'success') {
+        scheduleContent.innerHTML = '';
+      }
+    }
+
+    // Función para obtener el token de localStorage
+    function obtenerToken() {
+      return localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('access_token');
+    }
+
+    // Configuración para fetch con timeout y autenticación
+    const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      
+      const token = obtenerToken();
+      
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+            ...options.headers
+          }
+        });
+        clearTimeout(id);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response;
+      } catch (error) {
+        clearTimeout(id);
+        console.error(`Fetch error for ${url}:`, error);
+        throw error;
+      }
+    };
+
+    // Función para cargar todos los usuarios
+    async function cargarUsuarios() {
+      try {
+        const token = obtenerToken();
+        if (!token) {
+          console.warn('No se encontró token de autenticación, continuando sin cargar usuarios...');
+          return [];
+        }
+
+        console.log('🚀 Iniciando carga de usuarios desde:', `${API_BASE}/users`);
+        const response = await fetchWithTimeout(`${API_BASE}/users`);
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.warn('Token de autenticación inválido o expirado');
+            return [];
+          }
+          throw new Error(`Error al cargar usuarios: ${response.status} - ${response.statusText}`);
+        }
+        const usuarios = await response.json();
+        
+        console.log('📦 Respuesta completa de usuarios:', usuarios);
+        
+        // Crear cache de usuarios por UID
+        usuariosCache = {};
+        if (Array.isArray(usuarios)) {
+          usuarios.forEach((user, index) => {
+            console.log(`👤 Usuario ${index}:`, user);
+            const userId = user.uid;
+            usuariosCache[userId] = user.nombre || user.email || `Usuario ${userId}`;
+          });
+          console.log(`✅ Cargados ${usuarios.length} usuarios correctamente`);
+          console.log('🗂️ UIDs en cache:', Object.keys(usuariosCache));
+        }
+        
+        return usuarios;
+      } catch (error) {
+        console.warn('❌ No se pudieron cargar los usuarios:', error.message);
+        return [];
+      }
+    }
+
+    // Función para obtener el nombre del usuario
+    function obtenerNombreUsuario(userId) {
+      if (!userId) return 'No asignado';
+      
+      console.log(`🔍 Buscando usuario con UID: ${userId}`);
+      
+      const nombre = usuariosCache[userId];
+      if (nombre) {
+        console.log(`✅ Nombre encontrado: ${nombre}`);
+        return nombre;
+      } else {
+        console.log(`❌ Usuario no encontrado en cache para UID: ${userId}`);
+        console.log('🗂️ UIDs disponibles en cache:', Object.keys(usuariosCache));
+      }
+      
+      return `Usuario UID: ${userId}`;
+    }
+
+    // Función para formatear fecha
+    function formatearFecha(fecha) {
+      if (!fecha) return 'No definida';
+      try {
+        return new Date(fecha).toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      } catch (error) {
+        return fecha;
+      }
+    }
+
+    // Función para formatear fecha y hora completa
+    function formatearFechaHora(fecha) {
+      if (!fecha) return 'No definida';
+      try {
+        return new Date(fecha).toLocaleString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (error) {
+        return fecha;
+      }
+    }
+
+    // Función para calcular el progreso de una actividad
+    function calcularProgreso(fechaInicio, fechaFin) {
+      if (!fechaInicio || !fechaFin) return { porcentaje: 0, estado: 'Sin fechas', clase: 'bg-gray-200' };
+      
+      const inicio = new Date(fechaInicio);
+      const fin = new Date(fechaFin);
+      const ahora = new Date();
+      
+      if (ahora < inicio) {
+        return { porcentaje: 0, estado: 'Pendiente', clase: 'bg-gray-200' };
+      } else if (ahora > fin) {
+        return { porcentaje: 100, estado: 'Completada', clase: 'bg-green-500' };
+      } else {
+        const total = fin - inicio;
+        const transcurrido = ahora - inicio;
+        const porcentaje = Math.round((transcurrido / total) * 100);
+        return { porcentaje: porcentaje, estado: 'En progreso', clase: 'bg-blue-500' };
+      }
+    }
+
+    // Función para obtener el project_id de la URL
+    function getProjectIdFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('project_id');
+    }
+
+    // Función para renderizar el cronograma
+    function renderizarCronograma(cronogramas) {
+      if (!Array.isArray(cronogramas) || cronogramas.length === 0) {
+        mostrarEstado('empty');
+        return;
+      }
+
+      let contenido = `
+        <div class="mb-6 animate-slide-up">
+          <h3 class="text-2xl font-bold text-gray-800 mb-2">Cronogramas del Proyecto</h3>
+          <p class="text-gray-600">Se encontraron ${cronogramas.length} cronograma(s)</p>
+        </div>
+        <div class="space-y-8 animate-slide-up">
+      `;
+
+      cronogramas.forEach((cronograma, index) => {
+        contenido += `
+          <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+            <div class="flex justify-between items-start mb-6">
+              <h4 class="text-2xl font-bold text-gray-800">
+                <i class="fas fa-calendar-alt text-indigo-600 mr-3"></i>
+                Cronograma ${index + 1}
+              </h4>
+              <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">
+                ID: ${cronograma.id || 'N/A'}
+              </span>
+            </div>
+            
+            <!-- Información general del cronograma -->
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-white p-3 rounded-lg shadow-sm">
+                  <div class="flex items-center">
+                    <i class="fas fa-project-diagram text-indigo-600 mr-2"></i>
+                    <div>
+                      <p class="text-xs text-gray-500 uppercase font-medium">Proyecto</p>
+                      <p class="font-semibold text-gray-800">${cronograma.project_id || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="bg-white p-3 rounded-lg shadow-sm">
+                  <div class="flex items-center">
+                    <i class="fas fa-user-tie text-green-600 mr-2"></i>
+                    <div>
+                      <p class="text-xs text-gray-500 uppercase font-medium">Responsable</p>
+                      <p class="font-semibold text-gray-800">${obtenerNombreUsuario(cronograma.responsable_inicio) || 'No asignado'}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="bg-white p-3 rounded-lg shadow-sm">
+                  <div class="flex items-center">
+                    <i class="fas fa-calendar-plus text-blue-600 mr-2"></i>
+                    <div>
+                      <p class="text-xs text-gray-500 uppercase font-medium">Mes de Inicio</p>
+                      <p class="font-semibold text-gray-800">${cronograma.mes_inicio || 'No definido'}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                ${cronograma.created_at ? `
+                <div class="bg-white p-3 rounded-lg shadow-sm">
+                  <div class="flex items-center">
+                    <i class="fas fa-clock text-purple-600 mr-2"></i>
+                    <div>
+                      <p class="text-xs text-gray-500 uppercase font-medium">Creado</p>
+                      <p class="font-semibold text-gray-800">${formatearFechaHora(cronograma.created_at)}</p>
+                    </div>
+                  </div>
+                </div>
+                ` : ''}
+                
+                ${cronograma.updated_at ? `
+                <div class="bg-white p-3 rounded-lg shadow-sm">
+                  <div class="flex items-center">
+                    <i class="fas fa-edit text-orange-600 mr-2"></i>
+                    <div>
+                      <p class="text-xs text-gray-500 uppercase font-medium">Actualizado</p>
+                      <p class="font-semibold text-gray-800">${formatearFechaHora(cronograma.updated_at)}</p>
+                    </div>
+                  </div>
+                </div>
+                ` : ''}
+                
+                ${cronograma.descripcion ? `
+                <div class="bg-white p-3 rounded-lg shadow-sm md:col-span-2 lg:col-span-3">
+                  <div class="flex items-start">
+                    <i class="fas fa-info-circle text-blue-600 mr-2 mt-1"></i>
+                    <div class="flex-1">
+                      <p class="text-xs text-gray-500 uppercase font-medium">Descripción</p>
+                      <p class="text-gray-800">${cronograma.descripcion}</p>
+                    </div>
+                  </div>
+                </div>
+                ` : ''}
+              </div>
+            </div>
+            
+            <!-- Fases del cronograma -->
+            <div class="space-y-6">
+              <h5 class="text-xl font-bold text-gray-800 flex items-center mb-6">
+                <i class="fas fa-tasks text-indigo-600 mr-2"></i>
+                Fases del Proyecto
+              </h5>
+              <div class="grid gap-6">
+                ${[
+                  {
+                    nombre: 'Inicio',
+                    responsable: cronograma.responsable_inicio,
+                    mes: cronograma.mes_inicio,
+                    dia_inicio: cronograma.dia_inicio_inicio,
+                    dia_fin: cronograma.dia_fin_inicio,
+                    icono: 'fas fa-play',
+                    bgColor: 'bg-green-50',
+                    borderColor: 'border-green-200',
+                    iconBg: 'bg-green-500',
+                    textColor: 'text-green-600',
+                    badgeBg: 'bg-green-100',
+                    badgeText: 'text-green-800',
+                    descripcion: 'Configuración inicial y planteamiento del proyecto'
+                  },
+                  {
+                    nombre: 'Planificación',
+                    responsable: cronograma.responsable_planificacion,
+                    mes: cronograma.mes_planificacion,
+                    dia_inicio: cronograma.dia_inicio_planificacion,
+                    dia_fin: cronograma.dia_fin_planificacion,
+                    icono: 'fas fa-clipboard-list',
+                    bgColor: 'bg-blue-50',
+                    borderColor: 'border-blue-200',
+                    iconBg: 'bg-blue-500',
+                    textColor: 'text-blue-600',
+                    badgeBg: 'bg-blue-100',
+                    badgeText: 'text-blue-800',
+                    descripcion: 'Estructuración y organización del contenido'
+                  },
+                  {
+                    nombre: 'Diseño Instruccional',
+                    responsable: cronograma.responsable_diseno_instruccional,
+                    mes: cronograma.mes_diseno_instruccional,
+                    dia_inicio: cronograma.dia_inicio_diseno_instruccional,
+                    dia_fin: cronograma.dia_fin_diseno_instruccional,
+                    icono: 'fas fa-pencil-ruler',
+                    bgColor: 'bg-purple-50',
+                    borderColor: 'border-purple-200',
+                    iconBg: 'bg-purple-500',
+                    textColor: 'text-purple-600',
+                    badgeBg: 'bg-purple-100',
+                    badgeText: 'text-purple-800',
+                    descripcion: 'Diseño pedagógico y estructuración didáctica'
+                  },
+                  {
+                    nombre: 'Diseño Gráfico',
+                    responsable: cronograma.responsable_diseno_grafico,
+                    mes: cronograma.mes_diseno_grafico,
+                    dia_inicio: cronograma.dia_inicio_diseno_grafico,
+                    dia_fin: cronograma.dia_fin_diseno_grafico,
+                    icono: 'fas fa-palette',
+                    bgColor: 'bg-pink-50',
+                    borderColor: 'border-pink-200',
+                    iconBg: 'bg-pink-500',
+                    textColor: 'text-pink-600',
+                    badgeBg: 'bg-pink-100',
+                    badgeText: 'text-pink-800',
+                    descripcion: 'Creación visual y elementos gráficos'
+                  },
+                  {
+                    nombre: 'Producción',
+                    responsable: cronograma.responsable_produccion,
+                    mes: cronograma.mes_produccion,
+                    dia_inicio: cronograma.dia_inicio_produccion,
+                    dia_fin: cronograma.dia_fin_produccion,
+                    icono: 'fas fa-cogs',
+                    bgColor: 'bg-orange-50',
+                    borderColor: 'border-orange-200',
+                    iconBg: 'bg-orange-500',
+                    textColor: 'text-orange-600',
+                    badgeBg: 'bg-orange-100',
+                    badgeText: 'text-orange-800',
+                    descripcion: 'Desarrollo y construcción del contenido'
+                  },
+                  {
+                    nombre: 'Virtualización',
+                    responsable: cronograma.responsable_virtualizacion,
+                    mes: cronograma.mes_virtualizacion,
+                    dia_inicio: cronograma.dia_inicio_virtualizacion,
+                    dia_fin: cronograma.dia_fin_virtualizacion,
+                    icono: 'fas fa-laptop-code',
+                    bgColor: 'bg-teal-50',
+                    borderColor: 'border-teal-200',
+                    iconBg: 'bg-teal-500',
+                    textColor: 'text-teal-600',
+                    badgeBg: 'bg-teal-100',
+                    badgeText: 'text-teal-800',
+                    descripcion: 'Implementación en plataforma virtual'
+                  },
+                  {
+                    nombre: 'Validación',
+                    responsable: cronograma.responsable_validacion,
+                    mes: cronograma.mes_validacion,
+                    dia_inicio: cronograma.dia_inicio_validacion,
+                    dia_fin: cronograma.dia_fin_validacion,
+                    icono: 'fas fa-check-double',
+                    bgColor: 'bg-yellow-50',
+                    borderColor: 'border-yellow-200',
+                    iconBg: 'bg-yellow-500',
+                    textColor: 'text-yellow-600',
+                    badgeBg: 'bg-yellow-100',
+                    badgeText: 'text-yellow-800',
+                    descripcion: 'Pruebas y control de calidad'
+                  },
+                  {
+                    nombre: 'Cierre',
+                    responsable: cronograma.responsable_cierre,
+                    mes: cronograma.mes_cierre,
+                    dia_inicio: cronograma.dia_inicio_cierre,
+                    dia_fin: cronograma.dia_fin_cierre,
+                    icono: 'fas fa-flag-checkered',
+                    bgColor: 'bg-red-50',
+                    borderColor: 'border-red-200',
+                    iconBg: 'bg-red-500',
+                    textColor: 'text-red-600',
+                    badgeBg: 'bg-red-100',
+                    badgeText: 'text-red-800',
+                    descripcion: 'Finalización y entrega del proyecto'
+                  }
+                ].filter(fase => fase.responsable).map((fase, faseIndex) => `
+                  <div class="${fase.bgColor} ${fase.borderColor} border rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div class="flex-1">
+                        <div class="flex items-center mb-3">
+                          <div class="w-12 h-12 ${fase.iconBg} rounded-full flex items-center justify-center text-white mr-4">
+                            <i class="${fase.icono} text-lg"></i>
+                          </div>
+                          <div class="flex-1">
+                            <h6 class="text-lg font-bold ${fase.textColor}">${fase.nombre}</h6>
+                            <p class="text-gray-600 text-sm">${fase.descripcion}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <span class="${fase.badgeBg} ${fase.badgeText} px-3 py-1 rounded-full text-xs font-medium">
+                        Fase ${faseIndex + 1}
+                      </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                      <div class="bg-white rounded-lg p-4 ${fase.borderColor} border">
+                        <div class="flex items-center">
+                          <i class="fas fa-user-tie ${fase.textColor} mr-2"></i>
+                          <div class="flex-1">
+                            <p class="text-xs text-gray-500 uppercase font-medium">Responsable</p>
+                            <p class="font-medium text-gray-800">${obtenerNombreUsuario(fase.responsable) || 'No asignado'}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="bg-white rounded-lg p-4 ${fase.borderColor} border">
+                        <div class="flex items-center">
+                          <i class="fas fa-calendar ${fase.textColor} mr-2"></i>
+                          <div class="flex-1">
+                            <p class="text-xs text-gray-500 uppercase font-medium">Mes</p>
+                            <p class="font-medium text-gray-800">${fase.mes || 'No definido'}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="bg-white rounded-lg p-4 ${fase.borderColor} border">
+                        <div class="flex items-center">
+                          <i class="fas fa-clock ${fase.textColor} mr-2"></i>
+                          <div class="flex-1">
+                            <p class="text-xs text-gray-500 uppercase font-medium">Duración</p>
+                            <p class="font-medium text-gray-800">
+                              ${fase.dia_inicio && fase.dia_fin ? `Días ${fase.dia_inicio} - ${fase.dia_fin}` : 'No definida'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- Actividades -->
+            ${cronograma.actividades && cronograma.actividades.length > 0 ? `
+              <div class="space-y-4 mt-8">
+                <div class="flex justify-between items-center">
+                  <h5 class="text-xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-tasks text-indigo-600 mr-2"></i>
+                    Actividades
+                  </h5>
+                  <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                    ${cronograma.actividades.length} actividad(es)
+                  </span>
+                </div>
+                
+                <div class="grid gap-6">
+                  ${cronograma.actividades.map((actividad, idx) => {
+                    const responsableActividad = obtenerNombreUsuario(actividad.responsable);
+                    const progreso = calcularProgreso(actividad.fecha_inicio, actividad.fecha_fin);
+                    
+                    return `
+                      <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border-l-4 border-indigo-500 hover:shadow-md transition-shadow duration-300">
+                        <div class="flex justify-between items-start mb-4">
+                          <div>
+                            <h6 class="text-lg font-bold text-gray-800 mb-1">
+                              ${actividad.nombre || `Actividad ${idx + 1}`}
+                            </h6>
+                            ${actividad.descripcion ? `<p class="text-gray-600 text-sm mb-3">${actividad.descripcion}</p>` : ''}
+                          </div>
+                          <div class="text-right">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                              #${idx + 1}
+                            </span>
+                            <div class="mt-2">
+                              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${progreso.clase || 'bg-gray-200'} text-white">
+                                ${progreso.estado}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Barra de progreso -->
+                        <div class="mb-4">
+                          <div class="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>Progreso</span>
+                            <span>${progreso.porcentaje}%</span>
+                          </div>
+                          <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="${progreso.clase || 'bg-gray-400'} h-2 rounded-full transition-all duration-300" 
+                                 style="width: ${progreso.porcentaje}%"></div>
+                          </div>
+                        </div>
+                        
+                        <!-- Información de la actividad -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div class="bg-white p-3 rounded-lg">
+                            <div class="flex items-center">
+                              <i class="fas fa-play text-green-600 mr-2"></i>
+                              <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Fecha Inicio</p>
+                                <p class="font-medium text-gray-800">${formatearFecha(actividad.fecha_inicio)}</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div class="bg-white p-3 rounded-lg">
+                            <div class="flex items-center">
+                              <i class="fas fa-stop text-red-600 mr-2"></i>
+                              <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Fecha Fin</p>
+                                <p class="font-medium text-gray-800">${formatearFecha(actividad.fecha_fin)}</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          ${actividad.duracion ? `
+                          <div class="bg-white p-3 rounded-lg">
+                            <div class="flex items-center">
+                              <i class="fas fa-hourglass-half text-yellow-600 mr-2"></i>
+                              <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Duración</p>
+                                <p class="font-medium text-gray-800">${actividad.duracion} días</p>
+                              </div>
+                            </div>
+                          </div>
+                          ` : ''}
+                          
+                          <div class="bg-white p-3 rounded-lg ${!actividad.duracion ? 'md:col-span-2 lg:col-span-1' : ''}">
+                            <div class="flex items-center">
+                              <i class="fas fa-user-check text-blue-600 mr-2"></i>
+                              <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Responsable</p>
+                                <p class="font-medium text-gray-800">${responsableActividad}</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          ${actividad.prioridad ? `
+                          <div class="bg-white p-3 rounded-lg">
+                            <div class="flex items-center">
+                              <i class="fas fa-flag text-orange-600 mr-2"></i>
+                              <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Prioridad</p>
+                                <p class="font-medium text-gray-800">${actividad.prioridad}</p>
+                              </div>
+                            </div>
+                          </div>
+                          ` : ''}
+                          
+                          ${actividad.estado ? `
+                          <div class="bg-white p-3 rounded-lg">
+                            <div class="flex items-center">
+                              <i class="fas fa-info-circle text-purple-600 mr-2"></i>
+                              <div>
+                                <p class="text-xs text-gray-500 uppercase font-medium">Estado</p>
+                                <p class="font-medium text-gray-800">${actividad.estado}</p>
+                              </div>
+                            </div>
+                          </div>
+                          ` : ''}
+                        </div>
+                        
+                        ${actividad.notas || actividad.observaciones ? `
+                        <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                          <div class="flex items-start">
+                            <i class="fas fa-sticky-note text-yellow-600 mr-2 mt-1"></i>
+                            <div>
+                              <p class="text-xs text-yellow-700 uppercase font-medium mb-1">Notas/Observaciones</p>
+                              <p class="text-yellow-800 text-sm">${actividad.notas || actividad.observaciones}</p>
+                            </div>
+                          </div>
+                        </div>
+                        ` : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : `
+              <div class="text-center py-12 animate-fade-in bg-gray-50 rounded-xl">
+                <div class="text-gray-400 text-5xl mb-4">
+                  <i class="fas fa-calendar-times"></i>
+                </div>
+                <h6 class="text-lg font-semibold text-gray-600 mb-2">Sin actividades</h6>
+                <p class="text-gray-500">No hay actividades definidas para este cronograma.</p>
+              </div>
+            `}
+          </div>
+        `;
+      });
+
+      contenido += `
+        <div class="mt-8 text-center">
+          <a href="index.html" class="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 shadow-lg hover:shadow-xl">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Volver al inicio
+          </a>
+        </div>
+      `;
+      
+      scheduleContent.innerHTML = contenido;
+      scheduleContent.style.opacity = '1';
+    }
+
+    // Función principal para cargar cronograma
+    async function cargarCronograma(projectId, maxRetries = 3, initialDelay = 1000) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          mostrarEstado('loading');
+          
+          // Verificar si hay token
+          const token = obtenerToken();
+          if (!token) {
+            mostrarEstado('error', 'No se encontró token de autenticación. Por favor, inicia sesión nuevamente.');
+            return;
+          }
+          
+          // Cargar usuarios primero
+          console.log('🔄 Cargando usuarios desde:', `${API_BASE}/users`);
+          await cargarUsuarios();
+          
+          // Cargar cronogramas
+          console.log('🔄 Cargando cronogramas desde:', `${API_BASE}/cronogramas/project/${projectId}`);
+          const response = await fetchWithTimeout(`${API_BASE}/cronogramas/project/${projectId}`);
+          
+          if (!response.ok) {
+            if (response.status === 404) {
+              console.log('⚠️ No se encontraron cronogramas para el project_id:', projectId);
+              mostrarEstado('empty');
+              return;
+            }
+            if (response.status === 401) {
+              console.log('⚠️ Error de autenticación para el endpoint:', `${API_BASE}/cronogramas/project/${projectId}`);
+              mostrarEstado('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+              return;
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const cronogramas = await response.json();
+          console.log('✅ Respuesta de cronogramas:', cronogramas);
+          
+          if (Array.isArray(cronogramas) && cronogramas.length > 0 && cronogramas.every(c => c && typeof c === 'object')) {
+            console.log(`✅ Cargados ${cronogramas.length} cronograma(s) correctamente`);
+            renderizarCronograma(cronogramas);
+            mostrarEstado('success');
+          } else {
+            console.log('⚠️ No se encontraron cronogramas válidos en la respuesta:', cronogramas);
+            mostrarEstado('empty');
+          }
+          
+          return;
+        } catch (error) {
+          console.error(`Intento ${attempt} fallido para /cronogramas/project/${projectId}:`, error);
+          
+          if (attempt === maxRetries) {
+            let mensajeError;
+            if (error.name === 'AbortError') {
+              mensajeError = 'Tiempo de espera agotado. Verifica tu conexión.';
+            } else if (error.message.includes('401')) {
+              mensajeError = 'Error de autenticación. Por favor, inicia sesión nuevamente.';
+            } else {
+              mensajeError = `Error al cargar cronograma: ${error.message}`;
+            }
+            mostrarEstado('error', mensajeError);
+            return;
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, initialDelay * Math.pow(2, attempt)));
+        }
+      }
+    }
+
+    // Inicializar
+    const projectId = getProjectIdFromUrl();
+    console.log('🆔 Project ID desde URL:', projectId);
+    if (projectId) {
+      cargarCronograma(projectId);
+      retryBtn.addEventListener('click', () => cargarCronograma(projectId));
+    } else {
+      mostrarEstado('error', 'No se proporcionó ID de proyecto en la URL.');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Fases y Etapas</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5rem; font-weight: 300; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .section-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); }
+        .section-title { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; color: #333; }
+        .section-title i { font-size: 1.5rem; color: #667eea; }
+        .section-title h2 { font-size: 1.8rem; font-weight: 600; }
+        .form-container { background: #f8f9ff; padding: 25px; border-radius: 15px; margin-bottom: 25px; border: 2px dashed #e1e5f3; transition: all 0.3s ease; }
+        .form-container:hover { border-color: #667eea; background: #f0f2ff; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .form-group { position: relative; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-input, .form-select { width: 100%; padding: 12px 16px; border: 2px solid #e1e5f3; border-radius: 12px; font-size: 14px; transition: all 0.3s ease; background: white; font-family: inherit; }
+        .form-input:focus, .form-select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        .form-input::placeholder { color: #9ca3af; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102,126,234,0.3); }
+        .btn-primary:active { transform: translateY(0); }
+        
+        /* Estilos para Drag & Drop */
+        .data-table { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .table-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 25px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 14px; }
+        .table-content { max-height: 400px; overflow-y: auto; position: relative; } /* Añadido position: relative */
+        /* Contenedores para drag & drop */
+        .sortable-list { min-height: 50px; } /* Permite soltar en listas vacías */
+        .data-row {
+            display: grid;
+            /* grid-template-columns: 40px 60px 2fr 3fr 1fr; */ /* Añadido handle */
+            grid-template-columns: 40px 60px 2fr 3fr 1fr; /* Ajustado para handle y botón */
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: all 0.2s ease;
+            background-color: #fff; /* Fondo blanco por defecto */
+            cursor: move; /* Indicar que es arrastrable */
+        }
+        .etapa-row {
+            /* grid-template-columns: 40px 60px 2fr 3fr 1fr 120px; */ /* Añadido handle */
+            grid-template-columns: 40px 60px 2fr 3fr 1fr 120px; /* Ajustado para handle y botón */
+        }
+        .data-row:hover { background: #f8f9ff; }
+        .data-row:last-child { border-bottom: none; }
+        .data-row.drag-over {
+            border-top: 2px solid #667eea;
+        }
+        .data-row.drag-over-top {
+            border-top: 2px solid #667eea;
+            border-bottom: none;
+        }
+        .data-row.drag-over-bottom {
+            border-bottom: 2px solid #667eea;
+        }
+        .drag-handle {
+            cursor: move;
+            color: #9ca3af;
+            font-size: 16px;
+            text-align: center;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .drag-handle:hover {
+            color: #667eea;
+            background-color: #f0f2ff;
+        }
+        .row-id { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 35px; 
+            height: 35px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            border-radius: 50%; 
+            font-weight: bold; 
+            font-size: 12px; 
+        }
+        .row-field { 
+            padding: 8px 12px; 
+            border: 2px solid transparent; 
+            border-radius: 8px; 
+            background: transparent; 
+            transition: all 0.3s ease; 
+            cursor: text; 
+        }
+        .row-field:hover { background: #f8f9ff; border-color: #e1e5f3; }
+        .row-field:focus { outline: none; background: white; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        .row-field.empty { color: #9ca3af; font-style: italic; }
+        .phase-badge { 
+            display: inline-flex; 
+            align-items: center; 
+            padding: 6px 12px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 600; 
+        }
+        .btn-delete { 
+            background: #ef4444; 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 5px; 
+            font-size: 12px; 
+        }
+        .btn-delete:hover { background: #dc2626; transform: translateY(-1px); }
+        .empty-state { text-align: center; padding: 40px 20px; color: #6b7280; }
+        .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .notification { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            padding: 15px 20px; 
+            background: #10b981; 
+            color: white; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            transform: translateX(400px); 
+            transition: all 0.3s ease; 
+            z-index: 1000; 
+        }
+        .notification.show { transform: translateX(0); }
+        .notification.error { background: #ef4444; }
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; gap: 20px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .data-row, .etapa-row { grid-template-columns: 1fr; gap: 10px; text-align: center; }
+            .header h1 { font-size: 2rem; }
+            .drag-handle, .row-id { display: none; } /* Ocultar en móviles */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-project-diagram"></i> Gestión de Fases y Etapas</h1>
+            <p>Administra las fases y etapas de tus proyectos de manera eficiente</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- FASES -->
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-layer-group"></i>
+                    <h2>Fases</h2>
+                </div>
+                <div class="form-container">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <input type="text" id="faseNombre" class="form-input" placeholder="Nombre de la fase">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="faseDescripcion" class="form-input" placeholder="Descripción">
+                        </div>
+                    </div>
+                    <button onclick="createFase()" class="btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Crear Fase
+                    </button>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-header">
+                        <i class="fas fa-list"></i> Lista de Fases
+                    </div>
+                    <div class="table-content">
+                        <div id="fasesList" class="sortable-list">
+                            <!-- Las filas de fases se insertarán aquí -->
+                        </div>
+                        <div id="fasesEmptyState" class="empty-state">
+                            <i class="fas fa-layer-group"></i>
+                            <p>No hay fases creadas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ETAPAS -->
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-tasks"></i>
+                    <h2>Etapas</h2>
+                </div>
+                <div class="form-container">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <input type="text" id="etapaNombre" class="form-input" placeholder="Nombre de la etapa">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="etapaDescripcion" class="form-input" placeholder="Descripción">
+                        </div>
+                        <div class="form-group full-width">
+                            <select id="faseSelect" class="form-select">
+                                <option value="">Seleccionar fase...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="createEtapa()" class="btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Crear Etapa
+                    </button>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-header">
+                        <i class="fas fa-list-ul"></i> Lista de Etapas
+                    </div>
+                    <div class="table-content">
+                        <div id="etapasList" class="sortable-list">
+                            <!-- Las filas de etapas se insertarán aquí -->
+                        </div>
+                        <div id="etapasEmptyState" class="empty-state">
+                            <i class="fas fa-tasks"></i>
+                            <p>No hay etapas creadas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
+
+<script>
+// CORRECCIÓN: Eliminados los espacios al final de la URL
+const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+
+// --- Notificaciones ---
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    const text = document.getElementById('notificationText');
+    text.textContent = message;
+    notification.className = `notification ${type} show`;
+    setTimeout(() => notification.classList.remove('show'), 3000);
+}
+
+function clearForm(formType) {
+    if (formType === 'fase') {
+        document.getElementById('faseNombre').value = '';
+        document.getElementById('faseDescripcion').value = '';
+    } else {
+        document.getElementById('etapaNombre').value = '';
+        document.getElementById('etapaDescripcion').value = '';
+        document.getElementById('faseSelect').value = '';
+    }
+}
+
+// ---------- DRAG & DROP PARA FASES ----------
+let draggedItem = null;
+
+function handleDragStart(e) {
+    draggedItem = this;
+    setTimeout(() => this.style.opacity = '0.4', 0);
+}
+
+function handleDragEnd() {
+    this.style.opacity = '1';
+    draggedItem = null;
+    document.querySelectorAll('.data-row').forEach(row => {
+        row.classList.remove('drag-over', 'drag-over-top', 'drag-over-bottom');
+    });
+}
+
+function handleDragOver(e) {
+    e.preventDefault(); // Necesario para permitir el drop
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    // Visual feedback
+    if (this !== draggedItem) {
+        const rect = this.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        const height = rect.height;
+        
+        this.classList.remove('drag-over-top', 'drag-over-bottom');
+        if (y < height / 2) {
+            this.classList.add('drag-over-top');
+        } else {
+            this.classList.add('drag-over-bottom');
+        }
+    }
+}
+
+function handleDragLeave() {
+    this.classList.remove('drag-over', 'drag-over-top', 'drag-over-bottom');
+}
+
+async function handleDrop(e) {
+    e.stopPropagation(); // Evita el comportamiento por defecto del navegador
+    const listContainer = this.parentElement; // El contenedor .sortable-list
+    const listType = listContainer.id.includes('fases') ? 'fases' : 'etapas';
+    
+    if (draggedItem !== this) {
+        // Determinar posición de inserción
+        const rect = this.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        const height = rect.height;
+        
+        this.classList.remove('drag-over-top', 'drag-over-bottom');
+        
+        if (y < height / 2) {
+            // Insertar antes
+            listContainer.insertBefore(draggedItem, this);
+        } else {
+            // Insertar después
+            listContainer.insertBefore(draggedItem, this.nextSibling);
+        }
+        
+        // Enviar nuevo orden al backend
+        await saveNewOrder(listType, listContainer);
+    }
+    return false;
+}
+
+function initDragAndDrop() {
+    // Inicializar drag & drop para fases
+    document.querySelectorAll('#fasesList .data-row').forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('dragenter', handleDragEnter);
+        item.addEventListener('dragleave', handleDragLeave);
+        item.addEventListener('drop', handleDrop);
+    });
+
+    // Inicializar drag & drop para etapas
+    document.querySelectorAll('#etapasList .data-row').forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('dragenter', handleDragEnter);
+        item.addEventListener('dragleave', handleDragLeave);
+        item.addEventListener('drop', handleDrop);
+    });
+}
+
+async function saveNewOrder(listType, container) {
+    const newOrder = Array.from(container.querySelectorAll('.data-row'))
+                          .map(row => parseInt(row.dataset.id));
+    
+    if (newOrder.length === 0) return; // Nada que ordenar
+
+    try {
+        const res = await fetch(`${API_BASE}/${listType}/reorder`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                // Si tu API requiere autenticación, añade el header aquí
+                // 'Authorization': 'Bearer ' + getToken()
+            },
+            body: JSON.stringify({ ids: newOrder })
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            const errorMsg = errorData.detail || `Error ${res.status}: ${res.statusText}`;
+            throw new Error(errorMsg);
+        }
+
+        showNotification(`Orden de ${listType} actualizado exitosamente`);
+        // Opcional: Recargar datos para reflejar posibles cambios en otros lugares
+        // await loadFases();
+        // await loadEtapas();
+    } catch (error) {
+        console.error("Error al guardar el nuevo orden:", error);
+        showNotification(`Error al actualizar el orden: ${error.message}`, 'error');
+        // Opcional: Revertir el orden visual si falla la llamada a la API
+        // await loadFases(); // Esto revertiría el orden visual
+        // await loadEtapas();
+    }
+}
+
+
+// ---------- FASES ----------
+async function loadFases() {
+    try {
+        const res = await fetch(`${API_BASE}/fases`);
+        if (!res.ok) throw new Error('Error al cargar las fases');
+        const data = await res.json();
+
+        const container = document.getElementById('fasesList');
+        const emptyState = document.getElementById('fasesEmptyState');
+        const select = document.getElementById('faseSelect');
+
+        if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML = '';
+            emptyState.style.display = 'block';
+        } else {
+            emptyState.style.display = 'none';
+            container.innerHTML = data.map(fase => `
+                <div class="data-row" draggable="true" data-id="${fase.id}">
+                    <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
+                    <div class="row-id">${fase.id}</div>
+                    <div class="row-field" contenteditable="true" onblur="updateFase(${fase.id}, this, 'nombre')">${fase.nombre}</div>
+                    <div class="row-field ${!fase.descripcion ? 'empty' : ''}" contenteditable="true" onblur="updateFase(${fase.id}, this, 'descripcion')">${fase.descripcion || 'Sin descripción'}</div>
+                    <button class="btn-delete" onclick="deleteFase(${fase.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+            // Reinicializar drag & drop después de cargar
+            initDragAndDrop();
+        }
+
+        // Actualizar dropdown, manteniendo el valor seleccionado si existe
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">Seleccionar fase...</option>' +
+            (Array.isArray(data) ? data.map(f => `<option value="${f.id}">${f.nombre}</option>`).join('') : '');
+        if (currentValue) {
+            select.value = currentValue;
+        }
+
+    } catch (error) {
+        showNotification('Error al cargar las fases: ' + error.message, 'error');
+    }
+}
+
+async function createFase() {
+    const nombre = document.getElementById('faseNombre').value.trim();
+    const descripcion = document.getElementById('faseDescripcion').value.trim();
+
+    if (!nombre) {
+        showNotification('El nombre de la fase es requerido', 'error');
+        return;
+    }
+
+    const payload = { nombre, descripcion: descripcion || null };
+    try {
+        const res = await fetch(`${API_BASE}/fases`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+                // Si tu API requiere autenticación, añade el header aquí
+                // 'Authorization': 'Bearer ' + getToken()
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const msg = (body && body.detail) ? JSON.stringify(body.detail) : (res.status + ' ' + res.statusText);
+            throw new Error(msg);
+        }
+
+        showNotification('Fase creada exitosamente');
+        clearForm('fase');
+        await loadFases(); // Recargar para mostrar la nueva fase y actualizar el dropdown
+        await loadEtapas(); // Recargar etapas por si el dropdown necesita actualizarse
+    } catch (error) {
+        showNotification('Error al crear la fase: ' + error.message, 'error');
+    }
+}
+
+async function updateFase(id, el, field) {
+    const value = el.innerText.trim();
+
+    if (field === 'descripcion' && value === 'Sin descripción') {
+        el.innerText = '';
+        return;
+    }
+    if (field === 'nombre' && !value) {
+        showNotification('El nombre no puede estar vacío', 'error');
+        loadFases(); // Recargar para revertir el cambio visual
+        return;
+    }
+
+    try {
+        // Obtener el valor del otro campo para enviarlo en la actualización
+        const row = el.closest('.data-row');
+        const otherFieldElement = field === 'nombre' 
+            ? row.children[3] // descripcion
+            : row.children[2]; // nombre
+        
+        const otherFieldValue = otherFieldElement.innerText.trim();
+        const payload = field === 'nombre'
+            ? { nombre: value, descripcion: otherFieldValue === 'Sin descripción' ? null : otherFieldValue }
+            : { nombre: otherFieldValue, descripcion: value === 'Sin descripción' ? null : value };
+
+        const res = await fetch(`${API_BASE}/fases/${id}`, {
+            method: "PUT",
+            headers: { 
+                "Content-Type": "application/json", 
+                "Accept": "application/json"
+                // Si tu API requiere autenticación, añade el header aquí
+                // 'Authorization': 'Bearer ' + getToken()
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const msg = (body && body.detail) ? JSON.stringify(body.detail) : (res.status + ' ' + res.statusText);
+            throw new Error(msg);
+        }
+
+        showNotification('Fase actualizada exitosamente');
+        // No es necesario recargar todo, la vista ya está actualizada
+    } catch (error) {
+        showNotification('Error al actualizar la fase: ' + error.message, 'error');
+        loadFases(); // Recargar para revertir el cambio visual en caso de error
+    }
+}
+
+async function deleteFase(id) {
+    if (!confirm('¿Eliminar esta fase? Esto también eliminará todas las etapas asociadas.')) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/fases/${id}`, { 
+            method: "DELETE"
+            // Si tu API requiere autenticación, añade el header aquí
+            // headers: { 'Authorization': 'Bearer ' + getToken() }
+        });
+        if (!res.ok) throw new Error('Error al eliminar la fase');
+        showNotification('Fase eliminada exitosamente');
+        await loadFases(); // Recargar para reflejar la eliminación
+        await loadEtapas(); // Recargar etapas por si se eliminaron
+    } catch (error) {
+        showNotification('Error al eliminar la fase: ' + error.message, 'error');
+    }
+}
+
+// ---------- ETAPAS ----------
+async function loadEtapas() {
+    try {
+        const res = await fetch(`${API_BASE}/etapas`);
+        if (!res.ok) throw new Error('Error al cargar las etapas');
+        const data = await res.json();
+
+        const container = document.getElementById('etapasList');
+        const emptyState = document.getElementById('etapasEmptyState');
+
+        if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML = '';
+            emptyState.style.display = 'block';
+        } else {
+            emptyState.style.display = 'none';
+            // Cargar fases para mostrar el nombre en el badge
+            const fasesRes = await fetch(`${API_BASE}/fases`);
+            const fases = fasesRes.ok ? await fasesRes.json() : [];
+            const fasesMap = Object.fromEntries((fases || []).map(f => [f.id, f.nombre]));
+
+            container.innerHTML = data.map(etapa => `
+                <div class="data-row etapa-row" draggable="true" data-id="${etapa.id}">
+                    <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
+                    <div class="row-id">${etapa.id}</div>
+                    <div class="row-field" contenteditable="true" onblur="updateEtapa(${etapa.id}, this, 'nombre')">${etapa.nombre}</div>
+                    <div class="row-field ${!etapa.descripcion ? 'empty' : ''}" contenteditable="true" onblur="updateEtapa(${etapa.id}, this, 'descripcion')">${etapa.descripcion || 'Sin descripción'}</div>
+                    <div class="phase-badge">${fasesMap[etapa.fase_id] || 'Fase #' + etapa.fase_id}</div>
+                    <button class="btn-delete" onclick="deleteEtapa(${etapa.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+            // Reinicializar drag & drop después de cargar
+            initDragAndDrop();
+        }
+    } catch (error) {
+        showNotification('Error al cargar las etapas: ' + error.message, 'error');
+    }
+}
+
+async function createEtapa() {
+    const nombre = document.getElementById('etapaNombre').value.trim();
+    const descripcion = document.getElementById('etapaDescripcion').value.trim();
+    const fase_id = document.getElementById('faseSelect').value;
+
+    if (!nombre) { 
+        showNotification('El nombre de la etapa es requerido', 'error'); 
+        return; 
+    }
+    if (!fase_id) { 
+        showNotification('Debes seleccionar una fase', 'error'); 
+        return; 
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/etapas`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json", 
+                "Accept": "application/json"
+                // Si tu API requiere autenticación, añade el header aquí
+                // 'Authorization': 'Bearer ' + getToken()
+            },
+            body: JSON.stringify({ 
+                nombre, 
+                descripcion: descripcion || null, 
+                fase_id: parseInt(fase_id) 
+            })
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const msg = (body && body.detail) ? JSON.stringify(body.detail) : (res.status + ' ' + res.statusText);
+            throw new Error(msg);
+        }
+
+        showNotification('Etapa creada exitosamente');
+        clearForm('etapa');
+        await loadEtapas(); // Recargar para mostrar la nueva etapa
+    } catch (error) {
+        showNotification('Error al crear la etapa: ' + error.message, 'error');
+    }
+}
+
+async function updateEtapa(id, el, field) {
+    const value = el.innerText.trim();
+
+    if (field === 'descripcion' && value === 'Sin descripción') { 
+        el.innerText=''; 
+        return; 
+    }
+    if (field === 'nombre' && !value) { 
+        showNotification('El nombre no puede estar vacío', 'error'); 
+        loadEtapas(); // Recargar para revertir el cambio visual
+        return; 
+    }
+
+    try {
+        // Obtener el valor del otro campo para enviarlo en la actualización
+        const row = el.closest('.data-row');
+        const otherFieldElement = field === 'nombre' 
+            ? row.children[3] // descripcion
+            : row.children[2]; // nombre
+        
+        const otherFieldValue = otherFieldElement.innerText.trim();
+        const payload = field === 'nombre'
+            ? { nombre: value, descripcion: otherFieldValue === 'Sin descripción' ? null : otherFieldValue }
+            : { nombre: otherFieldValue, descripcion: value === 'Sin descripción' ? null : value };
+
+        const res = await fetch(`${API_BASE}/etapas/${id}`, {
+            method: "PUT",
+            headers: { 
+                "Content-Type": "application/json", 
+                "Accept": "application/json"
+                // Si tu API requiere autenticación, añade el header aquí
+                // 'Authorization': 'Bearer ' + getToken()
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const msg = (body && body.detail) ? JSON.stringify(body.detail) : (res.status + ' ' + res.statusText);
+            throw new Error(msg);
+        }
+
+        showNotification('Etapa actualizada exitosamente');
+        // No es necesario recargar todo, la vista ya está actualizada
+    } catch (error) {
+        showNotification('Error al actualizar la etapa: ' + error.message, 'error');
+        loadEtapas(); // Recargar para revertir el cambio visual en caso de error
+    }
+}
+
+async function deleteEtapa(id) {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta etapa?')) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/etapas/${id}`, { 
+            method: "DELETE"
+            // Si tu API requiere autenticación, añade el header aquí
+            // headers: { 'Authorization': 'Bearer ' + getToken() }
+        });
+        if (!res.ok) throw new Error('Error al eliminar la etapa');
+        showNotification('Etapa eliminada exitosamente');
+        await loadEtapas(); // Recargar para reflejar la eliminación
+    } catch (error) {
+        showNotification('Error al eliminar la etapa: ' + error.message, 'error');
+    }
+}
+
+// ---------- INICIALIZACIÓN ----------
+document.addEventListener('DOMContentLoaded', () => {
+    loadFases();
+    loadEtapas();
+});
+</script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot - Crear Unidad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%); min-height: 100vh; }
+        .chat-bubble { border-radius: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        #chat-box { scroll-behavior: smooth; }
+        #chat-box::-webkit-scrollbar { width: 6px; }
+        #chat-box::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 8px; }
+        .btn-primary { transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08); }
+        .header-gradient { background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%); }
+        .option-button { transition: all 0.2s ease-in-out; }
+        .option-button:hover { transform: scale(1.02); }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <div class="header-gradient text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold flex items-center"><i class="fas fa-robot text-white mr-3"></i>Asistente de Unidades</h1>
+                <button onclick="window.location.href='modulos.html'" class="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-all flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-shadow">
+            <div class="flex flex-col lg:flex-row">
+                <div class="w-full lg:w-1/2 p-6 border-r flex flex-col bg-gray-50">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-comments mr-2 text-indigo-600"></i>Conversación
+                    </h2>
+                    <div id="chat-box" class="flex-grow overflow-y-auto space-y-4 p-4 bg-white rounded-lg border mb-4 h-96"></div>
+                    
+                    <div id="input-area" class="mt-4">
+                        <div id="options-container" class="space-x-2 mb-3"></div>
+
+                        <div class="flex items-center">
+                            <button id="mic-btn" title="Dictar por voz" class="p-3 rounded-full border bg-white hover:bg-gray-100 mr-2 text-gray-600">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <input type="text" id="user-input" placeholder="Escribe aquí o usa el micrófono..."
+                                class="flex-grow px-4 py-3 rounded-full border focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                            <button id="send-button" class="ml-3 px-5 py-3 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 btn-primary flex items-center">
+                                <i class="fas fa-paper-plane mr-2"></i>Enviar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-1/2 p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-eye mr-2 text-blue-500"></i>Vista Previa de la Unidad
+                    </h2>
+                    <div id="preview-content" class="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto">
+                        <div class="text-center text-gray-500 py-16">
+                            <i class="fas fa-file-alt text-4xl mb-3"></i>
+                            <p>La información de la unidad aparecerá aquí mientras la creas.</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button id="save-button" class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 btn-primary flex items-center hidden">
+                            <i class="fas fa-save mr-2"></i>Guardar Unidad
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="notification" class="fixed top-5 right-5 z-50"></div>
+
+    <script>
+        const API_BASE = 'https://gestordecursos.pegui.edu.co:8000';
+        const token = localStorage.getItem('token');
+        let recognition;
+        let conversationState = 'start';
+        let unitData = {};
+        let moduleId = null;
+
+        // Obtener module_id de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        moduleId = urlParams.get('module_id');
+
+        if (!moduleId) {
+            showNotification('error', 'Error', 'No se especificó el módulo. Redirigiendo...');
+            setTimeout(() => window.location.href = 'modulos.html', 2000);
+        }
+
+        // Definición de la estructura de la conversación y las preguntas
+        const questions = [
+            { key: 'name', prompt: '¡Hola! Vamos a crear una nueva unidad. ¿Cuál es el nombre completo de la unidad?' },
+            { key: 'short_name', prompt: 'Perfecto. Ahora, ¿cuál es el nombre corto de la unidad?', required: true },
+            { key: 'unit_code', prompt: '¿Qué código único tendrá la unidad? (Ej: UA1-ALG)', required: true },
+            { 
+                key: 'ai_decision', 
+                prompt: '¿Quieres que use la IA para generar objetivos, contenidos y actividades? Esta es una herramienta muy útil que te ahorrará tiempo. (Sí/No)', 
+                options: ['Sí', 'No']
+            },
+            { key: 'general_objective', prompt: '¿Cuál es el objetivo general de esta unidad?', required: true },
+            { key: 'specific_objectives', prompt: 'Ahora, lista los objetivos específicos separados por punto y coma.', required: true },
+            { key: 'duration', prompt: '¿Cuál es la duración estimada? (Ej: 2 horas)', required: true },
+            { key: 'contents', prompt: 'Describe los contenidos que se abordarán separados por punto y coma.', required: true },
+            { key: 'multimedia_resources', prompt: 'Menciona los recursos multimedia a utilizar separados por coma.' },
+            { 
+                key: 'has_activities', 
+                prompt: '¿Esta unidad tendrá actividades?', 
+                options: ['Sí', 'No']
+            },
+            { key: 'activity_types', prompt: '¿Qué tipos de actividades tendrá? (Ej: Cuestionario, Foro de discusión)', required: true, condition: (data) => data.has_activities === true },
+            { key: 'activity_instructions', prompt: 'Escribe las instrucciones para las actividades.', required: true, condition: (data) => data.has_activities === true },
+            { 
+                key: 'has_downloadable_materials', 
+                prompt: '¿Tendrá materiales descargables?', 
+                options: ['Sí', 'No']
+            },
+            { 
+                key: 'has_assessment', 
+                prompt: '¿Tendrá una evaluación formal?', 
+                options: ['Sí', 'No']
+            },
+            { key: 'accessibility', prompt: 'Describe las características de accesibilidad.' },
+            { key: 'additional_notes', prompt: '¿Tienes alguna nota adicional?' }
+        ];
+
+        let currentQuestionIndex = 0;
+
+        // Funciones auxiliares
+        function parseYesNo(input) {
+            const normalized = input.trim().toLowerCase();
+            return normalized === 'sí' || normalized === 'si' || normalized === 'yes';
+        }
+
+        async function fetchAPI(url, options = {}) {
+            const defaultHeaders = { 
+                'Authorization': `Bearer ${token}`, 
+                'Content-Type': 'application/json' 
+            };
+            const allOptions = { ...options, headers: { ...defaultHeaders, ...options.headers } };
+            
+            try {
+                const response = await fetch(url, allOptions);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Error en la respuesta del servidor' }));
+                    throw new Error(errorData.detail || `Error ${response.status}`);
+                }
+                
+                if (response.status === 204) return null;
+                return response.json();
+            } catch (error) {
+                console.error("Error en fetchAPI:", error);
+                throw error;
+            }
+        }
+
+        function showNotification(type, title, message) {
+            const notificationArea = document.getElementById('notification');
+            const colors = { success: 'green', error: 'red', info: 'blue' };
+            const icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
+            
+            const notification = document.createElement('div');
+            notification.className = `rounded-lg border-l-4 p-4 max-w-md mb-4 shadow-lg bg-${colors[type]}-100 border-${colors[type]}-500 text-${colors[type]}-700`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <div class="mr-3 text-xl"><i class="fas ${icons[type]}"></i></div>
+                    <div>
+                        <div class="font-semibold">${title}</div>
+                        <div class="text-sm">${message}</div>
+                    </div>
+                </div>
+            `;
+            
+            notificationArea.appendChild(notification);
+            setTimeout(() => { notification.remove() }, 5000);
+        }
+
+        // Funciones del chatbot
+        function addChatMessage(text, sender, options = []) {
+            const chatBox = document.getElementById('chat-box');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} mb-3`;
+            messageDiv.innerHTML = `
+                <div class="chat-bubble max-w-[80%] ${sender === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'} px-4 py-3 rounded-2xl break-words">
+                    ${text.replace(/\n/g, '<br>')}
+                </div>
+            `;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            if (options.length > 0 && sender === 'bot') {
+                const optionsContainer = document.getElementById('options-container');
+                optionsContainer.innerHTML = '';
+                options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-button px-4 py-2 rounded-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-100';
+                    btn.textContent = option;
+                    btn.onclick = () => {
+                        document.getElementById('user-input').value = option;
+                        document.getElementById('send-button').click();
+                    };
+                    optionsContainer.appendChild(btn);
+                });
+            } else {
+                document.getElementById('options-container').innerHTML = '';
+            }
+        }
+
+        function updatePreview() {
+            const previewContent = document.getElementById('preview-content');
+            let html = '<div class="space-y-4">';
+            
+            const displayMapping = {
+                name: "Nombre Completo", short_name: "Nombre Corto", unit_code: "Código",
+                general_objective: "Objetivo General", specific_objectives: "Objetivos Específicos",
+                duration: "Duración", contents: "Contenidos", multimedia_resources: "Recursos Multimedia",
+                has_activities: "¿Tiene Actividades?", activity_types: "Tipos de Actividad",
+                activity_instructions: "Instrucciones", has_downloadable_materials: "¿Tiene Materiales Descargables?",
+                has_assessment: "¿Tiene Evaluación?", accessibility: "Accesibilidad",
+                additional_notes: "Notas Adicionales"
+            };
+
+            for (const key in unitData) {
+                if (key === 'module_id' || key === 'id' || key === 'learning_activities') continue;
+                
+                const label = displayMapping[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                let value = unitData[key];
+
+                if (typeof value === 'boolean') {
+                    value = value ? 'Sí' : 'No';
+                }
+                
+                html += `
+                    <div class="bg-white p-3 rounded-lg border">
+                        <div class="font-semibold text-gray-700">${label}:</div>
+                        <div class="text-gray-600 mt-1">${value || 'No especificado'}</div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            previewContent.innerHTML = html;
+        }
+
+        async function generateUnitContentWithAI() {
+            addChatMessage('Entendido. Generando contenido con IA... 🧠', 'bot');
+            document.getElementById('user-input').disabled = true;
+            document.getElementById('send-button').disabled = true;
+            document.getElementById('mic-btn').disabled = true;
+            document.getElementById('options-container').innerHTML = '';
+
+            const prompt = `Basado en el nombre de la unidad "${unitData.name}", genera un objeto JSON con los siguientes campos: "general_objective", "specific_objectives", "contents", "activity_types", "activity_instructions". El objetivo general debe ser una sola oración. Los objetivos específicos, contenidos y tipos de actividad deben estar separados por punto y coma. La respuesta debe ser solo el objeto JSON, sin texto adicional ni markdown.`;
+            
+            try {
+                const response = await fetchAPI(`${API_BASE}/chat/generar-contenido`, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ prompt }) 
+                });
+                
+                let aiContent = response.respuesta || response;
+                if (typeof aiContent === 'string') {
+                    const jsonMatch = aiContent.match(/\{.*\}/s);
+                    if (jsonMatch) {
+                        aiContent = JSON.parse(jsonMatch[0]);
+                    } else {
+                        throw new Error("La IA no generó un formato JSON válido.");
+                    }
+                }
+                
+                Object.assign(unitData, aiContent);
+                unitData.has_activities = true;
+                
+                addChatMessage('¡Contenido generado! He completado los objetivos y actividades por ti. Revisa la vista previa y continuemos.', 'bot');
+                updatePreview();
+                moveToNextQuestion();
+
+            } catch (error) {
+                console.error("Error al generar contenido con IA:", error);
+                addChatMessage(`Hubo un error con la IA: ${error.message}. Continuaremos manualmente.`, 'bot');
+                moveToNextQuestion(true); // Pasar a la siguiente pregunta de forma manual
+            } finally {
+                document.getElementById('user-input').disabled = false;
+                document.getElementById('send-button').disabled = false;
+                document.getElementById('mic-btn').disabled = false;
+            }
+        }
+
+        async function processResponse(message) {
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            if (currentQuestion.required && !message) {
+                addChatMessage("Este campo es obligatorio. Por favor, proporciona una respuesta.", "bot");
+                return;
+            }
+
+            // Manejar lógica especial para "ai_decision"
+            if (currentQuestion.key === 'ai_decision') {
+                if (parseYesNo(message)) {
+                    await generateUnitContentWithAI();
+                    return; // La función de IA maneja el flujo
+                } else {
+                    addChatMessage("De acuerdo, continuemos llenando la información manualmente.", 'bot');
+                }
+            }
+
+            // Guardar la respuesta
+            let valueToSave = message;
+            if (currentQuestion.options) {
+                valueToSave = parseYesNo(message);
+            }
+            unitData[currentQuestion.key] = valueToSave;
+            addChatMessage(message, 'user');
+            updatePreview();
+            
+            // Mover a la siguiente pregunta
+            moveToNextQuestion();
+        }
+
+        function moveToNextQuestion(forceManual = false) {
+            // Mover al siguiente índice de pregunta.
+            let nextIndex = currentQuestionIndex + 1;
+            
+            // Si hubo un error con la IA, o si la IA no se usó, no saltar campos.
+            if (!forceManual) {
+                // Si la IA fue exitosa, saltar los campos que ella llenó.
+                if (unitData.general_objective) {
+                    const aiSkippedKeys = ['general_objective', 'specific_objectives', 'contents', 'has_activities', 'activity_types', 'activity_instructions'];
+                    while (nextIndex < questions.length && aiSkippedKeys.includes(questions[nextIndex].key)) {
+                        nextIndex++;
+                    }
+                }
+            }
+
+            // Saltar preguntas condicionales si la condición no se cumple.
+            while (nextIndex < questions.length && questions[nextIndex].condition && !questions[nextIndex].condition(unitData)) {
+                const keyToSkip = questions[nextIndex].key;
+                if (keyToSkip === 'activity_types' || keyToSkip === 'activity_instructions') {
+                    unitData[keyToSkip] = 'N/A';
+                }
+                nextIndex++;
+            }
+
+            currentQuestionIndex = nextIndex;
+
+            if (currentQuestionIndex < questions.length) {
+                const nextQuestion = questions[currentQuestionIndex];
+                addChatMessage(nextQuestion.prompt, 'bot', nextQuestion.options);
+            } else {
+                finishConversation();
+            }
+        }
+
+        async function finishConversation() {
+            addChatMessage('¡Excelente! He recopilado toda la información. Ahora estoy creando la unidad. Por favor, no recargues la página.', 'bot');
+            document.getElementById('user-input').disabled = true;
+            document.getElementById('send-button').disabled = true;
+            document.getElementById('mic-btn').disabled = true;
+            document.getElementById('options-container').innerHTML = '';
+            
+            unitData.module_id = parseInt(moduleId);
+            unitData.learning_activities = [];
+
+            try {
+                await fetchAPI(`${API_BASE}/units/`, { 
+                    method: 'POST', 
+                    body: JSON.stringify(unitData) 
+                });
+                
+                addChatMessage('¡Unidad creada con éxito! Puedes revisar los datos finales en la vista previa.', 'bot');
+                document.getElementById('save-button').classList.remove('hidden');
+                
+            } catch (error) {
+                addChatMessage(`Error al crear la unidad: ${error.message}. Por favor, revisa la información y vuelve a intentar.`, 'bot');
+                
+            } finally {
+                document.getElementById('user-input').disabled = false;
+                document.getElementById('send-button').disabled = false;
+                document.getElementById('mic-btn').disabled = false;
+            }
+        }
+
+        function startConversation() {
+            currentQuestionIndex = 0;
+            unitData = { module_id: parseInt(moduleId), learning_activities: [] };
+            
+            document.getElementById('chat-box').innerHTML = '';
+            document.getElementById('save-button').classList.add('hidden');
+            
+            const firstQuestion = questions[currentQuestionIndex];
+            addChatMessage(firstQuestion.prompt, 'bot', firstQuestion.options);
+        }
+
+        function startVoiceInput() {
+            if (!('webkitSpeechRecognition' in window)) {
+                showNotification('error', 'Error', 'Tu navegador no soporta el reconocimiento de voz. Usa Google Chrome.');
+                return;
+            }
+            
+            recognition = new (window.webkitSpeechRecognition)();
+            recognition.lang = 'es-ES';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            const micBtn = document.getElementById('mic-btn');
+            micBtn.classList.add('bg-red-200');
+            
+            recognition.onresult = (event) => {
+                document.getElementById('user-input').value = event.results[0][0].transcript;
+                document.getElementById('send-button').click();
+            };
+            
+            recognition.onerror = (event) => {
+                console.error('Error de voz:', event.error);
+                micBtn.classList.remove('bg-red-200');
+                showNotification('error', 'Error de voz', `Hubo un error al usar el micrófono: ${event.error}`);
+            };
+            
+            recognition.onend = () => {
+                micBtn.classList.remove('bg-red-200');
+            };
+            
+            recognition.start();
+        }
+
+        function saveUnit() {
+            window.location.href = `https://gestordecursos.pegui.edu.co/r/superadmin/modulos/`;
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            startConversation();
+            
+            document.getElementById('send-button').addEventListener('click', () => {
+                const message = document.getElementById('user-input').value.trim();
+                if (message) {
+                    processResponse(message);
+                    document.getElementById('user-input').value = '';
+                    document.getElementById('options-container').innerHTML = '';
+                }
+            });
+            
+            document.getElementById('user-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('send-button').click();
+                }
+            });
+            
+            document.getElementById('mic-btn').addEventListener('click', startVoiceInput);
+            document.getElementById('save-button').addEventListener('click', saveUnit);
+        });
+    </script>
+</body>
+</html>

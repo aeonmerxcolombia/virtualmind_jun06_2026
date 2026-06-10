@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Cursos | VirtualMind</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: { 'fade-in': 'fadeIn 0.6s ease-out', 'slide-up': 'slideUp 0.4s ease-out' },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            slideUp: { '0%': { opacity: '0', transform: 'translateY(30px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass-effect { backdrop-filter: blur(15px); background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(255, 255, 255, 0.3); }
+    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+    .course-card { background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%); border: 1px solid rgba(226, 232, 240, 0.8); transition: all 0.3s ease; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+
+  <div class="gradient-bg shadow-xl">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="animate-fade-in">
+          <h1 class="text-4xl lg:text-5xl font-bold text-white mb-2">🎓 Gestión de Cursos</h1>
+          <p class="text-indigo-100 text-lg">Administra, crea, edita y elimina cursos educativos</p>
+        </div>
+        <div class="animate-slide-up">
+          <button id="toggleFormBtn" class="glass-effect text-gray-800 px-8 py-4 rounded-xl font-semibold shadow-lg border border-white/20 flex items-center gap-3 hover:bg-white/20 transition-all">
+            <span id="formIcon" class="text-2xl">➕</span>
+            <span id="formText">Crear Nuevo Curso</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto p-6 space-y-8">
+    <div id="formContainer" class="hidden animate-fade-in">
+      <div class="glass-effect rounded-2xl shadow-2xl p-8 card-hover">
+        <div class="flex items-center gap-3 mb-6">
+          <div id="formHeaderIcon" class="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center text-white text-xl font-bold">✨</div>
+          <div>
+            <h2 id="formTitle" class="text-2xl font-bold text-gray-800">Crear Nuevo Curso</h2>
+            <p id="formSubtitle" class="text-gray-600">Completa la información para crear un curso</p>
+          </div>
+        </div>
+        
+        <div class="p-4 bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-xl mb-6">
+            <label class="font-semibold text-gray-700 flex items-center gap-2 mb-2">
+                <i class="fas fa-robot text-indigo-500"></i> Asistente de Contenido con IA
+            </label>
+            <div class="flex items-center gap-2">
+                <input type="text" id="aiPromptInput" placeholder="Ej: Un curso sobre marketing digital para principiantes..." class="flex-1 px-4 py-2 border-2 rounded-lg">
+                <button type="button" id="aiMicBtn" title="Dictar idea por voz" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">🎤</button>
+                <button type="button" id="aiGenerateBtn" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 flex items-center justify-center gap-2 w-32">
+                    <span id="aiGenerateIcon">✨</span>
+                    <span>Generar</span>
+                </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Describe la idea de tu curso y la IA llenará el nombre y la descripción por ti.</p>
+        </div>
+
+        <form id="courseForm" class="space-y-6">
+          <input type="hidden" id="courseId" name="courseId">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div><label class="font-semibold" for="name">Nombre del curso</label><input class="w-full mt-1 px-4 py-3 border-2 rounded-xl" id="name" name="name" type="text" required></div>
+            <div><label class="font-semibold" for="study_plan_id">Plan de estudio</label><select class="w-full mt-1 px-4 py-3 border-2 rounded-xl" id="study_plan_id" name="study_plan_id" required><option value="">Cargando...</option></select></div>
+          </div>
+          <div><label class="font-semibold" for="description">Descripción</label><textarea class="w-full mt-1 px-4 py-3 border-2 rounded-xl" id="description" name="description" rows="4" required></textarea></div>
+          <div><label class="font-semibold" for="author">Autor</label><select class="w-full mt-1 px-4 py-3 border-2 rounded-xl" id="author" name="author"><option value="">Cargando...</option></select></div>
+          <div class="flex gap-4 pt-4">
+            <button id="submitBtn" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg flex items-center justify-center gap-2" type="submit"><span id="submitIcon" class="text-xl">🚀</span><span id="submitText">Crear Curso</span></button>
+            <button type="button" id="cancelBtn" class="px-6 py-4 border-2 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="glass-effect rounded-2xl shadow-2xl overflow-hidden card-hover animate-fade-in">
+      <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
+          <div class="flex items-center justify-between">
+              <div><h2 class="text-2xl font-bold text-white">Lista de Cursos</h2><p class="text-indigo-100" id="cursosCount">Cargando...</p></div>
+              <button id="refreshBtn" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-xl transition-all" title="Actualizar lista">🔄</button>
+          </div>
+      </div>
+      <div id="loadingState" class="py-16 text-center"><div class="inline-flex items-center gap-3 text-gray-500"><div class="animate-spin w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full"></div>Cargando...</div></div>
+      <div id="cursosContainer" class="hidden p-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+      <div id="emptyState" class="hidden py-16 text-center"><p class="text-gray-500">No hay cursos disponibles.</p></div>
+      <div id="errorState" class="hidden py-16 text-center text-red-500"><p>Error al cargar cursos.</p></div>
+    </div>
+  </div>
+
+  <div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl animate-slide-up">
+        <div class="p-5 border-b flex justify-between items-center">
+            <h3 id="modalTitle" class="text-xl font-bold text-gray-800"></h3>
+            <button onclick="closeModal()" class="text-2xl text-gray-400 hover:text-gray-700">&times;</button>
+        </div>
+        <div id="modalContent" class="p-6 space-y-4"></div>
+    </div>
+  </div>
+  
+  <div id="notification" class="fixed top-5 right-5 z-50"></div>
+
+<script>
+    const API_BASE = 'https://gestordecursos.pegui.edu.co:8000';
+    const token = localStorage.token || sessionStorage.token;
+    let cursos = [], planes = [], isEditing = false, recognition;
+
+    // --- LÓGICA DEL ASISTENTE IA Y VOZ ---
+    function startVoicePrompt() {
+        if (!('webkitSpeechRecognition' in window)) {
+            return alert('Tu navegador no soporta el reconocimiento de voz.');
+        }
+        recognition = new (window.webkitSpeechRecognition)();
+        recognition.lang = 'es-ES';
+        recognition.interimResults = false;
+        
+        const aiMicBtn = document.getElementById('aiMicBtn');
+        if (aiMicBtn) {
+            aiMicBtn.textContent = '...';
+            aiMicBtn.disabled = true;
+        }
+
+        recognition.onresult = (event) => {
+            const aiPromptInput = document.getElementById('aiPromptInput');
+            if (aiPromptInput) aiPromptInput.value = event.results[0][0].transcript;
+        };
+        recognition.onerror = (event) => { 
+            console.error('Error de voz:', event.error); 
+            alert('Error en reconocimiento de voz.'); 
+        };
+        recognition.onend = () => {
+            if (aiMicBtn) {
+                aiMicBtn.textContent = '🎤';
+                aiMicBtn.disabled = false;
+            }
+        };
+        recognition.start();
+    }
+
+    async function generateWithAI() {
+        const aiPromptInput = document.getElementById('aiPromptInput');
+        if (!aiPromptInput) {
+            console.error('Elemento aiPromptInput no encontrado.');
+            return;
+        }
+
+        const promptText = aiPromptInput.value.trim();
+        if (!promptText) return alert('Por favor, escribe o dicta una idea para el curso.');
+
+        const aiGenerateBtn = document.getElementById('aiGenerateBtn');
+        const aiGenerateIcon = document.getElementById('aiGenerateIcon');
+        
+        if (aiGenerateBtn) aiGenerateBtn.disabled = true;
+        if (aiGenerateIcon) aiGenerateIcon.innerHTML = `<div class="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>`;
+
+        const fullPrompt = `Basado en la siguiente idea: "${promptText}", genera el contenido para un nuevo curso. Tu respuesta DEBE ser únicamente un objeto JSON válido con la siguiente estructura: {"name": "un nombre creativo para el curso", "description": "una descripción detallada y atractiva del curso de al menos dos párrafos."}. No incluyas nada más en tu respuesta.`;
+
+        try {
+            const response = await fetch(`${API_BASE}/chat/generar-contenido`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ prompt: fullPrompt })
+            });
+            if (!response.ok) throw new Error('La IA no pudo generar el contenido.');
+
+            const data = await response.json();
+            const aiContent = data.respuesta || data;
+
+            const nameMatch = aiContent.match(/"name"\s*:\s*"([^"]*)"/);
+            const descriptionMatch = aiContent.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/s);
+            
+            const nameEl = document.getElementById('name');
+            const descriptionEl = document.getElementById('description');
+
+            if (nameMatch && nameMatch[1] && descriptionMatch && descriptionMatch[1] && nameEl && descriptionEl) {
+                const name = nameMatch[1].replace(/\\n/g, '\n');
+                const description = descriptionMatch[1].replace(/\\n/g, '\n');
+                nameEl.value = name;
+                descriptionEl.value = description;
+                showNotification('Contenido generado por IA', 'success');
+            } else {
+                throw new Error("La IA devolvió un formato de texto inesperado.");
+            }
+
+        } catch (error) {
+            console.error('Error con el asistente IA:', error);
+            showNotification(error.message, 'error');
+        } finally {
+            if (aiGenerateBtn) aiGenerateBtn.disabled = false;
+            if (aiGenerateIcon) aiGenerateIcon.innerHTML = `✨`;
+        }
+    }
+
+    // --- FUNCIONES CRUD Y UI ---
+    async function fetchAPI(url, options = {}) {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ detail: 'Error en la respuesta' }));
+            throw new Error(errorData.detail || `Error ${response.status}`);
+        }
+        if (response.status === 204) return null;
+        return response.json();
+    }
+
+    function showState(state) {
+        const states = ['loadingState', 'cursosContainer', 'emptyState', 'errorState'];
+        states.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+        const activeEl = document.getElementById(state);
+        if (activeEl) activeEl.classList.remove('hidden');
+    }
+
+    function toggleForm(show = null) {
+        const formContainer = document.getElementById('formContainer');
+        const formIcon = document.getElementById('formIcon');
+        const formText = document.getElementById('formText');
+
+        if (!formContainer) return;
+
+        const shouldShow = show !== null ? show : formContainer.classList.contains('hidden');
+
+        if (shouldShow) {
+            formContainer.classList.remove('hidden');
+            if (formIcon) formIcon.textContent = '❌';
+            if (formText) formText.textContent = isEditing ? 'Cerrar Edición' : 'Cerrar Formulario';
+            formContainer.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            formContainer.classList.add('hidden');
+            if (formIcon) formIcon.textContent = '➕';
+            if (formText) formText.textContent = 'Crear Nuevo Curso';
+            if (isEditing) resetForm();
+        }
+    }
+
+    function resetForm() {
+        isEditing = false;
+        const courseForm = document.getElementById('courseForm');
+        if (courseForm) courseForm.reset();
+
+        const titleEl = document.getElementById('formTitle');
+        const subtitleEl = document.getElementById('formSubtitle');
+        const headerIconEl = document.getElementById('formHeaderIcon');
+        const submitIconEl = document.getElementById('submitIcon');
+        const submitTextEl = document.getElementById('submitText');
+        
+        if (titleEl) titleEl.textContent = 'Crear Nuevo Curso';
+        if (subtitleEl) subtitleEl.textContent = 'Completa la información para crear un curso';
+        if (headerIconEl) headerIconEl.innerHTML = '✨';
+        if (submitIconEl) submitIconEl.textContent = '🚀';
+        if (submitTextEl) submitTextEl.textContent = 'Crear Curso';
+        
+        const courseIdEl = document.getElementById('courseId');
+        if (courseIdEl) courseIdEl.value = '';
+    }
+
+    function showNotification(message, type = 'info') {
+        const notificationArea = document.getElementById('notification');
+        if (!notificationArea) {
+            console.error("El contenedor de notificaciones no existe.");
+            return;
+        }
+        const colors = { success: 'green', error: 'red', info: 'blue' };
+        const icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
+        const notification = document.createElement('div');
+        notification.className = `bg-white rounded-lg shadow-xl border-l-4 border-${colors[type]}-500 p-4 max-w-md mb-4`;
+        notification.innerHTML = `<div class="flex items-center"><div class="mr-3"><i class="fas ${icons[type]} text-${colors[type]}-500 text-xl"></i></div><div><div class="font-semibold">${type === 'success' ? 'Éxito' : 'Error'}</div><div class="text-sm text-gray-600">${message}</div></div></div>`;
+        notificationArea.appendChild(notification);
+        setTimeout(() => { notification.remove(); }, 4000);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('detailsModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    async function obtenerDatos() {
+        showState('loadingState');
+        try {
+            cursos = await fetchAPI(`${API_BASE}/courses`);
+            const cursosCountEl = document.getElementById('cursosCount');
+            if (cursosCountEl) {
+                cursosCountEl.textContent = `${cursos.length} curso${cursos.length !== 1 ? 's' : ''} disponible${cursos.length !== 1 ? 's' : ''}`;
+            }
+            if (cursos.length === 0) showState('emptyState');
+            else {
+                mostrarCursos();
+                showState('cursosContainer');
+            }
+        } catch (error) {
+            console.error("Error cargando datos:", error);
+            showState('errorState');
+        }
+    }
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        const originalContent = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.innerHTML = `<div class="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div> <span>${isEditing ? 'Guardando...' : 'Creando...'}</span>`;
+            submitBtn.disabled = true;
+        }
+
+        const courseId = document.getElementById('courseId')?.value;
+        const data = {
+            name: e.target.name.value,
+            description: e.target.description.value,
+            study_plan_id: parseInt(e.target.study_plan_id.value),
+            author: e.target.author.value
+        };
+
+        const url = isEditing ? `${API_BASE}/courses/${courseId}` : `${API_BASE}/courses`;
+        const method = isEditing ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.detail || 'Error en la petición');
+            }
+            showNotification(`Curso ${isEditing ? 'actualizado' : 'creado'} con éxito!`, 'success');
+            toggleForm(false);
+            await obtenerDatos();
+        } catch (err) {
+            showNotification(`Error: ${err.message}`, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.innerHTML = originalContent;
+                submitBtn.disabled = false;
+            }
+        }
+    }
+
+    async function editCourse(courseId) {
+        const curso = cursos.find(c => c.id === courseId);
+        if (!curso) return;
+
+        isEditing = true;
+        const courseIdEl = document.getElementById('courseId');
+        if (courseIdEl) courseIdEl.value = curso.id;
+        
+        document.getElementById('name').value = curso.name;
+        document.getElementById('description').value = curso.description;
+        document.getElementById('study_plan_id').value = curso.study_plan_id;
+        document.getElementById('author').value = curso.author;
+
+        const titleEl = document.getElementById('formTitle');
+        const subtitleEl = document.getElementById('formSubtitle');
+        const headerIconEl = document.getElementById('formHeaderIcon');
+        const submitIconEl = document.getElementById('submitIcon');
+        const submitTextEl = document.getElementById('submitText');
+
+        if (titleEl) titleEl.textContent = 'Editar Curso';
+        if (subtitleEl) subtitleEl.textContent = `Modificando el curso #${curso.id}`;
+        if (headerIconEl) headerIconEl.innerHTML = '✏️';
+        if (submitIconEl) submitIconEl.textContent = '💾';
+        if (submitTextEl) submitTextEl.textContent = 'Guardar Cambios';
+
+        toggleForm(true);
+    }
+
+    async function deleteCourse(courseId) {
+        if (!confirm(`¿Estás seguro de que quieres eliminar el curso #${courseId}?`)) return;
+        try {
+            const res = await fetch(`${API_BASE}/courses/${courseId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.status !== 204 && res.status !== 200) {
+                const error = await res.json().catch(() => ({}));
+                throw new Error(error.detail || 'No se pudo eliminar');
+            }
+            showNotification('Curso eliminado con éxito.', 'success');
+            await obtenerDatos();
+        } catch (err) {
+            showNotification(`Error al eliminar: ${err.message}`, 'error');
+        }
+    }
+
+    function showCourseDetails(courseId) {
+        const curso = cursos.find(c => c.id === courseId);
+        const plan = planes.find(p => p.id === curso.study_plan_id);
+        if (!curso) return;
+
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+
+        if (modalTitle) modalTitle.textContent = curso.name;
+        if (modalContent) {
+            modalContent.innerHTML = `
+                <p><strong>Descripción:</strong> ${curso.description || 'N/A'}</p>
+                <p><strong>Autor:</strong> ${curso.author || 'N/A'}</p>
+                <p><strong>Plan de Estudio:</strong> ${plan ? plan.name : 'N/A'}</p>
+            `;
+        }
+        
+        const modal = document.getElementById('detailsModal');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    async function cargarDependencias() {
+      const selectPlan = document.getElementById('study_plan_id');
+      const selectAutor = document.getElementById('author');
+      
+      if (selectPlan) {
+        try {
+          const resPlanes = await fetch(`${API_BASE}/study_plans`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          planes = await resPlanes.json();
+          selectPlan.innerHTML = '<option value="">Seleccione un plan</option>';
+          planes.forEach(p => selectPlan.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+        } catch (e) {
+          selectPlan.innerHTML = '<option value="">Error al cargar</option>';
+        }
+      }
+
+      if (selectAutor) {
+        try {
+          const resUsers = await fetch(`${API_BASE}/users`, { headers: { 'Authorization': `Bearer ${token}` } });
+          const users = await resUsers.json();
+          selectAutor.innerHTML = '<option value="">Seleccione un autor</option>';
+          users.forEach(u => selectAutor.innerHTML += `<option value="${u.nombre || u.email}">${u.nombre || u.email}</option>`);
+        } catch(e) {
+          selectAutor.innerHTML = '<option value="">Error al cargar</option>';
+        }
+      }
+    }
+
+    function mostrarCursos() {
+        const cursosContainer = document.getElementById('cursosContainer');
+        if (!cursosContainer) return;
+        cursosContainer.innerHTML = cursos.map(curso => {
+            const plan = planes.find(p => p.id === curso.study_plan_id);
+            return `
+                <div class="course-card rounded-xl p-6 shadow-lg">
+                  <h3 class="text-xl font-bold text-gray-800 mb-2">${curso.name}</h3>
+                  <p class="text-gray-600 text-sm mb-4 h-12 overflow-hidden">${curso.description || 'Sin descripción.'}</p>
+                  <div class="text-sm space-y-2">
+                      <p><strong>Plan:</strong> ${plan ? plan.name : 'N/A'}</p>
+                      <p><strong>Autor:</strong> ${curso.author || 'N/A'}</p>
+                  </div>
+                  <div class="flex gap-2 mt-6">
+                      <button onclick="showCourseDetails(${curso.id})" class="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm">Ver</button>
+                      <button onclick="editCourse(${curso.id})" class="bg-yellow-400 text-yellow-900 px-3 py-2 rounded-lg text-sm">Editar</button>
+                      <button onclick="deleteCourse(${curso.id})" class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm">Eliminar</button>
+                  </div>
+                </div>`;
+        }).join('');
+    }
+
+    // --- EVENT LISTENERS ---
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!token) window.location.href = '/index.html';
+        cargarDependencias();
+        obtenerDatos();
+
+        const aiMicBtn = document.getElementById('aiMicBtn');
+        const aiGenerateBtn = document.getElementById('aiGenerateBtn');
+        const toggleFormBtn = document.getElementById('toggleFormBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const courseForm = document.getElementById('courseForm');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        if (aiMicBtn) aiMicBtn.addEventListener('click', startVoicePrompt);
+        if (aiGenerateBtn) aiGenerateBtn.addEventListener('click', generateWithAI);
+        if (toggleFormBtn) toggleFormBtn.addEventListener('click', () => toggleForm());
+        if (cancelBtn) cancelBtn.addEventListener('click', () => toggleForm(false));
+        if (courseForm) courseForm.addEventListener('submit', handleFormSubmit);
+        if (refreshBtn) refreshBtn.addEventListener('click', obtenerDatos);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Actualizar Proyecto - VirtualMind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .card-glass {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .input-focus {
+      transition: all 0.3s ease;
+    }
+
+    .input-focus:focus {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-card {
+      transition: all 0.3s ease;
+    }
+
+    .section-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .checkbox-custom {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .checkbox-custom input[type="checkbox"] {
+      opacity: 0;
+      position: absolute;
+    }
+
+    .checkbox-custom .checkmark {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: #f3f4f6;
+      border: 2px solid #d1d5db;
+      border-radius: 4px;
+      margin-right: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .checkbox-custom input[type="checkbox"]:checked + .checkmark {
+      background: #667eea;
+      border-color: #667eea;
+    }
+
+    .checkbox-custom input[type="checkbox"]:checked + .checkmark:after {
+      content: "✓";
+      color: white;
+      font-size: 14px;
+      position: absolute;
+      left: 3px;
+      top: 0px;
+    }
+
+    .radio-custom {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .radio-custom input[type="radio"] {
+      opacity: 0;
+      position: absolute;
+    }
+
+    .radio-custom .radiomark {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: #f3f4f6;
+      border: 2px solid #d1d5db;
+      border-radius: 50%;
+      margin-right: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .radio-custom input[type="radio"]:checked + .radiomark {
+      background: #667eea;
+      border-color: #667eea;
+    }
+
+    .radio-custom input[type="radio"]:checked + .radiomark:after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      position: absolute;
+      left: 6px;
+      top: 6px;
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f4f6;
+      border-top: 5px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .mic-recording { animation: micPulse 1s infinite ease-in-out; background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+    .mic-processing { background-color: #eab308 !important; color: white !important; border-color: #ca8a04 !important; }
+    @keyframes micPulse { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen py-8">
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="text-center">
+      <div class="spinner"></div>
+      <p class="text-white mt-4 font-semibold">Cargando proyecto...</p>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4">
+    <!-- Header -->
+    <div class="text-center mb-8 animate-fade-in">
+      <h1 class="text-4xl font-bold text-white mb-2">VirtualMind</h1>
+      <p class="text-blue-100 text-lg">Gestión Inteligente de Proyectos Educativos</p>
+    </div>
+
+    <div class="card-glass rounded-3xl shadow-2xl p-8 animate-fade-in">
+      <div class="flex items-center mb-8">
+        <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center mr-4">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+        </div>
+        <h2 id="pageTitle" class="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+          Actualizar Proyecto
+        </h2>
+      </div>
+
+      <!-- Error Message -->
+      <div id="errorMessage" class="hidden bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p id="errorText" class="text-red-800 font-semibold"></p>
+        </div>
+      </div>
+
+      <!-- Project Info Card -->
+      <div id="projectInfoCard" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-semibold text-blue-800">ID del Proyecto:</p>
+            <p id="projectIdDisplay" class="text-blue-600 font-mono"></p>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-blue-800">Última Actualización:</p>
+            <p id="lastUpdated" class="text-blue-600"></p>
+          </div>
+        </div>
+      </div>
+
+      <form id="formActualizarProyecto" class="space-y-8">
+        <!-- Información Básica -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </span>
+            Información Básica del Proyecto
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="name">Nombre del Proyecto</label>
+              <div class="flex gap-2">
+                <input id="name" name="name" required
+                  class="flex-1 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus transition-all"
+                  placeholder="Ingresa el nombre del proyecto"/>
+                <button type="button" onclick="gestionarGrabacionWhisper(event, 'name')" id="btn-mic-name" class="px-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-name" class="fas fa-microphone text-lg"></i></button>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="clienteSelect">Cliente</label>
+              <select id="clienteSelect" required
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Seleccione un cliente...</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="clientId">ID Cliente (uid)</label>
+              <input id="clientId" name="client_id" readonly required
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"/>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="codigoReferencia">Código Interno/Referencia</label>
+              <input id="codigoReferencia" name="codigo_referencia" readonly
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"/>
+            </div>
+
+            <div class="space-y-2">
+              <label for="etapa" class="block text-sm font-semibold text-gray-700">Seleccionar Etapa</label>
+              <select id="etapa" name="etapa"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="" disabled>Elige una etapa</option>
+                <option value="1">Etapa 1: Inicio</option>
+                <option value="2">Etapa 2: Desarrollo</option>
+                <option value="3">Etapa 3: Finalización</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="start_date">Fecha de Inicio</label>
+              <input id="start_date" name="start_date" type="date" required
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="end_date">Fecha de Finalización</label>
+              <input id="end_date" name="end_date" type="date"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="tipoProyecto">Tipo de Proyecto</label>
+               <select id="tipoProyecto" name="tipo_proyecto" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                 <option value="">Selecciona...</option>
+
+    <!-- ================== CURSOS ================== -->
+    <optgroup label="Cursos">
+      <option value="Curso virtual">Curso virtual</option>
+      <option value="Mooc">MOOC (Curso Online Masivo y Abierto)</option>
+      <option value="Scorm">SCORM</option>
+      <option value="OVA">OVA (Objeto Virtual de Aprendizaje)</option>
+      <option value="Microlearning">Microlearning</option>
+      <option value="Microcursos">Microcursos o cápsulas educativas</option>
+      <option value="RapidLearning">RapidLearning</option>
+      <option value="Gamificados">Gamificados</option>
+      <option value="VideoLearning">Video learning</option>
+      <option value="LearningByDoing">Learning by doing</option>
+      <option value="MobileLearning">Mobile Learning</option>
+      <option value="Nanocursos">Nanocursos / Cursos express</option>
+      <option value="Storytelling">Cursos en formato storytelling</option>
+    </optgroup>
+
+    <!-- ================== TALLERES ================== -->
+    <optgroup label="Talleres">
+      <option value="TallerVirtual">Taller virtual</option>
+      <option value="TallerPresencial">Taller presencial</option>
+      <option value="TallerHibrido">Taller híbrido</option>
+    </optgroup>
+
+    <!-- ================== EBOOK ================== -->
+    <optgroup label="Ebook">
+      <option value="EbookEducativo">Educativo</option>
+      <option value="EbookGamificado">Gamificado</option>
+      <option value="EbookAcademico">Académico</option>
+      <option value="EbookInformativo">Informativo</option>
+      <option value="EbookPromocional">Promocional</option>
+      <option value="EbookInfantil">Infantil</option>
+      <option value="EbookCreativo">Creativo o literario</option>
+      <option value="EbookOtro">Otro</option>
+    </optgroup>
+
+    <!-- ================== PODCAST ================== -->
+    <optgroup label="Podcast">
+      <option value="PodcastEducativo">Educativos</option>
+      <option value="PodcastCultural">Culturales y literarios</option>
+      <option value="PodcastNegocios">Negocios y emprendimiento</option>
+      <option value="PodcastEntretenimiento">Entretenimiento</option>
+      <option value="PodcastBienestar">Bienestar y desarrollo personal</option>
+      <option value="PodcastNoticias">Noticias y actualidad</option>
+      <option value="PodcastViajes">Viajes y estilo de vida</option>
+      <option value="PodcastTecnologia">Tecnología y ciencia</option>
+      <option value="PodcastFamilia">Familia y educación</option>
+      <option value="PodcastEspiritualidad">Espiritualidad y religión</option>
+      <option value="PodcastDeportes">Deportes</option>
+      <option value="PodcastSociedad">Opinión y sociedad</option>
+      <option value="PodcastMusica">Música y arte</option>
+      <option value="PodcastCrimen">Crimen y misterio</option>
+      <option value="PodcastRelaciones">Relaciones y sexualidad</option>
+      <option value="PodcastCocina">Cocina y gastronomía</option>
+      <option value="PodcastPsicologia">Psicología y salud mental</option>
+      <option value="PodcastEducacion">Educación superior</option>
+      <option value="PodcastMedioAmbiente">Medio ambiente</option>
+    </optgroup>
+
+    <!-- ================== APPS MÓVILES ================== -->
+    <optgroup label="Apps Educativas">
+      <option value="AppAprendizajeIdiomas">Aprendizaje de idiomas</option>
+      <option value="AppCursosVirtuales">Cursos virtuales</option>
+      <option value="AppDocentesEstudiantes">Apps para docentes y estudiantes</option>
+      <option value="AppJuegosEducativos">Juegos educativos infantiles</option>
+    </optgroup>
+
+    <optgroup label="Apps Ecommerce">
+      <option value="AppTiendaOnline">Tiendas online</option>
+      <option value="AppMarketplace">Marketplace</option>
+      <option value="AppComparadoresPrecios">Comparadores de precios</option>
+      <option value="AppSupermercadoModa">Compra de supermercado o moda</option>
+    </optgroup>
+
+    <optgroup label="Apps Salud y Bienestar">
+      <option value="AppMeditacion">Meditación y mindfulness</option>
+      <option value="AppHabitosSaludables">Seguimiento de hábitos saludables</option>
+      <option value="AppSaludMental">Salud mental</option>
+      <option value="AppCitasMedicas">Control de citas médicas</option>
+    </optgroup>
+
+    <optgroup label="Apps Fitness y Estilo de vida">
+      <option value="AppRutinas">Rutinas de ejercicio</option>
+      <option value="AppNutricion">Nutrición y dietas</option>
+      <option value="AppPasos">Seguimiento de peso/pasos</option>
+      <option value="AppYoga">Yoga y entrenamiento personalizado</option>
+    </optgroup>
+
+    <optgroup label="Apps Redes sociales">
+      <option value="AppChats">Chats y mensajería</option>
+      <option value="AppForos">Foros y comunidades</option>
+      <option value="AppCitas">Apps de citas</option>
+      <option value="AppInteraccionSocial">Plataformas de interacción social</option>
+    </optgroup>
+
+    <optgroup label="Apps Viajes y transporte">
+      <option value="AppVuelos">Reservas de vuelos y hoteles</option>
+      <option value="AppMapas">Mapas y navegación</option>
+      <option value="AppTransporte">Transporte urbano (Uber, Didi, etc.)</option>
+      <option value="AppGuiasViaje">Guías de viaje</option>
+    </optgroup>
+
+    <optgroup label="Apps Finanzas">
+      <option value="AppBancaDigital">Bancos digitales</option>
+      <option value="AppGastos">Control de gastos</option>
+      <option value="AppCriptomonedas">Criptomonedas</option>
+      <option value="AppContabilidad">Facturación y contabilidad personal</option>
+    </optgroup>
+
+    <optgroup label="Apps Juegos">
+      <option value="AppJuegosCasuales">Juegos casuales</option>
+      <option value="AppJuegosEducativos">Juegos educativos</option>
+      <option value="AppEstrategia">Estrategia, acción, aventura</option>
+      <option value="AppJuegosMultijugador">Juegos multijugador</option>
+    </optgroup>
+
+    <optgroup label="Apps Música y Audio">
+      <option value="AppReproductores">Reproductores de música</option>
+      <option value="AppStreamingAudio">Streaming de audio</option>
+      <option value="AppProduccionMusical">Producción y edición musical</option>
+    </optgroup>
+
+    <optgroup label="Apps Fotografía y Video">
+      <option value="AppEdicionImagenes">Edición de imágenes</option>
+      <option value="AppFiltros">Filtros y efectos</option>
+      <option value="AppProduccionVideo">Producción de video</option>
+      <option value="AppAlbumes">Álbumes y galerías</option>
+    </optgroup>
+
+    <optgroup label="Apps Noticias y Revistas">
+      <option value="AppPortalesNoticias">Portales de noticias</option>
+      <option value="AppRSS">Lectores RSS</option>
+      <option value="AppRevistas">Revistas digitales</option>
+    </optgroup>
+
+    <optgroup label="Apps Cocina y Gastronomía">
+      <option value="AppRecetarios">Recetarios</option>
+      <option value="AppPlanificacionComidas">Planificación de comidas</option>
+      <option value="AppComprasIngredientes">Compras de ingredientes</option>
+      <option value="AppDelivery">Apps para delivery</option>
+    </optgroup>
+
+    <optgroup label="Apps Productividad">
+      <option value="AppTareas">Gestión de tareas</option>
+      <option value="AppCalendarios">Calendarios y agendas</option>
+      <option value="AppHerramientasTrabajo">Herramientas de productividad</option>
+    </optgroup>
+
+    <!-- OTROS -->
+    <optgroup label="Otros">
+      <option value="LandingPage">Landing Page</option>
+      <option value="Otro">Otro (especificar)</option>
+    </optgroup>
+              </select>
+            </div>
+
+            <div id="divTipoProyectoPersonalizado" style="display:none;" class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="tipoProyectoPersonalizado">Tipo de Proyecto Personalizado</label>
+              <div class="flex gap-2">
+                <input id="tipoProyectoPersonalizado" name="tipo_proyecto_personalizado"
+                  placeholder="Especifique el tipo de proyecto"
+                  class="flex-1 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <button type="button" onclick="gestionarGrabacionWhisper(event, 'tipoProyectoPersonalizado')" id="btn-mic-tipoProyectoPersonalizado" class="px-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-tipoProyectoPersonalizado" class="fas fa-microphone text-lg"></i></button>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="estado">Estado</label>
+              <select id="estado" name="estado" required
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="Planificado">Planificado</option>
+                <option value="En desarrollo">En desarrollo</option>
+                <option value="Aprobado">Aprobado</option>
+                <option value="Aplazado">Aplazado</option>
+                <option value="Finalizado">Finalizado</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-6 space-y-2">
+            <label class="block text-sm font-semibold text-gray-700" for="description">Descripción resumen del proyecto</label>
+            <div class="flex gap-2">
+              <textarea id="description" name="description" rows="4"
+                class="flex-1 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus resize-none"
+                placeholder="Describe brevemente el proyecto y sus objetivos..."></textarea>
+              <button type="button" onclick="gestionarGrabacionWhisper(event, 'description')" id="btn-mic-description" class="px-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0 h-[120px]" title="Grabar con Whisper"><i id="ico-mic-description" class="fas fa-microphone text-lg"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuración de Lenguaje -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+              </svg>
+            </span>
+            Configuración de Lenguaje e Inclusión
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Lenguaje Inclusivo -->
+            <div class="space-y-4">
+              <h4 class="font-semibold text-gray-700">Lenguaje Inclusivo</h4>
+              <div class="flex space-x-6">
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="lenguaje_incluyente" value="true" id="incluyenteSi">
+                  <span class="radiomark"></span>
+                  Sí
+                </label>
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="lenguaje_incluyente" value="false" id="incluyenteNo">
+                  <span class="radiomark"></span>
+                  No
+                </label>
+              </div>
+              <select name="lenguaje_inclusivo_tipo" id="tipoLenguajeSelect" disabled
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Selecciona...</option>
+                <option value="Tradicional">Lenguaje tradicional</option>
+                <option value="Doble mención">Doble mención</option>
+                <option value="Neutro">Términos neutros</option>
+                <option value="No binario">No binario</option>
+                <option value="Otro">Otro</option>
+              </select>
+              <div class="flex gap-2">
+                <input id="otroLenguajeInput" name="lenguaje_inclusivo_otro" disabled
+                  class="flex-1 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"
+                  placeholder="Si elegiste Otro, especifica aquí"/>
+                <button type="button" onclick="gestionarGrabacionWhisper(event, 'otroLenguajeInput')" id="btn-mic-otroLenguajeInput" class="px-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-otroLenguajeInput" class="fas fa-microphone text-lg"></i></button>
+              </div>
+            </div>
+
+            <!-- Idioma -->
+            <div class="space-y-4">
+              <h4 class="font-semibold text-gray-700">Idioma</h4>
+              <div class="flex flex-wrap gap-4">
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="idioma" value="Español">
+                  <span class="radiomark"></span>
+                  Español
+                </label>
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="idioma" value="Inglés">
+                  <span class="radiomark"></span>
+                  Inglés
+                </label>
+                <label class="radio-custom flex items-center">
+                  <input type="radio" name="idioma" value="Bilingüe">
+                  <span class="radiomark"></span>
+                  Bilingüe
+                </label>
+              </div>
+              <div class="flex gap-2">
+                <input id="idioma_otro" name="idioma_otro"
+                  class="flex-1 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"
+                  placeholder="Otro idioma"/>
+                <button type="button" onclick="gestionarGrabacionWhisper(event, 'idioma_otro')" id="btn-mic-idioma_otro" class="px-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-idioma_otro" class="fas fa-microphone text-lg"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inclusión Digital -->
+          <div class="mt-8 space-y-4">
+            <h4 class="font-semibold text-gray-700">Inclusión Digital</h4>
+            <div class="flex space-x-6 mb-4">
+              <label class="radio-custom flex items-center">
+                <input type="radio" name="inclusion_digital" value="true">
+                <span class="radiomark"></span>
+                Sí
+              </label>
+              <label class="radio-custom flex items-center">
+                <input type="radio" name="inclusion_digital" value="false">
+                <span class="radiomark"></span>
+                No
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_web" value="true">
+                <span class="checkmark"></span>
+                Accesibilidad web
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_asistiva" value="true">
+                <span class="checkmark"></span>
+                Tecnología asistiva
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_universal" value="true">
+                <span class="checkmark"></span>
+                Diseño universal
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="inclusion_digital_educativa" value="true">
+                <span class="checkmark"></span>
+                Educación digital inclusiva
+              </label>
+            </div>
+            <div class="flex gap-2">
+              <input id="inclusion_digital_otro" name="inclusion_digital_otro"
+                class="flex-1 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"
+                placeholder="Otro (especificar)"/>
+              <button type="button" onclick="gestionarGrabacionWhisper(event, 'inclusion_digital_otro')" id="btn-mic-inclusion_digital_otro" class="px-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0" title="Grabar con Whisper"><i id="ico-mic-inclusion_digital_otro" class="fas fa-microphone text-lg"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diseño y Tipografía -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+            </span>
+            Diseño Visual y Tipografía
+          </h3>
+
+          <!-- Tipografía de Título -->
+          <div class="space-y-6">
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-4">Tipografía de Título</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <input name="tipografia_titulo_fuente" placeholder="Fuente título"
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <input name="tipografia_titulo_tamano" placeholder="Tamaño título"
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_titulo_negrita" value="true">
+                  <span class="checkmark"></span>
+                  Negrita
+                </label>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_titulo_cursiva" value="true">
+                  <span class="checkmark"></span>
+                  Cursiva
+                </label>
+              </div>
+            </div>
+
+            <!-- Tipografía de Subtítulo -->
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-4">Tipografía de Subtítulo</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <input name="tipografia_subtitulo_fuente" placeholder="Fuente subtítulo"
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <input name="tipografia_subtitulo_tamano" placeholder="Tamaño subtítulo"
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_subtitulo_negrita" value="true">
+                  <span class="checkmark"></span>
+                  Negrita
+                </label>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_subtitulo_cursiva" value="true">
+                  <span class="checkmark"></span>
+                  Cursiva
+                </label>
+              </div>
+            </div>
+
+            <!-- Tipografía de Párrafo -->
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-4">Tipografía de Párrafo</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <input name="tipografia_parrafo_fuente" placeholder="Fuente párrafo"
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <input name="tipografia_parrafo_tamano" placeholder="Tamaño párrafo"
+                  class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_parrafo_negrita" value="true">
+                  <span class="checkmark"></span>
+                  Negrita
+                </label>
+                <label class="checkbox-custom flex items-center">
+                  <input type="checkbox" name="tipografia_parrafo_cursiva" value="true">
+                  <span class="checkmark"></span>
+                  Cursiva
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Diseño Gráfico -->
+          <div class="mt-8 space-y-4">
+            <h4 class="font-semibold text-gray-700">Diseño Gráfico</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <select name="diseno_grafico_tipo"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                <option value="">Selecciona paleta...</option>
+                <option value="Flat UI Colors">Flat UI Colors</option>
+                <option value="Pasteles suaves">Pasteles suaves</option>
+                <option value="Colores vibrantes">Colores vibrantes</option>
+                <option value="Neutros y tierra">Neutros y tierra</option>
+                <option value="Blanco y negro">Blanco y negro</option>
+                <option value="Paleta personalizada">Paleta personalizada</option>
+              </select>
+              <input name="diseno_grafico_paleta"
+                placeholder="Especifica el hex o nombre si es personalizada"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuración de Tiempo -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </span>
+            Configuración de Tiempo de Estudio
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700" for="horas_curso">Total de Horas de Estudio</label>
+              <input id="horas_curso" name="horas_curso" type="number" min="0" step="0.1"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+
+            <div class="space-y-2">
+              <label for="horas_autonomo" class="block text-sm font-semibold text-gray-700">Horas de aprendizaje autónomo virtual</label>
+              <input type="number" step="0.1" id="horas_autonomo" name="horas_aprendizaje_autonomo_virtual"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+
+            <div class="space-y-2">
+              <label for="horas_actividades" class="block text-sm font-semibold text-gray-700">Horas de actividades de aprendizaje</label>
+              <input type="number" step="0.1" id="horas_actividades" name="horas_actividades_aprendizaje"
+                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Derechos y Entregables -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+            </span>
+            Derechos y Entregables
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Cesión de derechos</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="cesion_derechos" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="cesion_derechos" value="false">
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Derechos patrimoniales de autor</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="derechos_patrimoniales_autor" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="derechos_patrimoniales_autor" value="false">
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Acuerdo de confidencialidad</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="acuerdo_confidencialidad" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="acuerdo_confidencialidad" value="false">
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Entrega de fuentes</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_fuentes" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_fuentes" value="false">
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Entrega de escrito de autor</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_escrito_autor" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_escrito_autor" value="false">
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Entrega de diseño instruccional</label>
+                <div class="flex space-x-6">
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_diseno_instruccional" value="true">
+                    <span class="radiomark"></span>
+                    Sí
+                  </label>
+                  <label class="radio-custom flex items-center">
+                    <input type="radio" name="entrega_diseno_instruccional" value="false">
+                    <span class="radiomark"></span>
+                    No
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Público Objetivo -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+            </span>
+            Público Objetivo
+          </h3>
+
+          <div class="space-y-4">
+            <p class="text-sm text-gray-600">¿A quién está dirigido el proyecto?</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto border border-gray-200 rounded-xl p-4 bg-gray-50">
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Primera infancia">
+                <span class="checkmark"></span>
+                Primera infancia (0 a 5 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Niños 6 a 11 años">
+                <span class="checkmark"></span>
+                Niños (6 a 11 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Niñas 6 a 11 años">
+                <span class="checkmark"></span>
+                Niñas (6 a 11 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Adolescentes 12 a 17 años">
+                <span class="checkmark"></span>
+                Adolescentes (12 a 17 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Jóvenes 18 a 25 años">
+                <span class="checkmark"></span>
+                Jóvenes (18 a 25 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Adultos 26 a 35 años">
+                <span class="checkmark"></span>
+                Adultos jóvenes (26 a 35 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Adultos 36 a 59 años">
+                <span class="checkmark"></span>
+                Adultos (36 a 59 años)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Personas mayores 60+">
+                <span class="checkmark"></span>
+                Personas mayores (60+)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Familias">
+                <span class="checkmark"></span>
+                Familias
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Docentes">
+                <span class="checkmark"></span>
+                Docentes / educadores
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Empresas">
+                <span class="checkmark"></span>
+                Empresas / equipos de trabajo
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Instituciones educativas">
+                <span class="checkmark"></span>
+                Instituciones educativas
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Público en general">
+                <span class="checkmark"></span>
+                Público en general
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Agricultores">
+                <span class="checkmark"></span>
+                Agricultores
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Migración">
+                <span class="checkmark"></span>
+                Migración
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Población nativa">
+                <span class="checkmark"></span>
+                Población nativa (indígenas)
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Población afro">
+                <span class="checkmark"></span>
+                Población afro
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Género">
+                <span class="checkmark"></span>
+                Género
+              </label>
+              <label class="checkbox-custom flex items-center">
+                <input type="checkbox" name="publico_objetivo" value="Otro">
+                <span class="checkmark"></span>
+                Otro
+              </label>
+            </div>
+            <input name="publico_objetivo_otro"
+              placeholder="Otro (especificar)"
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+          </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="section-card bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </span>
+            Observaciones Adicionales
+          </h3>
+
+          <div class="space-y-2">
+            <label for="observaciones" class="block text-sm font-semibold text-gray-700">Observaciones</label>
+            <div class="flex gap-2">
+              <textarea id="observaciones" name="observaciones" rows="4"
+                class="flex-1 w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus resize-none"
+                placeholder="Agrega cualquier observación, requisito especial o comentario adicional sobre el proyecto..."></textarea>
+              <button type="button" onclick="gestionarGrabacionWhisper(event, 'observaciones')" id="btn-mic-observaciones" class="px-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0 h-[120px]" title="Grabar con Whisper"><i id="ico-mic-observaciones" class="fas fa-microphone text-lg"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="text-center flex justify-center items-center space-x-6">
+          <button type="button" id="cancelBtn"
+            class="group relative px-8 py-4 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-gray-200">
+            <span class="relative z-10 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              Cancelar
+            </span>
+          </button>
+
+          <button type="submit"
+            class="group relative px-8 py-4 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-orange-200">
+            <span class="relative z-10 flex items-center">
+              <svg class="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+              Actualizar Proyecto
+            </span>
+            <div class="absolute inset-0 bg-gradient-to-r from-orange-700 to-red-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+    let currentProjectId = null;
+
+    // Obtener el ID del proyecto desde la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('id');
+
+    if (!projectId) {
+      showError('No se proporcionó ID del proyecto');
+    } else {
+      currentProjectId = projectId;
+      loadProject();
+    }
+
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      const errorText = document.getElementById('errorText');
+      errorText.textContent = message;
+      errorDiv.classList.remove('hidden');
+    }
+
+    function hideError() {
+      document.getElementById('errorMessage').classList.add('hidden');
+    }
+
+    function showLoading(show = true) {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.style.display = show ? 'flex' : 'none';
+    }
+
+    async function loadProject() {
+      const token = getToken();
+      if (!token) {
+        showError("No has iniciado sesión. Haz login primero.");
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+        return;
+      }
+
+      try {
+        showLoading(true);
+        hideError();
+
+        // Cargar datos del proyecto
+        const [projectRes, usersRes] = await Promise.all([
+          fetch(`${API_URL}/projects/${currentProjectId}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+          }),
+          fetch(`${API_URL}/users/`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+          })
+        ]);
+
+        if (!projectRes.ok) {
+          throw new Error('Error al cargar el proyecto');
+        }
+
+        if (!usersRes.ok) {
+          throw new Error('Error al cargar usuarios');
+        }
+
+        const project = await projectRes.json();
+        const users = await usersRes.json();
+
+        // Cargar clientes en el select
+        loadClients(users);
+
+        // Llenar formulario con datos del proyecto
+        fillFormWithProjectData(project);
+
+        // Mostrar información del proyecto
+        showProjectInfo(project);
+
+        showLoading(false);
+
+      } catch (error) {
+        showLoading(false);
+        showError('Error al cargar el proyecto: ' + error.message);
+        console.error('Error:', error);
+      }
+    }
+
+    function loadClients(users) {
+      const clientes = users.filter(u => Array.isArray(u.roles) && u.roles.includes('cliente') && u.estado);
+      const select = document.getElementById('clienteSelect');
+      
+      select.innerHTML = `<option value="">Seleccione un cliente...</option>`;
+      
+      clientes.forEach(cliente => {
+        select.innerHTML += `<option value="${cliente.uid}">${cliente.nombre} (${cliente.email})</option>`;
+      });
+
+      // Event listener para actualizar campos relacionados
+      select.addEventListener('change', e => {
+        document.getElementById('clientId').value = e.target.value;
+        document.getElementById('codigoReferencia').value = e.target.value;
+      });
+    }
+
+    function showProjectInfo(project) {
+      const infoCard = document.getElementById('projectInfoCard');
+      const projectIdDisplay = document.getElementById('projectIdDisplay');
+      const lastUpdated = document.getElementById('lastUpdated');
+      const pageTitle = document.getElementById('pageTitle');
+
+      projectIdDisplay.textContent = project.id || project.uid || 'N/A';
+      lastUpdated.textContent = project.updated_at ? new Date(project.updated_at).toLocaleDateString('es-ES') : 'N/A';
+      pageTitle.textContent = `Actualizar: ${project.name || 'Proyecto'}`;
+
+      infoCard.classList.remove('hidden');
+    }
+
+    function fillFormWithProjectData(proyecto) {
+      const form = document.getElementById('formActualizarProyecto');
+
+      // Llenar campos básicos
+      if (proyecto.name) form.name.value = proyecto.name;
+      if (proyecto.client_id) {
+        document.getElementById('clientId').value = proyecto.client_id;
+        document.getElementById('clienteSelect').value = proyecto.client_id;
+        document.getElementById('codigoReferencia').value = proyecto.codigo_referencia || proyecto.client_id;
+      }
+      if (proyecto.etapa) form.etapa.value = proyecto.etapa;
+      if (proyecto.start_date) form.start_date.value = proyecto.start_date;
+      if (proyecto.end_date) form.end_date.value = proyecto.end_date;
+      if (proyecto.tipo_proyecto) {
+        form.tipo_proyecto.value = proyecto.tipo_proyecto;
+        if (proyecto.tipo_proyecto === 'Otro') {
+          document.getElementById('divTipoProyectoPersonalizado').style.display = 'block';
+          if (proyecto.tipo_proyecto_personalizado) {
+            form.tipo_proyecto_personalizado.value = proyecto.tipo_proyecto_personalizado;
+          }
+        }
+      }
+      if (proyecto.estado) form.estado.value = proyecto.estado;
+      if (proyecto.description) form.description.value = proyecto.description;
+
+      // Llenar campos de lenguaje inclusivo
+      if (proyecto.lenguaje_incluyente !== undefined) {
+        const radioSi = document.getElementById('incluyenteSi');
+        const radioNo = document.getElementById('incluyenteNo');
+        if (proyecto.lenguaje_incluyente) {
+          radioSi.checked = true;
+          document.getElementById('tipoLenguajeSelect').disabled = false;
+          if (proyecto.lenguaje_inclusivo_tipo) {
+            form.lenguaje_inclusivo_tipo.value = proyecto.lenguaje_inclusivo_tipo;
+            if (proyecto.lenguaje_inclusivo_tipo === 'Otro') {
+              document.getElementById('otroLenguajeInput').disabled = false;
+              if (proyecto.lenguaje_inclusivo_otro) {
+                form.lenguaje_inclusivo_otro.value = proyecto.lenguaje_inclusivo_otro;
+              }
+            }
+          }
+        } else {
+          radioNo.checked = true;
+        }
+      }
+
+      // Llenar campos de inclusión digital
+      if (proyecto.inclusion_digital !== undefined) {
+        document.querySelector(`input[name="inclusion_digital"][value="${proyecto.inclusion_digital}"]`).checked = true;
+        setInclusionDigitalEnabled(proyecto.inclusion_digital);
+        if (proyecto.inclusion_digital) {
+          if (proyecto.inclusion_digital_web) form.inclusion_digital_web.checked = true;
+          if (proyecto.inclusion_digital_asistiva) form.inclusion_digital_asistiva.checked = true;
+          if (proyecto.inclusion_digital_universal) form.inclusion_digital_universal.checked = true;
+          if (proyecto.inclusion_digital_educativa) form.inclusion_digital_educativa.checked = true;
+          if (proyecto.inclusion_digital_otro) form.inclusion_digital_otro.value = proyecto.inclusion_digital_otro;
+        }
+      }
+
+      // Llenar campos de idioma
+      if (proyecto.idioma) {
+        const radioIdioma = document.querySelector(`input[name="idioma"][value="${proyecto.idioma}"]`);
+        if (radioIdioma) radioIdioma.checked = true;
+      }
+      if (proyecto.idioma_otro) form.idioma_otro.value = proyecto.idioma_otro;
+
+      // Llenar campos de tipografía
+      if (proyecto.tipografia_titulo_fuente) form.tipografia_titulo_fuente.value = proyecto.tipografia_titulo_fuente;
+      if (proyecto.tipografia_titulo_tamano) form.tipografia_titulo_tamano.value = proyecto.tipografia_titulo_tamano;
+      if (proyecto.tipografia_titulo_negrita) form.tipografia_titulo_negrita.checked = proyecto.tipografia_titulo_negrita;
+      if (proyecto.tipografia_titulo_cursiva) form.tipografia_titulo_cursiva.checked = proyecto.tipografia_titulo_cursiva;
+
+      if (proyecto.tipografia_subtitulo_fuente) form.tipografia_subtitulo_fuente.value = proyecto.tipografia_subtitulo_fuente;
+      if (proyecto.tipografia_subtitulo_tamano) form.tipografia_subtitulo_tamano.value = proyecto.tipografia_subtitulo_tamano;
+      if (proyecto.tipografia_subtitulo_negrita) form.tipografia_subtitulo_negrita.checked = proyecto.tipografia_subtitulo_negrita;
+      if (proyecto.tipografia_subtitulo_cursiva) form.tipografia_subtitulo_cursiva.checked = proyecto.tipografia_subtitulo_cursiva;
+
+      if (proyecto.tipografia_parrafo_fuente) form.tipografia_parrafo_fuente.value = proyecto.tipografia_parrafo_fuente;
+      if (proyecto.tipografia_parrafo_tamano) form.tipografia_parrafo_tamano.value = proyecto.tipografia_parrafo_tamano;
+      if (proyecto.tipografia_parrafo_negrita) form.tipografia_parrafo_negrita.checked = proyecto.tipografia_parrafo_negrita;
+      if (proyecto.tipografia_parrafo_cursiva) form.tipografia_parrafo_cursiva.checked = proyecto.tipografia_parrafo_cursiva;
+
+      // Llenar campos de tiempo
+      if (proyecto.horas_curso) form.horas_curso.value = proyecto.horas_curso;
+      if (proyecto.horas_aprendizaje_autonomo_virtual) document.getElementById("horas_autonomo").value = proyecto.horas_aprendizaje_autonomo_virtual;
+      if (proyecto.horas_actividades_aprendizaje) document.getElementById("horas_actividades").value = proyecto.horas_actividades_aprendizaje;
+
+      // Llenar campos de diseño
+      if (proyecto.diseno_grafico_tipo) form.diseno_grafico_tipo.value = proyecto.diseno_grafico_tipo;
+      if (proyecto.diseno_grafico_paleta) form.diseno_grafico_paleta.value = proyecto.diseno_grafico_paleta;
+
+      // Llenar campos de derechos
+      if (proyecto.cesion_derechos !== undefined) {
+        const radio = document.querySelector(`input[name="cesion_derechos"][value="${proyecto.cesion_derechos}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (proyecto.derechos_patrimoniales_autor !== undefined) {
+        const radio = document.querySelector(`input[name="derechos_patrimoniales_autor"][value="${proyecto.derechos_patrimoniales_autor}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (proyecto.acuerdo_confidencialidad !== undefined) {
+        const radio = document.querySelector(`input[name="acuerdo_confidencialidad"][value="${proyecto.acuerdo_confidencialidad}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (proyecto.entrega_fuentes !== undefined) {
+        const radio = document.querySelector(`input[name="entrega_fuentes"][value="${proyecto.entrega_fuentes}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (proyecto.entrega_escrito_autor !== undefined) {
+        const radio = document.querySelector(`input[name="entrega_escrito_autor"][value="${proyecto.entrega_escrito_autor}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (proyecto.entrega_diseno_instruccional !== undefined) {
+        const radio = document.querySelector(`input[name="entrega_diseno_instruccional"][value="${proyecto.entrega_diseno_instruccional}"]`);
+        if (radio) radio.checked = true;
+      }
+
+      // Llenar público objetivo
+      if (proyecto.publico_objetivo && Array.isArray(proyecto.publico_objetivo)) {
+        proyecto.publico_objetivo.forEach(publico => {
+          const checkbox = document.querySelector(`input[name="publico_objetivo"][value="${publico}"]`);
+          if (checkbox) checkbox.checked = true;
+        });
+      }
+      if (proyecto.publico_objetivo_otro) form.publico_objetivo_otro.value = proyecto.publico_objetivo_otro;
+
+      // Llenar observaciones
+      if (proyecto.observaciones) document.getElementById("observaciones").value = proyecto.observaciones;
+    }
+
+    // Event Listeners
+    const tipoProyectoSelect = document.getElementById('tipoProyecto');
+    const divTipoPersonalizado = document.getElementById('divTipoProyectoPersonalizado');
+    const inputTipoPersonalizado = document.getElementById('tipoProyectoPersonalizado');
+
+    tipoProyectoSelect.addEventListener('change', () => {
+      if (tipoProyectoSelect.value === 'Otro') {
+        divTipoPersonalizado.style.display = 'block';
+        inputTipoPersonalizado.required = true;
+      } else {
+        divTipoPersonalizado.style.display = 'none';
+        inputTipoPersonalizado.required = false;
+        inputTipoPersonalizado.value = '';
+      }
+    });
+
+    // Lógica Lenguaje Inclusivo
+    const tipoLenguajeSelect = document.getElementById('tipoLenguajeSelect');
+    const otroLenguajeInput = document.getElementById('otroLenguajeInput');
+    document.getElementById('incluyenteSi').addEventListener('change', () => {
+      tipoLenguajeSelect.disabled = false;
+      if (tipoLenguajeSelect.value === "Otro") {
+        otroLenguajeInput.disabled = false;
+      }
+    });
+    document.getElementById('incluyenteNo').addEventListener('change', () => {
+      tipoLenguajeSelect.disabled = true;
+      tipoLenguajeSelect.value = "";
+      otroLenguajeInput.disabled = true;
+      otroLenguajeInput.value = "";
+    });
+    tipoLenguajeSelect.addEventListener('change', function () {
+      if (this.value === "Otro") {
+        otroLenguajeInput.disabled = false;
+      } else {
+        otroLenguajeInput.disabled = true;
+        otroLenguajeInput.value = "";
+      }
+    });
+
+    // Lógica Inclusión Digital
+    const radioInclusionDigitalSi = document.querySelector('input[name="inclusion_digital"][value="true"]');
+    const radioInclusionDigitalNo = document.querySelector('input[name="inclusion_digital"][value="false"]');
+    const checkboxesInclusion = document.querySelectorAll('input[type="checkbox"][name^="inclusion_digital_"]');
+    const inputInclusionOtro = document.querySelector('input[name="inclusion_digital_otro"]');
+
+    function setInclusionDigitalEnabled(enabled) {
+      checkboxesInclusion.forEach(chk => {
+        chk.disabled = !enabled;
+        if (!enabled) chk.checked = false;
+      });
+      inputInclusionOtro.disabled = !enabled;
+      if (!enabled) inputInclusionOtro.value = '';
+    }
+
+    radioInclusionDigitalSi.addEventListener('change', () => {
+      if (radioInclusionDigitalSi.checked) setInclusionDigitalEnabled(true);
+    });
+    radioInclusionDigitalNo.addEventListener('change', () => {
+      if (radioInclusionDigitalNo.checked) setInclusionDigitalEnabled(false);
+    });
+
+    // Botón Cancelar
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      if (confirm('¿Estás seguro de que quieres cancelar? Se perderán los cambios no guardados.')) {
+        window.location.href = 'https://gestordecursos.pegui.edu.co/r/superadmin/projects';
+      }
+    });
+
+    // Submit del formulario
+    document.getElementById('formActualizarProyecto').onsubmit = async function (e) {
+      e.preventDefault();
+
+      const token = getToken();
+      if (!token) {
+        showError("No has iniciado sesión. Haz login primero.");
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+        return;
+      }
+
+      const form = e.target;
+
+      // Construir array para público objetivo
+      const publicoArray = Array.from(form.querySelectorAll('input[name="publico_objetivo"]:checked')).map(c => c.value);
+
+      // Construir objeto con todos los datos para enviar
+      const data = {
+        name: form.name.value,
+        client_id: form.client_id.value,
+        codigo_referencia: form.codigo_referencia.value,
+        etapa: form.etapa.value,
+        start_date: form.start_date.value,
+        end_date: form.end_date.value || null,
+        tipo_proyecto: form.tipo_proyecto.value || null,
+        tipo_proyecto_personalizado: form.tipo_proyecto_personalizado.value || null,
+        estado: form.estado.value || "Planificado",
+        description: form.description.value || null,
+        lenguaje_incluyente: form.lenguaje_incluyente.value === "true",
+        lenguaje_inclusivo_tipo: form.lenguaje_inclusivo_tipo.value || null,
+        lenguaje_inclusivo_otro: form.lenguaje_inclusivo_otro.value || null,
+        inclusion_digital: form.inclusion_digital.value === "true",
+        inclusion_digital_web: form.inclusion_digital_web.checked,
+        inclusion_digital_asistiva: form.inclusion_digital_asistiva.checked,
+        inclusion_digital_universal: form.inclusion_digital_universal.checked,
+        inclusion_digital_educativa: form.inclusion_digital_educativa.checked,
+        inclusion_digital_otro: form.inclusion_digital_otro.value || null,
+        idioma: form.idioma.value || null,
+        idioma_otro: form.idioma_otro.value || null,
+        tipografia_titulo_fuente: form.tipografia_titulo_fuente.value || null,
+        tipografia_titulo_tamano: form.tipografia_titulo_tamano.value || null,
+        tipografia_titulo_negrita: form.tipografia_titulo_negrita.checked,
+        tipografia_titulo_cursiva: form.tipografia_titulo_cursiva.checked,
+        tipografia_subtitulo_fuente: form.tipografia_subtitulo_fuente.value || null,
+        tipografia_subtitulo_tamano: form.tipografia_subtitulo_tamano.value || null,
+        tipografia_subtitulo_negrita: form.tipografia_subtitulo_negrita.checked,
+        tipografia_subtitulo_cursiva: form.tipografia_subtitulo_cursiva.checked,
+        tipografia_parrafo_fuente: form.tipografia_parrafo_fuente.value || null,
+        tipografia_parrafo_tamano: form.tipografia_parrafo_tamano.value || null,
+        tipografia_parrafo_negrita: form.tipografia_parrafo_negrita.checked,
+        tipografia_parrafo_cursiva: form.tipografia_parrafo_cursiva.checked,
+        horas_curso: form.horas_curso.value ? parseFloat(form.horas_curso.value) : null,
+        horas_aprendizaje_autonomo_virtual: parseFloat(document.getElementById("horas_autonomo").value) || null,
+        horas_actividades_aprendizaje: parseFloat(document.getElementById("horas_actividades").value) || null,
+        observaciones: document.getElementById("observaciones").value || null,
+        diseno_grafico_tipo: form.diseno_grafico_tipo.value || null,
+        diseno_grafico_paleta: form.diseno_grafico_paleta.value || null,
+        cesion_derechos: form.cesion_derechos.value === "true",
+        derechos_patrimoniales_autor: form.derechos_patrimoniales_autor.value === "true",
+        acuerdo_confidencialidad: form.acuerdo_confidencialidad.value === "true",
+        entrega_fuentes: form.entrega_fuentes.value === "true",
+        entrega_escrito_autor: form.entrega_escrito_autor.value === "true",
+        entrega_diseno_instruccional: form.entrega_diseno_instruccional.value === "true",
+        publico_objetivo: publicoArray,
+        publico_objetivo_otro: form.publico_objetivo_otro.value || null
+      };
+
+      try {
+        showLoading(true);
+        hideError();
+
+        console.log('Actualizando proyecto con datos:', data);
+
+        const res = await fetch(`${API_URL}/projects/${currentProjectId}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Error al actualizar proyecto: ${res.status} - ${errText}`);
+        }
+
+        const proyectoActualizado = await res.json();
+        console.log("Proyecto actualizado:", proyectoActualizado);
+
+        // Mostrar mensaje de éxito
+        showSuccessMessage(`¡Proyecto "${proyectoActualizado.name || data.name}" actualizado exitosamente!`);
+
+        // Actualizar la información mostrada
+        showProjectInfo(proyectoActualizado);
+
+        // Recargar los datos del proyecto para mostrar los cambios
+        setTimeout(async () => {
+          try {
+            const updatedRes = await fetch(`${API_URL}/projects/${currentProjectId}`, {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            
+            if (updatedRes.ok) {
+              const updatedProject = await updatedRes.json();
+              fillFormWithProjectData(updatedProject);
+              showProjectInfo(updatedProject);
+console.log("Datos actualizados, redirigiendo en 2 segundos...");
+setTimeout(() => {
+  window.location.href = 'https://gestordecursos.pegui.edu.co/r/superadmin/projects';
+}, 2000);
+            }
+          } catch (error) {
+            console.log('Error al recargar datos actualizados:', error);
+          }
+          showLoading(false);
+        }, 1000);
+
+      } catch (error) {
+        showLoading(false);
+        showError("Error al actualizar proyecto: " + error.message);
+        console.error("Error:", error);
+      }
+    };
+
+    // Función auxiliar para mostrar mensaje de éxito
+    function showSuccessMessage(message) {
+      const successMessage = document.createElement('div');
+      successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-fade-in flex items-center';
+      successMessage.innerHTML = `
+        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        ${message}
+      `;
+      document.body.appendChild(successMessage);
+
+      setTimeout(() => {
+        if (successMessage.parentNode) {
+          successMessage.remove();
+        }
+      }, 5000);
+    }
+
+    // Función para manejar errores de validación del formulario
+    function validateForm() {
+      const requiredFields = ['name', 'client_id', 'start_date', 'tipo_proyecto', 'estado'];
+      let isValid = true;
+      
+      requiredFields.forEach(fieldName => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (field && !field.value.trim()) {
+          field.classList.add('border-red-500');
+          isValid = false;
+        } else if (field) {
+          field.classList.remove('border-red-500');
+        }
+      });
+
+      if (!isValid) {
+        showError('Por favor, complete todos los campos requeridos.');
+      }
+
+      return isValid;
+    }
+
+    // Agregar validación en tiempo real
+    document.querySelectorAll('input[required], select[required]').forEach(field => {
+      field.addEventListener('blur', () => {
+        if (!field.value.trim()) {
+          field.classList.add('border-red-500');
+        } else {
+          field.classList.remove('border-red-500');
+        }
+      });
+    });
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+<script>
+// ===== WHISPER - CONTROL DE INSTANCIAS SÍNCRONAS =====
+const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+const API_WHISPER = `${API_URL}/whisper/transcribir`;
+let mediaRecorder = null;
+let audioChunks = [];
+let idCampoDestino = null;
+let temporizadorMaximo = null;
+let estaGrabando = false;
+
+function getSessionToken() { return localStorage.getItem('token'); }
+
+async function gestionarGrabacionWhisper(e, idCampo) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+
+    if (estaGrabando && idCampoDestino === idCampo) {
+        if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+        return;
+    }
+
+    if (estaGrabando) {
+        if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+        await new Promise(resolve => setTimeout(resolve, 150));
+    }
+
+    idCampoDestino = idCampo;
+    audioChunks = [];
+    estaGrabando = true;
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+        
+        mediaRecorder.ondataavailable = (event) => { 
+            if (event.data && event.data.size > 0) audioChunks.push(event.data); 
+        };
+        
+        mediaRecorder.onstart = () => {
+            resetearIconosMic();
+            const currentBtn = document.getElementById(`btn-mic-${idCampoDestino}`);
+            const currentIco = document.getElementById(`ico-mic-${idCampoDestino}`);
+            if (currentBtn) currentBtn.classList.add('mic-recording');
+            if (currentIco) { currentIco.className = "fas fa-stop text-lg"; }
+            
+            temporizadorMaximo = setTimeout(() => { 
+                if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); 
+            }, 10000);
+        };
+        
+        mediaRecorder.onstop = async () => {
+            clearTimeout(temporizadorMaximo);
+            estaGrabando = false;
+
+            const processingBtn = document.getElementById(`btn-mic-${idCampoDestino}`);
+            const processingIco = document.getElementById(`ico-mic-${idCampoDestino}`);
+            
+            if (processingBtn) { 
+                processingBtn.classList.remove('mic-recording'); 
+                processingBtn.classList.add('mic-processing'); 
+            }
+            if (processingIco) { processingIco.className = "fas fa-spinner fa-spin text-lg"; }
+            
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
+            stream.getTracks().forEach(track => track.stop());
+            
+            if (audioBlob.size > 100) {
+                await enviarAudioAWhisper(audioBlob);
+            } else {
+                console.warn("Muestra de audio inválida o muy corta.");
+                resetearIconosMic();
+            }
+        };
+        
+        mediaRecorder.start();
+    } catch (err) { 
+        estaGrabando = false;
+        console.error("Error al inicializar hardware de audio:", err); 
+        resetearIconosMic(); 
+    }
+}
+
+async function enviarAudioAWhisper(blob) {
+    if (!blob || blob.size === 0) { resetearIconosMic(); return; }
+
+    const token = getSessionToken();
+    const formData = new FormData();
+    formData.append('audio', blob, 'dictado.webm');
+    
+    try {
+        const res = await fetch(API_WHISPER, { 
+            method: 'POST', 
+            headers: { 'Authorization': `Bearer ${token}` }, 
+            body: formData 
+        });
+        
+        if (!res.ok) { 
+            const errData = await res.json().catch(() => ({ detail: "Error de parsing en backend" })); 
+            throw new Error(errData.detail || "Fallo crítico Whisper"); 
+        }
+        
+        const data = await res.json();
+        const texto = (data.texto || '').trim();
+        
+        if (texto) {
+            const input = document.getElementById(idCampoDestino);
+            if (input) {
+                input.value = input.value.trim() ? input.value.trim() + ' ' + texto : texto;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+    } catch (err) { 
+        console.error("Error en la petición mutada de Whisper:", err); 
+    } finally { 
+        resetearIconosMic(); 
+    }
+}
+
+function resetearIconosMic() {
+    document.querySelectorAll('[id^="btn-mic-"]').forEach(btn => {
+        btn.className = "px-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-indigo-600 transition flex items-center justify-center w-14 flex-shrink-0";
+        if (btn.id === 'btn-mic-description' || btn.id === 'btn-mic-observaciones') {
+            btn.classList.add('h-[120px]');
+        } else {
+            btn.classList.add('h-12');
+        }
+    });
+    document.querySelectorAll('[id^="ico-mic-"]').forEach(ico => { 
+        ico.className = "fas fa-microphone text-lg"; 
+    });
+    if (!estaGrabando) idCampoDestino = null;
+}
+</script>
+</body>
+</html>

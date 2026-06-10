@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Unidades y Actividades</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-in-out',
+            'slide-up': 'slideUp 0.6s ease-out',
+            'scale-in': 'scaleIn 0.2s ease-out',
+            'pulse-soft': 'pulse 2s infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            scaleIn: {
+              '0%': { opacity: '0', transform: 'scale(0.95)' },
+              '100%': { opacity: '1', transform: 'scale(1)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .glass-effect {
+      backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.95);
+    }
+    .hover-lift:hover {
+      transform: translateY(-2px);
+      transition: all 0.3s ease;
+    }
+    .unit-card {
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    .unit-card:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .form-input { @apply w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-300; }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen">
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-10 left-10 w-72 h-72 bg-white opacity-5 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-10 right-10 w-96 h-96 bg-purple-300 opacity-10 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-200 opacity-5 rounded-full blur-2xl"></div>
+  </div>
+
+  <div class="relative min-h-screen py-8 px-4">
+    <div class="text-center mb-10 animate-fade-in">
+      <div class="inline-flex items-center justify-center w-20 h-20 bg-white bg-opacity-20 rounded-2xl mb-6">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+      </div>
+      <h1 class="text-4xl font-bold text-white mb-3">Gestión de Unidades de Aprendizaje</h1>
+      <p class="text-blue-100 text-lg">Administra tus unidades y sus actividades</p>
+    </div>
+
+    <div class="max-w-6xl mx-auto mb-8">
+      <div class="glass-effect rounded-2xl p-6 shadow-xl animate-slide-up">
+        <div class="flex flex-col md:flex-row gap-4 items-center">
+          <div class="flex-1">
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <input type="text" id="searchInput" placeholder="Buscar unidades..." 
+                class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300">
+            </div>
+          </div>
+          <button onclick="cargarUnidades()" 
+            class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300 flex items-center space-x-2 hover-lift">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span>Actualizar</span>
+          </button>
+          <button onclick="openUnitModal('create')" 
+            class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-300 flex items-center space-x-2 hover-lift">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            <span>Crear Unidad</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto">
+      <div id="unitsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up">
+        </div>
+      <div id="loadingState" class="text-center py-12">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full mb-4 animate-pulse-soft">
+          <svg class="w-8 h-8 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="m15.84 10.2c.1-.1.1-.2.1-.3 0-.1 0-.2-.1-.3l-1.8-1.8c-.1-.1-.2-.1-.3-.1-.1 0-.2 0-.3.1l-1.8 1.8c-.1.1-.1.2-.1.3 0 .1 0 .2.1.3l1.8 1.8c.1.1.2.1.3.1.1 0 .2 0 .3-.1l1.8-1.8z"></path>
+          </svg>
+        </div>
+        <p class="text-white text-lg">Cargando unidades...</p>
+      </div>
+
+      <div id="emptyState" class="text-center py-12 hidden">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full mb-4">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+          </svg>
+        </div>
+        <h3 class="text-white text-xl font-semibold mb-2">No hay unidades disponibles</h3>
+        <p class="text-blue-100">Crea tu primera unidad para comenzar</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="unitModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+    <div class="glass-effect rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-scale-in">
+      <div class="sticky top-0 glass-effect rounded-t-3xl px-8 py-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h2 id="unitModalTitle" class="text-xl font-bold text-gray-800">Crear Unidad</h2>
+          <button onclick="closeUnitModal()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
+            <svg class="w-6 h-6 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="p-8">
+        <form id="unit-form" class="space-y-6">
+          <input type="hidden" id="unitIdInput" name="unit_id">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="name" class="block text-sm font-medium text-gray-700">Nombre Completo de la Unidad</label>
+              <input type="text" id="name" name="name" required class="mt-1 form-input">
+            </div>
+            <div>
+              <label for="short_name" class="block text-sm font-medium text-gray-700">Nombre Corto</label>
+              <input type="text" id="short_name" name="short_name" required class="mt-1 form-input">
+            </div>
+            <div>
+              <label for="unit_code" class="block text-sm font-medium text-gray-700">Código de la Unidad</label>
+              <input type="text" id="unit_code" name="unit_code" required class="mt-1 form-input">
+            </div>
+            <div>
+              <label for="duration" class="block text-sm font-medium text-gray-700">Duración Estimada</label>
+              <input type="text" id="duration" name="duration" class="mt-1 form-input">
+            </div>
+          </div>
+          <div>
+            <label for="general_objective" class="block text-sm font-medium text-gray-700">Objetivo General</label>
+            <textarea id="general_objective" name="general_objective" rows="2" class="mt-1 form-input"></textarea>
+          </div>
+          <div>
+            <label for="specific_objectives" class="block text-sm font-medium text-gray-700">Objetivos Específicos (separados por punto y coma)</label>
+            <textarea id="specific_objectives" name="specific_objectives" rows="3" class="mt-1 form-input"></textarea>
+          </div>
+          <div>
+            <label for="contents" class="block text-sm font-medium text-gray-700">Contenidos (separados por punto y coma)</label>
+            <textarea id="contents" name="contents" rows="4" class="mt-1 form-input"></textarea>
+          </div>
+          <div>
+            <label for="multimedia_resources" class="block text-sm font-medium text-gray-700">Recursos Multimedia (separados por coma)</label>
+            <textarea id="multimedia_resources" name="multimedia_resources" rows="2" class="mt-1 form-input"></textarea>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center">
+              <input id="has_activities" name="has_activities" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+              <label for="has_activities" class="ml-2 block text-sm font-medium text-gray-700">¿Tendrá actividades?</label>
+            </div>
+            <div class="flex items-center">
+              <input id="has_downloadable_materials" name="has_downloadable_materials" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+              <label for="has_downloadable_materials" class="ml-2 block text-sm font-medium text-gray-700">¿Tendrá materiales descargables?</label>
+            </div>
+            <div class="flex items-center">
+              <input id="has_assessment" name="has_assessment" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+              <label for="has_assessment" class="ml-2 block text-sm font-medium text-gray-700">¿Tendrá evaluación formal?</label>
+            </div>
+          </div>
+          <div id="activity-fields" class="space-y-6 hidden">
+            <div>
+              <label for="activity_types" class="block text-sm font-medium text-gray-700">Tipos de Actividades (ej: Cuestionario, Foro)</label>
+              <input type="text" id="activity_types" name="activity_types" class="mt-1 form-input">
+            </div>
+            <div>
+              <label for="activity_instructions" class="block text-sm font-medium text-gray-700">Instrucciones de las Actividades</label>
+              <textarea id="activity_instructions" name="activity_instructions" rows="2" class="mt-1 form-input"></textarea>
+            </div>
+          </div>
+          <div>
+            <label for="accessibility" class="block text-sm font-medium text-gray-700">Características de Accesibilidad</label>
+            <textarea id="accessibility" name="accessibility" rows="2" class="mt-1 form-input"></textarea>
+          </div>
+          <div>
+            <label for="additional_notes" class="block text-sm font-medium text-gray-700">Notas Adicionales</label>
+            <textarea id="additional_notes" name="additional_notes" rows="2" class="mt-1 form-input"></textarea>
+          </div>
+          <div class="pt-4">
+            <button type="submit" id="saveUnitBtn"
+              class="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-700 text-white font-bold rounded-2xl hover:from-green-700 hover:to-emerald-800 transform hover-lift shadow-xl transition-all duration-300 flex items-center justify-center space-x-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              <span>Guardar Unidad</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalActividad" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+    <div class="glass-effect rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+      <div class="sticky top-0 glass-effect rounded-t-3xl px-8 py-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-800">Crear Actividad de Aprendizaje</h2>
+              <p class="text-gray-600 text-sm" id="modalUnitName">Para la unidad seleccionada</p>
+            </div>
+          </div>
+          <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
+            <svg class="w-6 h-6 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="p-8">
+        <form id="createActivityForm" class="space-y-6">
+          <input type="hidden" name="unit_id" id="activityUnitId">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="flex items-center text-gray-700 font-semibold text-sm">
+                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+                Nombre de la Actividad
+              </label>
+              <input type="text" name="nombre" required 
+                class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300" 
+                placeholder="Ej. Taller de Programación Básica">
+            </div>
+            <div class="space-y-2">
+              <label class="flex items-center text-gray-700 font-semibold text-sm">
+                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                Tipo de Actividad
+              </label>
+              <select name="tipo" 
+                class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none transition-all duration-300">
+                <option value="">Seleccionar tipo...</option>
+                <option value="Taller">Taller</option>
+                <option value="Laboratorio">Laboratorio</option>
+                <option value="Proyecto">Proyecto</option>
+                <option value="Evaluación">Evaluación</option>
+                <option value="Presentación">Presentación</option>
+                <option value="Investigación">Investigación</option>
+                <option value="Práctica">Práctica</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="flex items-center text-gray-700 font-semibold text-sm">
+              <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Descripción
+            </label>
+            <textarea name="descripcion" rows="4" 
+              class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none transition-all duration-300 resize-none" 
+              placeholder="Describe detalladamente la actividad, sus objetivos y metodología..."></textarea>
+          </div>
+          <div class="space-y-2">
+            <label class="flex items-center text-gray-700 font-semibold text-sm">
+              <svg class="w-4 h-4 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+              </svg>
+              Recursos Necesarios
+            </label>
+            <textarea name="recursos" rows="3" 
+              class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:outline-none transition-all duration-300 resize-none" 
+              placeholder="Lista los recursos materiales, tecnológicos o humanos necesarios..."></textarea>
+          </div>
+          <div class="pt-4">
+            <button type="submit" 
+              class="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-700 text-white font-bold rounded-2xl hover:from-green-700 hover:to-emerald-800 transform hover-lift shadow-xl transition-all duration-300 flex items-center justify-center space-x-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              <span>Crear Actividad de Aprendizaje</span>
+            </button>
+          </div>
+        </form>
+        <div id="resultActivity" class="mt-6 text-center"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification" class="fixed top-5 right-5 z-50"></div>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem('token');
+    let allUnits = [];
+
+    // Funciones de utilidad
+    function showNotification(type, title, message) {
+      const notificationArea = document.getElementById('notification');
+      const colors = { success: 'green', error: 'red', info: 'blue' };
+      const icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
+      const notification = document.createElement('div');
+      notification.className = `rounded-lg border-l-4 p-4 max-w-md mb-4 shadow-lg bg-${colors[type]}-100 border-${colors[type]}-500 text-${colors[type]}-700`;
+      notification.innerHTML = `
+        <div class="flex items-center">
+          <div class="mr-3 text-xl"><i class="fas ${icons[type]}"></i></div>
+          <div>
+            <div class="font-semibold">${title}</div>
+            <div class="text-sm">${message}</div>
+          </div>
+        </div>
+      `;
+      notificationArea.appendChild(notification);
+      setTimeout(() => { notification.remove() }, 5000);
+    }
+    
+    // Funciones del CRUD de Unidades
+    async function cargarUnidades() {
+      const container = document.getElementById('unitsContainer');
+      const loadingState = document.getElementById('loadingState');
+      const emptyState = document.getElementById('emptyState');
+      loadingState.classList.remove('hidden');
+      container.innerHTML = '';
+      emptyState.classList.add('hidden');
+      try {
+        const res = await fetch(`${API}/units/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const units = await res.json();
+        allUnits = units;
+        loadingState.classList.add('hidden');
+        if (units.length === 0) {
+          emptyState.classList.remove('hidden');
+          return;
+        }
+        renderUnits(units);
+      } catch (error) {
+        loadingState.classList.add('hidden');
+        showNotification('error', 'Error de conexión', 'No se pudieron cargar las unidades.');
+      }
+    }
+
+    function renderUnits(units) {
+      const container = document.getElementById('unitsContainer');
+      container.innerHTML = units.map(unit => `
+        <div class="unit-card glass-effect rounded-2xl p-6 shadow-xl hover-lift animate-fade-in" data-id="${unit.id}">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold">
+                ${unit.unit_code}
+              </div>
+              <div>
+                <h3 class="font-bold text-gray-800 text-lg leading-tight">${unit.name}</h3>
+                <p class="text-gray-600 text-sm">ID: ${unit.id}</p>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-2 text-sm text-gray-600 mb-4">
+            <p><span class="font-semibold">Objetivo:</span> ${unit.general_objective || 'N/A'}</p>
+            <p><span class="font-semibold">Duración:</span> ${unit.duration || 'N/A'}</p>
+            <p><span class="font-semibold">Contenidos:</span> ${unit.contents || 'N/A'}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs mb-4">
+            <span class="bg-gray-200 text-gray-700 py-1 px-3 rounded-full text-center">${unit.has_activities ? 'Con Actividades' : 'Sin Actividades'}</span>
+            <span class="bg-gray-200 text-gray-700 py-1 px-3 rounded-full text-center">${unit.has_assessment ? 'Con Evaluación' : 'Sin Evaluación'}</span>
+          </div>
+          <div class="flex justify-between items-center gap-2">
+            <button onclick="abrirModal(${unit.id}, '${unit.name.replace(/'/g, "\\'")}')" 
+              class="flex-1 py-3 bg-gradient-to-r from-green-600 to-emerald-700 text-white font-bold rounded-xl hover:from-green-700 hover:to-emerald-800 transform hover-lift transition-all duration-300 flex items-center justify-center space-x-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+              <span>Actividad</span>
+            </button>
+            <button onclick="openUnitModal('update', ${unit.id})" 
+              class="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 hover-lift transition-all">
+              <i class="fas fa-pencil-alt"></i>
+            </button>
+            <button onclick="deleteUnit(${unit.id})" 
+              class="p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 hover-lift transition-all">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function deleteUnit(unitId) {
+      if (!confirm('¿Estás seguro de que deseas eliminar esta unidad? Esta acción no se puede deshacer.')) {
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/units/${unitId}/`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          showNotification('success', 'Éxito', 'Unidad eliminada correctamente.');
+          cargarUnidades(); // Recargar la lista
+        } else {
+          const error = await res.json();
+          showNotification('error', 'Error al eliminar', error.detail || 'No se pudo eliminar la unidad.');
+        }
+      } catch (error) {
+        showNotification('error', 'Error de conexión', 'No se pudo conectar con el servidor.');
+      }
+    }
+
+    // Funciones del Modal de Unidades
+    const unitModal = document.getElementById('unitModal');
+    const unitForm = document.getElementById('unit-form');
+    const unitModalTitle = document.getElementById('unitModalTitle');
+    const unitIdInput = document.getElementById('unitIdInput');
+    const hasActivitiesCheckbox = document.getElementById('has_activities');
+    const activityFieldsDiv = document.getElementById('activity-fields');
+
+    function closeUnitModal() {
+      unitModal.classList.add('hidden');
+      unitForm.reset();
+      activityFieldsDiv.classList.add('hidden');
+    }
+
+    async function openUnitModal(mode, unitId = null) {
+      unitForm.reset();
+      activityFieldsDiv.classList.add('hidden');
+      unitModal.classList.remove('hidden');
+
+      if (mode === 'create') {
+        unitModalTitle.textContent = 'Crear Nueva Unidad';
+        unitIdInput.value = '';
+      } else if (mode === 'update' && unitId) {
+        unitModalTitle.textContent = 'Editar Unidad';
+        unitIdInput.value = unitId;
+        try {
+          const res = await fetch(`${API}/units/${unitId}/`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const unit = await res.json();
+          fillUnitForm(unit);
+        } catch (error) {
+          showNotification('error', 'Error', 'No se pudieron cargar los datos de la unidad para editar.');
+          closeUnitModal();
+        }
+      }
+    }
+
+    function fillUnitForm(unit) {
+      document.getElementById('name').value = unit.name;
+      document.getElementById('short_name').value = unit.short_name;
+      document.getElementById('unit_code').value = unit.unit_code;
+      document.getElementById('general_objective').value = unit.general_objective;
+      document.getElementById('specific_objectives').value = unit.specific_objectives;
+      document.getElementById('duration').value = unit.duration;
+      document.getElementById('contents').value = unit.contents;
+      document.getElementById('multimedia_resources').value = unit.multimedia_resources;
+      document.getElementById('has_activities').checked = unit.has_activities;
+      document.getElementById('has_downloadable_materials').checked = unit.has_downloadable_materials;
+      document.getElementById('has_assessment').checked = unit.has_assessment;
+      document.getElementById('accessibility').value = unit.accessibility;
+      document.getElementById('additional_notes').value = unit.additional_notes;
+
+      if (unit.has_activities) {
+        activityFieldsDiv.classList.remove('hidden');
+        document.getElementById('activity_types').value = unit.activity_types;
+        document.getElementById('activity_instructions').value = unit.activity_instructions;
+      } else {
+        activityFieldsDiv.classList.add('hidden');
+      }
+    }
+
+    unitForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const unitId = unitIdInput.value;
+      const method = unitId ? 'PUT' : 'POST';
+      const url = unitId ? `${API}/units/${unitId}/` : `${API}/units/`;
+
+      const unitData = {
+        name: document.getElementById('name').value,
+        short_name: document.getElementById('short_name').value,
+        unit_code: document.getElementById('unit_code').value,
+        general_objective: document.getElementById('general_objective').value,
+        specific_objectives: document.getElementById('specific_objectives').value,
+        duration: document.getElementById('duration').value,
+        contents: document.getElementById('contents').value,
+        multimedia_resources: document.getElementById('multimedia_resources').value,
+        has_activities: hasActivitiesCheckbox.checked,
+        activity_types: hasActivitiesCheckbox.checked ? document.getElementById('activity_types').value : '',
+        activity_instructions: hasActivitiesCheckbox.checked ? document.getElementById('activity_instructions').value : '',
+        has_downloadable_materials: document.getElementById('has_downloadable_materials').checked,
+        has_assessment: document.getElementById('has_assessment').checked,
+        accessibility: document.getElementById('accessibility').value,
+        additional_notes: document.getElementById('additional_notes').value
+      };
+
+      try {
+        const res = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(unitData)
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.detail || `Error ${res.status}`);
+        }
+        
+        showNotification('success', 'Éxito', `Unidad ${unitId ? 'actualizada' : 'creada'} correctamente.`);
+        closeUnitModal();
+        cargarUnidades();
+
+      } catch (error) {
+        showNotification('error', 'Error', `No se pudo guardar la unidad: ${error.message}`);
+      }
+    });
+
+    // Funciones del Modal de Actividades (CRUD separado)
+    function abrirModal(unitId, unitName) {
+      document.getElementById("modalActividad").classList.remove("hidden");
+      document.getElementById("activityUnitId").value = unitId;
+      document.getElementById("modalUnitName").textContent = `Para: ${unitName}`;
+      document.getElementById("resultActivity").innerHTML = '';
+      document.getElementById("createActivityForm").reset();
+    }
+    
+    function closeModal() {
+      document.getElementById("modalActividad").classList.add("hidden");
+    }
+
+    document.getElementById('createActivityForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalContent = submitBtn.innerHTML;
+      submitBtn.innerHTML = `<svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m15.84 10.2c.1-.1.1-.2.1-.3 0-.1 0-.2-.1-.3l-1.8-1.8c-.1-.1-.2-.1-.3-.1-.1 0-.2 0-.3.1l-1.8 1.8c-.1.1-.1.2-.1.3 0 .1 0 .2.1.3l1.8 1.8c.1.1.2.1.3.1.1 0 .2 0 .3-.1l1.8-1.8z"></path></svg><span>Creando...</span>`;
+      submitBtn.disabled = true;
+
+      const data = Object.fromEntries(new FormData(this));
+      data.unit_id = Number(data.unit_id);
+      
+      try {
+        const res = await fetch(`${API}/learning_activities/`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json", 'Authorization': `Bearer ${token}`},
+          body: JSON.stringify(data)
+        });
+        const resultDiv = document.getElementById('resultActivity');
+        if (res.ok) {
+          resultDiv.innerHTML = `<div class="bg-green-50 border border-green-200 rounded-xl p-4 animate-fade-in"><div class="flex items-center justify-center"><svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="text-green-800 font-semibold">¡Actividad creada!</span></div></div>`;
+          setTimeout(() => { this.reset(); closeModal(); }, 1500);
+        } else {
+          const error = await res.json();
+          resultDiv.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-4 animate-fade-in"><div class="flex items-center justify-center"><svg class="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg><span class="text-red-800 font-semibold">Error: ${error.detail || 'No se pudo crear la actividad'}</span></div></div>`;
+        }
+      } catch (error) {
+        document.getElementById('resultActivity').innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-4 animate-fade-in"><div class="flex items-center justify-center"><svg class="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg><span class="text-red-800 font-semibold">Error de conexión. Inténtalo de nuevo.</span></div></div>`;
+      } finally {
+        submitBtn.innerHTML = originalContent;
+        submitBtn.disabled = false;
+      }
+    };
+    
+    // Filtro y Carga Inicial
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const filteredUnits = allUnits.filter(unit => 
+        unit.name.toLowerCase().includes(searchTerm) ||
+        (unit.unit_code && unit.unit_code.toLowerCase().includes(searchTerm))
+      );
+      renderUnits(filteredUnits);
+    });
+
+    // Close modals on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeUnitModal();
+        closeModal();
+      }
+    });
+
+    // Toggle activity fields visibility
+    hasActivitiesCheckbox.addEventListener('change', () => {
+      if (hasActivitiesCheckbox.checked) {
+        activityFieldsDiv.classList.remove('hidden');
+      } else {
+        activityFieldsDiv.classList.add('hidden');
+      }
+    });
+
+    // Initial load
+    cargarUnidades();
+  </script>
+</body>
+</html>

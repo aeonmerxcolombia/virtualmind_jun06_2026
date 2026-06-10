@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Blacklist - Seguridad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/fetch-con-token.js"></script>
+    <script src="/js/tooltips.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #090D16; color: #e2e8f0; min-height: 100vh; padding: 24px; }
+        .glow { box-shadow: 0 0 20px rgba(99,102,241,0.15); }
+        .glass { background: rgba(15,23,42,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .input-dark { background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; padding: 10px 14px; border-radius: 8px; width: 100%; outline: none; transition: border-color 0.2s; }
+        .input-dark:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+        .btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
+        .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .btn-danger:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,0.4); }
+        .btn-secondary { background: rgba(255,255,255,0.08); color: #e2e8f0; padding: 10px 20px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 16px; color: #94a3b8; font-weight: 500; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 14px; }
+        tr:hover { background: rgba(99,102,241,0.04); }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .badge-ip { background: rgba(99,102,241,0.15); color: #818cf8; }
+        .badge-cidr { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 24px; border-radius: 10px; color: white; font-weight: 500; z-index: 9999; transform: translateY(100px); opacity: 0; transition: all 0.3s ease; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-success { background: linear-gradient(135deg, #059669, #047857); }
+        .toast-error { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+        .empty-state svg { margin: 0 auto 16px; opacity: 0.3; }
+        @media (max-width: 640px) { body { padding: 12px; } }
+    </style>
+</head>
+<body>
+    <div class="max-w-4xl mx-auto">
+        <div class="glass rounded-xl p-6 mb-6 glow flex items-center justify-between flex-wrap gap-4">
+            <div>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-indigo-300 bg-clip-text text-transparent">IP Blacklist</h1>
+                <p class="text-slate-400 text-sm mt-1">Gestiona las direcciones IP bloqueadas del sistema</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <div class="text-2xl font-bold text-indigo-400" id="totalCount">0</div>
+                    <div class="text-xs text-slate-500">IPs bloqueadas</div>
+                </div>
+                <a href="/r/superadmin/index.html" class="btn-secondary text-sm no-underline">← Panel</a>
+            </div>
+        </div>
+
+        <div class="glass rounded-xl p-6 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Agregar IP o Rango CIDR</h2>
+            <form id="addForm" class="flex gap-3 items-end flex-wrap" onsubmit="addIP(event)">
+                <div class="flex-1 min-w-[250px]">
+                    <label class="text-xs text-slate-500 block mb-1.5">Dirección IP o CIDR</label>
+                    <input type="text" id="ipInput" class="input-dark" placeholder="Ej: 192.168.1.100 o 10.0.0.0/24" required>
+                </div>
+                <button type="submit" class="btn-primary">Bloquear IP</button>
+            </form>
+        </div>
+
+        <div class="glass rounded-xl overflow-hidden">
+            <div class="p-4 border-b border-white/5 flex items-center justify-between flex-wrap gap-3">
+                <h2 class="text-lg font-semibold text-white">IPs Bloqueadas</h2>
+                <div class="flex gap-2">
+                    <input type="text" id="searchInput" class="input-dark !w-56 !py-2 text-sm" placeholder="Buscar IP..." oninput="renderList()">
+                    <button onclick="loadList()" class="btn-secondary text-sm !px-4 !py-2" title="Recargar">🔄</button>
+                </div>
+            </div>
+            <div id="listContainer">
+                <div class="empty-state">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <p class="text-lg font-medium text-slate-500 mt-2">No hay IPs bloqueadas</p>
+                    <p class="text-sm text-slate-600 mt-1">Todas las IPs tienen acceso al sistema</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+    const API = '/ip-blacklist';
+
+    function getToken() { return localStorage.getItem('token'); }
+
+    async function apiFetch(url, opts = {}) {
+        const token = getToken();
+        const base = 'https://gestordecursos.pegui.edu.co:8000';
+        const res = await fetch(base + url, {
+            ...opts,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? 'Bearer ' + token : '',
+                ...opts.headers,
+            }
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Error ' + res.status }));
+            throw new Error(err.detail || 'Error del servidor');
+        }
+        return res.json();
+    }
+
+    let blockedIPs = [];
+
+    async function loadList() {
+        try {
+            const data = await apiFetch(API + '/');
+            blockedIPs = data.blocked_ips || [];
+            document.getElementById('totalCount').textContent = blockedIPs.length;
+            renderList();
+        } catch (e) {
+            showToast('Error al cargar: ' + e.message, 'error');
+        }
+    }
+
+    function renderList() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = query ? blockedIPs.filter(ip => ip.toLowerCase().includes(query)) : blockedIPs;
+        const container = document.getElementById('listContainer');
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <p class="text-lg font-medium text-slate-500 mt-2">${query ? 'Sin resultados para "' + query + '"' : 'No hay IPs bloqueadas'}</p>
+                    <p class="text-sm text-slate-600 mt-1">${query ? 'Prueba con otro término de búsqueda' : 'Todas las IPs tienen acceso al sistema'}</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `<table><thead><tr><th>IP / Rango</th><th>Tipo</th><th class="text-right">Acción</th></tr></thead><tbody>`;
+        filtered.forEach(ip => {
+            const isCIDR = ip.includes('/');
+            html += `<tr>
+                <td class="font-mono text-sm text-slate-200">${ip}</td>
+                <td><span class="badge ${isCIDR ? 'badge-cidr' : 'badge-ip'}">${isCIDR ? 'CIDR' : 'IPv4'}</span></td>
+                <td class="text-right">
+                    <button onclick="removeIP('${ip}')" class="btn-danger text-xs">Desbloquear</button>
+                </td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    async function addIP(event) {
+        event.preventDefault();
+        const input = document.getElementById('ipInput');
+        const ip = input.value.trim();
+        if (!ip) return;
+
+        const btn = event.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = 'Bloqueando...';
+
+        try {
+            await apiFetch(API + '/', {
+                method: 'POST',
+                body: JSON.stringify({ ip })
+            });
+            showToast('IP ' + ip + ' bloqueada correctamente', 'success');
+            input.value = '';
+            await loadList();
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Bloquear IP';
+        }
+    }
+
+    async function removeIP(ip) {
+        if (!confirm('¿Desbloquear ' + ip + '?')) return;
+        try {
+            await apiFetch(API + '/', {
+                method: 'DELETE',
+                body: JSON.stringify({ ip })
+            });
+            showToast('IP ' + ip + ' desbloqueada', 'success');
+            await loadList();
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    }
+
+    function showToast(msg, type) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = 'toast toast-' + type + ' show';
+        clearTimeout(el._timer);
+        el._timer = setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    loadList();
+    </script>
+</body>
+</html>

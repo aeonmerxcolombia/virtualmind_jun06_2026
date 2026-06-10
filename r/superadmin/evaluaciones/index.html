@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear Evaluación Inteligente - VirtualMind</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Dependencias -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #090D16;
+      color: #cbd5e1;
+      overflow-x: hidden;
+    }
+
+    .gradient-bg { 
+      background: linear-gradient(135deg, #090d16 0%, #0f172a 100%); 
+    }
+            
+    .card-glass {             
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Input styling premium */
+    #evalForm input[type="text"],
+    #evalForm input[type="number"],
+    #evalForm input[type="datetime-local"],
+    #evalForm select,
+    #evalForm textarea {
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      background: rgba(15, 23, 42, 0.6) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      color: #f8fafc !important;
+      border-radius: 0.75rem !important; 
+      padding: 0.75rem 1rem !important;
+      outline: none !important;
+      width: 100%;
+    }
+
+    #evalForm input:focus,
+    #evalForm select:focus,
+    #evalForm textarea:focus {
+      border-color: #6366f1 !important; 
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
+      background: rgba(15, 23, 42, 0.95) !important;
+    }
+
+    /* Custom Checkbox */
+    .checkbox-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
+    .checkbox-custom input[type=checkbox] { opacity: 0; position: absolute; }
+    .checkbox-custom .checkmark { 
+      display: inline-block; width: 18px; height: 18px; background: rgba(15, 23, 42, 0.8); 
+      border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 6px; margin-right: 10px; transition: all 0.3s ease; flex-shrink: 0;
+    }
+    .checkbox-custom input:checked + .checkmark { background: #059669; border-color: #34d399; box-shadow: 0 0 10px rgba(52, 211, 153, 0.4); }
+    .checkbox-custom input:checked + .checkmark:after { 
+      content: "✓"; color: #fff; font-size: 11px; font-weight: bold; position: absolute; left: 4px; top: 0px; 
+    }
+
+    select { 
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23cbd5e1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); 
+      background-position: right 0.75rem center; 
+      background-repeat: no-repeat; 
+      background-size: 1.2em 1.2em; 
+      padding-right: 2.5rem; 
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    select option { background-color: #0f172a; color: #cbd5e1; }
+
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background-color: rgba(99, 102, 241, 0.3); border-radius: 9999px; }
+    .custom-scroll::-webkit-scrollbar-track { background-color: transparent; }
+
+    .glow-blob {
+      position: fixed; width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0) 70%);
+      border-radius: 50%; pointer-events: none; z-index: 0;
+    }
+
+    /* Estilos de grabación Whisper IA */
+    .btn-mic-premium {
+        background-color: rgba(99, 102, 241, 0.1) !important;
+        border: 1px solid rgba(99, 102, 241, 0.25) !important;
+        color: #818cf8 !important;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3.5rem;
+        height: auto;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .btn-mic-premium:hover {
+        background-color: rgba(99, 102, 241, 0.25) !important;
+        border-color: rgba(99, 102, 241, 0.5) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+    .mic-recording {            
+        animation: micPulse 1.2s infinite ease-in-out !important;            
+        background-color: rgba(239, 68, 68, 0.25) !important;            
+        color: #fca5a5 !important;            
+        border-color: rgba(239, 68, 68, 0.5) !important;        
+    }
+    .mic-processing {            
+        background-color: rgba(234, 179, 8, 0.2) !important;            
+        color: #fef08a !important;            
+        border-color: rgba(234, 179, 8, 0.4) !important;        
+    }
+    @keyframes micPulse {            
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }            
+        50% { transform: scale(1.04); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }            
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }        
+    }
+
+    /* Tema Custom para el Tutorial Interactivo Driver.js (DARK MODE) */
+    .driverjs-theme { 
+        font-family: 'Inter', sans-serif; 
+        border-radius: 16px; 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+        padding: 20px; 
+        background: rgba(15, 23, 42, 0.95) !important;
+        color: #f1f5f9 !important;
+    }
+    .driverjs-theme .driver-popover-title { font-size: 18px; font-weight: 700; color: #818cf8; margin-bottom: 8px; }
+    .driverjs-theme .driver-popover-description { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+    .driverjs-theme .driver-popover-next-btn, .driverjs-theme .driver-popover-prev-btn { 
+        background-color: #4f46e5; color: white; border-radius: 8px; text-shadow: none; border: none; padding: 6px 14px; font-weight: 600; 
+        transition: all 0.2s;
+    }
+    .driverjs-theme .driver-popover-next-btn:hover, .driverjs-theme .driver-popover-prev-btn:hover { background-color: #6366f1; }
+    .driverjs-theme .driver-popover-close-btn { color: #64748b; }
+
+    /* Tooltip System CSS */
+    .vm-tooltip { position:absolute; background:#0f172a; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.45); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; border: 1px solid rgba(255, 255, 255, 0.08); font-weight: 500; }
+    .vm-tooltip.visible { opacity:1; transform:translateY(0); }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen p-4 md:p-6 relative pb-12">
+
+  <div class="glow-blob top-0 left-0"></div>
+  <div class="glow-blob bottom-0 right-0"></div>
+
+  <!-- Contenedor de Toasts -->
+  <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
+
+  <div class="max-w-4xl mx-auto card-glass rounded-3xl p-6 md:p-8 z-10 relative shadow-2xl">
+    
+    <header class="flex flex-col sm:flex-row justify-between items-center mb-8 border-b border-white/5 pb-5 gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+            <i class="fas fa-brain text-white text-xl"></i>
+        </div>
+        <div>
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-white via-slate-100 to-emerald-300 bg-clip-text text-transparent tracking-wide">Crear Evaluación Inteligente</h2>
+            <p class="text-xs text-emerald-400 font-semibold mt-1">Configuración curricular con asistencia de IA y Voz</p>
+        </div>
+      </div>
+      <button type="button" onclick="verTutorial('crear_evaluacion')" class="group flex items-center gap-2 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 hover:border-transparent px-5 py-2.5 rounded-full shadow-md transition-all text-indigo-300 hover:text-white font-bold cursor-pointer">
+          <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm">?</span>
+          <span>Ver Tutorial</span>
+      </button>
+    </header>
+
+    <form id="evalForm" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Título -->
+        <div class="md:col-span-2" id="tour-step-titulo">
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Título de la Evaluación <span class="text-rose-500">*</span></label>
+          <div class="flex gap-2.5 items-start">
+            <div class="relative flex-1">
+              <input type="text" name="titulo" id="titulo" required placeholder="Ej: Evaluación Final de Arquitectura de Software" class="pr-12 w-full">
+              <button type="button" id="btn-ia-titulo" onclick="generarTituloIA()" class="absolute top-1/2 -translate-y-1/2 right-2 px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-lg text-xs font-semibold flex items-center transition-all" title="Generar con IA">
+                <i class="fas fa-robot"></i>
+              </button>
+            </div>
+            <button type="button" onclick="gestionarGrabacionWhisper(event, 'titulo')" id="btn-mic-titulo" class="btn-mic-premium h-12" title="Grabar con Whisper IA"><i id="ico-mic-titulo" class="fas fa-microphone text-lg"></i></button>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="md:col-span-2" id="tour-step-descripcion">
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Descripción General <span class="text-rose-500">*</span></label>
+          <div class="flex gap-2.5 items-start">
+            <div class="relative flex-1">
+              <textarea name="descripcion" id="descripcion" rows="2" required placeholder="Ingresa las instrucciones o un resumen del examen..." class="resize-none pr-12 w-full"></textarea>
+              <button type="button" id="btn-ia-desc" onclick="generarDescripcionIA()" class="absolute top-2.5 right-2.5 px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-lg text-xs font-semibold flex items-center transition-all" title="Sugerir con IA">
+                <i class="fas fa-robot"></i>
+              </button>
+            </div>
+            <button type="button" onclick="gestionarGrabacionWhisper(event, 'descripcion')" id="btn-mic-descripcion" class="btn-mic-premium h-[74px]" title="Grabar con Whisper IA"><i id="ico-mic-descripcion" class="fas fa-microphone text-lg"></i></button>
+          </div>
+        </div>
+
+        <!-- Fecha límite -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Fecha y Hora Límite</label>
+          <input type="datetime-local" name="fecha_limite" id="fecha_limite">
+        </div>
+
+        <!-- Cantidad de preguntas -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Cantidad de Preguntas <span class="text-rose-500">*</span></label>
+          <input type="number" min="1" max="50" name="cantidad" id="cantidad" value="5" required>
+        </div>
+
+        <!-- Duración -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Duración (minutos) <span class="text-rose-500">*</span></label>
+          <input type="number" min="1" max="360" name="duracion" id="duracion" value="40" required>
+        </div>
+
+        <!-- Intentos permitidos -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Intentos Permitidos <span class="text-rose-500">*</span></label>
+          <input type="number" min="1" max="10" name="intentos" id="intentos" value="1" required>
+        </div>
+
+        <!-- Área / Asignatura -->
+        <div id="tour-step-area">
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Área / Asignatura <span class="text-rose-500">*</span></label>
+          <div class="flex gap-2.5 items-start">
+            <input type="text" name="area" id="area" required placeholder="Ej: Ingeniería de Sistemas" class="flex-grow">
+            <button type="button" onclick="gestionarGrabacionWhisper(event, 'area')" id="btn-mic-area" class="btn-mic-premium h-12" title="Grabar con Whisper IA"><i id="ico-mic-area" class="fas fa-microphone text-lg"></i></button>
+          </div>
+        </div>
+
+        <!-- Nivel educativo -->
+        <div id="tour-step-nivel">
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Nivel Educativo <span class="text-rose-500">*</span></label>
+          <div class="flex gap-2.5 items-start">
+            <input type="text" name="nivel" id="nivel" required placeholder="Ej: Universitario" class="flex-grow">
+            <button type="button" onclick="gestionarGrabacionWhisper(event, 'nivel')" id="btn-mic-nivel" class="btn-mic-premium h-12" title="Grabar con Whisper IA"><i id="ico-mic-nivel" class="fas fa-microphone text-lg"></i></button>
+          </div>
+        </div>
+
+        <!-- Temas clave -->
+        <div class="md:col-span-2" id="tour-step-temas">
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Temas Clave <span class="text-rose-500">*</span></label>
+          <div class="flex gap-2.5 items-start">
+            <div class="relative flex-1">
+              <input type="text" name="temas" id="temas" required placeholder="Separados por comas. Ej: Microservicios, Docker, API Rest" class="pr-12 w-full">
+              <button type="button" id="btn-ia-temas" onclick="generarTemasIA()" class="absolute top-1/2 -translate-y-1/2 right-2 px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-lg text-xs font-semibold flex items-center transition-all" title="Sugerir con IA">
+                <i class="fas fa-robot"></i>
+              </button>
+            </div>
+            <button type="button" onclick="gestionarGrabacionWhisper(event, 'temas')" id="btn-mic-temas" class="btn-mic-premium h-12" title="Grabar con Whisper IA"><i id="ico-mic-temas" class="fas fa-microphone text-lg"></i></button>
+          </div>
+        </div>
+
+        <!-- Competencias -->
+        <div class="md:col-span-2" id="tour-step-competencias">
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Competencias a Evaluar <span class="text-rose-500">*</span></label>
+          <div class="flex gap-2.5 items-start">
+            <div class="relative flex-1">
+              <input type="text" name="competencias" id="competencias" required placeholder="Separadas por comas. Ej: Arquitectura de software, Diseño de infraestructura" class="pr-12 w-full">
+              <button type="button" id="btn-ia-competencias" onclick="generarCompetenciasIA()" class="absolute top-1/2 -translate-y-1/2 right-2 px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-lg text-xs font-semibold flex items-center transition-all" title="Sugerir con IA">
+                <i class="fas fa-robot"></i>
+              </button>
+            </div>
+            <button type="button" onclick="gestionarGrabacionWhisper(event, 'competencias')" id="btn-mic-competencias" class="btn-mic-premium h-12" title="Grabar con Whisper IA"><i id="ico-mic-competencias" class="fas fa-microphone text-lg"></i></button>
+          </div>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Dificultad Metodológica</label>
+          <select name="dificultad" id="dificultad">
+            <option value="Baja">Baja</option>
+            <option value="Media" selected>Media</option>
+            <option value="Alta">Alta</option>
+          </select>
+        </div>
+
+        <!-- Tipos de pregunta -->
+        <div class="md:col-span-2 bg-slate-950/40 p-5 rounded-2xl border border-white/5 shadow-inner mt-2" id="tour-step-tipos">
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-3">Tipo(s) de Preguntas Requeridas</label>
+          <div class="flex gap-x-6 gap-y-3 flex-wrap">
+            <label class="checkbox-custom text-sm font-medium text-slate-300"><input type="checkbox" name="tipo_pregunta" value="opcion_multiple" checked><span class="checkmark"></span> Opción múltiple</label>
+            <label class="checkbox-custom text-sm font-medium text-slate-300"><input type="checkbox" name="tipo_pregunta" value="verdadero_falso"><span class="checkmark"></span> Verdadero/Falso</label>
+            <label class="checkbox-custom text-sm font-medium text-slate-300"><input type="checkbox" name="tipo_pregunta" value="abierta"><span class="checkmark"></span> Abierta</label>
+            <label class="checkbox-custom text-sm font-medium text-slate-300"><input type="checkbox" name="tipo_pregunta" value="relacionar_columnas"><span class="checkmark"></span> Relacionar columnas</label>
+            <label class="checkbox-custom text-sm font-medium text-slate-300"><input type="checkbox" name="tipo_pregunta" value="seleccion_multiple"><span class="checkmark"></span> Selección múltiple</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 border-t border-white/5 pt-6" id="tour-step-acciones">
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <button type="button" id="btnGenIA" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+            <i class="fas fa-robot"></i> Generar con IA
+          </button>
+          <span id="cargandoIA" class="text-emerald-400 font-semibold text-xs hidden items-center gap-2 flex-shrink-0 animate-pulse">
+            <div class="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div> Generando banco...
+          </span>
+        </div>
+        
+        <button type="submit" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white px-6 py-3 rounded-xl font-semibold border border-white/5 transition-all text-sm flex items-center justify-center gap-2 shadow-md">
+          <i class="fas fa-save"></i> Guardar Estructura Manual
+        </button>
+      </div>
+      
+      <div id="respuesta" class="text-center mt-4 text-xs font-medium"></div>
+    </form>
+  </div>
+
+  <!-- MODAL PREVIEW IA -->
+  <div id="modalPreview" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">  
+    <div class="card-glass max-w-5xl w-full rounded-3xl p-6 md:p-8 relative flex flex-col max-h-[90vh] overflow-hidden border border-white/10 shadow-2xl animate-fade-in">    
+      <button onclick="cerrarPreview()" class="absolute top-4 right-6 text-slate-400 hover:text-white text-2xl transition-colors w-8 h-8 flex items-center justify-center bg-slate-800 rounded-full border border-white/5 focus:outline-none">&times;</button>    
+      
+      <h3 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
+        <i class="fas fa-server"></i> Banco de Preguntas Estructuradas por ROSA IA
+      </h3>    
+      
+      <div id="tablaPreview" class="overflow-y-auto overflow-x-auto custom-scroll flex-1 rounded-xl border border-white/5 bg-slate-950/40 shadow-inner p-1"></div>    
+      
+      <div class="flex gap-3 justify-end mt-6 border-t border-white/5 pt-4">      
+        <button onclick="cerrarPreview()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs border border-white/5 transition-all">
+          <i class="fas fa-edit mr-1"></i> Ajustar Parámetros
+        </button>      
+        <button id="guardarEvaluacionIA" class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-500/20">
+          <i class="fas fa-check-double mr-1"></i> Autorizar y Desplegar Evaluación
+        </button>    
+      </div>  
+    </div>
+  </div>
+
+  <script>
+    const API_GEMINI = "https://gestordecursos.pegui.edu.co:8000/chat/gemini";
+    const API_EVAL = "https://gestordecursos.pegui.edu.co:8000/evaluaciones/";
+    const API_WHISPER = "https://gestordecursos.pegui.edu.co:8000/whisper/transcribir";
+    
+    let preguntasIA = [];
+    let lastPayload = {};
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let idCampoDestino = null;
+    let temporizadorMaximo = null;
+    let estaGrabando = false;
+
+    function getUserId() {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          return JSON.parse(atob(token.split(".")[1])).user_id || localStorage.getItem("user_id");
+        } catch(e) { console.error("Error decode token id:", e); }
+      }
+      return localStorage.getItem("user_id") || "add801fe-c357-4cee-bc13-0bb7a7ba16fd";
+    }
+
+    function getToken() { return localStorage.getItem('token'); }
+
+    // --- Elegant Toast Alerts ---
+    function showNotification(type, message) {
+        const container = document.getElementById('customToastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = `flex items-center p-3.5 rounded-xl shadow-2xl border backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+            type === 'success' ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+        }`;
+        toast.innerHTML = `
+            <span class="mr-3 text-xl">${type === 'success' ? '✨' : '⚠️'}</span>
+            <div class="text-xs font-semibold tracking-wide">${message}</div>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 50);
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+    
+    window.alert = function(msg) {
+        const isSuccess = msg.toLowerCase().includes('éxito') || msg.toLowerCase().includes('guardada') || msg.toLowerCase().includes('actualizada') || msg.toLowerCase().includes('guardado');
+        showNotification(isSuccess ? 'success' : 'error', msg.replace(/[✅❌]/g, '').trim());
+    };
+
+    // ==========================================
+    // TUTORIAL INTERACTIVO CON DRIVER.JS
+    // ==========================================
+    window.verTutorial = function(key) {
+        if (key !== 'crear_evaluacion') return;
+
+        const driver = window.driver.js.driver;
+        const tour = driver({
+            showProgress: true,
+            animate: true,
+            nextBtnText: 'Siguiente &rarr;',
+            prevBtnText: '&larr; Anterior',
+            doneBtnText: '¡Entendido!',
+            progressText: 'Paso {{current}} de {{total}}',
+            popoverClass: 'driverjs-theme',
+            steps: [
+                { 
+                    element: '#titulo', 
+                    popover: { title: 'Título de la Evaluación', description: 'Digita el título o pídele a nuestra IA que te recomiende un título académico de alto impacto.', side: "bottom", align: 'start' } 
+                },
+                { 
+                    element: '#descripcion', 
+                    popover: { title: 'Descripción', description: 'Redacta un párrafo instruccional claro. Recuerda que tienes el micrófono integrado para dictar por voz.', side: "bottom", align: 'start' } 
+                },
+                { 
+                    element: '#tour-step-temas', 
+                    popover: { title: 'Temas Clave', description: 'Digita los temas separados por comas o usa la IA para autodetectarlos en base a tu título.', side: "top", align: 'start' } 
+                },
+                { 
+                    element: '#tour-step-competencias', 
+                    popover: { title: 'Competencias', description: 'Asocia las competencias transversales. ROSA IA puede deducirlas para ti en segundos.', side: "top", align: 'start' } 
+                },
+                { 
+                    element: '#tour-step-tipos', 
+                    popover: { title: 'Tipos de Pregunta', description: 'Selecciona las tipologías de reactivos que la IA mezclará de forma balanceada.', side: "top", align: 'start' } 
+                },
+                { 
+                    element: '#tour-step-acciones', 
+                    popover: { title: 'Generación Automática', description: 'Haz clic en <b>Generar con IA</b> para que ROSA compile, evalúe y te muestre una vista previa instantánea.', side: "top", align: 'center' } 
+                }
+            ]
+        });
+                
+        tour.drive();
+    };
+
+    // ==========================================
+    // INTEGRACIÓN ASÍNCRONA DE GRABACIÓN DE VOZ (WHISPER)
+    // ==========================================
+    async function gestionarGrabacionWhisper(e, idCampo) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+
+        if (estaGrabando && idCampoDestino === idCampo) {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+            return;
+        }
+
+        if (estaGrabando) {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+            await new Promise(resolve => setTimeout(resolve, 150));
+        }
+
+        idCampoDestino = idCampo;
+        audioChunks = [];
+        estaGrabando = true;
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+                        
+            mediaRecorder.ondataavailable = (event) => { 
+                if (event.data && event.data.size > 0) audioChunks.push(event.data); 
+            };
+                        
+            mediaRecorder.onstart = () => {
+                resetearIconosMic();
+                const currentBtn = document.getElementById(`btn-mic-${idCampoDestino}`);
+                const currentIco = document.getElementById(`ico-mic-${idCampoDestino}`);
+                if (currentBtn) currentBtn.classList.add('mic-recording');
+                if (currentIco) currentIco.className = "fas fa-stop text-lg";
+                                
+                temporizadorMaximo = setTimeout(() => { 
+                     if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop(); 
+                 }, 12000);
+            };
+                        
+            mediaRecorder.onstop = async () => {
+                clearTimeout(temporizadorMaximo);
+                estaGrabando = false;
+
+                const processingBtn = document.getElementById(`btn-mic-${idCampoDestino}`);
+                const processingIco = document.getElementById(`ico-mic-${idCampoDestino}`);
+                                
+                if (processingBtn) { 
+                     processingBtn.classList.remove('mic-recording'); 
+                     processingBtn.classList.add('mic-processing'); 
+                 }
+                if (processingIco) processingIco.className = "fas fa-spinner fa-spin text-lg";
+                                
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
+                stream.getTracks().forEach(track => track.stop());
+                                
+                if (audioBlob.size > 100) {
+                    await enviarAudioAWhisper(audioBlob);
+                } else {
+                    resetearIconosMic();
+                }
+            };
+                        
+            mediaRecorder.start();
+        } catch (err) { 
+             estaGrabando = false;
+             console.error("Error al inicializar hardware de audio:", err); 
+             showNotification('error', 'No se pudo acceder al micrófono del sistema.');
+             resetearIconosMic(); 
+         }
+    }
+
+    async function enviarAudioAWhisper(blob) {
+        if (!blob || blob.size === 0) { resetearIconosMic(); return; }
+        const token = getToken();
+        const formData = new FormData();
+        formData.append('audio', blob, 'dictado.webm');
+                
+        try {
+            const res = await fetch(API_WHISPER, { 
+                 method: 'POST', 
+                 headers: { 'Authorization': `Bearer ${token}` }, 
+                 body: formData 
+             });
+            if (!res.ok) throw new Error("Fallo en la transcripción");
+            const data = await res.json();
+            const texto = (data.texto || '').trim();
+                        
+            if (texto) {
+                const input = document.getElementById(idCampoDestino);
+                if (input) {
+                    input.value = input.value.trim() ? input.value.trim() + ' ' + texto : texto;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        } catch (err) { 
+             showNotification('error', `Error de dictado: ${err.message}`);
+         } finally { 
+             resetearIconosMic(); 
+         }
+    }
+
+    function resetearIconosMic() {
+        document.querySelectorAll('[id^="btn-mic-"]').forEach(btn => {
+            if(btn.id === 'btn-mic-descripcion') {
+                btn.className = "btn-mic-premium h-[74px]";
+            } else {
+                btn.className = "btn-mic-premium h-12";
+            }
+        });
+        document.querySelectorAll('[id^="ico-mic-"]').forEach(ico => { 
+             ico.className = "fas fa-microphone text-lg"; 
+         });
+        if (!estaGrabando) idCampoDestino = null;
+    }
+
+    // ==========================================
+    // ASISTENCIA INTELIGENTE IA (GEMINI ENDPOINTS)
+    // ==========================================
+    async function invocarROSA(prompt, btnID) {
+        const btn = document.getElementById(btnID);
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        try {
+            const res = await fetch(API_GEMINI, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                body: JSON.stringify({ prompt })
+            });
+            if (!res.ok) throw new Error('Error al conectar con ROSA IA');
+            const data = await res.json();
+            let respuesta = (data.respuesta || data.mensaje || '').trim();
+            respuesta = respuesta.replace(/```json/g, '').replace(/```/g, '').trim();
+            return respuesta;
+        } catch (e) {
+            showNotification('error', e.message);
+            throw e;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    async function generarTituloIA() {
+        const desc = document.getElementById("descripcion").value.trim();
+        const temas = document.getElementById("temas").value.trim();
+        if (!desc && !temas) {
+            showNotification('error', 'Por favor llena la descripción o temas para generar una sugerencia de título.');
+            return;
+        }
+        const prompt = `Actúas como un experto en pedagogía. Basado en esta descripción: '${desc}' y estos temas: '${temas}', genera un Título profesional y atractivo para la evaluación. Responde únicamente con el título, sin explicaciones ni comillas.`;
+        const res = await invocarROSA(prompt, 'btn-ia-titulo');
+        if (res) document.getElementById('titulo').value = res.replace(/['"]/g, '');
+    }
+
+    async function generarDescripcionIA() {
+        const titulo = document.getElementById("titulo").value.trim();
+        const temas = document.getElementById("temas").value.trim();
+        if (!titulo && !temas) {
+            showNotification('error', 'Por favor ingresa el título o los temas clave primero.');
+            return;
+        }
+        const prompt = `Actúas como un diseñador curricular. Genera una instrucción o descripción formal de examen para la evaluación titulada '${titulo}' basada en los temas: '${temas}'. Máximo 80 palabras. Responde solo con el texto de la descripción.`;
+        const res = await invocarROSA(prompt, 'btn-ia-desc');
+        if (res) document.getElementById('descripcion').value = res;
+    }
+
+    async function generarTemasIA() {
+        const titulo = document.getElementById("titulo").value.trim();
+        const area = document.getElementById("area").value.trim();
+        if (!titulo) {
+            showNotification('error', 'Ingresa el título de la evaluación para inferir los temas asociados.');
+            return;
+        }
+        const prompt = `Sugiere una lista de 4 a 6 temas académicos específicos clave separados por coma para evaluar en un examen sobre: '${titulo}' del área: '${area}'. Responde únicamente con la lista de temas separados por comas, sin explicaciones adicionales.`;
+        const res = await invocarROSA(prompt, 'btn-ia-temas');
+        if (res) document.getElementById('temas').value = res;
+    }
+
+    async function generarCompetenciasIA() {
+        const titulo = document.getElementById("titulo").value.trim();
+        const temas = document.getElementById("temas").value.trim();
+        if (!titulo && !temas) {
+            showNotification('error', 'Ingresa el título o temas de la evaluación para inferir las competencias.');
+            return;
+        }
+        const prompt = `Deduce de 3 a 4 competencias pedagógicas principales a evaluar separadas por comas basadas en el título '${titulo}' y temas clave: '${temas}'. Responde únicamente la lista de competencias separadas por comas.`;
+        const res = await invocarROSA(prompt, 'btn-ia-competencias');
+        if (res) document.getElementById('competencias').value = res;
+    }
+
+    // ------------ Prompt dinámico para Gemini -------------
+    function armarPromptIA() {
+      const titulo = document.getElementById("titulo").value;
+      const descripcion = document.getElementById("descripcion").value;
+      const area = document.getElementById("area").value;
+      const nivel = document.getElementById("nivel").value;
+      const cantidad = document.getElementById("cantidad").value;
+      const duracion = document.getElementById("duracion").value;
+      const intentos = document.getElementById("intentos").value;
+      const tiposArr = Array.from(document.querySelectorAll('input[name="tipo_pregunta"]:checked')).map(el=>el.value);
+      const temas = document.getElementById("temas").value;
+      const competencias = document.getElementById("competencias").value;
+      const dificultad = document.getElementById("dificultad").value;
+
+      return `Genera una evaluación con las siguientes características:Nombre: ${titulo}Descripción: ${descripcion}Área/Asignatura: ${area}Nivel educativo: ${nivel}Cantidad de preguntas: ${cantidad}Duración: ${duracion} minIntentos permitidos: ${intentos}Tipos de pregunta: ${tiposArr.join(', ')}Temas clave: ${temas}Competencias: ${competencias}Dificultad: ${dificultad}Devuelve un JSON con un array llamado preguntas, donde cada elemento debe tener: - "pregunta" (string), - "tipo" (string), - "opciones" (array, puede ser vacío para abiertas), - "respuesta" (string o array).No escribas nada fuera del JSON.`;
+    }
+
+    document.getElementById("btnGenIA").onclick = async function() {
+      const form = document.getElementById("evalForm");
+      if(!form.checkValidity()){
+          form.reportValidity();
+          showNotification('error', 'Por favor llena todos los parámetros obligatorios (*) antes de invocar a la IA.');
+          return;
+      }
+      
+      document.getElementById("cargandoIA").classList.remove("hidden");
+      preguntasIA = [];
+      document.getElementById("respuesta").innerHTML = "";
+      
+      try {
+        const prompt = armarPromptIA();
+        const res = await fetch(API_GEMINI, {
+          method: "POST",
+          headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
+          body: JSON.stringify({prompt})
+        });
+        const data = await res.json();
+
+        let raw = data.respuesta || data.resultado || data.text || "";
+        let obj;
+        try {
+          if (typeof raw !== "string") obj = raw;
+          else obj = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || raw);
+        } catch(e) {
+          obj = { preguntas: [] };
+        }
+
+        preguntasIA = obj.preguntas || [];
+        if (preguntasIA.length === 0) {
+          document.getElementById("respuesta").innerHTML = `<span class="text-rose-400">❌ ROSA IA no pudo estructurar las preguntas. Refina los temas clave.</span>`;
+          document.getElementById("cargandoIA").classList.add("hidden");
+          return;
+        }
+        mostrarPreviewIA();
+      } catch(e) {
+        document.getElementById("respuesta").innerHTML = `<span class="text-rose-400">❌ Error llamando a Gemini: ${e.message}</span>`;
+      }
+      document.getElementById("cargandoIA").classList.add("hidden");
+    };
+
+    function mostrarPreviewIA() {
+      let html = `<table class="min-w-full text-xs md:text-sm text-slate-300">    
+        <thead class="bg-slate-950/80 text-slate-400 border-b border-white/5">
+          <tr>
+            <th class="px-4 py-3 text-left">#</th>
+            <th class="px-4 py-3 text-left">Pregunta</th>
+            <th class="px-4 py-3 text-left">Tipo</th>
+            <th class="px-4 py-3 text-left">Opciones Estructuradas</th>
+            <th class="px-4 py-3 text-left">Respuesta Clave</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">`;
+        
+      preguntasIA.forEach((p, i) => {
+        html += `<tr class="hover:bg-slate-900/40 transition-colors">
+          <td class="px-4 py-3 font-mono font-bold text-slate-500">${i+1}</td>
+          <td class="px-4 py-3 text-slate-200 font-medium">${p.pregunta || p.texto || ""}</td>
+          <td class="px-4 py-3"><span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded text-[11px] font-semibold">${p.tipo || "General"}</span></td>
+          <td class="px-4 py-3 text-slate-400 leading-relaxed">${(p.opciones || []).map(o => `• ${o}`).join("<br>")}</td>
+          <td class="px-4 py-3 font-bold text-emerald-400">${Array.isArray(p.respuesta) ? p.respuesta.join(", ") : (p.respuesta || "")}</td>
+        </tr>`;
+      });
+      html += "</tbody></table>";
+      document.getElementById("tablaPreview").innerHTML = html;
+      document.getElementById("modalPreview").classList.remove("hidden");
+    }
+
+    function cerrarPreview() {
+      document.getElementById("modalPreview").classList.add("hidden");
+    }
+
+    document.getElementById("guardarEvaluacionIA").onclick = async function() {
+      document.getElementById("respuesta").innerHTML = "";
+      cerrarPreview();
+
+      const tiposArr = Array.from(document.querySelectorAll('input[name="tipo_pregunta"]:checked')).map(el=>el.value);
+      const parametros = {
+        area: document.getElementById("area").value,
+        nivel: document.getElementById("nivel").value,
+        temas: document.getElementById("temas").value,
+        competencias: document.getElementById("competencias").value,
+        dificultad: document.getElementById("dificultad").value,
+        duracion: Number(document.getElementById("duracion").value),
+        intentos: Number(document.getElementById("intentos").value),
+        mostrar_resultados: "Sí", 
+        permitir_reevaluacion: "No"
+      };
+      
+      lastPayload = {
+        titulo: document.getElementById("titulo").value,
+        descripcion: document.getElementById("descripcion").value,
+        fecha_limite: document.getElementById("fecha_limite").value || null,
+        creador_id: getUserId(),
+        tipos_pregunta: tiposArr,      
+        parametros: parametros,        
+        generada_ia: 1,
+        preguntas: preguntasIA
+      };
+
+      try {
+        const res = await fetch(API_EVAL, {
+          method: "POST",
+          headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
+          body: JSON.stringify(lastPayload)
+        });
+        if (res.ok) {
+          alert("✅ Evaluación generada por IA guardada exitosamente.");
+          document.getElementById("evalForm").reset();
+        } else {
+          const data = await res.json();
+          document.getElementById("respuesta").innerHTML = `<span class="text-rose-400">❌ Error al guardar: ${JSON.stringify(data.detail)}</span>`;
+        }
+      } catch(e) {
+        document.getElementById("respuesta").innerHTML = `<span class="text-rose-400">❌ Error de comunicación: ${e.message}</span>`;
+      }
+    };
+
+    document.getElementById("evalForm").onsubmit = async function(e) {
+      e.preventDefault();
+      document.getElementById("respuesta").innerHTML = "";
+      const tiposArr = Array.from(document.querySelectorAll('input[name="tipo_pregunta"]:checked')).map(el=>el.value);
+      const parametros = {
+        area: document.getElementById("area").value,
+        nivel: document.getElementById("nivel").value,
+        temas: document.getElementById("temas").value,
+        competencias: document.getElementById("competencias").value,
+        dificultad: document.getElementById("dificultad").value,
+        duracion: Number(document.getElementById("duracion").value),
+        intentos: Number(document.getElementById("intentos").value)
+      };
+      
+      let payload = {
+        titulo: document.getElementById("titulo").value,
+        descripcion: document.getElementById("descripcion").value,
+        fecha_limite: document.getElementById("fecha_limite").value || null,
+        creador_id: getUserId(),
+        tipos_pregunta: tiposArr,   
+        parametros: parametros,     
+        generada_ia: 0
+      };
+
+      try {
+        const res = await fetch(API_EVAL, {
+          method: "POST",
+          headers: {"Content-Type": "application/json", "Authorization": `Bearer ${getToken()}`},
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          alert("✅ Estructura base guardada manualmente. Ya puedes diseñar las preguntas.");
+          document.getElementById("evalForm").reset();
+        } else {
+          const data = await res.json();
+          document.getElementById("respuesta").innerHTML = `<span class="text-rose-400">❌ Error: ${JSON.stringify(data.detail)}</span>`;
+        }
+      } catch(e) {
+        document.getElementById("respuesta").innerHTML = `<span class="text-rose-400">❌ Error: ${e.message}</span>`;
+      }
+    };
+  </script>
+
+  <!-- Tooltips Dinámicos Estables -->
+  <script>
+      (function(){
+          if(window.__ttLoaded) return;
+          window.__ttLoaded=true;
+          let el=null;
+          document.addEventListener('mouseover',function(e){
+              var t=e.target.closest('[data-tooltip]');
+              if(!t)return;
+              var txt=t.getAttribute('data-tooltip');
+              if(!txt)return;
+              if(el)el.remove();
+              el=document.createElement('div');
+              el.className='vm-tooltip';
+              el.textContent=txt;
+              document.body.appendChild(el);
+              var r=t.getBoundingClientRect(),pos=t.getAttribute('data-tooltip-position')||'top';
+              requestAnimationFrame(function(){
+                  if(!el)return;
+                  var tr=el.getBoundingClientRect(),top=0,left=0;
+                  if(pos==='top'){
+                      top=r.top+window.scrollY-tr.height-8;
+                      left=r.left+window.scrollX+(r.width/2)-(tr.width/2);
+                  }else if(pos==='bottom'){
+                      top=r.bottom+window.scrollY+8;
+                      left=r.left+window.scrollX+(r.width/2)-(tr.width/2);
+                  }
+                  if(left<5)left=5;
+                  if(left+tr.width>window.innerWidth-5)left=window.innerWidth-tr.width-5;
+                  el.style.top=top+'px';
+                  el.style.left=left+'px';
+                  el.classList.add('visible');
+              });
+          });
+          document.addEventListener('mouseout',function(e){
+              if(e.target.closest('[data-tooltip]')&&el){
+                  el.classList.remove('visible');
+                  setTimeout(function(){if(el){el.remove();el=null}},150);
+              }
+          });
+      })();
+  </script>
+</body>
+</html>

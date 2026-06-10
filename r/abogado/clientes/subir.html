@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Subir documentos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white p-6">
+  <h1 class="text-2xl font-bold text-emerald-600 mb-4">📁 Ahora debes cargar los siguientes documentos:</h1>
+  <p class="mb-4">Haz clic en cada documento para seleccionarlo y subirlo.</p>
+
+  <div id="botones" class="grid grid-cols-3 gap-4"></div>
+  <input type="file" id="fileInput" hidden>
+
+  <script>
+    const uid = new URLSearchParams(window.location.search).get("uid");
+    const documentos = [
+      "PROPUESTA COMERCIAL", "CONTRATO FIRMADO", "CÁMARA DE COMERCIO",
+      "RUT", "MANUAL DE MARCA - IMAGEN", "CRONOGRAMA APROBADO",
+      "LOGOS", "PRESENTACIÓN DE LA EMPRESA", "OTRO"
+    ];
+
+    const contenedor = document.getElementById("botones");
+    const input = document.getElementById("fileInput");
+
+    let tipoSeleccionado = "";
+
+    // Asigna evento global al input para una sola instancia
+    input.addEventListener("change", async () => {
+      const file = input.files[0];
+      if (!file || !tipoSeleccionado || !uid) return;
+
+      const formData = new FormData();
+      formData.append("user_id", uid);
+      formData.append("tipo_documento", tipoSeleccionado);
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("https://gestordecursos.pegui.edu.co:8000/client-documents/", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (res.ok) {
+          alert(`✅ ${tipoSeleccionado} subido correctamente`);
+        } else {
+          const error = await res.json();
+          alert(`❌ Error al subir ${tipoSeleccionado}: ${error.detail || "fallo desconocido"}`);
+        }
+      } catch (err) {
+        alert(`⚠️ Error de red al subir ${tipoSeleccionado}`);
+      }
+
+      input.value = ""; // Limpia el input
+    });
+
+    // Renderiza botones
+    documentos.forEach(tipo => {
+      const btn = document.createElement("button");
+      btn.textContent = tipo;
+      btn.className = "bg-green-300 font-bold rounded-full py-2 px-4 hover:bg-green-400";
+      btn.onclick = () => {
+        tipoSeleccionado = tipo;
+        input.click();
+      };
+      contenedor.appendChild(btn);
+    });
+  </script>
+</body>
+</html>
+

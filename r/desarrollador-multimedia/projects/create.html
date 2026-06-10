@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crear Proyecto - VirtualMind</title>
+        
+    <!-- Dependencias -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/fetch-con-token.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #090D16;
+            color: #cbd5e1;
+            overflow-x: hidden;
+        }
+                
+        .gradient-bg { 
+            background: linear-gradient(135deg, #090d16 0%, #0f172a 100%); 
+        }
+                
+        .card-glass {             
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+                
+        .input-focus {             
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(15, 23, 42, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #f8fafc !important;
+        }
+                
+        .input-focus:focus {             
+            transform: translateY(-1px);             
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
+            background: rgba(15, 23, 42, 0.95) !important;
+        }
+                
+        .section-card {             
+            transition: all 0.3s ease;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+                
+        .section-card:hover {             
+            border-color: rgba(99, 102, 241, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);         
+        }
+                
+        /* Checkboxes & Radios Customizados Tecnológicos */
+        .checkbox-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
+        .checkbox-custom input[type=checkbox] { opacity: 0; position: absolute; }
+        .checkbox-custom .checkmark {             
+            display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8);             
+            border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 6px; margin-right: 8px; transition: all 0.3s ease;         
+        }
+        .checkbox-custom input:checked + .checkmark { 
+            background: #4f46e5; 
+            border-color: #6366f1; 
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+        .checkbox-custom input:checked + .checkmark:after {             
+            content: "✓"; color: #fff; font-size: 13px; font-weight: bold; position: absolute; left: 4px; top: 0px;         
+        }
+                
+        .radio-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
+        .radio-custom input[type=radio] { opacity: 0; position: absolute; }
+        .radio-custom .radiomark {             
+            display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8);             
+            border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 50%; margin-right: 8px; transition: all 0.3s ease;         
+        }
+        .radio-custom input:checked + .radiomark { 
+            background: #4f46e5; 
+            border-color: #6366f1; 
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+        .radio-custom input:checked + .radiomark:after {             
+            content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff;             
+            position: absolute; left: 6px; top: 6px;         
+        }
+                
+        .animate-fade-in { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+                
+        /* Utilidad Modal y Ayuda */
+        .hidden { display: none !important; }
+        .help-icon {             
+            display: inline-flex; align-items: center; justify-content: center;             
+            width: 16px; height: 16px; background: #3b82f6; color: #fff; border-radius: 50%;             
+            font-size: 10px; font-weight: 700; cursor: help; margin-left: 4px; flex-shrink: 0;         
+        }
+        .help-icon:hover { background: #2563eb; }
+
+        /* Estilos Grabación Whisper Premium (Siempre Visibles y Estéticos) */
+        .btn-mic-premium {
+            background-color: rgba(99, 102, 241, 0.1) !important;
+            border: 1px solid rgba(99, 102, 241, 0.25) !important;
+            color: #818cf8 !important;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3.5rem;
+            cursor: pointer;
+        }
+        .btn-mic-premium:hover {
+            background-color: rgba(99, 102, 241, 0.25) !important;
+            border-color: rgba(99, 102, 241, 0.5) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+        .mic-recording {            
+            animation: micPulse 1.2s infinite ease-in-out !important;            
+            background-color: rgba(239, 68, 68, 0.25) !important;            
+            color: #fca5a5 !important;            
+            border-color: rgba(239, 68, 68, 0.5) !important;        
+        }
+        .mic-processing {            
+            background-color: rgba(234, 179, 8, 0.2) !important;            
+            color: #fef08a !important;            
+            border-color: rgba(234, 179, 8, 0.4) !important;        
+        }
+        @keyframes micPulse {            
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }            
+            50% { transform: scale(1.04); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }            
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }        
+        }
+
+        /* Ambient glowing background blobs */
+        .glow-blob {
+            position: absolute;
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Tema Custom para el Tutorial Interactivo Driver.js */
+        .driverjs-theme { 
+            font-family: 'Inter', sans-serif; 
+            border-radius: 16px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+            padding: 20px; 
+            background: rgba(15, 23, 42, 0.95) !important;
+            color: #f1f5f9 !important;
+        }
+        .driverjs-theme .driver-popover-title { font-size: 18px; font-weight: 700; color: #818cf8; margin-bottom: 8px; }
+        .driverjs-theme .driver-popover-description { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+        .driverjs-theme .driver-popover-next-btn, .driverjs-theme .driver-popover-prev-btn { 
+            background-color: #4f46e5; color: white; border-radius: 8px; text-shadow: none; border: none; padding: 6px 14px; font-weight: 600; 
+            transition: all 0.2s;
+        }
+        .driverjs-theme .driver-popover-next-btn:hover, .driverjs-theme .driver-popover-prev-btn:hover { background-color: #6366f1; }
+        .driverjs-theme .driver-popover-close-btn { color: #64748b; }
+    </style>
+    <!-- Driver.js para Tutorial Interactivo -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+</head>
+<body class="gradient-bg min-h-screen py-8 relative">
+
+    <div class="glow-blob top-10 left-10"></div>
+    <div class="glow-blob bottom-10 right-10"></div>
+
+    <!-- Custom Notification Container (Toasts) -->
+    <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
+
+    <div class="max-w-6xl mx-auto px-4 relative z-10">
+                <!-- Header -->
+        <div class="text-center mb-8 animate-fade-in">
+            <h1 class="text-4xl font-bold text-white mb-2 tracking-wide">VirtualMind</h1>
+            <p class="text-indigo-300 text-base font-medium">Gestión Inteligente de Proyectos Educativos</p>
+        </div>
+                
+        <div class="card-glass rounded-3xl shadow-2xl p-8 animate-fade-in">
+                        
+            <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-indigo-500/20">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">
+                        Crear Nuevo Proyecto
+                    </h2>
+                </div>
+                <button type="button" onclick="verTutorial('crear_proyecto')" class="group flex items-center gap-2 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 hover:border-transparent px-5 py-2.5 rounded-full shadow-md transition-all text-indigo-300 hover:text-white font-bold cursor-pointer">
+                    <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm">?</span>
+                    <span>Ver Tutorial</span>
+                </button>
+            </div>
+
+            <!-- Formulario Principal -->
+            <form id="formProyecto" class="space-y-8">
+                                <!-- Sección 1: Información Básica -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                        <span class="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center mr-3 border border-blue-500/20">
+                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </span>
+                        Información Básica del Proyecto
+                    </h3>
+                                        
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Nombre del Proyecto -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="name">
+                                Nombre del Proyecto <span class="help-icon" title="Nombre único para identificar el proyecto. Ej: Curso de Inglés">?</span>
+                            </label>
+                            <div class="flex gap-2.5">
+                                <input type="text" id="name" name="name" required class="flex-1 px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" placeholder="Ingresa el nombre del proyecto"/>
+                                                                
+                                <button type="button" onclick="gestionarGrabacionWhisper('name')" id="btn-mic-name" class="btn-mic-premium" title="Grabar con Whisper IA">
+                                    <i id="ico-mic-name" class="fas fa-microphone text-lg"></i>
+                                </button>
+                                                                
+                                <button type="button" onclick="generarNombreConIA()" id="btnGenerarNombreIA" class="px-4 py-2 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-xl flex items-center gap-2 transition-all font-semibold text-sm">
+                                    <i class="fas fa-robot"></i> IA
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cliente -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="clienteSelect">Cliente</label>
+                            <select id="clienteSelect" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                                <option value="">Seleccione un cliente…</option>
+                            </select>
+                        </div>
+
+                        <!-- ID Cliente -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="clientId">ID Cliente (uid)</label>
+                            <input type="text" id="clientId" name="client_id" readonly required class="w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-950/60 text-slate-400 font-mono"/>
+                        </div>
+
+                        <!-- Código Referencia -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="codigoReferencia">Código Interno/Referencia</label>
+                            <input type="text" id="codigoReferencia" name="codigo_referencia" readonly class="w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-950/60 text-slate-400 font-mono"/>
+                        </div>
+
+                        <!-- Fechas -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="start_date">Fecha de Inicio</label>
+                            <input type="date" id="start_date" name="start_date" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="end_date">Fecha de Finalización</label>
+                            <input type="date" id="end_date" name="end_date" class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                        </div>
+
+                        <!-- Tipo Proyecto -->
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="tipoProyecto">Tipo de Proyecto</label>
+                            <select id="tipoProyecto" name="tipo_proyecto" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                                <option value="">Selecciona...</option>
+                                <optgroup label="Cursos" class="bg-slate-900">
+                                    <option value="Curso virtual">Curso virtual</option>
+                                    <option value="Mooc">MOOC</option>
+                                    <option value="OVA">OVA</option>
+                                    <option value="Microlearning">Microlearning</option>
+                                    <option value="VideoLearning">Video learning</option>
+                                    <option value="Gamificados">Gamificados</option>
+                                </optgroup>
+                                <optgroup label="Otros" class="bg-slate-900">
+                                    <option value="AppEducativa">App Educativa</option>
+                                    <option value="Podcast">Podcast</option>
+                                    <option value="EbookEducativo">Ebook</option>
+                                    <option value="Otro">Otro (especificar)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Tipo Personalizado -->
+                        <div id="divTipoProyectoPersonalizado" style="display:none;" class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="tipoProyectoPersonalizado">Tipo de Proyecto Personalizado</label>
+                            <div class="flex gap-2.5">
+                                <input type="text" id="tipoProyectoPersonalizado" name="tipo_proyecto_personalizado" placeholder="Especifique el tipo" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                <button type="button" onclick="gestionarGrabacionWhisper('tipoProyectoPersonalizado')" id="btn-mic-tipoProyectoPersonalizado" class="btn-mic-premium" title="Grabar con Whisper IA">
+                                    <i id="ico-mic-tipoProyectoPersonalizado" class="fas fa-microphone text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="estado">Estado</label>
+                            <select id="estado" name="estado" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                                <option value="Planificado">Planificado</option>
+                                <option value="En desarrollo">En desarrollo</option>
+                                <option value="Aprobado">Aprobado</option>
+                                <option value="Finalizado">Finalizado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="mt-6 space-y-2">
+                        <label class="block text-sm font-semibold text-slate-300" for="description">Descripción</label>
+                        <div class="flex gap-2.5 items-start">
+                            <div class="relative flex-1">
+                                <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus resize-none" placeholder="Describe brevemente..."></textarea>
+                                <button type="button" onclick="generarDescripcionConIA()" id="btnGenerarDescIA" class="absolute top-2.5 right-2.5 px-3 py-1 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-all">
+                                    <i class="fas fa-robot"></i> IA
+                                </button>
+                            </div>
+                            <button type="button" onclick="gestionarGrabacionWhisper('description')" id="btn-mic-description" class="btn-mic-premium h-[104px]" title="Grabar descripción con Whisper IA">
+                                <i id="ico-mic-description" class="fas fa-microphone text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 2: Configuración de Lenguaje e Inclusión -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                        <span class="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center mr-3 border border-green-500/20">
+                            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        </span>
+                        Configuración de Lenguaje e Inclusión
+                    </h3>
+                                        
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Lenguaje Inclusivo -->
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-slate-300 text-sm">Lenguaje Inclusivo</h4>
+                            <div class="flex space-x-6">
+                                <label class="radio-custom flex items-center text-slate-300">
+                                    <input type="radio" name="lenguaje_incluyente" value="true" id="incluyenteSi">
+                                    <span class="radiomark"></span> Sí
+                                </label>
+                                <label class="radio-custom flex items-center text-slate-300">
+                                    <input type="radio" name="lenguaje_incluyente" value="false" id="incluyenteNo" checked>
+                                    <span class="radiomark"></span> No
+                                </label>
+                            </div>
+                            <select name="lenguaje_inclusivo_tipo" id="tipoLenguajeSelect" disabled class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                <option value="">Selecciona…</option>
+                                <option value="Tradicional">Tradicional</option>
+                                <option value="Doble mención">Doble mención</option>
+                                <option value="Neutro">Neutro</option>
+                                <option value="No binario">No binario</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                                                        
+                            <!-- Input Otro Lenguaje -->
+                            <div class="flex gap-2.5" id="divOtroLenguaje" style="display:none;">
+                                <input type="text" id="otroLenguajeInput" name="lenguaje_inclusivo_otro" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus" placeholder="Especificar"/>
+                                <button type="button" onclick="gestionarGrabacionWhisper('otroLenguajeInput')" id="btn-mic-otroLenguajeInput" class="btn-mic-premium" title="Grabar con Whisper IA">
+                                    <i id="ico-mic-otroLenguajeInput" class="fas fa-microphone text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Idioma -->
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-slate-300 text-sm">Idioma</h4>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="radio-custom flex items-center text-slate-300">
+                                    <input type="radio" name="idioma" value="Español" checked id="idiomaEs">
+                                    <span class="radiomark"></span> Español
+                                </label>
+                                <label class="radio-custom flex items-center text-slate-300">
+                                    <input type="radio" name="idioma" value="Inglés" id="idiomaEn">
+                                    <span class="radiomark"></span> Inglés
+                                </label>
+                                <label class="radio-custom flex items-center text-slate-300">
+                                    <input type="radio" name="idioma" value="Bilingüe" id="idiomaBi">
+                                    <span class="radiomark"></span> Bilingüe
+                                </label>
+                            </div>
+                            <div class="flex gap-2.5">
+                                <input type="text" id="idioma_otro" name="idioma_otro" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus" placeholder="Otro idioma"/>
+                                <button type="button" onclick="gestionarGrabacionWhisper('idioma_otro')" id="btn-mic-idioma_otro" class="btn-mic-premium" title="Grabar con Whisper IA">
+                                    <i id="ico-mic-idioma_otro" class="fas fa-microphone text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inclusión Digital -->
+                    <div class="mt-8 space-y-4">
+                        <h4 class="font-semibold text-slate-300 text-sm">Inclusión Digital</h4>
+                        <div class="flex space-x-6 mb-4">
+                            <label class="radio-custom flex items-center text-slate-300">
+                                <input type="radio" name="inclusion_digital" value="true" id="inclusionSi">
+                                <span class="radiomark"></span> Sí
+                            </label>
+                            <label class="radio-custom flex items-center text-slate-300">
+                                <input type="radio" name="inclusion_digital" value="false" id="inclusionNo" checked>
+                                <span class="radiomark"></span> No
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 border border-white/5 rounded-2xl p-4 bg-slate-950/40">
+                            <label class="checkbox-custom flex items-center text-slate-300">
+                                <input type="checkbox" name="inclusion_digital_web" value="true" id="inclWeb">
+                                <span class="checkmark"></span> Accesibilidad web
+                            </label>
+                            <label class="checkbox-custom flex items-center text-slate-300">
+                                <input type="checkbox" name="inclusion_digital_asistiva" value="true" id="inclAsist">
+                                <span class="checkmark"></span> Tecnología asistiva
+                            </label>
+                            <label class="checkbox-custom flex items-center text-slate-300">
+                                <input type="checkbox" name="inclusion_digital_universal" value="true" id="inclUniv">
+                                <span class="checkmark"></span> Diseño universal
+                            </label>
+                            <label class="checkbox-custom flex items-center text-slate-300">
+                                <input type="checkbox" name="inclusion_digital_educativa" value="true" id="inclEdu">
+                                <span class="checkmark"></span> Educación digital inclusiva
+                            </label>
+                        </div>
+                        <div class="flex gap-2.5 mt-4">
+                            <input type="text" id="inclusion_digital_otro" name="inclusion_digital_otro" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus" placeholder="Otro (especificar)" disabled/>
+                            <button type="button" onclick="gestionarGrabacionWhisper('inclusion_digital_otro')" id="btn-mic-inclusion_digital_otro" class="btn-mic-premium" disabled>
+                                <i id="ico-mic-inclusion_digital_otro" class="fas fa-microphone text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 3: Diseño Visual -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                        <span class="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center mr-3 border border-purple-500/20">
+                            <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        </span>
+                        Diseño Visual y Tipografía
+                    </h3>
+                                        
+                    <div class="space-y-6">
+                        <!-- Título -->
+                        <div>
+                            <h4 class="font-semibold text-slate-300 mb-3 text-sm">Tipografía de Título</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start bg-slate-950/20 p-3 rounded-xl border border-white/5">
+                                <div>
+                                    <select id="tituloFuente" name="tipografia_titulo_fuente" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>Inter</option><option>Roboto</option><option>Open Sans</option><option>Otro</option>
+                                    </select>
+                                    <div class="flex gap-2 mt-2" id="divTituloFuenteOtro" style="display:none;">
+                                        <input type="text" id="tituloFuenteOtro" placeholder="Fuente" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                    </div>
+                                </div>
+                                <div>
+                                    <select id="tituloTamano" name="tipografia_titulo_tamano" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>24px</option><option>32px</option><option>40px</option><option>Otro</option>
+                                    </select>
+                                    <input type="text" id="tituloTamanoOtro" placeholder="Ej: 34px" class="mt-2 w-full px-4 py-3 border border-slate-700 rounded-xl input-focus" style="display:none;"/>
+                                </div>
+                                <label class="checkbox-custom flex items-center mt-3 text-slate-300"><input type="checkbox" name="tipografia_titulo_negrita" value="true"><span class="checkmark"></span> Negrita</label>
+                                <label class="checkbox-custom flex items-center mt-3 text-slate-300"><input type="checkbox" name="tipografia_titulo_cursiva" value="true"><span class="checkmark"></span> Cursiva</label>
+                            </div>
+                        </div>
+
+                        <!-- Subtítulo -->
+                        <div>
+                            <h4 class="font-semibold text-slate-300 mb-3 text-sm">Tipografía de Subtítulo</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start bg-slate-950/20 p-3 rounded-xl border border-white/5">
+                                <div>
+                                    <select id="subtituloFuente" name="tipografia_subtitulo_fuente" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>Inter</option><option>Roboto</option><option>Open Sans</option><option>Otro</option>
+                                    </select>
+                                    <div class="flex gap-2 mt-2" id="divSubtituloFuenteOtro" style="display:none;">
+                                        <input type="text" id="subtituloFuenteOtro" placeholder="Fuente" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                    </div>
+                                </div>
+                                <div>
+                                    <select id="subtituloTamano" name="tipografia_subtitulo_tamano" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>18px</option><option>24px</option><option>28px</option><option>Otro</option>
+                                    </select>
+                                    <input type="text" id="subtituloTamanoOtro" placeholder="Ej: 22px" class="mt-2 w-full px-4 py-3 border border-slate-700 rounded-xl input-focus" style="display:none;"/>
+                                </div>
+                                <label class="checkbox-custom flex items-center mt-3 text-slate-300"><input type="checkbox" name="tipografia_subtitulo_negrita" value="true"><span class="checkmark"></span> Negrita</label>
+                                <label class="checkbox-custom flex items-center mt-3 text-slate-300"><input type="checkbox" name="tipografia_subtitulo_cursiva" value="true"><span class="checkmark"></span> Cursiva</label>
+                            </div>
+                        </div>
+
+                        <!-- Párrafo -->
+                        <div>
+                            <h4 class="font-semibold text-slate-300 mb-3 text-sm">Tipografía de Párrafo</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start bg-slate-950/20 p-3 rounded-xl border border-white/5">
+                                <div>
+                                    <select id="parrafoFuente" name="tipografia_parrafo_fuente" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>Inter</option><option>Roboto</option><option>Open Sans</option><option>Otro</option>
+                                    </select>
+                                    <div class="flex gap-2 mt-2" id="divParrafoFuenteOtro" style="display:none;">
+                                        <input type="text" id="parrafoFuenteOtro" placeholder="Fuente" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                    </div>
+                                </div>
+                                <div>
+                                    <select id="parrafoTamano" name="tipografia_parrafo_tamano" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>14px</option><option>16px</option><option>18px</option><option>Otro</option>
+                                    </select>
+                                    <input type="text" id="parrafoTamanoOtro" placeholder="Ej: 16px" class="mt-2 w-full px-4 py-3 border border-slate-700 rounded-xl input-focus" style="display:none;"/>
+                                </div>
+                                <label class="checkbox-custom flex items-center mt-3 text-slate-300"><input type="checkbox" name="tipografia_parrafo_negrita" value="true"><span class="checkmark"></span> Negrita</label>
+                                <label class="checkbox-custom flex items-center mt-3 text-slate-300"><input type="checkbox" name="tipografia_parrafo_cursiva" value="true"><span class="checkmark"></span> Cursiva</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 4: Configuración de Tiempo -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                        <span class="w-8 h-8 bg-orange-500/10 rounded-lg flex items-center justify-center mr-3 border border-orange-500/20">
+                            <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </span>
+                        Configuración de Tiempo
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="space-y-2">
+                            <label for="horas_curso" class="block text-sm font-semibold text-slate-300">Total Horas</label>
+                            <input type="number" id="horas_curso" name="horas_curso" min="0" step="0.1" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                        </div>
+                        <div class="space-y-2">
+                            <label for="horas_autonomo" class="block text-sm font-semibold text-slate-300">Horas Autónomas</label>
+                            <input type="number" id="horas_autonomo" name="horas_aprendizaje_autonomo_virtual" min="0" step="0.1" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                        </div>
+                        <div class="space-y-2">
+                            <label for="horas_actividades" class="block text-sm font-semibold text-slate-300">Horas Actividades</label>
+                            <input type="number" id="horas_actividades" name="horas_actividades_aprendizaje" min="0" step="0.1" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 5: Derechos -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                        <span class="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center mr-3 border border-red-500/20">
+                            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        </span>
+                        Derechos y Permisos
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <label class="block text-sm font-semibold mb-3 text-slate-300">Cesión de Derechos</label>
+                            <div class="flex space-x-6">
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="cesion_derechos" value="true" id="cesionSi"><span class="radiomark"></span> Sí</label>
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="cesion_derechos" value="false" checked id="cesionNo"><span class="radiomark"></span> No</label>
+                            </div>
+                                                        
+                            <label class="block text-sm font-semibold mb-3 mt-4 text-slate-300">Derechos Patrimoniales</label>
+                            <div class="flex space-x-6">
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="derechos_patrimoniales_autor" value="true"><span class="radiomark"></span> Sí</label>
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="derechos_patrimoniales_autor" value="false" checked><span class="radiomark"></span> No</label>
+                            </div>
+                                                        
+                            <label class="block text-sm font-semibold mb-3 mt-4 text-slate-300">Confidencialidad</label>
+                            <div class="flex space-x-6">
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="acuerdo_confidencialidad" value="true"><span class="radiomark"></span> Sí</label>
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="acuerdo_confidencialidad" value="false" checked><span class="radiomark"></span> No</label>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <label class="block text-sm font-semibold mb-3 text-slate-300">Entrega de Fuentes</label>
+                            <div class="flex space-x-6">
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_fuentes" value="true"><span class="radiomark"></span> Sí</label>
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_fuentes" value="false" checked><span class="radiomark"></span> No</label>
+                            </div>
+                                                        
+                            <label class="block text-sm font-semibold mb-3 mt-4 text-slate-300">Entrega Escrito Autor</label>
+                            <div class="flex space-x-6">
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_escrito_autor" value="true"><span class="radiomark"></span> Sí</label>
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_escrito_autor" value="false" checked><span class="radiomark"></span> No</label>
+                            </div>
+                                                        
+                            <label class="block text-sm font-semibold mb-3 mt-4 text-slate-300">Entrega Diseño Instruccional</label>
+                            <div class="flex space-x-6">
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_diseno_instruccional" value="true"><span class="radiomark"></span> Sí</label>
+                                <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_diseno_instruccional" value="false" checked><span class="radiomark"></span> No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 6: Público Objetivo -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-3">
+                        <h3 class="text-xl font-semibold text-slate-100 flex items-center">
+                            <span class="w-8 h-8 bg-indigo-500/10 rounded-lg flex items-center justify-center mr-3 border border-indigo-500/20">
+                                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </span>
+                            Público Objetivo
+                        </h3>
+                        <button type="button" onclick="generarPublicoObjetivoConIA()" id="btnGenerarPublicoIA" class="px-4 py-2 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-xl flex items-center gap-2 text-xs font-semibold transition-all">
+                            <i class="fas fa-robot"></i> Sugerir con IA
+                        </button>
+                    </div>
+                                        
+                    <p class="text-sm text-slate-400 mb-4 font-medium">¿A quién está dirigido el proyecto?</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 border border-white/5 rounded-2xl p-4 bg-slate-950/40">
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Primera infancia"><span class="checkmark"></span> Primera infancia (0-5)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Niños 6 a 11 años"><span class="checkmark"></span> Niños (6-11)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Adolescentes"><span class="checkmark"></span> Adolescentes (12-17)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Jóvenes"><span class="checkmark"></span> Jóvenes (18-25)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Adultos"><span class="checkmark"></span> Adultos (26-59)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Mayores"><span class="checkmark"></span> Mayores (60+)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Docentes"><span class="checkmark"></span> Docentes</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Empresas"><span class="checkmark"></span> Empresas</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Público general"><span class="checkmark"></span> Público general</label>
+                    </div>
+                                        
+                    <div class="flex gap-2.5 mt-4">
+                        <input type="text" id="publico_objetivo_otro" name="publico_objetivo_otro" placeholder="Otro (especificar)" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                        <button type="button" onclick="gestionarGrabacionWhisper('publico_objetivo_otro')" id="btn-mic-publico_objetivo_otro" class="btn-mic-premium" title="Grabar con Whisper IA">
+                            <i id="ico-mic-publico_objetivo_otro" class="fas fa-microphone text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sección 7: Observaciones -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-xl font-semibold text-slate-100 mb-4">Observaciones Adicionales</h3>
+                    <div class="flex gap-2.5 items-start">
+                        <textarea id="observaciones" name="observaciones" rows="3" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus resize-none" placeholder="Escribe notas adicionales..."></textarea>
+                        <button type="button" onclick="gestionarGrabacionWhisper('observaciones')" id="btn-mic-observaciones" class="btn-mic-premium h-[84px]" title="Grabar observaciones con Whisper IA">
+                            <i id="ico-mic-observaciones" class="fas fa-microphone text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Controles Submit -->
+                <div id="form-message" class="mt-4 text-center"></div>
+                <div class="text-center">
+                    <button type="submit" id="submitButton" class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all text-sm tracking-wide">
+                        <span id="submitButtonText">Crear Proyecto</span>
+                    </button>
+                </div>
+                            
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        // ==========================================
+        // 1. CONFIGURACIÓN Y CONSTANTES GLOBALES
+        // ==========================================
+        const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+        const API_GEMINI = `${API_URL}/chat/gemini`;
+        const API_WHISPER = `${API_URL}/whisper/transcribir`;
+
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let idCampoDestino = null;
+        let temporizadorMaximo = null;
+
+        // --- Elegant Toast Alerts (Sustituye a alerts de navegador) ---
+        function showNotification(type, message) {
+            const container = document.getElementById('customToastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `flex items-center p-3 rounded-xl shadow-xl border backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+                type === 'success' 
+                    ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' 
+                    : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+            }`;
+            toast.innerHTML = `
+                <span class="mr-2 text-lg">${type === 'success' ? '✨' : '⚠️'}</span>
+                <div class="text-xs font-semibold tracking-wide">${message}</div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+        
+        // Override alert globally for VirtualMind standard
+        window.alert = function(msg) {
+            const isSuccess = msg.includes('✅') || msg.toLowerCase().includes('éxito') || msg.toLowerCase().includes('copiado');
+            showNotification(isSuccess ? 'success' : 'error', msg.replace(/[✅❌]/g, '').trim());
+        };
+
+        // ==========================================
+        // 2. SISTEMA DE GRABACIÓN LOCAL (WHISPER)
+        // ==========================================
+        async function gestionarGrabacionWhisper(idCampo) {
+            const btn = document.getElementById(`btn-mic-${idCampo}`);
+            const ico = document.getElementById(`ico-mic-${idCampo}`);
+
+            // Detener si es el mismo botón
+            if (mediaRecorder && mediaRecorder.state === "recording" && idCampoDestino === idCampo) {
+                mediaRecorder.stop();
+                return;
+            }
+
+            // Detener si hay otro grabando
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+            }
+
+            idCampoDestino = idCampo;
+            audioChunks = [];
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+                                
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+
+                mediaRecorder.onstart = () => {
+                    resetearIconosMic();
+                    if (btn) btn.classList.add('mic-recording');
+                    if (ico) {
+                        ico.classList.remove('fa-microphone');
+                        ico.classList.add('fa-stop');
+                    }
+                                        
+                    // Límite de 10 segundos
+                    temporizadorMaximo = setTimeout(() => {
+                        if (mediaRecorder && mediaRecorder.state === "recording") {
+                            mediaRecorder.stop();
+                        }
+                    }, 10000);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    clearTimeout(temporizadorMaximo);
+                                        
+                    if (btn) {
+                        btn.classList.remove('mic-recording');
+                        btn.classList.add('mic-processing');
+                    }
+                    if (ico) {
+                        ico.classList.remove('fa-stop');
+                        ico.classList.add('fa-spinner', 'fa-spin');
+                    }
+                                        
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
+                    stream.getTracks().forEach(track => track.stop());
+                                        
+                    await enviarAudioAWhisper(audioBlob);
+                };
+
+                mediaRecorder.start();
+            } catch (err) {
+                console.error("Error al acceder al micrófono:", err);
+                alert("No se pudo acceder al micrófono.");
+                resetearIconosMic();
+            }
+        }
+
+        async function enviarAudioAWhisper(blob) {
+            const token = getToken();
+            const formData = new FormData();
+            formData.append('audio', blob, 'dictado_proyecto.ogg');
+
+            try {
+                const res = await fetch(API_WHISPER, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Error en Whisper");
+                }
+
+                const data = await res.json();
+                const textoTranscrito = data.texto || '';
+
+                if (textoTranscrito.trim()) {
+                    const campoInput = document.getElementById(idCampoDestino);
+                    if (campoInput) {
+                        if (campoInput.value.trim().length > 0) {
+                            campoInput.value = campoInput.value.trim() + " " + textoTranscrito;
+                        } else {
+                            campoInput.value = textoTranscrito;
+                        }
+                        campoInput.dispatchEvent(new Event('input'));
+                    }
+                }
+            } catch (err) {
+                console.error("Error Whisper Local:", err);
+                alert("Error de red con Whisper local: " + err.message);
+            } finally {
+                resetearIconosMic();
+            }
+        }
+
+        // RECONSTRUIDA CON CLASES PREMIUM ULTRA-OSCURAS DE VIRTUALMIND
+        function resetearIconosMic() {
+            const botones = document.querySelectorAll('[id^="btn-mic-"]');
+            botones.forEach(btn => {
+                btn.className = "btn-mic-premium";
+                if (btn.id === 'btn-mic-description' || btn.id === 'btn-mic-observaciones') {
+                    btn.classList.add('h-[104px]');
+                }
+                if (btn.id === 'btn-mic-observaciones') {
+                    btn.classList.replace('h-[104px]', 'h-[84px]');
+                }
+            });
+            const iconos = document.querySelectorAll('[id^="ico-mic-"]');
+            iconos.forEach(ico => {
+                ico.className = "fas fa-microphone text-lg";
+            });
+            idCampoDestino = null;
+        }
+
+        // ==========================================
+        // 3. UTILIDADES Y TOKENS
+        // ==========================================
+        function generarCodigoReferencia(length = 12) {
+            const array = new Uint8Array(length / 2);
+            crypto.getRandomValues(array);
+            return Array.from(array, b => b.toString(16).padStart(2, "0")).join("");
+        }
+
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        function getRadioValue(form, name) {
+            const radios = form.querySelectorAll(`input[name="${name}"]`);
+            for (const radio of radios) {
+                if (radio.checked) return radio.value;
+            }
+            return null;
+        }
+
+        function getCheckboxValue(form, name) {
+            const checkbox = form.querySelector(`input[name="${name}"]`);
+            return checkbox ? checkbox.checked : false;
+        }
+
+        // ==========================================
+        // 4. FUNCIONES DE IA (GEMINI)
+        // ==========================================
+        async function generarNombreConIA() {
+            const tipoProyecto = document.getElementById('tipoProyecto').value;
+            const clienteSelect = document.getElementById('clienteSelect');
+            const clienteNombre = clienteSelect.options[clienteSelect.selectedIndex]?.text || '';
+            const descripcion = document.getElementById('description').value;
+
+            if (!tipoProyecto && !descripcion) {
+                alert('Por favor, selecciona un tipo de proyecto o escribe una descripción para que la IA genere un nombre.');
+                return;
+            }
+
+            const btn = document.getElementById('btnGenerarNombreIA');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            const prompt = `Eres un experto en naming de proyectos educativos. Genera un nombre creativo y profesional para un proyecto educativo.\n${tipoProyecto ? `Tipo de proyecto: ${tipoProyecto}` : ''}${clienteNombre ? `Cliente: ${clienteNombre}` : ''}${descripcion ? `Descripción: ${descripcion}` : ''}\nGenera SOLO el nombre del proyecto, sin explicaciones ni comillas. El nombre debe ser corto (máximo 6 palabras).`;                        
+            try {
+                const token = getToken();
+                const response = await fetch(API_GEMINI, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (!response.ok) throw new Error('Error al contactar la IA');
+                const data = await response.json();
+                const nombre = (data.respuesta || '').trim().replace(/^["']|["']$/g, '');
+
+                if (nombre) {
+                    document.getElementById('name').value = nombre;
+                }
+            } catch (error) {
+                alert('Error al generar nombre: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+        async function generarDescripcionConIA() {
+            const nombre = document.getElementById('name').value;
+            const tipoProyecto = document.getElementById('tipoProyecto').value;
+
+            if (!nombre && !tipoProyecto) {
+                alert('Por favor, escribe el nombre del proyecto o selecciona un tipo para generar la descripción.');
+                return;
+            }
+
+            const btn = document.getElementById('btnGenerarDescIA');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            const prompt = `Eres un experto en redacción de proyectos educativos. Genera una descripción profesional y concisa (máximo 200 palabras) para un proyecto.\n${nombre ? `Nombre del proyecto: ${nombre}` : ''}${tipoProyecto ? `Tipo: ${tipoProyecto}` : ''}\nLa descripción debe ser clara, atractiva y profesional.`;                        
+            try {
+                const token = getToken();
+                const response = await fetch(API_GEMINI, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (!response.ok) throw new Error('Error al contactar la IA');
+                const data = await response.json();
+                const descripcion = (data.respuesta || '').trim();
+
+                if (descripcion) {
+                    document.getElementById('description').value = descripcion;
+                }
+            } catch (error) {
+                alert('Error al generar descripción: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+        async function generarPublicoObjetivoConIA() {
+            const nombre = document.getElementById('name').value;
+            const descripcion = document.getElementById('description').value;
+            const tipoProyecto = document.getElementById('tipoProyecto').value;
+
+            if (!nombre && !descripcion && !tipoProyecto) {
+                alert('Por favor, completa al menos el nombre o descripción del proyecto.');
+                return;
+            }
+
+            const btn = document.getElementById('btnGenerarPublicoIA');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            const prompt = `Eres un experto en diseño instruccional. Basado en el siguiente proyecto educativo, indica qué público objetivo es el más apropiado. Selecciona de esta lista:\n- Primera infancia (0-5 años)\n- Niños 6 a 11 años\n- Adolescentes (12-17 años)\n- Jóvenes (18-25 años)\n- Adultos (26-59 años)\n- Mayores (60+)\n- Docentes / Educadores\n- Empresas / Equipos\n- Instituciones educativas\n- Público general\nProyecto: ${nombre || 'Por definir'}\nTipo: ${tipoProyecto || 'Por definir'}\nDescripción: ${descripcion || 'Por definir'}\nResponde SOLO con los nombres del público objetivo, uno por línea, sin números ni viñetas. Selecciona entre 1 y 3 opciones.`;            
+            const opcionesValidas = [
+                'Primera infancia', 'Niños 6 a 11 años', 'Adolescentes', 'Jóvenes',
+                'Adultos', 'Mayores', 'Docentes', 'Empresas', 'Instituciones educativas', 'Público general'
+            ];                        
+            try {
+                const token = getToken();
+                const response = await fetch(API_GEMINI, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (!response.ok) throw new Error('Error al contactar la IA');
+                const data = await response.json();
+                const respuesta = (data.respuesta || '').trim();
+
+                const lineas = respuesta.split('\n').map(l => l.trim()).filter(l => l.length > 0);                                
+                // Limpiar checkboxes
+                document.querySelectorAll('input[name="publico_objetivo"]').forEach(cb => {
+                    cb.checked = false;
+                });
+
+                lineas.forEach(linea => {
+                    const limpio = linea.replace(/^[\d\.\)\-\*\•]+\s*/, '').trim();
+                    opcionesValidas.forEach(opcion => {
+                        if (limpio.toLowerCase().includes(opcion.toLowerCase()) || opcion.toLowerCase().includes(limpio.toLowerCase())) {
+                            const cb = document.querySelector(`input[name="publico_objetivo"][value="${opcion}"]`);
+                            if (cb) cb.checked = true;
+                        }
+                    });
+                });
+
+            } catch (error) {
+                alert('Error al generar público objetivo: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+        // ==========================================
+        // 5. TUTORIAL INTERACTIVO PASO A PASO (UX)
+        // ==========================================
+        window.verTutorial = function(key) {
+            if (key !== 'crear_proyecto') return;
+
+            const driver = window.driver.js.driver;
+            const tour = driver({
+                showProgress: true,
+                animate: true,
+                nextBtnText: 'Siguiente &rarr;',
+                prevBtnText: '&larr; Anterior',
+                doneBtnText: '¡Entendido!',
+                progressText: 'Paso {{current}} de {{total}}',
+                popoverClass: 'driverjs-theme',
+                steps: [
+                    { 
+                        element: '.text-center.mb-8', 
+                        popover: { title: '¡Bienvenido a VirtualMind!', description: 'Vamos a dar un recorrido rápido y guiado para enseñarte a crear tu proyecto educativo de forma inteligente.', side: "bottom", align: 'center' } 
+                    },
+                    { 
+                        element: '#name', 
+                        popover: { title: 'Nombre del Proyecto', description: 'Ingresa un título claro. Recuerda que tienes botones al lado para <b>dictarlo con tu voz</b> (Whisper) o generarlo con <b>Inteligencia Artificial</b>.', side: "bottom", align: 'start' } 
+                    },
+                    { 
+                        element: '#clienteSelect', 
+                        popover: { title: 'Asignación de Cliente', description: 'Selecciona la empresa o usuario al que le pertenece este proyecto. Si vienes del módulo CRM, esto ya estará lleno.', side: "bottom", align: 'start' } 
+                    },
+                    { 
+                        element: '#start_date', 
+                        popover: { title: 'Cronograma', description: 'Fija al menos la fecha de inicio oficial. La fecha de finalización es opcional pero muy recomendada para las métricas.', side: "top", align: 'start' } 
+                    },
+                    { 
+                        element: '#tipoProyecto', 
+                        popover: { title: 'Tipo de Formación', description: '¿Es un curso virtual, un MOOC, un Podcast? Selecciona la categoría principal de desarrollo.', side: "bottom", align: 'start' } 
+                    },
+                    { 
+                        element: '#description', 
+                        popover: { title: 'Descripción', description: 'Escribe un resumen del alcance. ¡Nuestra IA puede redactarlo por ti automáticamente si se lo pides!', side: "top", align: 'start' } 
+                    },
+                    { 
+                        element: '#submitButton', 
+                        popover: { title: '¡Todo listo!', description: 'Haz clic aquí para crear y guardar. Una vez procesado, el sistema te redirigirá a armar el Plan de Estudios a detalle.', side: "top", align: 'center' } 
+                    }
+                ]
+            });                        
+            tour.drive();
+        };
+
+        // Lógica Mostrar/Ocultar "Otros" Inputs
+        function setupToggleOtro(selectId, divWrapperId, inputId) {
+            const sel = document.getElementById(selectId);
+            const div = document.getElementById(divWrapperId);
+            const inp = document.getElementById(inputId);                        
+            if (!sel || !div || !inp) return;
+
+            const apply = () => {
+                if (sel.value === 'Otro') {
+                    div.style.display = 'flex';
+                    inp.required = true;
+                    inp.disabled = false;
+                } else {
+                    div.style.display = 'none';
+                    inp.required = false;
+                    inp.disabled = true;
+                    inp.value = '';
+                }
+            };
+            sel.addEventListener('change', apply);
+            apply();
+        }
+
+        // ==========================================
+        // 6. INICIALIZACIÓN DE FORMULARIO
+        // ==========================================
+        async function loadClients() {
+            const token = getToken();
+            if (!token) {
+                alert('Login requerido');
+                window.location.href = '/';
+                return [];
+            }
+            try {
+                const r = await fetch(`${API_URL}/users/`, {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                if (!r.ok) return [];
+                const users = await r.json();
+                return users.filter(u => Array.isArray(u.roles) && u.roles.includes('cliente') && u.estado);
+            } catch (e) {
+                console.error('Error cargando clientes:', e);
+                return [];
+            }
+        }
+
+        async function initForm() {
+            const token = getToken();
+            if (!token) return;
+
+            const clientes = await loadClients();
+            const sel = document.getElementById('clienteSelect');
+            sel.innerHTML = '<option value="">Seleccione un cliente…</option>';
+            clientes.forEach(c => {
+                sel.innerHTML += `<option value="${c.uid}">${c.nombre} (${c.email})</option>`;
+            });                        
+            sel.addEventListener('change', e => {
+                document.getElementById('clientId').value = e.target.value;
+                document.getElementById('codigoReferencia').value = generarCodigoReferencia(12);
+            });
+
+            // Fecha default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('start_date').min = today;
+            document.getElementById('start_date').value = today;
+
+            // URL Params para CRM mapping
+            const urlParams = new URLSearchParams(window.location.search);
+            const clientIdFromUrl = urlParams.get('clientId');
+            const clientNameFromUrl = decodeURIComponent(urlParams.get('clientName') || '');
+
+            if (clientIdFromUrl) {
+                const clienteSelect = document.getElementById('clienteSelect');
+                if (clientNameFromUrl && !clienteSelect.querySelector(`option[value="${clientIdFromUrl}"]`)) {
+                    const newOption = new Option(`${clientNameFromUrl} (ID: ${clientIdFromUrl})`, clientIdFromUrl, true, true);
+                    clienteSelect.appendChild(newOption);
+                }
+                clienteSelect.value = clientIdFromUrl;
+                document.getElementById('clientId').value = clientIdFromUrl;
+                document.getElementById('codigoReferencia').value = generarCodigoReferencia(12);
+                clienteSelect.disabled = true;
+                clienteSelect.classList.add("bg-slate-950/60", "text-slate-400", "cursor-not-allowed");
+            }
+
+            // Configuradores de Toggles UI
+            setupToggleOtro('tipoProyecto', 'divTipoProyectoPersonalizado', 'tipoProyectoPersonalizado');
+            setupToggleOtro('tituloFuente', 'divTituloFuenteOtro', 'tituloFuenteOtro');
+            setupToggleOtro('subtituloFuente', 'divSubtituloFuenteOtro', 'subtituloFuenteOtro');
+            setupToggleOtro('parrafoFuente', 'divParrafoFuenteOtro', 'parrafoFuenteOtro');
+
+            // Listeners Inclusión
+            document.getElementById('incluyenteSi').addEventListener('change', () => {
+                document.getElementById('tipoLenguajeSelect').disabled = false;
+            });
+            document.getElementById('incluyenteNo').addEventListener('change', () => {
+                const t = document.getElementById('tipoLenguajeSelect');
+                t.disabled = true; t.value = '';
+                const o = document.getElementById('otroLenguajeInput');
+                o.disabled = true; o.value = '';
+                document.getElementById('divOtroLenguaje').style.display = 'none';
+            });
+            document.getElementById('tipoLenguajeSelect').addEventListener('change', (e) => {
+                const div = document.getElementById('divOtroLenguaje');
+                const inp = document.getElementById('otroLenguajeInput');
+                if (e.target.value === 'Otro') {
+                    div.style.display = 'flex';
+                    inp.disabled = false;
+                } else {
+                    div.style.display = 'none';
+                    inp.disabled = true;
+                    inp.value = '';
+                }
+            });
+
+            // Listeners Accesibilidad
+            const setInclusion = (state) => {
+                document.querySelectorAll('input[name^="inclusion_digital_"]').forEach(ch => {
+                    if (ch.type === 'checkbox') { ch.disabled = !state; if (!state) ch.checked = false; }
+                    else { ch.disabled = !state; if (!state) ch.value = ''; }
+                });
+                document.getElementById('btn-mic-inclusion_digital_otro').disabled = !state;
+            };
+            document.getElementById('inclusionSi').addEventListener('change', () => setInclusion(true));
+            document.getElementById('inclusionNo').addEventListener('change', () => setInclusion(false));
+        }
+
+        // ==========================================
+        // 7. SUBMIT AL BACKEND
+        // ==========================================
+        document.getElementById('formProyecto').addEventListener('submit', async e => {
+            e.preventDefault();
+            const token = getToken();
+            if (!token) return;
+
+            const submitButton = document.getElementById('submitButton');
+            const mensajeDiv = document.getElementById('form-message');
+
+            submitButton.disabled = true;
+            document.getElementById('submitButtonText').textContent = "Creando...";
+            mensajeDiv.innerHTML = "";
+
+            const f = e.target;
+            const lenguajeIncl = getRadioValue(f, 'lenguaje_incluyente') === 'true';
+            const inclusionDig = getRadioValue(f, 'inclusion_digital') === 'true';
+            const publico = Array.from(f.querySelectorAll('input[name="publico_objetivo"]:checked')).map(c => c.value);
+
+            const tipoLenguajeSelect = document.getElementById('tipoLenguajeSelect');
+            const otroLenguajeInput = document.getElementById('otroLenguajeInput');
+            const tipoLeng = lenguajeIncl ? (tipoLenguajeSelect?.value || null) : null;
+            const tipoLengOtro = lenguajeIncl && tipoLeng === 'Otro' ? (otroLenguajeInput?.value || null) : null;
+
+            function getSelectConOtroData(selectId, inputId) {
+                const sel = document.getElementById(selectId);
+                const inp = document.getElementById(inputId);
+                if (!sel) return null;
+                if (sel.value === 'Otro') return inp?.value || null;
+                return sel.value || null;
+            }
+
+            const data = {
+                name: f.name.value,
+                client_id: document.getElementById('clientId').value,
+                codigo_referencia: document.getElementById('codigoReferencia').value,
+                start_date: f.start_date.value,
+                end_date: f.end_date.value || null,
+                tipo_proyecto: f.tipo_proyecto.value,
+                tipo_proyecto_personalizado: f.tipo_proyecto.value === 'Otro' ? (f.tipo_proyecto_personalizado.value || null) : null,
+                estado: f.estado.value,
+                description: f.description.value || null,
+                                
+                lenguaje_incluyente: lenguajeIncl,
+                lenguaje_inclusivo_tipo: tipoLeng,
+                lenguaje_inclusivo_otro: tipoLengOtro,
+                                
+                inclusion_digital: inclusionDig,
+                inclusion_digital_web: getCheckboxValue(f, 'inclusion_digital_web'),
+                inclusion_digital_asistiva: getCheckboxValue(f, 'inclusion_digital_asistiva'),
+                inclusion_digital_universal: getCheckboxValue(f, 'inclusion_digital_universal'),
+                inclusion_digital_educativa: getCheckboxValue(f, 'inclusion_digital_educativa'),
+                inclusion_digital_otro: f.inclusion_digital_otro?.value || null,
+                                
+                idioma: getRadioValue(f, 'idioma'),
+                idioma_otro: f.idioma_otro?.value || null,
+                                
+                tipografia_titulo_fuente: getSelectConOtroData('tituloFuente', 'tituloFuenteOtro'),
+                tipografia_titulo_tamano: getSelectConOtroData('tituloTamano', 'tituloTamanoOtro'),
+                tipografia_titulo_negrita: getCheckboxValue(f, 'tipografia_titulo_negrita'),
+                tipografia_titulo_cursiva: getCheckboxValue(f, 'tipografia_titulo_cursiva'),
+                                
+                tipografia_subtitulo_fuente: getSelectConOtroData('subtituloFuente', 'subtituloFuenteOtro'),
+                tipografia_subtitulo_tamano: getSelectConOtroData('subtituloTamano', 'subtituloTamanoOtro'),
+                tipografia_subtitulo_negrita: getCheckboxValue(f, 'tipografia_subtitulo_negrita'),
+                tipografia_subtitulo_cursiva: getCheckboxValue(f, 'tipografia_subtitulo_cursiva'),
+                                
+                tipografia_parrafo_fuente: getSelectConOtroData('parrafoFuente', 'parrafoFuenteOtro'),
+                tipografia_parrafo_tamano: getSelectConOtroData('parrafoTamano', 'parrafoTamanoOtro'),
+                tipografia_parrafo_negrita: getCheckboxValue(f, 'tipografia_parrafo_negrita'),
+                tipografia_parrafo_cursiva: getCheckboxValue(f, 'tipografia_parrafo_cursiva'),
+                                
+                horas_curso: f.horas_curso.value ? parseFloat(f.horas_curso.value) : null,
+                horas_aprendizaje_autonomo_virtual: f.horas_aprendizaje_autonomo_virtual.value ? parseFloat(f.horas_aprendizaje_autonomo_virtual.value) : null,
+                horas_actividades_aprendizaje: f.horas_actividades_aprendizaje.value ? parseFloat(f.horas_actividades_aprendizaje.value) : null,
+                                
+                cesion_derechos: getRadioValue(f, 'cesion_derechos') === 'true',
+                derechos_patrimoniales_autor: getRadioValue(f, 'derechos_patrimoniales_autor') === 'true',
+                acuerdo_confidencialidad: getRadioValue(f, 'acuerdo_confidencialidad') === 'true',
+                entrega_fuentes: getRadioValue(f, 'entrega_fuentes') === 'true',
+                entrega_escrito_autor: getRadioValue(f, 'entrega_escrito_autor') === 'true',
+                entrega_diseno_instruccional: getRadioValue(f, 'entrega_diseno_instruccional') === 'true',
+                                
+                publico_objetivo: publico,
+                publico_objetivo_otro: f.publico_objetivo_otro?.value || null,
+                observaciones: f.observaciones?.value || null
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/projects/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.detail || `Error ${res.status}`);
+                }
+
+                const proyecto = await res.json();
+                const project_id = proyecto.id;
+                const project_name = encodeURIComponent(data.name || '');
+                const project_desc = encodeURIComponent(data.description || '');
+                const project_type = encodeURIComponent(data.tipo_proyecto || '');
+                const project_horas = data.horas_curso || '';
+
+                mensajeDiv.innerHTML = `<p class="text-lg font-semibold text-emerald-400">✅ Proyecto creado con éxito (ID: ${project_id}). Redirigiendo al flujo completo...</p>`;
+
+                const roleBase = '/' + window.location.pathname.split('/').slice(1, 3).join('/');
+                const urlWizard = `${window.location.origin}${roleBase}/cronograma/wizard-flujo-completo.html`;
+                setTimeout(() => {
+                    window.location.href = `${urlWizard}?project_id=${project_id}&project_name=${project_name}&project_desc=${project_desc}&project_type=${project_type}&project_horas=${project_horas}`;
+                }, 2000);
+
+            } catch (err) {
+                console.error('Error al crear proyecto:', err);
+                mensajeDiv.innerHTML = `<p class="text-rose-500 font-semibold text-sm">❌ Error: ${err.message}</p>`;
+                submitButton.disabled = false;
+                document.getElementById('submitButtonText').textContent = 'Crear Proyecto';
+            }
+        });
+
+        // Trigger inicial
+        window.addEventListener('DOMContentLoaded', initForm);
+    </script>
+        
+    <!-- Script de Roles Aislado -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const allowedRoles = ['superadmin', 'admin', 'gerente-general'];
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const userRoles = payload.roles || [payload.role].filter(Boolean);
+                if (!userRoles.some(r => allowedRoles.includes(r))) {
+                    window.location.href = '/';
+                }
+            } catch(e) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html>

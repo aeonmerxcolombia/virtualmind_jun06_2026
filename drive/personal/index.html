@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mi Drive Personal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/onlyoffice/web-apps/apps/api/documents/api.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .folder-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    .file-hover:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      transform: translateX(5px);
+      transition: all 0.2s ease;
+    }
+    .glassmorphism {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .file-icon {
+      transition: transform 0.2s ease;
+    }
+    .file-icon:hover {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body class="min-h-screen" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+  
+  <!-- Contenido Principal del Drive -->
+  <div id="mainDriveContent" class="container mx-auto px-6 py-8 max-w-7xl block">
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <div class="flex items-center justify-center mb-4">
+        <div class="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mr-4 shadow-lg">
+          <i class="fas fa-cloud text-white text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-4xl font-bold text-gray-800">Mi Drive Personal</h1>
+          <p class="text-gray-600 mt-2">Organiza y gestiona tus archivos de forma inteligente</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel de control -->
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+      <!-- Subida de archivos -->
+      <div class="glassmorphism p-6 rounded-2xl shadow-lg">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-upload text-blue-600 text-xl mr-3"></i>
+          <h2 class="text-xl font-semibold text-gray-800">Subir Archivo</h2>
+        </div>
+        <form id="uploadForm" class="space-y-4">
+          <div class="relative">
+            <input type="file" id="fileInput" name="file" required
+              class="w-full file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer file:transition-all file:duration-200">
+          </div>
+          <div class="grid md:grid-cols-2 gap-3">
+            <select id="folderSelect" name="folder_id" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur text-sm">
+              <option value="">📁 Selecciona carpeta</option>
+            </select>
+            <input type="text" id="nombreArchivo" name="nombre_archivo" placeholder="Nombre del archivo" 
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur text-sm">
+          </div>
+          <button type="submit" class="w-full gradient-bg text-white px-6 py-3 rounded-xl hover:opacity-90 transition-all duration-200 font-semibold shadow-lg">
+            <i class="fas fa-cloud-upload-alt mr-2"></i>Subir Archivo
+          </button>
+        </form>
+      </div>
+
+      <!-- Crear carpeta -->
+      <div class="glassmorphism p-6 rounded-2xl shadow-lg">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-folder-plus text-green-600 text-xl mr-3"></i>
+          <h2 class="text-xl font-semibold text-gray-800">Nueva Carpeta</h2>
+        </div>
+        <form id="createFolderForm" class="space-y-4">
+          <input type="text" id="nombreCarpeta" placeholder="Nombre de la carpeta" required 
+            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white/80 backdrop-blur text-sm">
+          <input type="text" id="descripcionCarpeta" placeholder="Descripción (opcional)" 
+            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white/80 backdrop-blur text-sm">
+          <select id="parentCarpeta" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white/80 backdrop-blur text-sm">
+            <option value="">📁 Sin carpeta padre</option>
+          </select>
+          <button type="submit" class="w-full bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all duration-200 font-semibold shadow-lg">
+            <i class="fas fa-plus mr-2"></i>Crear Carpeta
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Vista de carpetas -->
+    <div class="glassmorphism p-6 rounded-2xl shadow-lg">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+          <i class="fas fa-folder text-yellow-600 text-xl mr-3"></i>
+          <h2 class="text-2xl font-semibold text-gray-800">Mis Carpetas</h2>
+        </div>
+        <div class="text-sm text-gray-500">
+          <i class="fas fa-info-circle mr-1"></i>
+          Haz clic en las carpetas para expandir
+        </div>
+      </div>
+      <div id="carpetasContainer" class="space-y-4"></div>
+      <div id="emptyState" class="hidden text-center py-12">
+        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-folder-open text-gray-400 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay carpetas</h3>
+        <p class="text-gray-500">Crea tu primera carpeta para comenzar a organizar tus archivos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor Estático del Editor (Ciclo de vida correcto de OnlyOffice) -->
+  <div id="editorWrapper" class="hidden fixed inset-0 z-[99999] bg-[#f5f6fa] w-full h-screen">
+    <nav class="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white px-6 py-3 flex justify-between items-center shadow-md">
+      <span id="editorTitle" class="text-lg font-semibold flex items-center">
+        <i class="fas fa-edit mr-2"></i> Editando documento
+      </span>
+      <button class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg flex items-center transition-colors text-sm font-medium" onclick="cerrarOfficeDrive()">
+        <i class="fas fa-times mr-2"></i> Cerrar
+      </button>
+    </nav>
+    <div id="editorContainer" class="flex-grow w-full h-full relative"></div>
+  </div>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const TOKEN = localStorage.getItem("token");
+    
+    // MAGIA: Mantener la instancia global como en el módulo de documentos
+    let editorInstance = null;
+
+    // Recibe la extensión directamente en lugar del nombre del archivo completo
+    function getFileIcon(ext) {
+      const iconMap = {
+        'pdf': { icon: 'fas fa-file-pdf', color: 'text-red-500' },
+        'doc': { icon: 'fas fa-file-word', color: 'text-blue-600' },
+        'docx': { icon: 'fas fa-file-word', color: 'text-blue-600' },
+        'xls': { icon: 'fas fa-file-excel', color: 'text-green-600' },
+        'xlsx': { icon: 'fas fa-file-excel', color: 'text-green-600' },
+        'ppt': { icon: 'fas fa-file-powerpoint', color: 'text-orange-600' },
+        'pptx': { icon: 'fas fa-file-powerpoint', color: 'text-orange-600' },
+        'jpg': { icon: 'fas fa-file-image', color: 'text-purple-500' },
+        'jpeg': { icon: 'fas fa-file-image', color: 'text-purple-500' },
+        'png': { icon: 'fas fa-file-image', color: 'text-purple-500' },
+        'gif': { icon: 'fas fa-file-image', color: 'text-purple-500' },
+        'mp4': { icon: 'fas fa-file-video', color: 'text-red-600' },
+        'avi': { icon: 'fas fa-file-video', color: 'text-red-600' },
+        'mp3': { icon: 'fas fa-file-audio', color: 'text-green-500' },
+        'wav': { icon: 'fas fa-file-audio', color: 'text-green-500' },
+        'txt': { icon: 'fas fa-file-alt', color: 'text-gray-600' },
+        'zip': { icon: 'fas fa-file-archive', color: 'text-yellow-600' },
+        'rar': { icon: 'fas fa-file-archive', color: 'text-yellow-600' }
+      };
+      return iconMap[ext] || { icon: 'fas fa-file', color: 'text-gray-500' };
+    }
+
+    async function cargarCarpetas() {
+      try {
+        const res = await fetch(API + "/folders?include_general=false", {
+          headers: { Authorization: "Bearer " + TOKEN }
+        });
+        let carpetas = await res.json();
+
+        const container = document.getElementById("carpetasContainer");
+        const emptyState = document.getElementById("emptyState");
+        
+        container.innerHTML = "";
+        
+        if (carpetas.length === 0) {
+          await crearCarpetaPersonal();
+          const resUpdate = await fetch(API + "/folders?include_general=false", {
+            headers: { Authorization: "Bearer " + TOKEN }
+          });
+          carpetas = await resUpdate.json();
+        }
+        
+        emptyState.classList.add("hidden");
+        carpetas.forEach(folder => {
+          if (!folder.parent_id) {
+            container.appendChild(renderFolder(folder));
+          }
+        });
+
+        llenarSelect(carpetas);
+      } catch (err) {
+        console.error(err);
+        alert("Error al cargar carpetas");
+      }
+    }
+
+    async function crearCarpetaPersonal() {
+      try {
+        const payload = {
+          nombre: "Mi carpeta personal",
+          descripcion: "Carpeta creada automáticamente para organizar tus archivos personales",
+          parent_id: null
+        };
+
+        const res = await fetch(API + "/folders/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + TOKEN
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          console.error("Error al crear carpeta personal automática");
+        }
+      } catch (error) {
+        console.error("Error al crear carpeta personal:", error);
+      }
+    }
+
+    function renderFolder(folder, level = 0) {
+      const wrapper = document.createElement("div");
+      wrapper.className = `glassmorphism rounded-xl shadow-lg folder-hover transition-all duration-300 ${level > 0 ? 'ml-8 border-l-4 border-blue-200' : ''}`;
+
+      const header = document.createElement("div");
+      header.className = "flex justify-between items-center cursor-pointer p-5";
+      
+      const fileCount = folder.archivos?.length || 0;
+      const subfolderCount = folder.hijos?.length || 0;
+      
+      header.innerHTML = `
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center mr-4 shadow-md">
+            <i class="fas fa-folder text-white text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-semibold text-lg text-gray-800">${folder.nombre}</h3>
+            <p class="text-sm text-gray-500">${folder.descripcion || "Sin descripción"}</p>
+            <div class="flex items-center space-x-4 mt-1">
+              <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                <i class="fas fa-file mr-1"></i>${fileCount} archivos
+              </span>
+              ${subfolderCount > 0 ? `<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                <i class="fas fa-folder mr-1"></i>${subfolderCount} carpetas
+              </span>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+            <i class="fas fa-chevron-down text-gray-600 text-sm transition-transform duration-200" id="chevron-${folder.id}"></i>
+          </div>
+        </div>
+      `;
+      wrapper.appendChild(header);
+
+      const content = document.createElement("div");
+      content.className = "hidden px-5 pb-5";
+      content.id = `content-${folder.id}`;
+
+      // Archivos
+      if (folder.archivos && folder.archivos.length > 0) {
+        const filesContainer = document.createElement("div");
+        filesContainer.className = "space-y-2 mb-4";
+        
+        folder.archivos.forEach(file => {
+          
+          let rawUrl = file.url;
+          if (rawUrl && rawUrl.includes('view.officeapps.live.com')) {
+            try {
+              const urlObj = new URL(rawUrl);
+              const srcUrl = urlObj.searchParams.get('src');
+              if (srcUrl) rawUrl = srcUrl;
+            } catch(e) {}
+          }
+          
+          let ext = rawUrl.split('.').pop().toLowerCase().split('?')[0];
+          if (!ext || ext.length > 5) {
+            ext = file.nombre_archivo.split('.').pop().toLowerCase();
+          }
+
+          const fileIcon = getFileIcon(ext);
+          const isOffice = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext);
+          
+          const fileDiv = document.createElement("div");
+          fileDiv.className = "flex justify-between items-center bg-white/60 backdrop-blur px-4 py-3 rounded-lg file-hover cursor-pointer transition-all duration-200";
+          
+          const nombreEnlace = isOffice 
+            ? `<a href="javascript:void(0)" onclick="abrirConOffice(${file.id}, '${rawUrl}', '${file.nombre_archivo}', '${ext}')" class="font-medium text-gray-800 hover:text-blue-600 transition-colors">${file.nombre_archivo}</a>`
+            : `<a href="${rawUrl}" target="_blank" class="font-medium text-gray-800 hover:text-blue-600 transition-colors">${file.nombre_archivo}</a>`;
+
+          fileDiv.innerHTML = `
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center mr-3 file-icon">
+                <i class="${fileIcon.icon} ${fileIcon.color} text-lg"></i>
+              </div>
+              <div>
+                ${nombreEnlace}
+                <p class="text-xs text-gray-500">Archivo</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              ${isOffice ? `
+                <button onclick="abrirConOffice(${file.id}, '${rawUrl}', '${file.nombre_archivo}', '${ext}')" 
+                   class="w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110" title="Abrir con Office">
+                  <i class="fas fa-file-word text-sm"></i>
+                </button>
+              ` : ''}
+              <button onclick="compartirArchivoDrive(${file.id}, '${file.nombre_archivo}')" 
+                 class="w-8 h-8 bg-green-50 hover:bg-green-100 text-green-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110" title="Compartir">
+                <i class="fas fa-share-alt text-sm"></i>
+              </button>
+              <button onclick="eliminarArchivo(${file.id})" 
+                 class="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110">
+                <i class="fas fa-trash text-sm"></i>
+              </button>
+            </div>
+          `;
+          filesContainer.appendChild(fileDiv);
+        });
+        
+        content.appendChild(filesContainer);
+      }
+
+      // Subcarpetas
+      if (folder.hijos && folder.hijos.length > 0) {
+        const subfoldersContainer = document.createElement("div");
+        subfoldersContainer.className = "space-y-3";
+        
+        folder.hijos.forEach(child => {
+          const subFolder = renderFolder(child, level + 1);
+          subfoldersContainer.appendChild(subFolder);
+        });
+        
+        content.appendChild(subfoldersContainer);
+      }
+
+      wrapper.appendChild(content);
+      
+      header.addEventListener("click", () => {
+        const chevron = document.getElementById(`chevron-${folder.id}`);
+        content.classList.toggle("hidden");
+        chevron.style.transform = content.classList.contains("hidden") ? "rotate(0deg)" : "rotate(180deg)";
+      });
+
+      return wrapper;
+    }
+
+    function llenarSelect(carpetas) {
+      const selectUpload = document.getElementById("folderSelect");
+      const selectParent = document.getElementById("parentCarpeta");
+
+      selectUpload.innerHTML = "<option value=''>📁 Selecciona carpeta</option>";
+      selectParent.innerHTML = "<option value=''>📁 Sin carpeta padre</option>";
+
+      carpetas.forEach(folder => {
+        appendFolderToSelect(folder, "", selectUpload);
+        appendFolderToSelect(folder, "", selectParent);
+      });
+    }
+
+    function appendFolderToSelect(folder, prefix, select) {
+      const opt = document.createElement("option");
+      opt.value = folder.id;
+      opt.textContent = prefix + folder.nombre;
+      select.appendChild(opt);
+      folder.hijos?.forEach(child => appendFolderToSelect(child, prefix + "— ", select));
+    }
+
+    async function eliminarArchivo(id) {
+      if (!confirm("¿Estás seguro de que deseas eliminar este archivo?")) return;
+      
+      try {
+        await fetch(API + "/archivos/" + id, {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + TOKEN }
+        });
+        cargarCarpetas();
+      } catch (error) {
+        alert("Error al eliminar el archivo");
+        console.error(error);
+      }
+    }
+
+    document.getElementById("uploadForm").addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const file = document.getElementById("fileInput").files[0];
+      const folderId = document.getElementById("folderSelect").value;
+      const nombreArchivo = document.getElementById("nombreArchivo").value;
+
+      if (!file) {
+        alert("Debes seleccionar un archivo.");
+        return;
+      }
+
+      if (!folderId) {
+        alert("Debes seleccionar una carpeta.");
+        return;
+      }
+
+      const form = new FormData();
+      form.append("file", file);
+      form.append("folder_id", folderId);
+      form.append("nombre_archivo", nombreArchivo);
+
+      try {
+        const res = await fetch(API + "/archivos/", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + TOKEN },
+          body: form
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById("uploadForm").reset();
+          alert("¡Archivo subido exitosamente!");
+          cargarCarpetas();
+        } else {
+          alert("Error al subir archivo");
+        }
+      } catch (error) {
+        alert("Error al subir archivo");
+        console.error(error);
+      }
+    });
+
+    document.getElementById("createFolderForm").addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const nombre = document.getElementById("nombreCarpeta").value.trim();
+      const descripcion = document.getElementById("descripcionCarpeta").value.trim();
+      const parentId = document.getElementById("parentCarpeta").value;
+
+      const payload = {
+        nombre,
+        descripcion,
+        parent_id: parentId === "" ? null : parseInt(parentId)
+      };
+
+      try {
+        const res = await fetch(API + "/folders/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + TOKEN
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          document.getElementById("createFolderForm").reset();
+          cargarCarpetas();
+        } else {
+          const error = await res.json();
+          alert("Error al crear carpeta: " + (error.detail || "Desconocido"));
+          console.error(error);
+        }
+      } catch (error) {
+        alert("Error al crear carpeta");
+        console.error(error);
+      }
+    });
+
+    // Cargar carpetas al inicializar
+    cargarCarpetas();
+
+    // Abrir con OnlyOffice (Con ciclo de vida protegido)
+    function abrirConOffice(fileId, fileUrl, fileName, exactExt) {
+      const ext = exactExt || fileName.split('.').pop().toLowerCase();
+      
+      // Asegurarnos de destruir cualquier instancia previa limpia y correctamente
+      if (editorInstance) {
+        editorInstance.destroyEditor();
+        editorInstance = null;
+      }
+      
+      // Ocultar drive y mostrar contenedor estático
+      document.getElementById('mainDriveContent').classList.add('hidden');
+      document.getElementById('mainDriveContent').classList.remove('block');
+      
+      const wrapper = document.getElementById('editorWrapper');
+      wrapper.classList.remove('hidden');
+      wrapper.classList.add('flex');
+      
+      document.getElementById('editorTitle').innerHTML = `<i class="fas fa-edit mr-2"></i> Editando: ${fileName}`;
+      
+      fetch(API + '/documentos-office/config-archivo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + TOKEN
+        },
+        body: JSON.stringify({ file_id: fileId, file_url: fileUrl, file_name: fileName, file_type: ext })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const checkDocsAPI = setInterval(() => {
+          if (typeof DocsAPI !== 'undefined') {
+            clearInterval(checkDocsAPI);
+            // Asignamos la nueva instancia a la variable global para no perderla
+            editorInstance = new DocsAPI.DocEditor('editorContainer', data.config);
+          }
+        }, 100);
+      })
+      .catch(err => {
+        alert('Error al generar la configuración de OnlyOffice. Revisa la consola.');
+        console.error(err);
+        cerrarOfficeDrive();
+      });
+    }
+    
+    function cerrarOfficeDrive() {
+      // Destruir formalmente la instancia del editor antes de ocultarlo
+      if (editorInstance) {
+        editorInstance.destroyEditor();
+        editorInstance = null;
+      }
+      
+      // Ocultar editor y restaurar la vista principal
+      const wrapper = document.getElementById('editorWrapper');
+      wrapper.classList.add('hidden');
+      wrapper.classList.remove('flex');
+      
+      document.getElementById('mainDriveContent').classList.remove('hidden');
+      document.getElementById('mainDriveContent').classList.add('block');
+      
+      // Recargar para que se reflejen los cambios visuales si el archivo aumentó de tamaño o fecha
+      cargarCarpetas();
+    }
+
+    // Compartir archivo
+    async function compartirArchivoDrive(fileId, fileName) {
+      const email = prompt('Ingresa el correo del destinatario:');
+      if (!email) return;
+      
+      try {
+        const res = await fetch(API + '/archivos/compartir/' + fileId, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + TOKEN
+          },
+          body: JSON.stringify({ email_destino: email })
+        });
+        
+        if (res.ok) {
+          alert('Archivo compartido exitosamente');
+        } else {
+          alert('Error al compartir el archivo');
+        }
+      } catch (e) {
+        alert('Error al compartir: ' + e.message);
+      }
+    }
+  </script>
+</body>
+</html>

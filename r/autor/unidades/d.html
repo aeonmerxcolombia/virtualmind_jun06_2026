@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Unidades y Actividades de Aprendizaje</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="max-w-3xl mx-auto mt-10">
+    <h1 class="text-2xl font-bold mb-6 text-gray-900">Unidades</h1>
+    <table class="min-w-full bg-white rounded-xl shadow text-sm">
+      <thead>
+        <tr>
+          <th class="py-2 px-4 text-left">ID</th>
+          <th class="py-2 px-4 text-left">Nombre</th>
+          <th class="py-2 px-4 text-left">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="unitsTable"></tbody>
+    </table>
+  </div>
+
+  <!-- Modal Crear Actividad -->
+  <div id="modalActividad"
+    class="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center hidden"
+    onclick="if(event.target===this)closeModal()">
+    <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md relative">
+      <button onclick="closeModal()" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-gray-700">&times;</button>
+      <h2 class="text-lg font-bold mb-3">Crear Actividad de Aprendizaje</h2>
+      <form id="createActivityForm" class="space-y-3">
+        <input type="hidden" name="unit_id" id="activityUnitId">
+        <div>
+          <label class="block text-gray-700 mb-1">Nombre</label>
+          <input type="text" name="nombre" required class="w-full border p-2 rounded">
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Descripción</label>
+          <textarea name="descripcion" rows="2" class="w-full border p-2 rounded"></textarea>
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Tipo</label>
+          <input type="text" name="tipo" class="w-full border p-2 rounded">
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Recursos</label>
+          <textarea name="recursos" rows="2" class="w-full border p-2 rounded"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">
+          Crear Actividad
+        </button>
+      </form>
+      <div id="resultActivity" class="mt-2"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = "https://gestordecursos.pegui.edu.co:8000"; // Cambia si usas otra IP/host
+
+    // 1. Cargar y listar unidades
+    async function cargarUnidades() {
+      const tbody = document.getElementById('unitsTable');
+      tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-gray-400">Cargando...</td></tr>';
+      try {
+        const res = await fetch(`${API}/units/`);
+        const units = await res.json();
+        tbody.innerHTML = "";
+        units.forEach(u => {
+          tbody.innerHTML += `
+            <tr class="border-t hover:bg-gray-50">
+              <td class="py-2 px-4">${u.id}</td>
+              <td class="py-2 px-4">${u.name}</td>
+              <td class="py-2 px-4">
+                <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded font-semibold"
+                  onclick="abrirModal(${u.id})">Crear Actividad</button>
+              </td>
+            </tr>
+          `;
+        });
+      } catch {
+        tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-red-500">Error cargando unidades</td></tr>';
+      }
+    }
+
+    // 2. Modal
+    function abrirModal(unitId) {
+      document.getElementById("modalActividad").classList.remove("hidden");
+      document.getElementById("activityUnitId").value = unitId;
+      document.getElementById("resultActivity").innerHTML = '';
+      document.getElementById("createActivityForm").reset();
+    }
+    function closeModal() {
+      document.getElementById("modalActividad").classList.add("hidden");
+    }
+
+    // 3. Crear Actividad
+    document.getElementById('createActivityForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(this));
+      data.unit_id = Number(data.unit_id);
+
+      const res = await fetch(`${API}/learning_activities/`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+      });
+      const resultDiv = document.getElementById('resultActivity');
+      if (res.ok) {
+        resultDiv.innerHTML = '<span class="text-green-600 font-bold">¡Actividad creada!</span>';
+        setTimeout(() => { closeModal(); cargarUnidades(); }, 1200);
+      } else {
+        const err = await res.json();
+        resultDiv.innerHTML = '<span class="text-red-600">Error: ' + (err.detail || 'No se pudo crear') + '</span>';
+      }
+    };
+
+    cargarUnidades();
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

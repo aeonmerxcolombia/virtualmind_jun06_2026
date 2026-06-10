@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentos - VirtualMind</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://gestordecursos.pegui.edu.co:8446/web-apps/apps/api/documents/api.js"></script>
+    <script src="/js/tooltips.js"></script>
+    
+    <style>
+        body { background: #f5f6fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-doc { border: none; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.08); transition: transform 0.2s; cursor: pointer; }
+        .card-doc:hover { transform: translateY(-3px); }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
+        .btn-primary:hover { background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%); }
+        .header-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        
+        #editorWrapper { display: none; height: calc(100vh - 120px); width: 100%; }
+        #editorContainer { width: 100%; height: 100%; }
+        
+        /* ESTILOS DEL COPILOTO IA */
+        .ai-sidebar { background: #1a1a2e; color: #fff; box-shadow: -5px 0 25px rgba(0,0,0,0.5); }
+        .ai-sidebar .offcanvas-header { border-bottom: 1px solid rgba(255,255,255,0.1); background: #16213e; }
+        .ai-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .ai-input:focus { background: rgba(255,255,255,0.1); border-color: #0f3460; color: white; box-shadow: none; }
+        .ai-input::placeholder { color: rgba(255,255,255,0.4); }
+        .nav-pills .nav-link { color: rgba(255,255,255,0.6); }
+        .nav-pills .nav-link.active { background-color: #e94560; color: white; }
+        .ai-result { background: #0f3460; border-radius: 8px; padding: 15px; font-size: 0.9rem; min-height: 150px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark header-gradient">
+        <div class="container">
+            <a class="navbar-brand" href="/r/superadmin/index.html">
+                <i class="fas fa-brain me-2"></i>VirtualMind - Documentos Office
+            </a>
+            <div>
+                <button class="btn btn-outline-light btn-sm" onclick="window.location.href='/r/superadmin/index.html'" title="Volver al panel principal">
+                    <i class="fas fa-home me-1"></i>Inicio
+                </button>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()" title="Cerrar sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4" id="mainContainer">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-file-word me-2"></i>Mis Documentos</h2>
+            <div>
+                <button class="btn btn-primary" onclick="mostrarModal()" title="Crear un nuevo documento">
+                    <i class="fas fa-plus me-2"></i>Crear Documento
+                </button>
+            </div>
+        </div>
+        
+        <div id="documentos-lista">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3 text-muted">Cargando documentos...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="editorWrapper" class="container-fluid py-2">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 id="editorTitle" class="mb-0 text-primary"></h5>
+            <div>
+                <button class="btn btn-info btn-sm me-2 text-white fw-bold shadow-sm" data-bs-toggle="offcanvas" data-bs-target="#copilotoIA" title="Abrir el asistente de IA">
+                    <i class="fas fa-robot me-1"></i> Copiloto IA
+                </button>
+                <button class="btn btn-danger btn-sm shadow-sm" onclick="cerrarEditor()" title="Cerrar el editor y volver a la lista">
+                    <i class="fas fa-times me-2"></i>Cerrar Editor
+                </button>
+            </div>
+        </div>
+        <div id="editorContainer"></div>
+    </div>
+
+    <div class="offcanvas offcanvas-end ai-sidebar" tabindex="-1" id="copilotoIA" aria-labelledby="copilotoIALabel" style="width: 450px;">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title text-info fw-bold" id="copilotoIALabel">
+                <i class="fas fa-robot me-2"></i> Copiloto IA Virtualmind
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close" title="Cerrar panel"></button>
+        </div>
+        <div class="offcanvas-body">
+            
+            <ul class="nav nav-pills mb-4 nav-fill" id="ai-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold" data-bs-toggle="pill" data-bs-target="#ai-texto" type="button" title="Generar texto con IA"><i class="fas fa-pen-nib me-1"></i> Texto</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" data-bs-toggle="pill" data-bs-target="#ai-imagen" type="button" title="Generar imágenes con IA"><i class="fas fa-image me-1"></i> Imagen</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="ai-tabsContent">
+                
+                <div class="tab-pane fade show active" id="ai-texto" role="tabpanel">
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Modelo de IA</label>
+                        <select id="iaAgente" class="form-select ai-input">
+                            <option value="gemini">Gemini (Google)</option>
+                            <option value="openai">ChatGPT (OpenAI)</option>
+                            <option value="kimi">Kimi</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Instrucción (Prompt)</label>
+                        <textarea id="iaTextoPrompt" class="form-control ai-input" rows="4" placeholder="Ej: Redacta una introducción sobre seguridad informática..."></textarea>
+                    </div>
+                    <button onclick="generarTextoIA()" id="btnGenerarTexto" class="btn btn-info w-100 text-white fw-bold mb-4" title="Generar texto con inteligencia artificial">
+                        <i class="fas fa-magic me-2"></i>Generar Texto
+                    </button>
+                    
+                    <label class="form-label text-white-50 small">Resultado</label>
+                    <div id="iaTextoResultado" class="ai-result mb-3">El resultado aparecerá aquí...</div>
+                    <button onclick="copiarTextoIA()" class="btn btn-outline-light w-100 btn-sm" title="Copiar el resultado al portapapeles">
+                        <i class="fas fa-copy me-2"></i>Copiar para pegar en el documento
+                    </button>
+                </div>
+
+                <div class="tab-pane fade" id="ai-imagen" role="tabpanel">
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Prompt Positivo</label>
+                        <textarea id="iaImgPrompt" class="form-control ai-input" rows="3" placeholder="Ej: Un servidor futurista brillando en neon azul..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Prompt Negativo</label>
+                        <textarea id="iaImgNegPrompt" class="form-control ai-input" rows="2" placeholder="blurry, bad quality, distorted"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-white-50 small">Dimensiones</label>
+                            <select id="iaImgDim" class="form-select ai-input">
+                                <option value="512x512">512 x 512</option>
+                                <option value="512x768">512 x 768 (Vertical)</option>
+                                <option value="768x512">768 x 512 (Horizontal)</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-white-50 small">Pasos (Steps)</label>
+                            <input type="number" id="iaImgSteps" class="form-control ai-input" value="20" min="1" max="50">
+                        </div>
+                    </div>
+                    
+                    <button onclick="generarImagenIA()" id="btnGenerarImagen" class="btn btn-danger w-100 text-white fw-bold mb-4" style="background-color: #e94560;" title="Generar una imagen con inteligencia artificial">
+                        <i class="fas fa-paint-brush me-2"></i>Generar Imagen
+                    </button>
+                    
+                    <div id="iaImgPreviewContainer" class="text-center d-none">
+                        <div class="position-relative d-inline-block w-100 mb-3">
+                            <img id="iaImgPreview" class="img-fluid rounded border border-secondary w-100" src="" alt="Generada">
+                            
+                            <div id="iaImgLoading" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center rounded" style="background: rgba(0,0,0,0.8);">
+                                <div class="spinner-border text-danger mb-2" role="status"></div>
+                                <div class="w-75 bg-dark rounded-pill mt-2">
+                                    <div id="iaImgProgress" class="bg-danger rounded-pill" style="height: 5px; width: 0%;"></div>
+                                </div>
+                                <small id="iaImgProgressText" class="text-white mt-1">0%</small>
+                            </div>
+                        </div>
+                        <button onclick="copiarImagenIA()" id="btnCopiarImagen" class="btn btn-outline-light w-100 btn-sm" title="Copiar la imagen al portapapeles">
+                            <i class="fas fa-copy me-2"></i>Copiar Imagen (Presiona Ctrl+V en el documento)
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modalCrear" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Crear Nuevo Documento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" title="Cerrar ventana"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del documento</label>
+                        <input type="text" id="nombreInput" class="form-control" placeholder="Ej: Proyecto Final">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de archivo</label>
+                        <select id="tipoInput" class="form-select">
+                            <option value="docx">📄 Documento de Word (.docx)</option>
+                            <option value="xlsx">📊 Hoja de Cálculo (.xlsx)</option>
+                            <option value="pptx">🖥️ Presentación (.pptx)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" title="Cancelar y cerrar">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="crearArchivo()" title="Crear el documento y abrir el editor">Crear y Abrir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://gestordecursos.pegui.edu.co/js/roles.js"></script>
+    
+    <script>
+        // ==========================================
+        // LÓGICA PRINCIPAL DE ONLYOFFICE
+        // ==========================================
+        const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+        let archivos = [];
+        let editorInstance = null; 
+
+        function getToken() { return localStorage.getItem('token') || sessionStorage.getItem('token'); }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        async function cargarArchivos() {
+            const token = getToken();
+            try {
+                const res = await fetch(API_URL + '/documentos-office/', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    archivos = await res.json();
+                    mostrarDocumentos();
+                }
+            } catch(e) { console.error('Error:', e); }
+        }
+
+        function mostrarDocumentos() {
+            const container = document.getElementById('documentos-lista');
+            if (!archivos.length) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-folder-open text-muted" style="font-size: 4rem;"></i>
+                        <h4 class="mt-3 text-muted">Aún no tienes documentos</h4>
+                        <button class="btn btn-primary mt-3" onclick="mostrarModal()" title="Crear un nuevo documento"><i class="fas fa-plus me-2"></i>Crear el primero</button>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = '<div class="row">' + archivos.map((doc, idx) => {
+                const ext = doc.tipo;
+                const icon = ext === 'xlsx' ? 'fa-file-excel text-success' : ext === 'pptx' ? 'fa-file-powerpoint text-danger' : 'fa-file-word text-primary';
+                return `
+                    <div class="col-md-4 col-lg-3 mb-4">
+                        <div class="card card-doc p-3" onclick="editarConOnlyOffice(${idx})" title="Abrir documento en el editor">
+                            <div class="text-center py-3"><i class="fas ${icon}" style="font-size: 3rem;"></i></div>
+                            <div class="card-body text-center">
+                                <h6 class="card-title fw-bold">${doc.nombre}.${doc.tipo}</h6>
+                                <small class="text-muted d-block mb-3">Actualizado: ${new Date(doc.actualizado || doc.creado).toLocaleDateString()}</small>
+                                <button class="btn btn-sm btn-outline-danger w-100" onclick="event.stopPropagation(); eliminarArchivo(${doc.id})" title="Eliminar este documento permanentemente">
+                                    <i class="fas fa-trash me-1"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('') + '</div>';
+        }
+
+        function mostrarModal() {
+            document.getElementById('nombreInput').value = '';
+            new bootstrap.Modal(document.getElementById('modalCrear')).show();
+        }
+
+        async function crearArchivo() {
+            const nombre = document.getElementById('nombreInput').value.trim();
+            const tipo = document.getElementById('tipoInput').value;
+            if (!nombre) { alert('Por favor, ingresa un nombre.'); return; }
+            
+            const formData = new FormData();
+            formData.append('nombre', nombre);
+            formData.append('tipo', tipo);
+            
+            try {
+                const res = await fetch(API_URL + '/documentos-office/', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + getToken() },
+                    body: formData
+                });
+                
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalCrear')).hide();
+                    await cargarArchivos();
+                    editarConOnlyOffice(archivos.length - 1);
+                } else { alert('Error al crear el archivo.'); }
+            } catch(e) { alert('Error de conexión.'); }
+        }
+
+        async function eliminarArchivo(id) {
+            if (!confirm('¿Seguro que deseas eliminar este documento?')) return;
+            try {
+                const res = await fetch(API_URL + '/documentos-office/' + id, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + getToken() }
+                });
+                if (res.ok) cargarArchivos();
+            } catch(e) { console.error(e); }
+        }
+
+        async function editarConOnlyOffice(idx) {
+            const doc = archivos[idx];
+            if (!doc) return;
+
+            if (editorInstance) { editorInstance.destroyEditor(); editorInstance = null; }
+
+            document.getElementById('mainContainer').style.display = 'none';
+            document.getElementById('editorWrapper').style.display = 'block';
+            document.getElementById('editorTitle').innerHTML = `<i class="fas fa-edit me-2"></i> Editando: ${doc.nombre}.${doc.tipo}`;
+
+            try {
+                const res = await fetch(`${API_URL}/documentos-office/config/${doc.id}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': 'Bearer ' + getToken() }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    editorInstance = new DocsAPI.DocEditor("editorContainer", data.config);
+                } else {
+                    alert('Error al generar configuración. ¿Backend activo?');
+                    cerrarEditor();
+                }
+            } catch (error) {
+                alert('No se pudo conectar con el servidor.');
+                cerrarEditor();
+            }
+        }
+
+        function cerrarEditor() {
+            if (editorInstance) { editorInstance.destroyEditor(); editorInstance = null; }
+            document.getElementById('mainContainer').style.display = 'block';
+            document.getElementById('editorWrapper').style.display = 'none';
+            cargarArchivos();
+        }
+
+
+        // ==========================================
+        // LÓGICA DEL COPILOTO IA (TEXTO E IMAGEN)
+        // ==========================================
+
+        // --- IA TEXTO ---
+        async function generarTextoIA() {
+            const prompt = document.getElementById('iaTextoPrompt').value.trim();
+            const agente = document.getElementById('iaAgente').value;
+            const btn = document.getElementById('btnGenerarTexto');
+            const resultBox = document.getElementById('iaTextoResultado');
+
+            if (!prompt) { alert('Escribe una instrucción primero.'); return; }
+
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Pensando...';
+            btn.disabled = true;
+            resultBox.innerHTML = 'Conectando con ' + agente + '...';
+
+            let endpoint = '';
+            let payload = {};
+
+            if (agente === 'gemini') {
+                endpoint = `${API_URL}/chat/gemini`;
+                payload = { prompt: prompt };
+            } else if (agente === 'openai') {
+                endpoint = `${API_URL}/chat/openai`;
+                payload = { mensaje: prompt };
+            } else {
+                endpoint = `${API_URL}/chat/kimi`;
+                payload = { mensaje: prompt };
+            }
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }, // Si requieren token, añade Authorization aquí
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) throw new Error('Falló la conexión con el servidor IA');
+                
+                const data = await res.json();
+                // Extraer el texto de la respuesta (depende de cómo tu backend envía el JSON)
+                const finalStr = data.mensaje || data.result || data.respuesta || data.text || JSON.stringify(data);
+                
+                // Formatear negritas de markdown a texto simple para ONLYOFFICE
+                resultBox.innerText = finalStr;
+
+            } catch (error) {
+                resultBox.innerText = 'Error: ' + error.message;
+            } finally {
+                btn.innerHTML = '<i class="fas fa-magic me-2"></i>Generar Texto';
+                btn.disabled = false;
+            }
+        }
+
+        function copiarTextoIA() {
+            const resultText = document.getElementById('iaTextoResultado').innerText;
+            if (resultText && resultText !== 'El resultado aparecerá aquí...') {
+                navigator.clipboard.writeText(resultText).then(() => {
+                    const btn = event.currentTarget;
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check me-2"></i>¡Copiado! Usa Ctrl+V';
+                    btn.classList.replace('btn-outline-light', 'btn-success');
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.classList.replace('btn-success', 'btn-outline-light');
+                    }, 2500);
+                });
+            }
+        }
+
+        // --- IA IMAGEN (WAN / STABLE DIFFUSION) ---
+        const API_IMAGE_BASE = "https://ia.pegui.edu.co/sdapi/v1";
+        let isGeneratingImage = false;
+        let generatedImageBase64 = null;
+        let progressInterval = null;
+
+        async function generarImagenIA() {
+            if (isGeneratingImage) return;
+            
+            const prompt = document.getElementById('iaImgPrompt').value.trim();
+            if (!prompt) { alert('Escribe qué imagen deseas generar.'); return; }
+
+            isGeneratingImage = true;
+            const btn = document.getElementById('btnGenerarImagen');
+            const previewContainer = document.getElementById('iaImgPreviewContainer');
+            const loadingOverlay = document.getElementById('iaImgLoading');
+            const progressBar = document.getElementById('iaImgProgress');
+            const progressText = document.getElementById('iaImgProgressText');
+            const previewImg = document.getElementById('iaImgPreview');
+            const dims = document.getElementById('iaImgDim').value.split('x');
+
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Generando...';
+            btn.disabled = true;
+            
+            previewContainer.classList.remove('d-none');
+            loadingOverlay.classList.remove('d-none');
+            progressBar.style.width = '0%';
+            progressText.innerText = '0%';
+            previewImg.src = ''; // Limpiar anterior
+
+            const payload = {
+                prompt: prompt,
+                negative_prompt: document.getElementById('iaImgNegPrompt').value || 'blurry, bad quality, distorted',
+                steps: parseInt(document.getElementById('iaImgSteps').value),
+                cfg_scale: 7,
+                width: parseInt(dims[0]),
+                height: parseInt(dims[1]),
+                sampler_name: "Euler a",
+                restore_faces: true
+            };
+
+            // POLLING DE PROGRESO
+            progressInterval = setInterval(async () => {
+                if (!isGeneratingImage) { clearInterval(progressInterval); return; }
+                try {
+                    const res = await fetch(`${API_IMAGE_BASE}/progress?skip_current_image=false`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.progress !== undefined) {
+                            const p = Math.round(data.progress * 100);
+                            progressBar.style.width = p + '%';
+                            progressText.innerText = p + '%';
+                            if (data.current_image) {
+                                previewImg.src = `data:image/png;base64,${data.current_image}`;
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }, 500);
+
+            try {
+                const response = await fetch(`${API_IMAGE_BASE}/txt2img`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error('Falló el motor de imágenes');
+
+                const data = await response.json();
+                generatedImageBase64 = data.images[0];
+                
+                progressBar.style.width = '100%';
+                progressText.innerText = '100%';
+                previewImg.src = `data:image/png;base64,${generatedImageBase64}`;
+                
+            } catch (error) {
+                alert('Error al generar la imagen: ' + error.message);
+                previewContainer.classList.add('d-none');
+            } finally {
+                loadingOverlay.classList.add('d-none');
+                isGeneratingImage = false;
+                clearInterval(progressInterval);
+                btn.innerHTML = '<i class="fas fa-paint-brush me-2"></i>Generar Imagen';
+                btn.disabled = false;
+            }
+        }
+
+        // COPIAR IMAGEN AL PORTAPAPELES (Para pegarla en OnlyOffice con Ctrl+V)
+        async function copiarImagenIA() {
+            if (!generatedImageBase64) return;
+            try {
+                // Convertir Base64 a Blob
+                const res = await fetch(`data:image/png;base64,${generatedImageBase64}`);
+                const blob = await res.blob();
+                
+                // Escribir en el portapapeles
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]);
+                
+                const btn = document.getElementById('btnCopiarImagen');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check me-2"></i>¡Copiada! Haz clic en el documento y presiona Ctrl+V';
+                btn.classList.replace('btn-outline-light', 'btn-success');
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.replace('btn-success', 'btn-outline-light');
+                }, 4000);
+
+            } catch (error) {
+                console.error(error);
+                alert('Tu navegador bloqueó la acción. Por favor, haz clic derecho en la imagen y selecciona "Copiar imagen".');
+            }
+        }
+
+        window.onload = () => {
+            if (!getToken()) window.location.href = '/';
+            else cargarArchivos();
+        };
+    </script>
+</body>
+</html>

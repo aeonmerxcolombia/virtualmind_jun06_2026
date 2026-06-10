@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constructor de Cronogramas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet"/>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .custom-checkbox input { display: none; }
+        .custom-checkbox .checkmark {
+            width: 1.25rem; height: 1.25rem;
+            border: 2px solid #cbd5e1; border-radius: 0.25rem;
+            display: inline-block;
+            transition: background-color 0.2s, border-color 0.2s;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .custom-checkbox .checkmark::after {
+            content: ""; position: absolute; display: none;
+            left: 6px; top: 2px; width: 5px; height: 10px;
+            border: solid white; border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+        .custom-checkbox input:checked ~ .checkmark { background-color: #4f46e5; border-color: #4f46e5; }
+        .custom-checkbox input:checked ~ .checkmark::after { display: block; }
+        .select-multiple { min-height: 120px; border-width: 1px; }
+        .input-field { border-width: 1px; }
+        .btn-primary { background-color: #4f46e5; transition: background-color 0.3s, transform 0.2s; }
+        .btn-primary:hover { background-color: #4338ca; transform: translateY(-2px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: translateY(0); }
+        .input-error { border-color: #ef4444 !important; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+    <div class="container mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
+
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 flex items-center">
+                <i class="fas fa-calendar-alt mr-4 text-indigo-600"></i>Constructor de Cronogramas
+            </h1>
+        </header>
+
+        <!-- Contenedor para la advertencia de cronograma existente (oculto por defecto) -->
+        <div id="existingCronogramaWarning" class="hidden animate-fade-in mb-8 p-6 bg-yellow-50 text-yellow-800 rounded-lg border border-yellow-200 text-center">
+            <i class="fas fa-exclamation-triangle fa-2x mb-4"></i>
+            <h2 class="text-xl font-bold mb-2">Este proyecto ya tiene un cronograma.</h2>
+            <p class="mb-4">No puedes crear uno nuevo, pero puedes ver o editar el existente.</p>
+            <a id="viewCronogramaBtn" href="#" class="inline-block bg-yellow-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-yellow-600 transition-colors">
+                Ver Cronograma Existente
+            </a>
+        </div>
+        
+        <div id="projectInfo" class="mb-8 p-4 flex items-center gap-4 bg-blue-50 text-blue-800 rounded-lg border border-blue-200">
+            <i class="fas fa-circle-info fa-lg"></i>
+            <div id="projectInfoText" class="font-medium">Cargando datos del proyecto...</div>
+        </div>
+
+        <form id="cronogramaForm" class="space-y-8">
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center mb-4">
+                    <span class="bg-indigo-600 text-white rounded-full h-8 w-8 flex items-center justify-center mr-3 text-base">A</span>
+                    Datos Generales
+                </h2>
+                <div>
+                    <label for="cronogramaNombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Cronograma</label>
+                    <input type="text" id="cronogramaNombre" name="cronograma_nombre" class="input-field w-full" placeholder="Ej: Cronograma de Desarrollo V1" required>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center mb-4">
+                    <span class="bg-indigo-600 text-white rounded-full h-8 w-8 flex items-center justify-center mr-3 text-base">B</span>
+                    Seleccione Componentes
+                </h2>
+                <div id="selectorContainer" class="space-y-4">
+                    <div class="text-center text-gray-500 p-4"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando fases y etapas...</div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center mb-4">
+                    <span class="bg-indigo-600 text-white rounded-full h-8 w-8 flex items-center justify-center mr-3 text-base">C</span>
+                    Planifique el Cronograma
+                </h2>
+                <div id="constructorContainer" class="space-y-6">
+                    <div id="constructorPlaceholder" class="text-center text-gray-500 p-8 border-2 border-dashed rounded-lg">
+                        <i class="fas fa-tasks fa-2x mb-2"></i>
+                        <p>Seleccione las etapas que desea incluir para comenzar a planificar.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-end items-center gap-4 mt-8 pt-6 border-t">
+                <button type="button" onclick="history.back()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold">Cancelar</button>
+                <button type="submit" class="btn-primary flex items-center gap-2 px-6 py-2 rounded-lg font-semibold">
+                    <i class="fas fa-save"></i>
+                    <span>Guardar Cronograma</span>
+                </button>
+            </div>
+        </form>
+        <div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-8 text-center max-w-sm w-full shadow-2xl animate-fade-in">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                    <i class="fas fa-check text-green-600 fa-lg"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2 text-gray-800">¡Cronograma Guardado!</h2>
+                <p class="text-gray-600 mb-6">El cronograma ha sido creado exitosamente.</p>
+                <button id="goToListButton" class="btn-primary w-full py-2.5">Ver lista de cronogramas</button>
+            </div>
+        </div>
+    </div>
+
+    <template id="etapaFormTemplate">
+        <div class="p-5 border rounded-lg animate-fade-in bg-gray-50/50" data-etapa-id="" data-fase-id="">
+            <h3 class="font-bold text-indigo-700 text-lg">
+                <span class="fase-name"></span> / <span class="etapa-name"></span>
+            </h3>
+            <div class="grid md:grid-cols-2 gap-x-6 gap-y-4 mt-4">
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
+                    <input type="date" name="fecha_inicio" class="input-field w-full" required>
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
+                    <input type="date" name="fecha_fin" class="input-field w-full" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Responsables</label>
+                    <select multiple name="responsables" class="select-multiple w-full" required></select>
+                </div>
+            </div>
+        </div>
+    </template>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token");
+    const projectId = new URLSearchParams(window.location.search).get("project_id");
+
+    let projectData = {}, masterFases = [], masterEtapas = [], usersData = [];
+
+    const form = document.getElementById('cronogramaForm');
+    const projectInfo = document.getElementById('projectInfo');
+    const projectInfoText = document.getElementById('projectInfoText');
+    const existingCronogramaWarning = document.getElementById('existingCronogramaWarning');
+    const selectorContainer = document.getElementById('selectorContainer');
+    const constructorContainer = document.getElementById('constructorContainer');
+    const constructorPlaceholder = document.getElementById('constructorPlaceholder');
+    const etapaFormTemplate = document.getElementById('etapaFormTemplate');
+    const successModal = document.getElementById('successModal');
+    const goToListButton = document.getElementById('goToListButton');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const cronogramaNombreInput = document.getElementById('cronogramaNombre');
+
+    async function fetchData(endpoint) {
+        const response = await fetch(`${API_BASE}${endpoint}`, { headers: { "Authorization": `Bearer ${token}` } });
+        if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(`Error ${response.status} en ${endpoint}: ${errorBody}`);
+        }
+        return response.json();
+    }
+
+    async function init() {
+        if (!projectId) {
+            projectInfoText.textContent = "Error: No se proporcionó un ID de proyecto en la URL.";
+            form.style.display = 'none'; // Ocultar formulario si no hay ID de proyecto
+            return;
+        }
+
+        try {
+            // =================================================================
+            // NUEVA VALIDACIÓN: Comprobar si ya existe un cronograma
+            // =================================================================
+            const existingCronograma = await fetchData(`/cronogramas/project/${projectId}`);
+            
+            // Si la llamada tiene éxito, significa que ya existe un cronograma
+            projectInfo.style.display = 'none';
+            form.style.display = 'none';
+            existingCronogramaWarning.classList.remove('hidden');
+            existingCronogramaWarning.querySelector('a').href = `./ver-cronograma.html?cronograma_id=${existingCronograma.id}`;
+            return; // Detener la ejecución para no mostrar el formulario de creación
+
+        } catch (error) {
+            // Un error 404 es el caso esperado y significa que podemos crear uno nuevo.
+            if (!error.message.includes("404")) {
+                // Si es otro tipo de error (ej. 500, de red), lo mostramos.
+                console.error("Error al comprobar cronograma existente:", error);
+                projectInfoText.parentElement.className = 'mb-8 p-4 flex items-center gap-4 bg-red-100 text-red-800 rounded-lg border border-red-200';
+                projectInfoText.textContent = `Error al verificar el proyecto. Revisa la consola.`;
+                form.style.display = 'none';
+                return;
+            }
+            // Si es 404, continuamos con la carga normal del formulario de creación.
+        }
+        
+        // --- El resto de la lógica de inicialización (solo se ejecuta si no existe cronograma) ---
+        try {
+            [projectData, masterFases, masterEtapas, usersData] = await Promise.all([
+                fetchData(`/projects/${projectId}`),
+                fetchData("/fases/"),
+                fetchData("/etapas/"),
+                fetchData("/users/")
+            ]);
+
+            masterFases.sort((a, b) => a.orden - b.orden);
+            masterEtapas.sort((a, b) => a.orden - b.orden);
+
+            renderProjectInfo();
+            renderSelector();
+            attachEventListeners();
+        } catch (error) {
+            console.error("Error en la inicialización:", error);
+            projectInfoText.parentElement.className = 'mb-8 p-4 flex items-center gap-4 bg-red-100 text-red-800 rounded-lg border border-red-200';
+            projectInfoText.textContent = `Error al cargar datos. Revisa la consola.`;
+        }
+    }
+
+    // --- El resto de las funciones (renderProjectInfo, renderSelector, etc.) se mantienen sin cambios ---
+    function renderProjectInfo() { /* ... (código sin cambios) ... */ }
+    function renderSelector() { /* ... (código sin cambios) ... */ }
+    function createEtapaForm(dataset) { /* ... (código sin cambios) ... */ }
+    function deleteEtapaForm(etapaId) { /* ... (código sin cambios) ... */ }
+    function getNextDay(dateString) { /* ... (código sin cambios) ... */ }
+    function updateAllDateConstraints() { /* ... (código sin cambios) ... */ }
+    function attachEventListeners() { /* ... (código sin cambios) ... */ }
+    async function handleFormSubmit(e) { /* ... (código sin cambios) ... */ }
+    function buildPayload() { /* ... (código sin cambios) ... */ }
+
+    // --- Implementaciones de las funciones sin cambios (para que el snippet sea completo) ---
+    renderProjectInfo = function() {
+        const { name, start_date, end_date } = projectData;
+        if (start_date && end_date) {
+            projectInfoText.textContent = `Planificando para "${name}" (Límite del proyecto: ${start_date} al ${end_date})`;
+            cronogramaNombreInput.placeholder = `Cronograma para ${name}`;
+        } else {
+            projectInfoText.textContent = `Planificando para "${name}" (¡Atención: El proyecto no tiene fechas definidas!)`;
+        }
+    }
+    renderSelector = function() {
+        selectorContainer.innerHTML = "";
+        masterFases.forEach(fase => {
+            const faseDiv = document.createElement('div');
+            faseDiv.className = 'py-2';
+            const etapasDeLaFase = masterEtapas.filter(e => e.fase_id === fase.id);
+            let etapasHTML = '';
+            if (etapasDeLaFase.length > 0) {
+                etapasHTML = `<div class="ml-8 mt-2 space-y-2 border-l-2 pl-4">` +
+                    etapasDeLaFase.map(etapa => `
+                    <label class="block flex items-center space-x-3 custom-checkbox text-gray-600 cursor-pointer">
+                        <input type="checkbox" class="etapa-checkbox" value="${etapa.id}"
+                               data-etapa-id="${etapa.id}" data-fase-id="${fase.id}"
+                               data-nombre-fase="${fase.nombre}" data-nombre-etapa="${etapa.nombre}">
+                        <span class="checkmark"></span>
+                        <span>${etapa.nombre}</span>
+                    </label>`).join('') + `</div>`;
+            }
+            faseDiv.innerHTML = `
+                <label class="font-bold text-gray-700 flex items-center space-x-3 custom-checkbox cursor-pointer">
+                    <input type="checkbox" class="fase-checkbox" value="${fase.id}" ${etapasDeLaFase.length ? '' : 'disabled'}>
+                    <span class="checkmark"></span>
+                    <span>${fase.nombre}</span>
+                </label>
+                ${etapasHTML}
+            `;
+            selectorContainer.appendChild(faseDiv);
+        });
+    }
+    createEtapaForm = function(dataset) {
+        if (constructorPlaceholder) constructorPlaceholder.classList.add('hidden');
+        const template = etapaFormTemplate.content.cloneNode(true);
+        const formElement = template.querySelector('div');
+        formElement.dataset.etapaId = dataset.etapaId;
+        formElement.dataset.faseId = dataset.faseId;
+        formElement.querySelector('.fase-name').textContent = dataset.nombreFase;
+        formElement.querySelector('.etapa-name').textContent = dataset.nombreEtapa;
+        const userOptions = usersData.map(u => `<option value="${u.uid}">${u.nombre || u.username}</option>`).join('');
+        formElement.querySelector('select[name="responsables"]').innerHTML = userOptions;
+        if (projectData.start_date && projectData.end_date) {
+             const fechaInicioInput = formElement.querySelector('input[name="fecha_inicio"]');
+             const fechaFinInput = formElement.querySelector('input[name="fecha_fin"]');
+             fechaInicioInput.min = projectData.start_date;
+             fechaInicioInput.max = projectData.end_date;
+             fechaFinInput.min = projectData.start_date;
+             fechaFinInput.max = projectData.end_date;
+        }
+        constructorContainer.appendChild(formElement);
+        updateAllDateConstraints();
+    }
+    deleteEtapaForm = function(etapaId) {
+        const formElement = constructorContainer.querySelector(`[data-etapa-id="${etapaId}"]`);
+        if (formElement) formElement.remove();
+        const remainingForms = constructorContainer.querySelectorAll('[data-etapa-id]');
+        if (remainingForms.length === 0 && constructorPlaceholder) {
+            constructorPlaceholder.classList.remove('hidden');
+        }
+        updateAllDateConstraints();
+    }
+    getNextDay = function(dateString) {
+        if (!dateString) return null;
+        const [year, month, day] = dateString.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        date.setDate(date.getDate() + 1);
+        const nextYear = date.getFullYear();
+        const nextMonth = String(date.getMonth() + 1).padStart(2, '0');
+        const nextDay = String(date.getDate()).padStart(2, '0');
+        return `${nextYear}-${nextMonth}-${nextDay}`;
+    }
+    updateAllDateConstraints = function() {
+        const allForms = Array.from(constructorContainer.querySelectorAll('[data-etapa-id]'));
+        allForms.sort((a, b) => {
+            const faseA = masterFases.find(f => f.id == a.dataset.faseId);
+            const faseB = masterFases.find(f => f.id == b.dataset.faseId);
+            if (faseA.orden !== faseB.orden) { return faseA.orden - faseB.orden; }
+            const etapaA = masterEtapas.find(e => e.id == a.dataset.etapaId);
+            const etapaB = masterEtapas.find(e => e.id == b.dataset.etapaId);
+            return etapaA.orden - etapaB.orden;
+        });
+        let previousEndDate = null;
+        allForms.forEach(form => {
+            const startDateInput = form.querySelector('input[name="fecha_inicio"]');
+            const endDateValue = form.querySelector('input[name="fecha_fin"]').value;
+            const newMinDate = getNextDay(previousEndDate) || projectData.start_date;
+            if (newMinDate) {
+                startDateInput.min = newMinDate;
+                if (startDateInput.value && startDateInput.value < newMinDate) {
+                    startDateInput.value = '';
+                }
+            }
+            if (endDateValue) { previousEndDate = endDateValue; }
+        });
+    }
+    attachEventListeners = function() {
+        selectorContainer.addEventListener('change', (e) => {
+            const target = e.target;
+            if (target.classList.contains('etapa-checkbox')) {
+                if (target.checked) createEtapaForm(target.dataset);
+                else deleteEtapaForm(target.value);
+            }
+            if (target.classList.contains('fase-checkbox')) {
+                const etapasContainer = target.closest('label').nextElementSibling;
+                if(etapasContainer){
+                    const etapas = etapasContainer.querySelectorAll('.etapa-checkbox');
+                    etapas.forEach(etapa => {
+                        if (etapa.checked !== target.checked) {
+                            etapa.checked = target.checked;
+                            etapa.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    });
+                }
+            }
+        });
+        constructorContainer.addEventListener('change', (e) => {
+            const target = e.target;
+            if (target.name === 'fecha_inicio') {
+                const parentForm = target.closest('[data-etapa-id]');
+                if (parentForm) {
+                    const fechaFinInput = parentForm.querySelector('input[name="fecha_fin"]');
+                    const fechaInicioValue = target.value;
+                    if (fechaInicioValue) {
+                        fechaFinInput.min = fechaInicioValue;
+                        if (fechaFinInput.value && fechaFinInput.value < fechaInicioValue) {
+                            fechaFinInput.value = '';
+                        }
+                    }
+                }
+            }
+            if (target.name === 'fecha_fin' || target.name === 'fecha_inicio') {
+                updateAllDateConstraints();
+            }
+        });
+        form.addEventListener('submit', handleFormSubmit);
+        goToListButton.addEventListener('click', () => { window.location.href = "./listar_cronogramas.html"; }); // Asumiendo que esta es la ruta a la lista
+    }
+    handleFormSubmit = async function(e) {
+        e.preventDefault();
+        submitButton.disabled = true;
+        submitButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Guardando...`;
+        try {
+            const payload = buildPayload();
+            if (!payload) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = `<span>Guardar Cronograma</span><i class="fas fa-save"></i>`;
+                return;
+            };
+            const response = await fetch(`${API_BASE}/cronogramas/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(payload)
+            });
+            if (response.ok) {
+                successModal.classList.remove('hidden');
+            } else {
+                const errorData = await response.json();
+                alert(`Error al guardar: ${errorData.detail || response.statusText}`);
+            }
+        } catch (error) {
+            console.error("Error en el envío:", error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            if (!successModal.classList.contains('hidden')) {}
+            else {
+                submitButton.disabled = false;
+                submitButton.innerHTML = `<span>Guardar Cronograma</span><i class="fas fa-save"></i>`;
+            }
+        }
+    }
+    buildPayload = function() {
+        const cronogramaNombre = cronogramaNombreInput.value.trim();
+        if (!cronogramaNombre) {
+            alert("El nombre del cronograma es obligatorio.");
+            cronogramaNombreInput.classList.add('input-error');
+            return null;
+        } else {
+            cronogramaNombreInput.classList.remove('input-error');
+        }
+        const estructuraForms = constructorContainer.querySelectorAll('[data-etapa-id]');
+        if (estructuraForms.length === 0) {
+            alert("Debe seleccionar y planificar al menos una etapa.");
+            return null;
+        }
+        let isValid = true;
+        const fasesMap = new Map();
+        estructuraForms.forEach(form => {
+            form.querySelectorAll('input, select').forEach(el => el.classList.remove('input-error'));
+            const etapaId = parseInt(form.dataset.etapaId);
+            const faseId = parseInt(form.dataset.faseId);
+            const fechaInicio = form.querySelector('input[name="fecha_inicio"]').value;
+            const fechaFin = form.querySelector('input[name="fecha_fin"]').value;
+            const responsablesSelect = form.querySelector('select[name="responsables"]');
+            const responsables = Array.from(responsablesSelect.selectedOptions).map(opt => opt.value);
+            if (!fechaInicio || !fechaFin || responsables.length === 0 || new Date(fechaFin) < new Date(fechaInicio)) {
+                isValid = false;
+                if (!fechaInicio) form.querySelector('input[name="fecha_inicio"]').classList.add('input-error');
+                if (!fechaFin || new Date(fechaFin) < new Date(fechaInicio)) form.querySelector('input[name="fecha_fin"]').classList.add('input-error');
+                if (responsables.length === 0) responsablesSelect.classList.add('input-error');
+            }
+            const etapaData = { etapa_id: etapaId, nombre_etapa: masterEtapas.find(e => e.id === etapaId).nombre, fecha_inicio: fechaInicio, fecha_fin: fechaFin, estado: "pendiente", responsables: responsables };
+            if (!fasesMap.has(faseId)) {
+                fasesMap.set(faseId, { fase_id: faseId, nombre_fase: masterFases.find(f => f.id === faseId).nombre, fecha_inicio: "", fecha_fin: "", estado: "pendiente", etapas: [] });
+            }
+            fasesMap.get(faseId).etapas.push(etapaData);
+        });
+        if (!isValid) {
+            alert("Por favor, revise los campos marcados en rojo. Todas las fechas y responsables son requeridos, y la fecha de fin no puede ser anterior a la de inicio.");
+            return null;
+        }
+        const estructuraFinal = [];
+        masterFases.forEach(masterFase => {
+            if (fasesMap.has(masterFase.id)) {
+                let fase = fasesMap.get(masterFase.id);
+                fase.etapas.sort((a,b) => {
+                    const etapaA = masterEtapas.find(e => e.id === a.etapa_id);
+                    const etapaB = masterEtapas.find(e => e.id === b.etapa_id);
+                    return etapaA.orden - etapaB.orden;
+                });
+                const fechasInicio = fase.etapas.map(e => new Date(e.fecha_inicio));
+                const fechasFin = fase.etapas.map(e => new Date(e.fecha_fin));
+                fase.fecha_inicio = new Date(Math.min(...fechasInicio)).toISOString().split('T')[0];
+                fase.fecha_fin = new Date(Math.max(...fechasFin)).toISOString().split('T')[0];
+                estructuraFinal.push(fase);
+            }
+        });
+        return {
+            project_id: parseInt(projectId),
+            nombre: cronogramaNombre,
+            estado: "planificado",
+            estructura: estructuraFinal
+        };
+    }
+
+    init();
+});
+</script>
+
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
+

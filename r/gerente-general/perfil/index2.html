@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ver/Editar Perfil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans p-8">
+
+  <div class="max-w-xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-2xl font-bold mb-4">Perfil de Usuario</h2>
+
+    <form id="profileForm" enctype="multipart/form-data" class="space-y-4">
+      <div>
+        <label for="user_id" class="block font-semibold">ID de Usuario</label>
+        <input type="text" id="user_id" name="user_id" readonly
+          class="w-full border p-2 rounded bg-gray-100 text-gray-700" />
+      </div>
+
+      <div>
+        <label for="nombre" class="block font-semibold">Nombre</label>
+        <input type="text" id="nombre" name="nombre" required class="w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label for="telefono" class="block font-semibold">Teléfono</label>
+        <input type="text" id="telefono" name="telefono" required class="w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label for="direccion" class="block font-semibold">Dirección</label>
+        <input type="text" id="direccion" name="direccion" required class="w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label for="foto" class="block font-semibold">Foto de Perfil</label>
+        <input type="file" id="foto" name="foto" accept="image/*" class="w-full border p-2 rounded" />
+      </div>
+
+      <div id="preview" class="mt-2 hidden">
+        <p class="text-sm text-gray-600 mb-1">Foto actual:</p>
+        <img id="foto_actual" src="" alt="Foto de perfil" class="w-32 h-32 object-cover rounded border" />
+      </div>
+
+      <div class="flex justify-between">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          Guardar Cambios
+        </button>
+        <button type="button" onclick="eliminarPerfil()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+          Eliminar Perfil
+        </button>
+      </div>
+    </form>
+
+    <div id="respuesta" class="mt-4 text-sm"></div>
+  </div>
+
+  <script>
+    const API_URL = "https://gestordecursos.pegui.edu.co:8000/profiles";
+
+    function getQueryParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+
+    function redirigirSegunRol() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Token no encontrado. Inicia sesión.");
+        return;
+      }
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const rol = payload.rol || (Array.isArray(payload.roles) ? payload.roles[0] : null);
+        if (!rol) {
+          alert("No se pudo determinar el rol del usuario.");
+          return;
+        }
+        window.location.href = `/r/${rol}/`;
+      } catch (e) {
+        console.error("Error al leer el rol:", e);
+        alert("Error en el token. Vuelve a iniciar sesión.");
+      }
+    }
+
+    async function cargarPerfil(userId) {
+      try {
+        const res = await fetch(`${API_URL}/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('nombre').value = data.nombre || '';
+          document.getElementById('telefono').value = data.telefono || '';
+          document.getElementById('direccion').value = data.direccion || '';
+          document.getElementById('profileForm').setAttribute('data-existe', 'true');
+
+          if (data.foto_url) {
+            document.getElementById('foto_actual').src = data.foto_url;
+            document.getElementById('preview').classList.remove('hidden');
+          } else {
+            document.getElementById('preview').classList.add('hidden');
+          }
+        } else {
+          document.getElementById('profileForm').setAttribute('data-existe', 'false');
+          document.getElementById('preview').classList.add('hidden');
+        }
+      } catch (error) {
+        console.error("Error cargando perfil:", error);
+        document.getElementById('respuesta').innerHTML = '<span class="text-red-600">⚠️ Error de red</span>';
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      const userId = getQueryParam("user_id");
+      if (userId) {
+        document.getElementById("user_id").value = userId;
+        await cargarPerfil(userId);
+      } else {
+        document.getElementById('respuesta').innerHTML = '<span class="text-red-600">❌ No se proporcionó user_id en la URL.</span>';
+      }
+    });
+
+    document.getElementById('profileForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const userId = form.user_id.value.trim();
+      const existe = form.getAttribute('data-existe') === 'true';
+
+      const url = existe ? `${API_URL}/${userId}` : `${API_URL}/`;
+      const method = existe ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          document.getElementById('respuesta').innerHTML = '<span class="text-green-600">✅ Perfil guardado correctamente.</span>';
+          setTimeout(redirigirSegunRol, 1500);
+        } else {
+          document.getElementById('respuesta').innerHTML = `<span class="text-red-600">❌ Error: ${data.detail || 'fallo en la solicitud'}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('respuesta').innerHTML = `<span class="text-red-600">⚠️ Error de red: ${error.message}</span>`;
+      }
+    });
+
+    async function eliminarPerfil() {
+      const userId = document.getElementById('user_id').value.trim();
+      if (!userId) {
+        document.getElementById('respuesta').innerHTML = '<span class="text-red-600">❌ No hay un ID de usuario cargado.</span>';
+        return;
+      }
+
+      if (!confirm(`¿Eliminar el perfil del usuario ${userId}? Esta acción es irreversible.`)) return;
+
+      try {
+        const res = await fetch(`${API_URL}/${userId}`, { method: 'DELETE' });
+
+        if (res.ok) {
+          document.getElementById('respuesta').innerHTML = '<span class="text-green-600">🗑️ Perfil eliminado. Redirigiendo...</span>';
+          setTimeout(redirigirSegunRol, 1500);
+        } else {
+          const data = await res.json();
+          document.getElementById('respuesta').innerHTML = `<span class="text-red-600">❌ Error al eliminar: ${data.detail || 'fallo desconocido'}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('respuesta').innerHTML = `<span class="text-red-600">⚠️ Error de red: ${error.message}</span>`;
+      }
+    }
+  </script>
+
+</body>
+</html>
+

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tripo3D - Generación 3D con IA | Virtualmind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            secondary: '#a855f7',
+            accent: '#22d3ee',
+            dark: '#020617',
+            surface: '#1e293b',
+            'surface-light': '#334155'
+          },
+          animation: {
+            'gradient': 'gradient 8s ease infinite',
+            'shimmer': 'shimmer 2s linear infinite',
+            'spin-slow': 'spin 3s linear infinite'
+          },
+          keyframes: {
+            gradient: {
+              '0%, 100%': { 'background-position': '0% 50%' },
+              '50%': { 'background-position': '100% 50%' }
+            },
+            shimmer: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(100%)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: radial-gradient(circle at top right, #1e1b4b, #020617); background-attachment: fixed; }
+    .glass-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); }
+    .glass-input { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .glass-input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15); background: rgba(15, 23, 42, 0.8); }
+    .btn-action { position: relative; overflow: hidden; transition: all 0.3s ease; }
+    .btn-action:hover { transform: translateY(-1px); box-shadow: 0 8px 25px -5px rgba(99, 102, 241, 0.4); }
+    .preview-3d { width: 100%; background: transparent; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.08); }
+    model-viewer { --poster-color: transparent; }
+    .model-card { transition: all 0.3s ease; }
+    .model-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px -8px rgba(99, 102, 241, 0.3); }
+    .modal-overlay { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+    #userDropdown::-webkit-scrollbar { width: 4px; }
+    #userDropdown::-webkit-scrollbar-track { background: transparent; }
+    #userDropdown::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 2px; }
+  </style>
+</head>
+<body class="min-h-screen text-white p-4 md:p-8">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20">
+            <i data-lucide="box" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-primary to-secondary bg-clip-text text-transparent">Tripo3D Studio</h1>
+            <p class="text-gray-400 text-sm">Generación de modelos 3D con IA</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-sm text-gray-400">
+        <i data-lucide="zap" class="w-4 h-4 text-accent"></i>
+        <span>Tripo3D API</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Panel de Generación -->
+      <div class="glass-card rounded-2xl p-6 space-y-6">
+        <h2 class="text-lg font-semibold flex items-center gap-2">
+          <i data-lucide="wand-2" class="w-5 h-5 text-primary"></i>
+          Generar Modelo 3D
+        </h2>
+        <div class="flex gap-2">
+          <button id="btnTextMode" class="flex-1 px-4 py-2.5 rounded-xl bg-primary/20 border border-primary/40 text-primary font-medium text-sm transition-all" onclick="setMode('text')">
+            <i data-lucide="file-text" class="w-4 h-4 inline mr-1"></i> Texto a 3D
+          </button>
+          <button id="btnImageMode" class="flex-1 px-4 py-2.5 rounded-xl bg-surface border border-white/10 text-gray-300 font-medium text-sm transition-all hover:bg-surface-light" onclick="setMode('image')">
+            <i data-lucide="image" class="w-4 h-4 inline mr-1"></i> Imagen a 3D
+          </button>
+        </div>
+        <div id="textMode" class="space-y-4">
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">Describe el modelo 3D</label>
+            <textarea id="promptInput" rows="3" class="glass-input w-full rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none resize-none" placeholder="Ej: un gato pequeño, un auto clásico, una espada medieval..."></textarea>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">Prompt negativo (opcional)</label>
+            <input id="negativePrompt" type="text" class="glass-input w-full rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none" placeholder="low quality, blurry, deformed">
+          </div>
+        </div>
+        <div id="imageMode" class="space-y-4 hidden">
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">URL de imagen de referencia</label>
+            <input id="imageUrlInput" type="url" class="glass-input w-full rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none" placeholder="https://ejemplo.com/imagen.png">
+          </div>
+          <div class="border-2 border-dashed border-white/10 rounded-xl p-8 text-center">
+            <i data-lucide="upload" class="w-8 h-8 text-gray-500 mx-auto mb-2"></i>
+            <p class="text-sm text-gray-500">O arrastra una imagen aquí</p>
+          </div>
+        </div>
+        <button id="generateBtn" onclick="generateModel()" class="btn-action w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold shadow-lg shadow-primary/25 flex items-center justify-center gap-2">
+          <i data-lucide="sparkles" class="w-5 h-5"></i>
+          <span id="btnText">Generar Modelo 3D</span>
+          <div id="spinner" class="hidden">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+          </div>
+        </button>
+        <div id="statusArea" class="hidden">
+          <div class="bg-surface/50 rounded-xl p-4">
+            <div class="flex items-center gap-2 text-sm">
+              <div id="statusDot" class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
+              <span id="statusText" class="text-gray-300">Generando...</span>
+            </div>
+            <pre id="logOutput" class="mt-2 text-xs text-gray-500 font-mono max-h-32 overflow-y-auto"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel de Vista Previa -->
+      <div class="glass-card rounded-2xl p-6 space-y-6">
+        <h2 class="text-lg font-semibold flex items-center gap-2">
+          <i data-lucide="eye" class="w-5 h-5 text-secondary"></i>
+          Vista Previa
+        </h2>
+        <div id="previewPlaceholder" class="preview-3d flex items-center justify-center">
+          <div class="text-center">
+            <i data-lucide="cube" class="w-16 h-16 text-gray-600 mx-auto mb-3"></i>
+            <p class="text-gray-500 text-sm">Tu modelo 3D aparecerá aquí</p>
+          </div>
+        </div>
+        <div id="previewContainer" class="hidden">
+          <div class="preview-3d relative overflow-hidden bg-transparent" style="height:400px;">
+            <model-viewer id="modelViewer" style="width:100%;height:400px;--poster-color:transparent;" camera-controls auto-rotate shadow-intensity="1" exposure="0.8"></model-viewer>
+          </div>
+          <div class="flex gap-2 mt-4">
+            <button onclick="downloadModel()" class="flex-1 py-2.5 rounded-xl bg-surface border border-white/10 text-gray-300 font-medium text-sm hover:bg-surface-light transition-all flex items-center justify-center gap-2">
+              <i data-lucide="download" class="w-4 h-4"></i> Descargar GLB
+            </button>
+            <button onclick="openShareModal(currentTaskId)" class="flex-1 py-2.5 rounded-xl bg-surface border border-white/10 text-gray-300 font-medium text-sm hover:bg-surface-light transition-all flex items-center justify-center gap-2">
+              <i data-lucide="share-2" class="w-4 h-4"></i> Compartir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial de modelos -->
+    <div class="glass-card rounded-2xl p-6 mt-6">
+      <h2 class="text-lg font-semibold flex items-center gap-2 mb-4">
+        <i data-lucide="clock" class="w-5 h-5 text-accent"></i>
+        Modelos Generados
+      </h2>
+      <div id="historyList" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div id="shareModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden" onclick="if(event.target===this)closeShareModal()">
+    <div class="glass-card rounded-2xl p-6 w-full max-w-md mx-4 space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold flex items-center gap-2">
+          <i data-lucide="share-2" class="w-5 h-5 text-primary"></i>
+          Compartir modelo 3D
+        </h3>
+        <button onclick="closeShareModal()" class="text-gray-400 hover:text-white transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div>
+        <label class="block text-sm text-gray-300 mb-2">Enlace del modelo</label>
+        <div class="flex gap-2">
+          <input id="shareLinkInput" type="text" readonly class="glass-input flex-1 rounded-xl px-4 py-2.5 text-white text-sm outline-none" value="">
+          <button onclick="copyShareLink()" id="copyBtn" class="px-4 py-2.5 rounded-xl bg-primary/20 border border-primary/40 text-primary text-sm hover:bg-primary/30 transition-all whitespace-nowrap">Copiar</button>
+        </div>
+      </div>
+
+      <div class="border-t border-white/10 pt-4">
+        <label class="block text-sm text-gray-300 mb-2">Enviar a usuario</label>
+        <div class="space-y-3">
+          <div id="userSelectorContainer" class="relative">
+            <div id="selectedUserDisplay" class="hidden">
+              <div class="flex items-center gap-3 bg-primary/10 border border-primary/30 rounded-xl px-4 py-3">
+                <div id="selectedUserAvatar" class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-sm shrink-0"></div>
+                <div class="flex-1 min-w-0">
+                  <p id="selectedUserName" class="text-sm font-medium truncate"></p>
+                  <p id="selectedUserEmail" class="text-xs text-gray-400 truncate"></p>
+                </div>
+                <button onclick="clearSelectedUser()" class="text-gray-400 hover:text-red-400 transition-colors p-1">
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+            <div id="userSearchWrapper">
+              <input id="userSearchInput" type="text" class="glass-input w-full rounded-xl px-4 py-2.5 text-white placeholder-gray-500 text-sm outline-none" placeholder="Buscar usuario por nombre o email..." autocomplete="off">
+              <div id="userDropdown" class="absolute z-50 mt-1 w-full glass-card rounded-xl max-h-60 overflow-y-auto hidden"></div>
+            </div>
+          </div>
+          <textarea id="shareMessageInput" rows="2" class="glass-input w-full rounded-xl px-4 py-2.5 text-white placeholder-gray-500 text-sm outline-none resize-none" placeholder="Mensaje opcional..."></textarea>
+          <button onclick="sendShareEmail()" id="shareEmailBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+            <span id="shareEmailBtnText">Enviar por correo</span>
+          </button>
+          <div id="shareEmailStatus" class="text-xs hidden"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentMode = 'text';
+    let currentTaskId = null;
+    let currentModelUrl = null;
+    let history = JSON.parse(localStorage.getItem('tripo3d_history') || '[]');
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('textMode').classList.toggle('hidden', mode !== 'text');
+      document.getElementById('imageMode').classList.toggle('hidden', mode !== 'image');
+      document.getElementById('btnTextMode').className = mode === 'text'
+        ? 'flex-1 px-4 py-2.5 rounded-xl bg-primary/20 border border-primary/40 text-primary font-medium text-sm transition-all'
+        : 'flex-1 px-4 py-2.5 rounded-xl bg-surface border border-white/10 text-gray-300 font-medium text-sm transition-all hover:bg-surface-light';
+      document.getElementById('btnImageMode').className = mode === 'image'
+        ? 'flex-1 px-4 py-2.5 rounded-xl bg-primary/20 border border-primary/40 text-primary font-medium text-sm transition-all'
+        : 'flex-1 px-4 py-2.5 rounded-xl bg-surface border border-white/10 text-gray-300 font-medium text-sm transition-all hover:bg-surface-light';
+    }
+
+    function addLog(msg) {
+      const el = document.getElementById('logOutput');
+      el.textContent += `> ${msg}\n`;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function setStatus(text, type) {
+      document.getElementById('statusArea').classList.remove('hidden');
+      document.getElementById('statusText').textContent = text;
+      const dot = document.getElementById('statusDot');
+      dot.className = `w-2 h-2 rounded-full ${type === 'success' ? 'bg-green-400' : type === 'error' ? 'bg-red-400' : 'bg-yellow-400 animate-pulse'}`;
+    }
+
+    async function generateModel() {
+      const btn = document.getElementById('generateBtn');
+      const btnText = document.getElementById('btnText');
+      const spinner = document.getElementById('spinner');
+      btn.disabled = true;
+      btnText.classList.add('hidden');
+      spinner.classList.remove('hidden');
+
+      document.getElementById('previewPlaceholder').classList.add('hidden');
+      document.getElementById('previewContainer').classList.add('hidden');
+      document.getElementById('logOutput').textContent = '';
+
+      try {
+        let endpoint, body;
+        if (currentMode === 'text') {
+          const prompt = document.getElementById('promptInput').value.trim();
+          if (!prompt) { alert('Escribe un prompt'); throw new Error('No prompt'); }
+          const negative = document.getElementById('negativePrompt').value.trim();
+          endpoint = '/tripo3d/text-to-model';
+          body = { prompt, negative_prompt: negative || undefined };
+        } else {
+          const imageUrl = document.getElementById('imageUrlInput').value.trim();
+          if (!imageUrl) { alert('Ingresa una URL de imagen'); throw new Error('No image'); }
+          endpoint = '/tripo3d/image-to-model';
+          body = { image: imageUrl };
+        }
+
+        setStatus('Iniciando generación...', 'pending');
+        addLog(`POST ${endpoint}`);
+
+        const res = await fetchConToken(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          let errMsg;
+          try { const e = await res.json(); errMsg = e.detail || res.statusText; } catch { errMsg = res.statusText; }
+          throw new Error(errMsg);
+        }
+        const data = await res.json();
+        currentTaskId = data.task_id;
+        addLog(`Task ID: ${currentTaskId}`);
+        setStatus(`Generando (Task: ${currentTaskId.slice(0,8)}...)`, 'pending');
+        await pollStatus(currentTaskId);
+      } catch (e) {
+        addLog(`ERROR: ${e.message}`);
+        setStatus(`Error: ${e.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btnText.classList.remove('hidden');
+        spinner.classList.add('hidden');
+      }
+    }
+
+    async function pollStatus(taskId) {
+      let attempts = 0;
+      const maxAttempts = 120;
+      while (attempts < maxAttempts) {
+        attempts++;
+        addLog(`Verificando estado (${attempts})...`);
+        const res = await fetchConToken(`/tripo3d/status/${taskId}`);
+        if (!res.ok) throw new Error('Error al consultar estado');
+        const data = await res.json();
+        const status = data.status;
+        if (status === 'SUCCESS') {
+          setStatus('Generación completada ✅', 'success');
+          addLog('Modelo generado exitosamente');
+          showModel(data);
+          return;
+        }
+        if (status === 'FAILED') {
+          throw new Error(data.error || 'La generación falló');
+        }
+        await new Promise(r => setTimeout(r, 3000));
+      }
+      throw new Error('Tiempo de espera agotado');
+    }
+
+    function showModel(data) {
+      currentModelUrl = data.proxy_url || data.model_url;
+      currentTaskId = data.task_id;
+      document.getElementById('previewPlaceholder').classList.add('hidden');
+      const previewContainer = document.getElementById('previewContainer');
+      previewContainer.classList.remove('hidden');
+      const modelViewer = document.getElementById('modelViewer');
+      if (modelViewer) {
+        modelViewer.setAttribute('src', currentModelUrl);
+      }
+      const entry = {
+        id: data.task_id,
+        prompt: document.getElementById('promptInput').value.trim() || 'Modelo 3D',
+        date: new Date().toLocaleString(),
+        model_url: currentModelUrl,
+        thumbnail: data.thumbnail || ''
+      };
+      history.unshift(entry);
+      localStorage.setItem('tripo3d_history', JSON.stringify(history));
+      renderHistory();
+    }
+
+    function downloadModel() {
+      const url = currentModelUrl;
+      if (!url) { alert('No hay modelo para descargar'); return; }
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `modelo_3d_${currentTaskId || 'modelo'}.glb`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    let allUsers = [];
+    let selectedUser = null;
+    let userSearchTimeout = null;
+
+    async function openShareModal(taskId) {
+      if (!taskId) { alert('No hay modelo para compartir'); return; }
+      document.getElementById('shareLinkInput').value = `https://gestordecursos.pegui.edu.co/tripo3d/model/${taskId}`;
+      clearSelectedUser();
+      document.getElementById('shareMessageInput').value = '';
+      document.getElementById('shareEmailStatus').classList.add('hidden');
+      document.getElementById('shareEmailBtnText').textContent = 'Enviar por correo';
+      document.getElementById('shareEmailBtn').disabled = false;
+      document.getElementById('shareModal').classList.remove('hidden');
+      lucide.createIcons();
+      if (allUsers.length === 0) {
+        try {
+          const res = await fetchConToken('/users/', { method: 'GET' });
+          allUsers = await res.json();
+        } catch(e) {
+          console.error('Error fetching users:', e);
+        }
+      }
+      document.getElementById('userSearchInput').focus();
+    }
+
+    function closeShareModal() {
+      document.getElementById('shareModal').classList.add('hidden');
+      document.getElementById('userDropdown').classList.add('hidden');
+    }
+
+    function filterUsers() {
+      clearTimeout(userSearchTimeout);
+      userSearchTimeout = setTimeout(() => {
+        const q = document.getElementById('userSearchInput').value.toLowerCase().trim();
+        const dropdown = document.getElementById('userDropdown');
+        if (!q) { dropdown.classList.add('hidden'); return; }
+        const filtered = allUsers.filter(u =>
+          u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+        ).slice(0, 15);
+        if (filtered.length === 0) {
+          dropdown.innerHTML = '<div class="px-4 py-3 text-gray-400 text-sm text-center">Sin resultados</div>';
+          dropdown.classList.remove('hidden');
+          return;
+        }
+        dropdown.innerHTML = filtered.map(u => `
+          <div onclick="selectUser('${u.uid}')" class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors border-b border-white/5 last:border-0">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary/60 to-secondary/60 flex items-center justify-center text-white font-bold text-xs shrink-0">
+              ${u.nombre.charAt(0).toUpperCase()}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate">${u.nombre}</p>
+              <p class="text-xs text-gray-400 truncate">${u.email}</p>
+            </div>
+          </div>
+        `).join('');
+        dropdown.classList.remove('hidden');
+      }, 200);
+    }
+
+    function selectUser(uid) {
+      const user = allUsers.find(u => u.uid === uid);
+      if (!user) return;
+      selectedUser = user;
+      document.getElementById('selectedUserAvatar').textContent = user.nombre.charAt(0).toUpperCase();
+      document.getElementById('selectedUserName').textContent = user.nombre;
+      document.getElementById('selectedUserEmail').textContent = user.email;
+      document.getElementById('selectedUserDisplay').classList.remove('hidden');
+      document.getElementById('userSearchWrapper').classList.add('hidden');
+      document.getElementById('userDropdown').classList.add('hidden');
+      document.getElementById('userSearchInput').value = '';
+      lucide.createIcons();
+    }
+
+    function clearSelectedUser() {
+      selectedUser = null;
+      document.getElementById('selectedUserDisplay').classList.add('hidden');
+      document.getElementById('userSearchWrapper').classList.remove('hidden');
+      document.getElementById('userSearchInput').value = '';
+      document.getElementById('userSearchInput').focus();
+    }
+
+    function copyShareLink() {
+      const input = document.getElementById('shareLinkInput');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copiado!';
+        setTimeout(() => { btn.textContent = 'Copiar'; }, 2000);
+      });
+    }
+
+    async function sendShareEmail() {
+      if (!selectedUser) { alert('Selecciona un usuario'); return; }
+      const message = document.getElementById('shareMessageInput').value.trim();
+      const btn = document.getElementById('shareEmailBtn');
+      const status = document.getElementById('shareEmailStatus');
+      btn.disabled = true;
+      document.getElementById('shareEmailBtnText').textContent = 'Enviando...';
+      status.classList.add('hidden');
+      try {
+        const res = await fetchConToken('/tripo3d/share', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task_id: currentTaskId, recipient_email: selectedUser.email, message: message || undefined })
+        });
+        const data = await res.json();
+        if (data.success) {
+          status.className = 'text-xs text-green-400';
+          status.textContent = 'Correo enviado exitosamente ✅';
+        } else {
+          status.className = 'text-xs text-red-400';
+          status.textContent = 'Error al enviar el correo';
+        }
+      } catch (e) {
+        status.className = 'text-xs text-red-400';
+        status.textContent = `Error: ${e.message}`;
+      }
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      document.getElementById('shareEmailBtnText').textContent = 'Enviar por correo';
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      if (history.length === 0) {
+        list.innerHTML = `<div class="col-span-full text-center py-8">
+          <i data-lucide="package" class="w-10 h-10 text-gray-600 mx-auto mb-2"></i>
+          <p class="text-gray-500 text-sm">Aún no has generado modelos</p>
+        </div>`;
+        return;
+      }
+      list.innerHTML = history.slice(0, 8).map(item => `
+        <div class="model-card glass-card rounded-xl p-4">
+          <div class="cursor-pointer" onclick="showHistoryModel('${item.id}')">
+            <div class="w-full h-24 bg-surface rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+              ${item.thumbnail ? `<img src="${item.thumbnail}" class="w-full h-full object-cover rounded-lg">` : `<i data-lucide="box" class="w-8 h-8 text-primary"></i>`}
+            </div>
+            <p class="text-sm font-medium truncate">${item.prompt}</p>
+            <p class="text-xs text-gray-500">${item.date}</p>
+          </div>
+          <div class="flex gap-1 mt-2">
+            <button onclick="event.stopPropagation();downloadHistoryModel('${item.id}')" class="flex-1 py-1.5 rounded-lg bg-surface border border-white/10 text-xs text-gray-300 hover:bg-surface-light transition-all flex items-center justify-center gap-1">
+              <i data-lucide="download" class="w-3 h-3"></i> GLB
+            </button>
+            <button onclick="event.stopPropagation();openShareModal('${item.id}')" class="flex-1 py-1.5 rounded-lg bg-surface border border-white/10 text-xs text-gray-300 hover:bg-surface-light transition-all flex items-center justify-center gap-1">
+              <i data-lucide="share-2" class="w-3 h-3"></i> Compartir
+            </button>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function showHistoryModel(id) {
+      const item = history.find(h => h.id === id);
+      if (!item || !item.model_url) return;
+      currentModelUrl = item.model_url;
+      currentTaskId = item.id;
+      document.getElementById('previewPlaceholder').classList.add('hidden');
+      const previewContainer = document.getElementById('previewContainer');
+      previewContainer.classList.remove('hidden');
+      const modelViewer = document.getElementById('modelViewer');
+      modelViewer.setAttribute('src', currentModelUrl);
+      setStatus(`Modelo: ${item.prompt}`, 'success');
+    }
+
+    function downloadHistoryModel(id) {
+      const item = history.find(h => h.id === id);
+      if (!item || !item.model_url) return;
+      const a = document.createElement('a');
+      a.href = item.model_url;
+      a.download = `modelo_3d_${id}.glb`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    document.getElementById('userSearchInput').addEventListener('input', filterUsers);
+    document.addEventListener('click', function(e) {
+      const container = document.getElementById('userSelectorContainer');
+      const dropdown = document.getElementById('userDropdown');
+      if (container && !container.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    renderHistory();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

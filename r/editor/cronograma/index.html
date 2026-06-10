@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear Cronograma</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.6s ease-out',
+            'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+  <!-- Header con gradiente -->
+  <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-12 px-6 mb-8">
+    <div class="max-w-6xl mx-auto text-center">
+      <div class="inline-block p-3 bg-white/10 rounded-2xl mb-4 backdrop-blur-sm">
+        <i class="fas fa-calendar-alt text-3xl"></i>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">
+        Gestor de Cronogramas
+      </h1>
+      <p class="text-xl opacity-90 animate-fade-in">
+        Crea o visualiza cronogramas de tus proyectos
+      </p>
+    </div>
+  </div>
+
+  <!-- Contenedor principal -->
+  <div class="max-w-6xl mx-auto px-6 pb-12">
+    <!-- Barra de búsqueda -->
+    <div class="mb-8 animate-slide-up">
+      <div class="relative max-w-md mx-auto">
+        <input 
+          type="text" 
+          id="search-input"
+          placeholder="Buscar proyecto..."
+          class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition shadow-sm"
+        >
+        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+      </div>
+    </div>
+
+    <!-- Loading spinner -->
+    <div id="loading-spinner" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <p class="mt-4 text-gray-600">Cargando proyectos...</p>
+    </div>
+
+    <!-- Contenedor de proyectos -->
+    <div id="project-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-0 transition-opacity duration-500"></div>
+    
+    <!-- Estado vacío -->
+    <div id="empty-state" class="hidden text-center py-12 animate-fade-in">
+      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 max-w-md mx-auto">
+        <div class="text-6xl mb-4">📋</div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay proyectos</h3>
+        <p class="text-gray-600 mb-6">Aún no tienes proyectos disponibles para crear cronogramas.</p>
+        <button class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition">
+          <i class="fas fa-plus mr-2"></i>Crear Proyecto
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado de error -->
+    <div id="error-state" class="hidden text-center py-12 animate-fade-in">
+      <div class="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md mx-auto">
+        <div class="text-red-500 text-4xl mb-4">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-red-800 mb-2">Error de conexión</h3>
+        <p id="error-message" class="text-red-600 mb-6">No se pudieron cargar los proyectos. Verifica tu conexión.</p>
+        <button id="retry-btn" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition">
+          <i class="fas fa-redo mr-2"></i>Reintentar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    let proyectosData = [];
+    let cronogramasData = {};
+
+    // Elementos del DOM
+    const loadingSpinner = document.getElementById("loading-spinner");
+    const projectList = document.getElementById("project-list");
+    const emptyState = document.getElementById("empty-state");
+    const errorState = document.getElementById("error-state");
+    const errorMessage = document.getElementById("error-message");
+    const searchInput = document.getElementById("search-input");
+    const retryBtn = document.getElementById("retry-btn");
+
+    // Configuración para fetch con timeout
+    const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            // Agrega aquí cualquier token de autenticación si es necesario
+            // 'Authorization': 'Bearer YOUR_TOKEN'
+          }
+        });
+        clearTimeout(id);
+        return response;
+      } catch (error) {
+        clearTimeout(id);
+        throw error;
+      }
+    };
+
+    // Función para mostrar estados
+    function mostrarEstado(estado, mensajeError = null) {
+      loadingSpinner.style.display = estado === 'loading' ? 'block' : 'none';
+      projectList.style.opacity = estado === 'success' ? '1' : '0';
+      emptyState.style.display = estado === 'empty' ? 'block' : 'none';
+      errorState.style.display = estado === 'error' ? 'block' : 'none';
+      if (mensajeError && errorMessage) {
+        errorMessage.textContent = mensajeError;
+      }
+    }
+
+    // Función para obtener el nombre del proyecto
+    function obtenerNombreProyecto(proyecto) {
+      return proyecto.nombre || proyecto.name || proyecto.title || proyecto.titulo || `Proyecto ${proyecto.id}` || 'Proyecto Sin Nombre';
+    }
+
+    // Función para cargar cronogramas usando el endpoint específico de cada proyecto
+    async function cargarCronogramasProyecto(projectId) {
+      try {
+        const response = await fetchWithTimeout(`${API_BASE}/cronogramas/project/${projectId}`);
+        if (response.ok) {
+          const cronogramas = await response.json();
+          console.log(`Cronogramas para proyecto ${projectId}:`, cronogramas);
+          
+          if (Array.isArray(cronogramas) && cronogramas.length > 0) {
+            const cronogramaValido = cronogramas[0];
+            if (cronogramaValido && (cronogramaValido.id || cronogramaValido.actividades || Object.keys(cronogramaValido).length > 1)) {
+              return cronogramaValido;
+            }
+          } else if (cronogramas && typeof cronogramas === 'object' && (cronogramas.id || cronogramas.actividades)) {
+            return cronogramas;
+          }
+          return null;
+        } else if (response.status === 404) {
+          console.log(`No existe cronograma para proyecto ${projectId}`);
+          return null;
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (error) {
+        console.error(`Error cargando cronograma del proyecto ${projectId}:`, error);
+        return null;
+      }
+    }
+
+    // Función para cargar cronogramas de todos los proyectos
+    async function cargarCronogramasProyectos(proyectos) {
+      cronogramasData = {};
+      const promesas = proyectos.map(async (proyecto) => {
+        const cronograma = await cargarCronogramasProyecto(proyecto.id);
+        if (cronograma) {
+          cronogramasData[String(proyecto.id)] = cronograma;
+        }
+      });
+      await Promise.all(promesas);
+      console.log('Cronogramas cargados:', cronogramasData);
+    }
+
+    // Función para crear tarjeta de proyecto
+    function crearTarjetaProyecto(proyecto, index) {
+      const card = document.createElement("div");
+      card.className = "bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 animate-slide-up";
+      card.style.animationDelay = `${index * 0.1}s`;
+      
+      const colores = ['bg-indigo-500', 'bg-purple-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-pink-500'];
+      const colorAleatorio = colores[Math.floor(Math.random() * colores.length)];
+      const nombreProyecto = obtenerNombreProyecto(proyecto);
+      const projectIdStr = String(proyecto.id);
+      const tieneCronograma = cronogramasData[projectIdStr];
+
+      let badgeHTML = tieneCronograma ? `
+        <span class="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium mb-3">
+          <i class="fas fa-check-circle mr-1.5 text-xs"></i>
+          Con cronograma
+        </span>
+      ` : `
+        <span class="inline-flex items-center bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium mb-3">
+          <i class="fas fa-plus-circle mr-1.5 text-xs"></i>
+          Sin cronograma
+        </span>
+      `;
+
+      let botonesHTML = tieneCronograma ? `
+        <div class="flex gap-2">
+          <a href="https://gestordecursos.pegui.edu.co/r/superadmin/cronograma/vercronograma.html?project_id=${proyecto.id}" 
+             class="flex-1 bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition-all duration-300 font-medium flex items-center justify-center">
+            <i class="fas fa-eye mr-2"></i>
+            <span>Ver</span>
+          </a>
+          <a href="https://gestordecursos.pegui.edu.co/r/superadmin/cronograma/editarcronograma.html?project_id=${proyecto.id}" 
+             class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2.5 rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center">
+            <i class="fas fa-edit mr-2"></i>
+            <span>Editar</span>
+          </a>
+        </div>
+      ` : `
+        <a href="https://gestordecursos.pegui.edu.co/r/superadmin/cronograma/form-cronograma.html?project_id=${proyecto.id}" 
+           class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2.5 rounded-xl hover:shadow-lg transition-all duration-300 font-medium flex items-center justify-center group">
+          <span class="mr-2">Crear cronograma</span>
+          <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+        </a>
+      `;
+
+      card.innerHTML = `
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex-1">
+            <div class="flex items-center mb-3">
+              <div class="w-12 h-12 ${colorAleatorio} rounded-xl flex items-center justify-center text-white mr-3 shadow-sm">
+                <i class="fas fa-project-diagram"></i>
+              </div>
+              <div class="flex-1">
+                <h2 class="text-xl font-bold text-gray-800 mb-1">${nombreProyecto}</h2>
+                <span class="inline-block bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">
+                  ID: ${proyecto.id || 'N/A'}
+                </span>
+              </div>
+            </div>
+            ${badgeHTML}
+          </div>
+        </div>
+        <div class="border-t border-gray-100 pt-4 mt-4">
+          ${botonesHTML}
+        </div>
+      `;
+      
+      return card;
+    }
+
+    // Función para renderizar proyectos
+    function renderizarProyectos(proyectos = proyectosData) {
+      projectList.innerHTML = "";
+      
+      if (proyectos.length === 0) {
+        mostrarEstado('empty');
+        return;
+      }
+
+      proyectos.forEach((proyecto, index) => {
+        const card = crearTarjetaProyecto(proyecto, index);
+        projectList.appendChild(card);
+      });
+      
+      mostrarEstado('success');
+    }
+
+    // Función para filtrar proyectos
+    function filtrarProyectos(termino) {
+      const proyectosFiltrados = proyectosData.filter(proyecto => {
+        const nombreProyecto = obtenerNombreProyecto(proyecto).toLowerCase();
+        const terminoBusqueda = termino.toLowerCase();
+        return nombreProyecto.includes(terminoBusqueda) ||
+               proyecto.id.toString().includes(termino);
+      });
+      renderizarProyectos(proyectosFiltrados);
+    }
+
+    // Función para reintentar con backoff exponencial
+    async function cargarProyectosConReintentos(maxRetries = 3, initialDelay = 1000) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          mostrarEstado('loading');
+          
+          const response = await fetchWithTimeout(`${API_BASE}/projects`, {}, 10000);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          proyectosData = await response.json();
+          
+          if (!Array.isArray(proyectosData)) {
+            throw new Error('Formato de datos inválido');
+          }
+
+          await cargarCronogramasProyectos(proyectosData);
+          
+          setTimeout(() => {
+            renderizarProyectos();
+          }, 500);
+          
+          return; // Éxito, salir del bucle
+        } catch (error) {
+          console.error(`Intento ${attempt} fallido:`, error);
+          
+          if (attempt === maxRetries) {
+            const mensajeError = error.name === 'AbortError' 
+              ? 'Tiempo de espera agotado. Verifica tu conexión.'
+              : `Error al cargar proyectos: ${error.message}`;
+            mostrarEstado('error', mensajeError);
+            return;
+          }
+          
+          // Esperar antes del próximo reintento
+          await new Promise(resolve => setTimeout(resolve, initialDelay * Math.pow(2, attempt)));
+        }
+      }
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', (e) => {
+      filtrarProyectos(e.target.value);
+    });
+
+    retryBtn.addEventListener('click', () => cargarProyectosConReintentos());
+
+    // Inicializar
+    cargarProyectosConReintentos();
+  </script>
+</body>
+</html>

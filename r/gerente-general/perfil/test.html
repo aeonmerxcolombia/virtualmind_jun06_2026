@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Perfil de Usuario</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-xl mx-auto bg-white p-8 rounded shadow">
+    <h2 class="text-2xl font-bold mb-4 text-indigo-700">Gestión de Perfil</h2>
+    <form id="profileForm" enctype="multipart/form-data">
+      <label class="block font-semibold mb-1">Nombre:</label>
+      <input id="nombre" class="w-full mb-3 p-2 border rounded" required />
+
+      <label class="block font-semibold mb-1">Teléfono:</label>
+      <input id="telefono" class="w-full mb-3 p-2 border rounded" required />
+
+      <label class="block font-semibold mb-1">Dirección:</label>
+      <input id="direccion" class="w-full mb-3 p-2 border rounded" required />
+
+      <label class="block font-semibold mb-1">Foto:</label>
+      <input id="foto" type="file" accept="image/*" class="w-full mb-4" required />
+
+      <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded w-full hover:bg-indigo-700">Guardar Perfil</button>
+    </form>
+    <div id="mensaje" class="text-sm mt-4"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("profileForm");
+    const msg = document.getElementById("mensaje");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Token no encontrado. Inicia sesión primero.");
+        return;
+      }
+
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const userId = payload.sub;
+
+      const formData = new FormData();
+      formData.append("user_id", userId);
+      formData.append("nombre", document.getElementById("nombre").value);
+      formData.append("telefono", document.getElementById("telefono").value);
+      formData.append("direccion", document.getElementById("direccion").value);
+      formData.append("foto", document.getElementById("foto").files[0]);
+
+      try {
+        const response = await fetch("https://gestordecursos.pegui.edu.co:8000/profiles/", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token
+          },
+          body: formData
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          msg.textContent = "✅ Perfil creado exitosamente";
+          msg.className = "text-green-600 mt-4";
+        } else {
+          msg.textContent = "❌ Error: " + (result.detail || "Error al crear el perfil");
+          msg.className = "text-red-600 mt-4";
+        }
+      } catch (err) {
+        msg.textContent = "❌ Error en la solicitud";
+        msg.className = "text-red-600 mt-4";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca - VirtualMind</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="/js/fetch-con-token.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: {
+              surface: { 800: '#1e293b', 900: '#0f172a' }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0f172a; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+        /* =========================================
+           SISTEMA DE TOOLTIPS INTEGRADO
+           ========================================= */
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s ease, visibility 0.15s ease, transform 0.15s ease;
+            z-index: 1000;
+            pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        [data-tooltip]::before {
+            content: "";
+            position: absolute;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s ease, visibility 0.15s ease;
+            z-index: 1000;
+        }
+
+        [data-tooltip]:hover::after,
+        [data-tooltip]:hover::before {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-200">
+    <!-- Header -->
+    <header class="sticky top-0 z-50" style="background: rgba(15,23,42,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <a href="/r/autor/index.html" class="flex items-center gap-3 text-white hover:text-indigo-300 transition" data-tooltip="Volver al panel principal del Autor">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <i class="fas fa-book-open text-white"></i>
+                    </div>
+                    <span class="font-bold text-xl">Biblioteca</span>
+                </a>
+                <div class="hidden md:flex items-center gap-4">
+                    <div class="flex flex-wrap items-center gap-2 mb-4">
+                        <input type="text" id="searchInput" placeholder="Buscar por título..." 
+                            class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white w-32"
+                            onkeyup="loadResources()" data-tooltip="Escribe palabras clave para buscar en los títulos">
+                        <input type="text" id="tagFilter" placeholder="Filtrar por tag..." 
+                            class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white w-32"
+                            onkeyup="filtrarPorTags()" data-tooltip="Filtra usando etiquetas específicas (ej: naturaleza)">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Título y acciones -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Mis Recursos</h1>
+                <p class="text-gray-400 text-sm mt-1">Organiza y descubre recursos visuales por categoría</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="cambiarVista('grid')" id="btnGrid" class="p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500" data-tooltip="Cambiar a vista de cuadrícula / tarjetas">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button onclick="cambiarVista('list')" id="btnList" class="p-2 rounded-lg bg-slate-700 text-gray-300 hover:bg-slate-600" data-tooltip="Cambiar a vista de lista detallada">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+                
+        <!-- Botón IA -->
+        <div class="mb-6">
+            <button onclick="abrirGeneradorIA()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-medium transition hover:scale-105 shadow-lg" data-tooltip="Abrir el estudio creativo con Inteligencia Artificial Stable Diffusion">
+                <i class="fas fa-robot"></i> Generar con IA
+            </button>
+        </div>
+                
+        <!-- Categorías -->
+        <div class="flex flex-wrap gap-2 mb-6" id="docTabs">
+            <button onclick="filtrarPorCategoria(null)" class="nav-pill active" data-tooltip="Mostrar todos los archivos sin distinción">
+                <i class="fas fa-star mr-1.5"></i>Todos
+            </button>
+            <button onclick="filtrarPorCategoria('fotos')" class="nav-pill hover:text-green-400" data-tooltip="Filtrar por fotografías">
+                <i class="fas fa-camera mr-1.5"></i>Fotos
+            </button>
+            <button onclick="filtrarPorCategoria('ilustraciones')" class="nav-pill hover:text-purple-400" data-tooltip="Filtrar por ilustraciones artísticas">
+                <i class="fas fa-paint-brush mr-1.5"></i>Ilustraciones
+            </button>
+            <button onclick="filtrarPorCategoria('vectores')" class="nav-pill hover:text-blue-400" data-tooltip="Filtrar por archivos vectoriales y planos técnicos">
+                <i class="fas fa-vector-square mr-1.5"></i>Vectores
+            </button>
+            <button onclick="filtrarPorCategoria('videos')" class="nav-pill hover:text-red-400" data-tooltip="Filtrar por recursos multimedia en video">
+                <i class="fas fa-video mr-1.5"></i>Videos
+            </button>
+            <button onclick="filtrarPorCategoria('audios')" class="nav-pill hover:text-yellow-400" data-tooltip="Filtrar por pistas de audio y sonido">
+                <i class="fas fa-music mr-1.5"></i>Audios
+            </button>
+            <button onclick="filtrarPorCategoria('documentos')" class="nav-pill hover:text-gray-400" data-tooltip="Filtrar por documentos de texto y manuales">
+                <i class="fas fa-file-alt mr-1.5"></i>Documentos
+            </button>
+        </div>
+                
+        <style>
+            .nav-pill {
+                background: rgba(30, 41, 59, 0.6);
+                color: #94a3b8;
+                padding: 8px 14px;
+                border-radius: 10px;
+                font-weight: 500;
+                font-size: 0.8rem;
+                transition: all 0.2s;
+                cursor: pointer;
+                border: none;
+            }
+            .nav-pill:hover { background: rgba(99,102,241,0.2); color: #c7d2fe; }
+            .nav-pill.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+            .engine-pill { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+            .engine-pill.active { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+            .engine-pill.inactive { background: rgba(255,255,255,0.04); color: #64748b; border: 1px solid rgba(255,255,255,0.06); }
+            .engine-pill.inactive:hover { background: rgba(255,255,255,0.08); color: #94a3b8; }
+        </style>
+                
+        <!-- Subir -->
+        <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-5 mb-6">
+            <h3 class="text-lg font-semibold text-white mb-4"><i class="fas fa-cloud-upload mr-2"></i>Subir nuevo recurso</h3>
+            <form id="uploadForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                <input type="text" id="titleInput" placeholder="Título del recurso" required
+                    class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white text-sm focus:border-indigo-500 focus:outline-none"
+                    data-tooltip="Asigna un nombre claro e identificativo al archivo">
+                <input type="text" id="descInput" placeholder="Descripción"
+                    class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white text-sm focus:border-indigo-500 focus:outline-none"
+                    data-tooltip="Breve explicación sobre el contenido o uso del recurso">
+                <select id="categoryInput" class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white text-sm focus:border-indigo-500 focus:outline-none"
+                    data-tooltip="Clasifica el archivo en una de las categorías del sistema">
+                    <option value="">Seleccionar categoría</option>
+                    <option value="fotos">📷 Fotos</option>
+                    <option value="ilustraciones">🎨 Ilustraciones</option>
+                    <option value="vectores">📐 Vectores</option>
+                    <option value="videos">🎬 Videos</option>
+                    <option value="audios">🎵 Audios</option>
+                    <option value="documentos">📄 Documentos</option>
+                </select>
+                <input type="text" id="tagsInput" placeholder="Tags: naturaleza, educación..."
+                    class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white text-sm focus:border-indigo-500 focus:outline-none"
+                    data-tooltip="Separa las palabras clave por comas para optimizar búsquedas futuras">
+                <div class="flex gap-2">
+                    <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.gif,.mp4,.webm,.svg,.wav,.mp3,.zip,.rar,.scorm,.doc,.docx,.xls,.xlsx,.ppt,.pptx" required
+                        class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-sm text-gray-400 file:mr-2 file:px-2 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white"
+                        data-tooltip="Formatos permitidos: Documentos, multimedia, comprimidos y paquetes SCORM">
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 rounded-lg" data-tooltip="Subir y almacenar recurso de forma permanente">
+                        <i class="fas fa-upload"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+                
+        <!-- Lista de recursos -->
+        <div id="recursos-lista">
+            <div class="text-center py-12">
+                <div class="inline-block w-10 h-10 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                <p class="mt-3 text-gray-400">Cargando recursos...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal IA - Completo como omnistudio -->
+    <div class="modal fade" id="iaModal" tabindex="-1" data-bs-keyboard="true">
+        <div class="modal-dialog modal-dialog-centered m-3 mx-auto" style="max-width: 560px;">
+            <div class="modal-content bg-slate-800 text-white rounded-2xl">
+                <div class="modal-header border-b border-slate-700 rounded-t-2xl" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                    <h5 class="modal-title"><i class="fas fa-robot mr-2"></i>Generar Imagen IA</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Engines -->
+                    <div class="flex gap-2 mb-3">
+                        <button class="engine-pill active" data-engine="qwen" onclick="switchIaEngine('qwen')">☁️ Qwen</button>
+                        <button class="engine-pill inactive" data-engine="sd" onclick="switchIaEngine('sd')">⚡ Stable Diffusion</button>
+                    </div>
+
+                    <label class="text-sm text-gray-400">Describe la imagen</label>
+                    <textarea id="iaPrompt" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white mt-1" rows="2" placeholder="Ej: Un gato realista sentado..."></textarea>
+
+                    <!-- SD Options -->
+                    <div id="iaSdOptions">
+                        <label class="text-sm text-gray-400 mt-3 block">Prompt negativo</label>
+                        <input type="text" id="iaNegative" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" placeholder="low quality, blurry, deformed hands..."></input>
+                        <div class="grid grid-cols-2 gap-3 mt-3">
+                            <div>
+                                <label class="text-sm text-gray-400">Estilo</label>
+                                <select id="iaStyle" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white mt-1">
+                                    <option value="">Foto realista</option>
+                                    <option value="anime, vibrant">Anime</option>
+                                    <option value="digital art, detailed">Arte digital</option>
+                                    <option value="oil painting, classic">Pintura óleo</option>
+                                    <option value="3d render, octane">3D Render</option>
+                                    <option value="watercolor painting">Acuarela</option>
+                                    <option value="vector illustration">Vector</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-400">Calidad</label>
+                                <select id="iaQuality" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white mt-1">
+                                    <option value="20">Básica (20 pasos)</option>
+                                    <option value="30">Normal (30 pasos)</option>
+                                    <option value="50">Alta (50 pasos)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 mt-3">
+                            <div>
+                                <label class="text-sm text-gray-400">Ancho</label>
+                                <select id="iaWidth" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white text-sm">
+                                    <option value="512">512px</option>
+                                    <option value="768">768px</option>
+                                    <option value="1024">1024px</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-400">Alto</label>
+                                <select id="iaHeight" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white text-sm">
+                                    <option value="512">512px</option>
+                                    <option value="768">768px</option>
+                                    <option value="1024">1024px</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-400">Muestreo</label>
+                                <select id="iaSampler" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white text-sm">
+                                    <option value="Euler a">Euler a</option>
+                                    <option value="DPM++ 2M">DPM++ 2M</option>
+                                    <option value="DDIM">DDIM</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Qwen Options -->
+                    <div id="iaQwenOptions" class="hidden">
+                        <div class="grid grid-cols-2 gap-3 mt-3">
+                            <div>
+                                <label class="text-sm text-gray-400">Modelo</label>
+                                <select id="iaQwenModel" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white mt-1">
+                                    <option value="qwen-image-2.0-pro">Qwen 2.0 Pro</option>
+                                    <option value="qwen-image-max">Qwen Max (Superior)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-400">Tamaño</label>
+                                <select id="iaQwenSize" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white mt-1">
+                                    <option value="1024*1024">1024x1024</option>
+                                    <option value="768*768">768x768</option>
+                                    <option value="512*512">512x512</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <label class="flex items-center gap-2 text-sm text-gray-400">
+                                <input type="checkbox" id="iaQwenExtend" checked class="rounded bg-slate-900 border-slate-700">
+                                Extender prompt automáticamente
+                            </label>
+                        </div>
+                    </div>
+
+                    <button onclick="generarImagenIA()" id="iaBtn" class="w-full mt-4 bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl font-semibold">
+                        <i class="fas fa-magic mr-2"></i>Generar
+                    </button>
+                                        
+                    <div id="iaProgress" class="hidden mt-3 text-center py-4">
+                        <div class="inline-block w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="mt-2 text-green-400">Generando imagen...</p>
+                    </div>
+                                        
+                    <div id="iaResult" class="mt-3 hidden">
+                        <img id="iaImg" class="w-full rounded-lg">
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="guardarImagenIA()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-sm">
+                                <i class="fas fa-save mr-1"></i>Guardar en Biblioteca
+                            </button>
+                            <button onclick="convertirIAa3D()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-sm">
+                                <i class="fas fa-cube mr-1"></i>Convertir a 3D
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Visor 3D -->
+    <div id="modal3dViewer" class="hidden fixed inset-0 z-50 bg-black/80 items-center justify-center p-4" onclick="if(event.target===this)cerrarModal3D()">
+        <div class="bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-700" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between p-4 border-b border-slate-700">
+                <div>
+                    <h3 id="modelTitle" class="text-lg font-semibold text-white"></h3>
+                    <p id="modelDesc" class="text-sm text-gray-400"></p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a id="modelDownloadLink" href="#" download class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm flex items-center gap-1.5" data-tooltip="Descargar modelo GLB">
+                        <i class="fas fa-download"></i> Descargar
+                    </a>
+                    <button onclick="cerrarModal3D()" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-gray-300" data-tooltip="Cerrar visor 3D">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 min-h-0 bg-slate-900/50">
+                <model-viewer id="modelViewer3d" class="w-full h-full" style="height:500px;--poster-color:transparent;" camera-controls auto-rotate shadow-intensity="1" exposure="0.8" touch-action="pan-y"></model-viewer>
+            </div>
+            <div class="px-4 py-2 border-t border-slate-700 text-xs text-gray-500" id="modelTags"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = "https://gestordecursos.pegui.edu.co:8000/resources";
+        let vistaActual = 'grid';
+        let filtroActual = null;
+        let todosLosRecursos = [];
+        let iaModal = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadResources();
+            document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await subirRecurso();
+            });
+        });
+
+        async function loadResources() {
+            const lista = document.getElementById('recursos-lista');
+            lista.innerHTML = '<div class="text-center py-12"><div class="inline-block w-10 h-10 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div><p class="mt-3 text-gray-400">Cargando...</p></div>';
+                        
+            try {
+                let url = API_URL + "/";
+                const search = document.getElementById('searchInput').value;
+                const tagFilter = document.getElementById('tagFilter').value.toLowerCase();
+                if (filtroActual) url += "?category=" + filtroActual;
+                if (search) url += (filtroActual ? "&" : "?") + "search=" + encodeURIComponent(search);
+                                
+                todosLosRecursos = await fetch(url).then(r => r.json());
+                                
+                // Filtrar por tags en frontend
+                if (tagFilter) {
+                    todosLosRecursos = todosLosRecursos.filter(r => r.tags && r.tags.toLowerCase().includes(tagFilter));
+                }
+                                
+                renderRecursos();
+            } catch (e) {
+                lista.innerHTML = '<div class="text-center py-12 text-red-400">Error al cargar recursos</div>';
+            }
+        }
+
+        function filtrarPorTags() {
+            loadResources();
+        }
+
+        function filtrarPorCategoria(cat) {
+            filtroActual = cat;
+            document.querySelectorAll('#docTabs button').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            loadResources();
+        }
+
+        function cambiarVista(tipo) {
+            vistaActual = tipo;
+            document.getElementById('btnGrid').classList.toggle('bg-indigo-600', tipo === 'grid');
+            document.getElementById('btnGrid').classList.toggle('bg-slate-700', tipo !== 'grid');
+            document.getElementById('btnList').classList.toggle('bg-indigo-600', tipo === 'list');
+            document.getElementById('btnList').classList.toggle('bg-slate-700', tipo !== 'list');
+            renderRecursos();
+        }
+
+        function renderRecursos() {
+            const lista = document.getElementById('recursos-lista');
+            if (!todosLosRecursos.length) {
+                lista.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3"></i><p>No hay recursos</p></div>';
+                return;
+            }
+
+            if (vistaActual === 'grid') {
+                lista.innerHTML = '<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">' +
+                    todosLosRecursos.map(r => `
+                        <div class="bg-slate-800/50 border border-slate-700 rounded-lg p-2 hover:border-indigo-500 cursor-pointer transition group relative" onclick="verRecurso(${r.id})" data-tooltip="Hacer clic para abrir este recurso en una nueva pestaña">
+                            <div class="aspect-square bg-slate-700 rounded mb-2 flex items-center justify-center overflow-hidden">
+                                ${r.file_type === 'image' || (r.file_type === 'model' && r.thumbnail_url) ? '<img src="' + (r.thumbnail_url || r.file_url) + '" class="w-full h-full object-cover">' :
+                                   '<i class="fas ' + getIcon(r.file_type) + ' text-xl ' + getColor(r.file_type) + '"></i>'}
+                            </div>
+                            <h4 class="text-xs font-medium text-white truncate">${r.title}</h4>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-600/80 text-indigo-200">${r.category || '-'}</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-700 text-gray-300 uppercase">${getExtension(r.file_url)}</span>
+                            </div>
+                            ${r.tags ? '<div class="mt-1"><span class="text-[9px] text-gray-500 truncate block">' + r.tags.split(',').slice(0,2).map(t => '#'+t.trim()).join(' ') + '</span></div>' : ''}
+                            <button onclick="event.stopPropagation(); eliminarRecurso(${r.id})" class="text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition absolute top-1 right-1 p-1" data-tooltip="Eliminar permanentemente de la biblioteca">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </div>
+                    `).join('') + '</div>';
+            } else {
+                lista.innerHTML = '<div class="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">' +
+                    todosLosRecursos.map(r => `
+                        <div class="flex items-center gap-3 p-3 border-b border-slate-700 hover:bg-slate-700/30 cursor-pointer" onclick="verRecurso(${r.id})" data-tooltip="Hacer clic para abrir este recurso">
+                            <div class="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                <i class="fas ${getIcon(r.file_type)} ${getColor(r.file_type)}"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm text-white font-medium truncate">${r.title}</h4>
+                                <p class="text-xs text-gray-500 truncate">${r.description || ''}</p>
+                            </div>
+                            <span class="text-[10px] px-1.5 py-1 rounded bg-indigo-600/80 text-indigo-200">${r.category || '-'}</span>
+                            <span class="text-[10px] px-1.5 py-1 rounded bg-slate-700 text-gray-300 uppercase">${getExtension(r.file_url)}</span>
+                            ${r.tags ? '<span class="text-[10px] text-gray-500 hidden md:inline">🏷️ ' + r.tags + '</span>' : ''}
+                            <button onclick="event.stopPropagation(); eliminarRecurso(${r.id})" class="text-red-400 hover:text-red-300 p-1" data-tooltip="Eliminar permanentemente de la biblioteca">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('') + '</div>';
+            }
+        }
+
+        function getIcon(type) {
+            const icons = { 
+                 pdf: 'fa-file-pdf', 
+                 image: 'fa-image', 
+                 video: 'fa-video', 
+                 audio: 'fa-music',
+                 model: 'fa-cube',
+                scorm: 'fa-box-open',
+                rar: 'fa-file-archive',
+                zip: 'fa-file-archive',
+                doc: 'fa-file-word',
+                docx: 'fa-file-word',
+                xls: 'fa-file-excel',
+                xlsx: 'fa-file-excel',
+                ppt: 'fa-file-powerpoint',
+                pptx: 'fa-file-powerpoint'
+            };
+            return icons[type] || 'fa-file';
+        }
+
+        function getColor(type) {
+            return { 
+                 pdf: 'text-red-400', 
+                 image: 'text-green-400', 
+                 video: 'text-purple-400', 
+                 audio: 'text-yellow-400',
+                 model: 'text-indigo-400',
+                scorm: 'text-orange-400',
+                rar: 'text-yellow-600',
+                zip: 'text-yellow-600',
+                doc: 'text-blue-400',
+                xls: 'text-green-500',
+                ppt: 'text-orange-500'
+            }[type] || 'text-gray-400';
+        }
+
+        function getExtension(url) {
+            return url ? url.split('.').pop().split('?')[0].toLowerCase() : '';
+        }
+
+        function verRecurso(id) {
+            const r = todosLosRecursos.find(x => x.id === id);
+            if (!r) return;
+            if (r.file_type === 'model') {
+                verModelo3D(r);
+            } else {
+                window.open(r.file_url, '_blank');
+            }
+        }
+
+        function verModelo3D(r) {
+            const viewer = document.getElementById('modelViewer3d');
+            viewer.src = r.file_url;
+            document.getElementById('modelTitle').textContent = r.title;
+            document.getElementById('modelDesc').textContent = r.description || '';
+            document.getElementById('modelTags').textContent = r.tags ? '🏷️ ' + r.tags : '';
+            document.getElementById('modelDownloadLink').href = r.file_url;
+            document.getElementById('modal3dViewer').classList.remove('hidden');
+            document.getElementById('modal3dViewer').classList.add('flex');
+        }
+
+        function cerrarModal3D() {
+            const viewer = document.getElementById('modelViewer3d');
+            viewer.src = '';
+            document.getElementById('modal3dViewer').classList.add('hidden');
+            document.getElementById('modal3dViewer').classList.remove('flex');
+        }
+
+        async function subirRecurso() {
+            const formData = new FormData();
+            formData.append('title', document.getElementById('titleInput').value);
+            formData.append('description', document.getElementById('descInput').value);
+            formData.append('category', document.getElementById('categoryInput').value);
+            formData.append('tags', document.getElementById('tagsInput').value);
+            formData.append('file', document.getElementById('fileInput').files[0]);
+                        
+            try {
+                const res = await fetch(API_URL + "/", { method: 'POST', body: formData });
+                if (res.ok) {
+                    document.getElementById('uploadForm').reset();
+                    loadResources();
+                }
+            } catch (e) {
+                alert('Error al subir');
+            }
+        }
+
+        async function eliminarRecurso(id) {
+            if (!confirm('¿Eliminar?')) return;
+            await fetch(API_URL + "/" + id, { method: 'DELETE' });
+            loadResources();
+        }
+
+        let iaCurrentEngine = 'qwen';
+        let iaLastImageUrl = '';
+
+        function switchIaEngine(engine) {
+            iaCurrentEngine = engine;
+            document.querySelectorAll('#iaModal .engine-pill').forEach(b => {
+                b.classList.toggle('active', b.dataset.engine === engine);
+                b.classList.toggle('inactive', b.dataset.engine !== engine);
+            });
+            document.getElementById('iaSdOptions').classList.toggle('hidden', engine !== 'sd');
+            document.getElementById('iaQwenOptions').classList.toggle('hidden', engine !== 'qwen');
+        }
+
+        function abrirGeneradorIA() {
+            if (!iaModal) iaModal = new bootstrap.Modal(document.getElementById('iaModal'));
+            iaModal.show();
+        }
+
+        async function generarImagenIA() {
+            const prompt = document.getElementById('iaPrompt').value.trim();
+            if (!prompt) return alert('Escribe un prompt');
+                        
+            const btn = document.getElementById('iaBtn');
+            const progress = document.getElementById('iaProgress');
+            const result = document.getElementById('iaResult');
+            result.classList.add('hidden');
+            btn.disabled = true;
+            progress.classList.remove('hidden');
+
+            try {
+                if (iaCurrentEngine === 'qwen') {
+                    const res = await fetch('https://gestordecursos.pegui.edu.co:8000/ai/generate-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                        body: JSON.stringify({
+                            prompt,
+                            model: document.getElementById('iaQwenModel').value,
+                            size: document.getElementById('iaQwenSize').value.replace('*', '*'),
+                            prompt_extend: document.getElementById('iaQwenExtend').checked
+                        })
+                    });
+                    const data = await res.json();
+                    const imgUrl = data.image_url || (data.images && data.images[0]) || '';
+                    if (imgUrl) {
+                        iaLastImageUrl = imgUrl;
+                        const displaySrc = imgUrl.startsWith('data:') ? imgUrl : `data:image/png;base64,${imgUrl}`;
+                        document.getElementById('iaImg').src = displaySrc.startsWith('http') ? imgUrl : displaySrc;
+                        result.classList.remove('hidden');
+                        // Auto-save to library
+                        guardarEnBiblioteca(imgUrl, `Imagen: ${prompt.substring(0, 50)}`, 'image', 'fotos', prompt.substring(0, 100));
+                        loadResources();
+                    } else {
+                        alert(data.detail || 'Error al generar');
+                    }
+                } else {
+                    const style = document.getElementById('iaStyle').value;
+                    const width = parseInt(document.getElementById('iaWidth').value);
+                    const height = parseInt(document.getElementById('iaHeight').value);
+                    const steps = parseInt(document.getElementById('iaQuality').value);
+                    const sampler = document.getElementById('iaSampler').value;
+                    const negative = document.getElementById('iaNegative').value || 'low quality, blurry, deformed hands, extra fingers, mutation';
+                    const fullPrompt = style ? `${prompt}, ${style}` : prompt;
+
+                    const res = await fetch('https://ia.pegui.edu.co/sdapi/v1/txt2img', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: fullPrompt, negative_prompt: negative, steps, width, height, sampler_name: sampler })
+                    });
+                    const data = await res.json();
+                    const images = data.images || [];
+                    if (images.length > 0) {
+                        const b64 = images[0];
+                        iaLastImageUrl = `data:image/png;base64,${b64}`;
+                        document.getElementById('iaImg').src = iaLastImageUrl;
+                        result.classList.remove('hidden');
+                        // Auto-save to library
+                        guardarEnBiblioteca(iaLastImageUrl, `Imagen: ${prompt.substring(0, 50)}`, 'image', 'fotos', prompt.substring(0, 100));
+                        loadResources();
+                    } else {
+                        alert('No se pudo generar la imagen');
+                    }
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                progress.classList.add('hidden');
+            }
+        }
+
+        async function guardarImagenIA() {
+            if (!iaLastImageUrl) return;
+            const title = document.getElementById('iaPrompt').value.trim().substring(0, 50) || 'Imagen IA';
+            guardarEnBiblioteca(iaLastImageUrl, title, 'image', 'ilustraciones', 'ia,generated');
+            loadResources();
+            alert('¡Guardado en biblioteca!');
+            if (iaModal) iaModal.hide();
+        }
+
+        function convertirIAa3D() {
+            if (!iaLastImageUrl) return;
+            if (iaModal) iaModal.hide();
+            window.open('/r/superadmin/omnistudio/index.html?convertir3d=' + encodeURIComponent(iaLastImageUrl), '_blank');
+        }
+
+        async function guardarEnBiblioteca(fileUrl, title, fileType, category, tags) {
+            try {
+                await fetch('https://gestordecursos.pegui.edu.co:8000/resources/from-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify({ file_url: fileUrl, title, file_type: fileType, category: category || undefined, tags: tags || undefined })
+                });
+            } catch(e) {
+                console.warn('No se pudo guardar en biblioteca:', e.message);
+            }
+        }
+    </script>
+</body>
+</html>

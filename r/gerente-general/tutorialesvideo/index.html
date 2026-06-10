@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tutoriales en Video – Virtualmind</title>
+  <meta name="description" content="Página de tutoriales en video de Virtualmind. Reproduce videos de YouTube, Vimeo, MP4 o páginas internas.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] },
+          colors: {
+            brand:{600:'#4f46e5',700:'#4338ca'},
+            accent:{600:'#db2777'}
+          }
+        }
+      },
+      darkMode: 'class'
+    }
+  </script>
+  <style>
+    .container-xxl{max-width:120rem}
+    .glass{background:rgba(255,255,255,.7);backdrop-filter:blur(6px)}
+    .dark .glass{background:rgba(17,24,39,.7)}
+    .aspect-video{position:relative;padding-top:56.25%}
+    .aspect-video>*{position:absolute;inset:0;width:100%;height:100%}
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 border-b border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/70 backdrop-blur">
+    <div class="mx-auto container-xxl px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="/assets/logo.png" alt="Virtualmind" class="w-10 h-10 rounded-full shadow">
+        <div>
+          <p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Zona de Capacitación</p>
+          <h1 class="text-lg font-semibold">Tutoriales en Video</h1>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="darkToggle" class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm">🌙 / ☀️</button>
+        <a href="/r/superadmin/" class="text-sm text-brand-600 hover:underline">Volver</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="relative">
+    <div class="absolute inset-0 bg-gradient-to-r from-brand-600 to-accent-600 opacity-10 dark:opacity-20"></div>
+    <div class="mx-auto container-xxl px-4 py-10 relative">
+      <h2 class="text-3xl lg:text-4xl font-bold">Aprende con tutoriales cortos</h2>
+      <p class="mt-3 text-gray-600 dark:text-gray-300">
+        Pega el enlace del video en cada tarjeta (YouTube, Vimeo, MP4 en tu servidor o una página interna). El enlace queda guardado en tu navegador.
+      </p>
+    </div>
+  </section>
+
+  <!-- Grid de tutoriales -->
+  <main class="mx-auto container-xxl px-4 pb-14">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="grid">
+
+      <!-- Tarjeta: Dashboard y navegación -->
+      <article class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 overflow-hidden">
+        <div class="p-4 space-y-3">
+          <h3 class="font-semibold leading-tight">Dashboard y navegación</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Recorrido por menús, atajos y tips de productividad.</p>
+
+          <div class="aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800" data-tutorial="onboarding" data-type="auto">
+            <!-- El player se inyecta aquí -->
+            <div class="w-full h-full flex items-center justify-center text-xs text-gray-500">Sin enlace aún • Pulsa “Pegar enlace”</div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm" data-action="paste" data-id="onboarding">Pegar enlace</button>
+            <button class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm" data-action="open" data-id="onboarding">Abrir en pestaña</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Tarjeta: Crear proyecto y cronograma -->
+      <article class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 overflow-hidden">
+        <div class="p-4 space-y-3">
+          <h3 class="font-semibold leading-tight">Crear proyecto y cronograma</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Desde cero hasta el calendario con fases y porcentajes.</p>
+
+          <div class="aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800" data-tutorial="proyectos" data-type="auto">
+            <div class="w-full h-full flex items-center justify-center text-xs text-gray-500">Sin enlace aún • Pulsa “Pegar enlace”</div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm" data-action="paste" data-id="proyectos">Pegar enlace</button>
+            <button class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm" data-action="open" data-id="proyectos">Abrir en pestaña</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Tarjeta: Evaluaciones inteligentes -->
+      <article class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 overflow-hidden">
+        <div class="p-4 space-y-3">
+          <h3 class="font-semibold leading-tight">Evaluaciones inteligentes</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Bancos de preguntas, niveles y reportes.</p>
+
+          <div class="aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800" data-tutorial="evaluaciones" data-type="auto">
+            <div class="w-full h-full flex items-center justify-center text-xs text-gray-500">Sin enlace aún • Pulsa “Pegar enlace”</div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm" data-action="paste" data-id="evaluaciones">Pegar enlace</button>
+            <button class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm" data-action="open" data-id="evaluaciones">Abrir en pestaña</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Tarjeta: Firma digital -->
+      <article class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 overflow-hidden">
+        <div class="p-4 space-y-3">
+          <h3 class="font-semibold leading-tight">Firma digital de documentos</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Sube, firma y descarga PDFs con trazabilidad.</p>
+
+        <div class="aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800" data-tutorial="firma" data-type="auto">
+            <div class="w-full h-full flex items-center justify-center text-xs text-gray-500">Sin enlace aún • Pulsa “Pegar enlace”</div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm" data-action="paste" data-id="firma">Pegar enlace</button>
+            <button class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm" data-action="open" data-id="firma">Abrir en pestaña</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Tarjeta: Gestión de archivos -->
+      <article class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 overflow-hidden">
+        <div class="p-4 space-y-3">
+          <h3 class="font-semibold leading-tight">Gestión de archivos (Drive)</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Drive Personal/Global, permisos y repositorio público.</p>
+
+          <div class="aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800" data-tutorial="drive" data-type="auto">
+            <div class="w-full h-full flex items-center justify-center text-xs text-gray-500">Sin enlace aún • Pulsa “Pegar enlace”</div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm" data-action="paste" data-id="drive">Pegar enlace</button>
+            <button class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm" data-action="open" data-id="drive">Abrir en pestaña</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Tarjeta: Chat y videoconferencia -->
+      <article class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/60 overflow-hidden">
+        <div class="p-4 space-y-3">
+          <h3 class="font-semibold leading-tight">Chat y videoconferencia</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Canales, reuniones y buenas prácticas.</p>
+
+          <div class="aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800" data-tutorial="chat" data-type="auto">
+            <div class="w-full h-full flex items-center justify-center text-xs text-gray-500">Sin enlace aún • Pulsa “Pegar enlace”</div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm" data-action="paste" data-id="chat">Pegar enlace</button>
+            <button class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm" data-action="open" data-id="chat">Abrir en pestaña</button>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+  <footer class="mx-auto container-xxl px-4 pb-12">
+    <div class="glass rounded-xl p-6 border border-gray-200/60 dark:border-gray-800/60 flex flex-col lg:flex-row gap-4 items-center justify-between">
+      <p class="text-sm text-gray-600 dark:text-gray-300">Para cada tutorial, usa <b>Pegar enlace</b> y coloca una URL de YouTube, Vimeo, MP4 o una página interna.</p>
+      <div class="flex gap-2">
+        <button id="exportBtn" class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm">Exportar enlaces</button>
+        <button id="importBtn" class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm">Importar enlaces</button>
+        <button id="resetBtn"  class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm">Borrar todos</button>
+      </div>
+    </div>
+    <p class="mt-6 text-center text-xs text-gray-500">© 2025 Virtualmind</p>
+  </footer>
+
+<script>
+  // ---- Tema persistente
+  const root = document.documentElement;
+  const darkToggle = document.getElementById('darkToggle');
+  function setTheme(mode){ mode==='dark' ? root.classList.add('dark') : root.classList.remove('dark'); localStorage.setItem('vm-theme', mode); }
+  setTheme(localStorage.getItem('vm-theme') || (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  darkToggle.addEventListener('click', ()=> setTheme(root.classList.contains('dark')?'light':'dark'));
+
+  // ---- Persistencia de enlaces
+  const LSKEY = 'vm-tutoriales-urls';
+  let links = {};
+  try { links = JSON.parse(localStorage.getItem(LSKEY) || '{}'); } catch { links = {}; }
+
+  // Detectar tipo por URL
+  function parseSource(url){
+    if(!url) return null;
+    if(/youtu\.be|youtube\.com/.test(url)){
+      const id = (url.match(/(?:youtu\.be\/|v=)([^&?#]+)/)||[])[1] || url;
+      return { type:'yt', id, url:`https://www.youtube-nocookie.com/embed/${id}?rel=0&autoplay=1` };
+    }
+    if(/vimeo\.com/.test(url)){
+      const id = (url.match(/vimeo\.com\/(\d+)/)||[])[1] || url;
+      return { type:'vimeo', id, url:`https://player.vimeo.com/video/${id}` };
+    }
+    if(/\.mp4(\?|$)/i.test(url)){
+      return { type:'mp4', url };
+    }
+    return { type:'page', url };
+  }
+
+  function mountPlayer(container, src){
+    container.innerHTML = ''; // limpiar
+    if(!src){
+      container.innerHTML = `<div class="w-full h-full flex items-center justify-center text-xs text-gray-500">Sin enlace aún • Pulsa “Pegar enlace”</div>`;
+      return;
+    }
+    if(src.type==='yt' || src.type==='vimeo' || src.type==='page'){
+      const iframe = document.createElement('iframe');
+      iframe.loading = 'lazy';
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      iframe.allowFullscreen = true;
+      iframe.src = src.url;
+      container.appendChild(iframe);
+    }else if(src.type==='mp4'){
+      const video = document.createElement('video');
+      video.controls = true;
+      video.preload = 'metadata';
+      video.playsInline = true;
+      video.src = src.url;
+      container.appendChild(video);
+    }
+  }
+
+  // Inicializar players con lo que haya guardado
+  document.querySelectorAll('[data-tutorial]').forEach(box=>{
+    const id = box.getAttribute('data-tutorial');
+    const saved = links[id] || null; // {type,url,id}
+    mountPlayer(box, saved);
+  });
+
+  // Acciones: pegar / abrir
+  document.getElementById('grid').addEventListener('click', (e)=>{
+    const act = e.target.getAttribute('data-action');
+    const id  = e.target.getAttribute('data-id');
+    if(!act || !id) return;
+
+    if(act==='paste'){
+      const url = prompt('Pega el enlace del tutorial (YouTube, Vimeo, MP4 o URL interna):');
+      if(!url) return;
+      const src = parseSource(url.trim());
+      links[id] = src;
+      localStorage.setItem(LSKEY, JSON.stringify(links));
+      const box = document.querySelector(`[data-tutorial="${id}"]`);
+      mountPlayer(box, src);
+    }
+
+    if(act==='open'){
+      const src = links[id];
+      if(!src){ alert('Aún no hay enlace para este tutorial. Usa “Pegar enlace”.'); return; }
+      if(src.type==='yt' || src.type==='vimeo' || src.type==='page') window.open(src.url, '_blank');
+      if(src.type==='mp4') window.open(src.url, '_blank');
+    }
+  });
+
+  // Exportar / Importar / Reset
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const resetBtn  = document.getElementById('resetBtn');
+
+  exportBtn.addEventListener('click', async ()=>{
+    const txt = JSON.stringify(links, null, 2);
+    try { await navigator.clipboard.writeText(txt); alert('Enlaces copiados al portapapeles.'); }
+    catch { prompt('Copia manualmente:', txt); }
+  });
+
+  importBtn.addEventListener('click', ()=>{
+    const txt = prompt('Pega aquí el JSON exportado:');
+    if(!txt) return;
+    try {
+      const obj = JSON.parse(txt);
+      links = obj; localStorage.setItem(LSKEY, JSON.stringify(links));
+      document.querySelectorAll('[data-tutorial]').forEach(box=>{
+        const id = box.getAttribute('data-tutorial');
+        mountPlayer(box, links[id] || null);
+      });
+      alert('Importado.');
+    } catch(e){ alert('JSON inválido.'); }
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    if(!confirm('¿Borrar todos los enlaces guardados?')) return;
+    links = {}; localStorage.removeItem(LSKEY);
+    document.querySelectorAll('[data-tutorial]').forEach(box=> mountPlayer(box, null));
+  });
+</script>
+</body>
+</html>
+

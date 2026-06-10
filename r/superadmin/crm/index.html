@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes - VirtualMind</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/fetch-con-token.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #090D16;
+            color: #cbd5e1;
+            overflow-x: hidden;
+        }
+        
+        .glass-card { 
+            background: rgba(15, 23, 42, 0.65); 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        .action-btn { 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            border-radius: 12px; 
+            padding: 0.5rem 0.7rem; 
+        }
+        .action-btn:hover { 
+            transform: translateY(-2px); 
+            filter: brightness(1.2); 
+        }
+
+        .input-focus {             
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(15, 23, 42, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #f8fafc !important;
+        }
+        .input-focus:focus {             
+            transform: translateY(-1px);             
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
+            background: rgba(15, 23, 42, 0.95) !important;
+        }
+
+        .help-icon { 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 18px; 
+            height: 18px; 
+            background: #4f46e5; 
+            color: #fff; 
+            border-radius: 50%; 
+            font-size: 10px; 
+            font-weight: bold;
+            cursor: help; 
+        }
+        .help-icon:hover {
+            background: #6366f1;
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Ambient glowing background blobs */
+        .glow-blob {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Custom premium select option scroll */
+        select option {
+            background-color: #0f172a;
+            color: #cbd5e1;
+        }
+
+        /* Tooltip System CSS */
+        .vm-tooltip { 
+            position:absolute; 
+            background:#0f172a; 
+            color:#fff; 
+            font-size:12px; 
+            padding:6px 12px; 
+            border-radius:8px; 
+            box-shadow:0 4px 15px rgba(0,0,0,0.45); 
+            pointer-events:none; 
+            opacity:0; 
+            transform:translateY(4px); 
+            transition:opacity 0.15s ease-out, transform 0.15s ease-out; 
+            z-index:10000; 
+            max-width:250px; 
+            text-align:center; 
+            white-space:nowrap; 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+        }
+        .vm-tooltip.visible { opacity:1; transform:translateY(0); }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 relative">
+
+    <div class="glow-blob top-10 left-10"></div>
+    <div class="glow-blob bottom-10 right-10"></div>
+
+    <!-- Custom Notification Container (Toasts) -->
+    <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
+
+    <div class="max-w-6xl mx-auto glass-card p-8 rounded-3xl z-10 relative">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 border-b border-white/5 pb-6">
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent tracking-wide">Gestión de Clientes</h1>
+            <button id="btnCreate" title="Registrar un nuevo cliente en el sistema" class="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/20 transition-all transform hover:-translate-y-0.5">
+                <i class="fas fa-plus mr-2"></i>Crear Cliente
+            </button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div class="relative">
+                <input id="filtroTexto" type="text" placeholder="Buscar clientes por nombre, documento o email..." title="Busca clientes por nombre, documento o email" class="w-full p-3 rounded-xl input-focus text-sm outline-none" />
+                <span class="absolute right-4 top-1/2 -translate-y-1/2 help-icon flex items-center justify-center" title="Busca clientes por nombre, documento o email">?</span>
+            </div>
+            <div class="relative">
+                <select id="filtroEstado" title="Filtra clientes por estado: Activos o Inactivos" class="w-full p-3 pr-12 rounded-xl bg-slate-900 border border-white/5 text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm cursor-pointer appearance-none">
+                    <option value="todos">Todos los estados</option>
+                    <option value="activo">Activos</option>
+                    <option value="inactivo">Inactivos</option>
+                </select>
+                <span class="absolute right-10 top-1/2 -translate-y-1/2 help-icon flex items-center justify-center" title="Filtra clientes por estado: Activos o Inactivos">?</span>
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+            </div>
+        </div>
+
+        <!-- Tabla de Resultados -->
+        <div class="overflow-x-auto rounded-2xl border border-white/5 bg-slate-950/40 shadow-inner">
+            <table class="min-w-full text-sm text-slate-300">
+                <thead class="bg-slate-950/80 text-slate-400 font-bold border-b border-white/5">
+                    <tr>
+                        <th class="px-6 py-4 text-left">Cliente</th>
+                        <th class="px-6 py-4 text-left">Documento</th>
+                        <th class="px-6 py-4 text-left">Email</th>
+                        <th class="px-6 py-4 text-left">Estado</th>
+                        <th class="px-6 py-4 text-left">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="clientTableBody" class="divide-y divide-white/5"></tbody>
+            </table>
+
+            <!-- Tarjeta Bienvenida -->
+            <div id="welcomeContainer" class="p-12 text-center hidden">
+                <div class="bg-indigo-950/20 border border-indigo-500/10 p-8 rounded-2xl text-center cursor-pointer hover:border-indigo-500/30 transition-all shadow-xl inline-block max-w-md" onclick="openEdit(null)">
+                    <div class="w-16 h-16 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-user-plus text-2xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 mb-2">¡Todo listo para comenzar!</h2>
+                    <p class="text-slate-400 text-xs mb-6 leading-relaxed">No tienes clientes registrados aún.<br>El primer paso indispensable es crear un cliente para poder asignarle proyectos.</p>
+                    <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-indigo-600/20 transition-all">Crear mi primer cliente</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        <div class="flex justify-between items-center mt-6 text-sm">
+            <button id="btnPrev" title="Página anterior de resultados" class="px-4 py-2 bg-slate-900 border border-white/5 hover:bg-slate-800 text-slate-300 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold">← Anterior</button>
+            <span id="pagerInfo" class="text-slate-500 font-mono font-semibold">Página 1</span>
+            <button id="btnNext" title="Página siguiente de resultados" class="px-4 py-2 bg-slate-900 border border-white/5 hover:bg-slate-800 text-slate-300 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold">Siguiente →</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN CUSTOM (Sustituye a confirm() nativo de forma premium) -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden items-center justify-center p-4">
+        <div class="card-glass rounded-2xl max-w-md w-full p-6 text-center border border-white/10 shadow-2xl">
+            <div class="w-16 h-16 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+                <i class="fas fa-exclamation-triangle text-2xl animate-pulse"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-100 mb-2" id="confirmTitle">Confirmar Acción</h3>
+            <p class="text-sm text-slate-400 mb-6" id="confirmText">¿Estás seguro de realizar esta acción?</p>
+            <div class="flex gap-3 justify-center">
+                <button id="btnConfirmCancel" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold border border-white/5 transition-all">Cancelar</button>
+                <button id="btnConfirmAccept" class="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-rose-600/20">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+        const API_CLIENTS = `${API_BASE}/clients`;
+        const HEADERS = { "Content-Type": "application/json" };
+        let currentPage = 1, limit = 10, lastPageCount = 0;
+
+        const token = window.parent.localStorage.getItem("token") || localStorage.getItem("token");
+        if (token) {
+            HEADERS['Authorization'] = `Bearer ${token}`;
+        } else {
+            console.error("No se encontró token de autorización.");
+        }
+
+        // --- Elegant Toast Alerts ---
+        function showNotification(type, message) {
+            const container = document.getElementById('customToastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `flex items-center p-3 rounded-xl shadow-xl border backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+                type === 'success' 
+                    ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' 
+                    : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+            }`;
+            toast.innerHTML = `
+                <span class="mr-2 text-lg">${type === 'success' ? '✨' : '⚠️'}</span>
+                <div class="text-xs font-semibold tracking-wide">${message}</div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+        
+        window.alert = function(msg) {
+            const isSuccess = msg.includes('✅') || msg.toLowerCase().includes('éxito') || msg.toLowerCase().includes('cambiado');
+            showNotification(isSuccess ? 'success' : 'error', msg.replace(/[✅❌]/g, '').trim());
+        };
+
+        // --- Custom Promise Confirmation Modal ---
+        function openConfirmModal(msg) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                const text = document.getElementById('confirmText');
+                const btnAccept = document.getElementById('btnConfirmAccept');
+                const btnCancel = document.getElementById('btnConfirmCancel');
+                
+                text.textContent = msg;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                
+                const handleAccept = () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    cleanup();
+                    resolve(true);
+                };
+                const handleCancel = () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    cleanup();
+                    resolve(false);
+                };
+                const cleanup = () => {
+                    btnAccept.removeEventListener('click', handleAccept);
+                    btnCancel.removeEventListener('click', handleCancel);
+                };
+                btnAccept.addEventListener('click', handleAccept);
+                btnCancel.addEventListener('click', handleCancel);
+            });
+        }
+
+        async function fetchClients(page = 1) {
+            currentPage = page;
+            const url = new URL(API_CLIENTS);
+            url.searchParams.set("skip", (page - 1) * limit);
+            url.searchParams.set("limit", limit);
+
+            const texto = document.getElementById("filtroTexto").value.trim();
+            const estado = document.getElementById("filtroEstado").value;
+
+            if (texto) url.searchParams.set("nombre", texto);
+            if (estado !== "todos") url.searchParams.set("estado", estado === "activo" ? "true" : "false");
+
+            try {
+                const res = await fetch(url, { headers: HEADERS });
+                if (!res.ok) throw new Error("Error al cargar clientes");
+                const data = await res.json();
+                lastPageCount = data.length;
+                renderClients(data);
+                updatePagination();
+            } catch (error) {
+                console.error(error);
+                alert("❌ No se pudieron cargar los clientes.");
+            }
+        }
+
+        function renderClients(clients) {
+            const tbody = document.getElementById("clientTableBody");
+            const welcomeContainer = document.getElementById("welcomeContainer");
+            tbody.innerHTML = "";
+            
+            const texto = document.getElementById("filtroTexto").value.trim();
+            const estado = document.getElementById("filtroEstado").value;
+
+            if (clients.length === 0 && currentPage === 1 && !texto && estado === 'todos') {
+                tbody.parentElement.classList.add("hidden");
+                welcomeContainer.classList.remove("hidden");
+                return;
+            }
+            
+            tbody.parentElement.classList.remove("hidden");
+            welcomeContainer.classList.add("hidden");
+
+            if (clients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-500 font-medium">No se encontraron clientes con esos filtros.</td></tr>`;
+                return;
+            }
+
+            clients.forEach(c => {
+                const row = `
+                <tr class="hover:bg-slate-900/40 transition-colors">
+                    <td class="px-6 py-4 font-bold text-slate-200">${c.nombre}</td>
+                    <td class="px-6 py-4 text-slate-400 font-mono text-xs">${c.tipo_documento || ""} ${c.documento || ""}</td>
+                    <td class="px-6 py-4 text-slate-400">${c.email}</td>
+                    <td class="px-6 py-4">
+                        ${c.estado 
+                            ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">🟢 Activo</span>' 
+                            : '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">🔴 Inactivo</span>'
+                        }
+                    </td>
+                    <td class="px-6 py-4 flex gap-1.5">
+                        <button class="action-btn bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 view-btn" data-id="${c.uid}" title="Ver Detalles"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn bg-amber-500/10 text-amber-400 border border-amber-500/20 edit-btn" data-id="${c.uid}" title="Editar Cliente"><i class="fas fa-pencil-alt"></i></button>
+                        
+                        <button class="action-btn bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 create-project-btn" 
+                                data-id="${c.uid}" 
+                                data-name="${encodeURIComponent(c.nombre)}" 
+                                title="Crear Proyecto para este Cliente">
+                            <i class="fas fa-folder-plus"></i>
+                        </button>
+
+                        <button class="action-btn ${c.estado ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"} toggle-btn" 
+                                data-id="${c.uid}" data-active="${c.estado}" title="${c.estado ? 'Desactivar' : 'Activar'}">
+                            ${c.estado ? '<i class="fas fa-trash-alt"></i>' : '<i class="fas fa-check-circle"></i>'}
+                        </button>
+                    </td>
+                </tr>`;
+                tbody.insertAdjacentHTML("beforeend", row);
+            });
+
+            document.querySelectorAll(".view-btn").forEach(btn =>
+                btn.addEventListener("click", e => openDetail(e.currentTarget.dataset.id))
+            );
+            document.querySelectorAll(".edit-btn").forEach(btn =>
+                btn.addEventListener("click", e => openEdit(e.currentTarget.dataset.id))
+            );
+            document.querySelectorAll(".toggle-btn").forEach(btn =>
+                btn.addEventListener("click", e => toggleClient(e.currentTarget.dataset.id, e.currentTarget.dataset.active === "true"))
+            );
+            document.querySelectorAll(".create-project-btn").forEach(btn =>
+                btn.addEventListener("click", e => openCreateProject(e.currentTarget.dataset.id, e.currentTarget.dataset.name))
+            );
+        }
+
+        function updatePagination() {
+            document.getElementById("btnPrev").disabled = (currentPage === 1);
+            document.getElementById("btnNext").disabled = (lastPageCount < limit);
+            document.getElementById("pagerInfo").textContent = `Página ${currentPage}`;
+        }
+
+        async function toggleClient(id, active) {
+            const confirmMsg = active ? "¿Seguro que deseas desactivar a este cliente del sistema?" : "¿Deseas activar de nuevo a este cliente?";
+            const confirmed = await openConfirmModal(confirmMsg);
+            if (!confirmed) return;
+            try {
+                const res = await fetch(`${API_CLIENTS}/${id}/status`, {
+                    method: "PATCH",
+                    headers: HEADERS,
+                    body: JSON.stringify({ estado: !active })
+                });
+                if (!res.ok) throw new Error("No se pudo cambiar el estado del cliente");
+                showNotification('success', '✅ Estado de afiliación de cliente actualizado correctamente.');
+                await fetchClients(currentPage);
+            } catch (err) {
+                console.error(err);
+                alert("❌ Error al actualizar el estado del cliente.");
+            }
+        }
+
+        function openDetail(id) {
+            window.location.href = `clientes_detalle.html?id=${id}`;
+        }
+
+        function openEdit(id) {
+            if (id) {
+                window.location.href = `clientes_editar.html?id=${id}`;
+            } else {
+                window.location.href = `clientes_crear.html`;
+            }
+        }
+
+        function openCreateProject(clientId, clientName) {
+            if (!clientId || !clientName) return;
+            window.location.href = `../projects/create.html?clientId=${clientId}&clientName=${clientName}`;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchClients();
+            document.getElementById("btnNext").addEventListener("click", () => fetchClients(currentPage + 1));
+            document.getElementById("btnPrev").addEventListener("click", () => fetchClients(currentPage - 1));
+            document.getElementById("filtroTexto").addEventListener("input", () => fetchClients(1));
+            document.getElementById("filtroEstado").addEventListener("change", () => fetchClients(1));
+            document.getElementById("btnCreate").addEventListener("click", () => openEdit(null));
+        });
+    </script>
+
+    <!-- Tooltips Dinámicos Estables -->
+    <script>
+        (function(){
+            if(window.__ttLoaded) return;
+            window.__ttLoaded=true;
+            let el=null;
+            document.addEventListener('mouseover',function(e){
+                var t=e.target.closest('[data-tooltip]');
+                if(!t)return;
+                var txt=t.getAttribute('data-tooltip');
+                if(!txt)return;
+                if(el)el.remove();
+                el=document.createElement('div');
+                el.className='vm-tooltip';
+                el.textContent=txt;
+                document.body.appendChild(el);
+                var r=t.getBoundingClientRect(),pos=t.getAttribute('data-tooltip-position')||'top';
+                requestAnimationFrame(function(){
+                    if(!el)return;
+                    var tr=el.getBoundingClientRect(),top=0,left=0;
+                    if(pos==='top'){
+                        top=r.top+window.scrollY-tr.height-8;
+                        left=r.left+window.scrollX+(r.width/2)-(tr.width/2);
+                    }else if(pos==='bottom'){
+                        top=r.bottom+window.scrollY+8;
+                        left=r.left+window.scrollX+(r.width/2)-(tr.width/2);
+                    }else if(pos==='left'){
+                        top=r.top+window.scrollY+(r.height/2)-(tr.height/2);
+                        left=r.left+window.scrollX-tr.width-8;
+                    }else if(pos==='right'){
+                        top=r.top+window.scrollY+(r.height/2)-(r.height/2);
+                        left=r.right+window.scrollX+8;
+                    }
+                    if(left<5)left=5;
+                    if(left+tr.width>window.innerWidth-5)left=window.innerWidth-tr.width-5;
+                    el.style.top=top+'px';
+                    el.style.left=left+'px';
+                    el.classList.add('visible');
+                });
+            });
+            document.addEventListener('mouseout',function(e){
+                if(e.target.closest('[data-tooltip]')&&el){
+                    el.classList.remove('visible');
+                    setTimeout(function(){if(el){el.remove();el=null}},150);
+                }
+            });
+        })();
+    </script>
+    <script src="/js/roles.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const path = window.location.pathname;
+            const isSuperadmin = path.includes('/r/superadmin/');
+            const isAdmin = path.includes('/r/admin/');
+            const isCoordinador = path.includes('/r/coordinador/');
+            const isCliente = path.includes('/r/cliente/');
+            const isDisInst = path.includes('/r/disenador-instruccional/');
+            const isAutor = path.includes('/r/autor/');
+            const isRevisor = path.includes('/r/revisor-qa/');
+            const isEditor = path.includes('/r/editor/');
+            const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+            const isAbogado = path.includes('/r/abogado/');
+            const isDisGraf = path.includes('/r/disenador-grafico/');
+            const isAnim2d = path.includes('/r/animador-2d/');
+            const isAnim3d = path.includes('/r/animador-3d/');
+            const isVideo = path.includes('/r/video/');
+            const isCorrector = path.includes('/r/corrector-de-estilo/');
+            const isIngeniero = path.includes('/r/ingeniero-lms/');
+            const isRegistrado = path.includes('/r/registrado/');
+
+            const allowedRoles = [];
+            if (isSuperadmin) allowedRoles.push('superadmin');
+            if (isAdmin) allowedRoles.push('admin');
+            if (isCoordinador) allowedRoles.push('coordinador');
+            if (isCliente) allowedRoles.push('cliente');
+            if (isDisInst) allowedRoles.push('disenador-instruccional');
+            if (isAutor) allowedRoles.push('autor');
+            if (isRevisor) allowedRoles.push('revisor-qa');
+            if (isEditor) allowedRoles.push('editor');
+            if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+            if (isAbogado) allowedRoles.push('abogado');
+            if (isDisGraf) allowedRoles.push('disenador-grafico');
+            if (isAnim2d) allowedRoles.push('animador-2d');
+            if (isAnim3d) allowedRoles.push('animador-3d');
+            if (isVideo) allowedRoles.push('video');
+            if (isCorrector) allowedRoles.push('corrector-de-estilo');
+            if (isIngeniero) allowedRoles.push('ingeniero-lms');
+            if (isRegistrado) allowedRoles.push('registrado');
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+                
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const userRoles = payload.roles || [payload.role].filter(Boolean);
+                if (!userRoles.some(r => allowedRoles.includes(r))) {
+                    window.location.href = '/';
+                    return;
+                }
+            } catch(e) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+    <script>
+        (function() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+                
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const permissions = payload.permissions || [];
+                const hasPermission = (perm) => permissions.includes(perm);
+                const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+                const menuPermissions = {
+                    'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+                    'menu-crear-proyecto': ['proyectos_crear'],
+                    'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+                    'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+                    'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+                    'menu-crear-plan': ['diseno_instruccional_crear'],
+                    'menu-cursos': ['proyectos_cursos_listar'],
+                    'menu-crear-curso': ['autor_crear'],
+                    'menu-modulos': ['proyectos_modulos_listar'],
+                    'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+                    'menu-unidades': ['proyectos_unidades_listar'],
+                    'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+                    'menu-tareas': ['proyectos_tareas_listar'],
+                    'menu-crear-tarea': ['autor_crear'],
+                    'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+                    'menu-crear-evaluacion': ['autor_crear'],
+                    'menu-fases': ['proyectos_fases_etapas_gestionar'],
+                    'menu-cronogramas': ['proyectos_cronogramas_crear'],
+                    'menu-calendario': ['proyectos_calendario_ver'],
+                    'menu-usuarios': ['usuarios_crear'],
+                    'menu-clientes': ['usuarios_crear'],
+                    'menu-crm': ['usuarios_crear'],
+                    'menu-roles': ['roles_permisos_gestionar'],
+                    'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+                    'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+                    'menu-canvas': ['herramientas_canvas_usar'],
+                    'menu-powerpoint': ['herramientas_powerpoint_usar'],
+                    'menu-auditoria': ['seguridad_auditoria_ver'],
+                    'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+                    'menu-estadisticas': ['reportes_estadisticas_ver'],
+                    'menu-metricas': ['reportes_metricas_ver'],
+                    'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+                    'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+                    'menu-microcursos': ['capacitacion_microcursos_ver'],
+                    'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+                    'menu-faq': ['capacitacion_faq_ver'],
+                };
+                Object.entries(menuPermissions).forEach(([id, required]) => {
+                    const el = document.getElementById(id);
+                    if (el && !hasAnyPermission(required)) {
+                        el.style.display = 'none';
+                    }
+                });
+            } catch(e) {}
+        })();
+    </script>
+</body>
+</html>

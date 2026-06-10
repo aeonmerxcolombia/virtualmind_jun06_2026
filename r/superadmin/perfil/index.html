@@ -1,0 +1,2634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Perfil de Usuario & RRHH Inteligente – VirtualMind</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.10/build/css/intlTelInput.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.css" rel="stylesheet">
+  
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: #090D16;
+      color: #cbd5e1;
+      overflow-x: hidden;
+    }
+    
+    .iti { width: 100%; }
+    .iti__country-list { 
+      background-color: #0f172a !important; 
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: #f1f5f9 !important;
+      z-index: 100; 
+    }
+    .iti__country { padding: 8px 10px !important; }
+    .iti__country:hover, .iti__country.iti__highlight { background-color: #1e293b !important; }
+    .iti__input.error { border-color: #ef4444 !important; }
+
+    /* Scrollbar del modal y paneles */
+    .custom-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+        background-color: rgba(99, 102, 241, 0.3);
+        border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+
+    .card-glass {             
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .input-focus {             
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        background: rgba(15, 23, 42, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #f8fafc !important;
+    }
+    .input-focus:focus {             
+        transform: translateY(-1px);             
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+    }
+
+    /* Estilo de Pestaña Activa */
+    .tab-active { 
+        background-color: rgba(255, 255, 255, 0.06); 
+        border-bottom: 2px solid #6366f1; 
+        color: #ffffff !important; 
+    }
+    .tab-inactive { 
+        background-color: transparent; 
+        border-bottom: 2px solid transparent; 
+        color: #94a3b8; 
+    }
+    .tab-inactive:hover { 
+        background-color: rgba(255, 255, 255, 0.02); 
+        color: #ffffff; 
+    }
+
+    /* Ambient glowing background blobs */
+    .glow-blob {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* Dropzone de RRHH con efectos de neón */
+    .drop-zone-cyber {
+      border: 2px dashed rgba(99, 102, 241, 0.3);
+      background: rgba(15, 23, 42, 0.4);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .drop-zone-cyber:hover, .drop-zone-cyber.dragover {
+      border-color: #6366f1 !important;
+      background: rgba(99, 102, 241, 0.05);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+    }
+
+    /* === ESTILOS DEL TOUR GUIADO INTERACTIVO === */
+    .tour-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .tour-overlay.visible { 
+        opacity: 1; 
+        pointer-events: auto;
+        visibility: visible; 
+    }
+    .tour-highlight {
+        position: relative;
+        z-index: 10000 !important;
+        box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.75), 0 0 20px 5px rgba(99, 102, 241, 0.6) !important;
+        pointer-events: none;
+        border-color: #6366f1 !important;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .tour-card {
+        position: absolute;
+        background: #0f172a;
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        padding: 20px;
+        width: 320px;
+        z-index: 10001;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        color: #cbd5e1;
+    }
+    .tour-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .tour-card::after {
+        content: "";
+        position: absolute;
+        border-width: 8px;
+        border-style: solid;
+    }
+    .tour-card-bottom::after {
+        bottom: 100%; left: 24px;
+        border-color: transparent transparent #0f172a transparent;
+    }
+    .tour-card-top::after {
+        top: 100%; left: 24px;
+        border-color: #0f172a transparent transparent transparent;
+    }
+
+    /* Clases de Accesibilidad */
+    body.contrast { filter: invert(1) hue-rotate(180deg); background: #000 !important; }
+    body.contrast iframe { filter: invert(1) hue-rotate(180deg); }
+    body.large-text { font-size: 1.15rem !important; line-height: 1.7 !important; }
+    body.grayscale { filter: grayscale(1); }
+    body.dyslexia { font-family: 'OpenDyslexic', sans-serif !important; }
+    body.reduce-motion * { animation: none !important; transition: none !important; }
+    body.large-cursor, body.large-cursor * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="black" opacity="0.8"/></svg>') 16 16, auto !important; }
+    body.highlight-links a { outline: 3px solid #f59e0b !important; outline-offset: 2px !important; }
+    body.reading-guide { background: linear-gradient(to right, transparent 0%, transparent 10%, rgba(59, 130, 246, 0.1) 10%, rgba(59, 130, 246, 0.1) 90%, transparent 90%, transparent 100%); }
+    body.paragraph-spacing p, body.paragraph-spacing div, body.paragraph-spacing li { margin-bottom: 1.5rem !important; line-height: 1.8 !important; }
+    body.no-flashing * { animation: none !important; }
+    body.focus-highlight *:focus { outline: 3px solid #4f46e5 !important; outline-offset: 2px !important; }
+    body.show-keys { -webkit-user-select: none; user-select: none; }
+    body.show-keys kbd { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; padding: 2px 6px; font-family: monospace; box-shadow: 0 2px 0 #d1d5db; margin: 0 2px; }
+    body.screen-reader * { pointer-events: auto !important; }
+
+    /* Custom Tooltip System CSS */
+    .vm-tooltip { position:absolute; background:#0f172a; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.45); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; white-space:nowrap; border: 1px solid rgba(255, 255, 255, 0.08); }
+    .vm-tooltip.visible { opacity:1; transform:translateY(0); }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6 relative">
+
+    <div class="glow-blob top-10 left-10"></div>
+    <div class="glow-blob bottom-10 right-10"></div>
+
+    <!-- Custom Notification Container (Toasts) -->
+    <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
+
+    <div class="w-full max-w-6xl card-glass rounded-3xl shadow-2xl overflow-hidden z-10 relative">
+        
+        <!-- Header -->
+        <div class="bg-slate-900 border-b border-indigo-500/10 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h2 class="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent flex items-center gap-2">
+                <span>👤</span> Centro de Talento & Perfil
+            </h2>
+            
+            <!-- Navigation Tabs / Pestañas de Navegación -->
+            <div class="flex gap-2 border-b border-white/5 pb-0 w-full md:w-auto">
+                <button onclick="switchProfileTab('tab-info-content')" id="btn-tab-info" class="profile-tab-btn tab-active px-4 py-2 text-sm font-semibold transition-all">
+                    👤 Mi Perfil
+                </button>
+                <button onclick="switchProfileTab('tab-competencias-content')" id="btn-tab-competencias" class="profile-tab-btn tab-inactive px-4 py-2 text-sm font-semibold transition-all">
+                    🛡️ Competencias
+                </button>
+                <button onclick="switchProfileTab('tab-rrhh-content')" id="btn-tab-rrhh" class="profile-tab-btn tab-inactive px-4 py-2 text-sm font-semibold transition-all">
+                    👥 Hoja de Vida (IA)
+                </button>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button type="button" onclick="iniciarTourPerfil(true)" class="flex items-center gap-2 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 hover:border-transparent text-indigo-300 hover:text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-sm transition-all" data-tooltip="Iniciar guía rápida interactiva" data-tooltip-position="bottom">
+                    <span>💡</span> <span class="hidden sm:inline">Tutorial</span>
+                </button>
+                <a href="https://gestordecursos.pegui.edu.co/r/superadmin/" class="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-medium opacity-80 hover:opacity-100 transition-all" data-tooltip="Volver a la vista del panel principal" data-tooltip-position="bottom">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span class="hidden md:inline">Volver al Inicio</span>
+                </a>
+                <a href="#" onclick="history.back(); return false;" class="flex items-center gap-2 text-rose-400 hover:text-rose-300 text-sm font-medium opacity-80 hover:opacity-100 transition-all" data-tooltip="Cerrar y volver a la página previa" data-tooltip-position="bottom">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <span class="hidden md:inline">Cerrar</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="p-8">
+            
+            <!-- PESTAÑA 1: MI PERFIL (INFORMACIÓN GENERAL) -->
+            <div id="tab-info-content" class="profile-tab-content space-y-6">
+                
+                <!-- Sección Foto de Perfil (Tour Step 1) -->
+                <div id="tour-step-foto" class="bg-slate-950/40 p-6 rounded-2xl border border-white/5 max-w-xl mx-auto flex flex-col items-center">
+                    <div id="preview" class="flex justify-center mb-4 hidden">
+                        <img id="foto_actual" src="" alt="Foto de perfil"
+                             class="w-32 h-32 object-cover rounded-full border-4 border-slate-900 shadow-lg"
+                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Usuario&background=4F46E5&color=fff';" />
+                    </div>
+                    
+                    <div class="w-full text-center">
+                        <label for="foto" class="block font-bold text-slate-300 mb-2">Foto de Perfil</label>
+                        <div class="flex gap-2 justify-center">
+                            <label class="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md" data-tooltip="Subir una imagen en formato JPG o PNG" data-tooltip-position="top">
+                                📁 Subir Archivo
+                                <input type="file" id="foto" name="foto" accept="image/*" class="hidden" />
+                            </label>
+                            <button type="button" id="btnTomarFoto" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md" data-tooltip="Tomar una fotografía en tiempo real con la cámara" data-tooltip-position="top">📷 Tomar Foto</button>
+                            <button type="button" id="btnGuardarFoto" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md" data-tooltip="Guardar la foto sin enviar todo el formulario" data-tooltip-position="top">💾 Guardar Foto</button>
+                            <button type="button" id="btnCancelarFoto" class="hidden bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-md" data-tooltip="Cancelar la foto seleccionada y restaurar la anterior" data-tooltip-position="top">✕ Cancelar Foto</button>
+                            <span id="autoSaveIndicator" class="hidden text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-900/80 border border-white/5"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario Principal de Información Personal -->
+                <form id="profileForm" enctype="multipart/form-data" class="space-y-6" novalidate>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                             <label for="user_id" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">ID de Usuario</label>
+                             <input type="text" id="user_id" name="user_id" readonly class="w-full border border-white/5 p-3 rounded-xl bg-slate-950/80 text-slate-400 font-mono outline-none cursor-not-allowed" data-tooltip="ID único del sistema (Solo Lectura)" data-tooltip-position="bottom" />
+                        </div>
+                                
+                        <!-- Datos Personales (Tour Step 2) -->
+                        <div class="p-5 bg-slate-950/40 rounded-2xl border border-white/5 space-y-4" id="tour-step-datos-personales">
+                            <h4 class="font-bold text-slate-200 border-b border-white/5 pb-2 flex items-center gap-2"><span class="text-indigo-400">👤</span> Información Básica</h4>
+                            <div>
+                                <label for="nombre" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Nombre <span class="text-rose-500">*</span></label>
+                                <input type="text" id="nombre" name="nombre" class="w-full p-3 rounded-xl input-focus" required data-tooltip="Introduce tu nombre o nombres" data-tooltip-position="top" />
+                            </div>
+                            <div>
+                                <label for="apellidos" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Apellidos <span class="text-rose-500">*</span></label>
+                                <input type="text" id="apellidos" name="apellidos" class="w-full p-3 rounded-xl input-focus" required data-tooltip="Introduce tus apellidos" data-tooltip-position="top" />
+                            </div>
+                            <div>
+                                <label for="email" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Correo Electrónico <span class="text-rose-500">*</span></label>
+                                <input type="email" id="email" name="email" required class="w-full p-3 rounded-xl input-focus" data-tooltip="Correo electrónico institucional o personal" data-tooltip-position="top" />
+                            </div>
+                        </div>
+
+                        <!-- Contacto y Residencia (Tour Step 3) -->
+                        <div class="p-5 bg-slate-950/40 rounded-2xl border border-white/5 space-y-4" id="tour-step-contacto">
+                            <h4 class="font-bold text-slate-200 border-b border-white/5 pb-2 flex items-center gap-2"><span class="text-emerald-400">📞</span> Contacto y Residencia</h4>
+                            <div>
+                                <label for="telefono" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Teléfono <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <input type="tel" id="telefono" name="telefono" class="w-full p-3 rounded-xl input-focus" data-tooltip="Ingresa tu teléfono fijo con código internacional" data-tooltip-position="top" />
+                                    <span id="telCounter" class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-amber-400 font-semibold pointer-events-none hidden"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5" for="celular">Celular <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    <input type="tel" id="celular" name="celular" class="w-full p-3 rounded-xl input-focus" data-tooltip="Ingresa tu número celular activo" data-tooltip-position="top" />
+                                    <span id="celCounter" class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-amber-400 font-semibold pointer-events-none hidden"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="direccion" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Oficina / Dirección <span class="text-rose-500">*</span></label>
+                                <input type="text" id="direccion" name="direccion" class="w-full p-3 rounded-xl input-focus" required data-tooltip="Dirección de tu residencia u oficina de trabajo" data-tooltip-position="top" />
+                            </div>
+                        </div>
+
+                        <!-- Ubicación Geográfica -->
+                        <div class="p-5 bg-slate-950/40 rounded-2xl border border-white/5 space-y-4 md:col-span-2">
+                            <h4 class="font-bold text-slate-200 border-b border-white/5 pb-2 flex items-center gap-2"><span class="text-indigo-400">🌍</span> Ubicación Geográfica</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="pais" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">País</label>
+                                    <select id="pais" name="pais" class="w-full p-3 rounded-xl bg-slate-900 border border-white/5 text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500" onchange="cargarCiudadesPorPais()" data-tooltip="Selecciona tu país de residencia actual" data-tooltip-position="top">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Colombia">Colombia</option>
+                                        <option value="España">España</option>
+                                        <option value="México">México</option>
+                                        <option value="Argentina">Argentina</option>
+                                        <option value="Chile">Chile</option>
+                                        <option value="Perú">Perú</option>
+                                        <option value="Venezuela">Venezuela</option>
+                                        <option value="Ecuador">Ecuador</option>
+                                        <option value="Estados Unidos">Estados Unidos</option>
+                                        <option value="Canadá">Canadá</option>
+                                        <option value="Reino Unido">Reino Unido</option>
+                                        <option value="Francia">Francia</option>
+                                        <option value="Alemania">Alemania</option>
+                                        <option value="Italia">Italia</option>
+                                        <option value="Brasil">Brasil</option>
+                                        <option value="Otro">Otro (especificar)</option>
+                                    </select>
+                                    <input type="text" id="pais_otro" name="pais_otro" class="w-full p-3 rounded-xl hidden mt-3 input-focus" placeholder="Especifica tu país" data-tooltip="Escribe tu país personalizado" data-tooltip-position="top" />
+                                </div>
+                                <div>
+                                    <label for="ciudad" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Ciudad</label>
+                                    <select id="ciudad" name="ciudad" class="w-full p-3 rounded-xl bg-slate-900 border border-white/5 text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500" data-tooltip="Selecciona tu ciudad de residencia actual" data-tooltip-position="top">
+                                        <option value="">Selecciona primero un país...</option>
+                                    </select>
+                                    <input type="text" id="ciudad_otra" name="ciudad_otra" class="w-full p-3 rounded-xl hidden mt-3 input-focus" placeholder="Especifica tu ciudad" data-tooltip="Escribe tu ciudad personalizada" data-tooltip-position="top" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empresa y Cargo -->
+                        <div class="p-5 bg-slate-950/40 rounded-2xl border border-white/5 space-y-4 md:col-span-2">
+                            <h4 class="font-bold text-slate-200 border-b border-white/5 pb-2 flex items-center gap-2"><span class="text-amber-400">💼</span> Entorno Laboral</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="empresa" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Empresa</label>
+                                    <input type="text" id="empresa" name="empresa" class="w-full p-3 rounded-xl input-focus" data-tooltip="Nombre de la empresa u organización" data-tooltip-position="top" />
+                                </div>
+                                <div>
+                                    <label for="cargo" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Cargo</label>
+                                    <input type="text" id="cargo" name="cargo" class="w-full p-3 rounded-xl input-focus" data-tooltip="Tu puesto o cargo laboral actual" data-tooltip-position="top" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Redes Sociales -->
+                        <div class="md:col-span-2 p-5 bg-slate-950/40 rounded-2xl border border-white/5 space-y-4">
+                            <h3 class="text-base font-bold text-indigo-300 border-b border-white/5 pb-2">🔗 Redes Sociales</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div><label for="linkedin" class="block text-xs font-semibold text-slate-400 mb-1.5">LinkedIn</label><input type="url" id="linkedin" name="linkedin" class="w-full p-3 rounded-xl input-focus" placeholder="https://linkedin.com/in/..."/></div>
+                                <div><label for="twitter" class="block text-xs font-semibold text-slate-400 mb-1.5">Twitter</label><input type="url" id="twitter" name="twitter" class="w-full p-3 rounded-xl input-focus" placeholder="https://twitter.com/..."/></div>
+                                <div><label for="facebook" class="block text-xs font-semibold text-slate-400 mb-1.5">Facebook</label><input type="url" id="facebook" name="facebook" class="w-full p-3 rounded-xl input-focus" placeholder="https://facebook.com/..."/></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Intereses Profesionales -->
+                    <div class="md:col-span-2 p-5 bg-slate-950/40 rounded-2xl border border-white/5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                            <h3 class="text-lg font-bold text-indigo-300 flex items-center gap-2"><span>🎯</span> Intereses Profesionales</h3>
+                            <button type="button" id="btnSugerirInteresesIA" onclick="sugerirInteresesConIA()" class="px-4 py-2 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 hover:border-transparent text-indigo-300 hover:text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm" data-tooltip="Generar intereses basados en tu Cargo y Empresa con ROSA IA" data-tooltip-position="top">
+                                🤖 Sugerir con IA
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-indigo-950/20 rounded-xl border border-indigo-500/10 shadow-inner">
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-400 uppercase tracking-wide mb-1.5">Área de Interés</label>
+                                <select id="intereses_interes_principal" name="intereses_interes_principal" class="w-full p-2.5 rounded-lg text-sm bg-slate-900 border border-white/5 text-slate-200 outline-none" onchange="toggleOtroInput(this, 'otro_interes_principal')" data-tooltip="Área técnica de mayor afinidad" data-tooltip-position="top">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="desarrollo_software">Desarrollo de Software</option>
+                                    <option value="diseno_instruccional">Diseño Instruccional</option>
+                                    <option value="diseno_grafico">Diseño Gráfico</option>
+                                    <option value="produccion_multimedia">Producción Multimedia</option>
+                                    <option value="gestion_proyectos">Gestión de Proyectos</option>
+                                    <option value="marketing">Marketing Digital</option>
+                                    <option value="inteligencia_artificial">Inteligencia Artificial</option>
+                                    <option value="ciencia_datos">Ciencia de Datos</option>
+                                    <option value="ciberseguridad">Ciberseguridad</option>
+                                    <option value="educacion">Educación</option>
+                                    <option value="comunicacion">Comunicación</option>
+                                    <option value="audiovisual">Audiovisual</option>
+                                    <option value="animacion_3d">Animación 3D</option>
+                                    <option value="investigacion">Investigación</option>
+                                    <option value="innovacion">Innovación</option>
+                                    <option value="otro">Otro (especificar)</option>
+                                </select>
+                                <input type="text" id="otro_interes_principal" name="otro_interes_principal" placeholder="Escribe tu área de interés..." class="w-full p-2.5 rounded-lg text-sm bg-slate-900 border border-indigo-500/30 text-slate-200 outline-none mt-2 hidden" oninput="actualizarOtroInteres()" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-400 uppercase tracking-wide mb-1.5">Formato Preferido</label>
+                                <select id="intereses_formato_preferido" name="intereses_formato_preferido" class="w-full p-2.5 rounded-lg text-sm bg-slate-900 border border-white/5 text-slate-200 outline-none" onchange="toggleOtroInput(this, 'otro_formato_preferido')" data-tooltip="Tipo de formato educativo favorito" data-tooltip-position="top">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="video">Video Tutoriales</option>
+                                    <option value="lectura">Lectura</option>
+                                    <option value="interactivo">Interactivo</option>
+                                    <option value="practico">Práctico</option>
+                                    <option value="auditivo">Auditivo (Podcast, Audio)</option>
+                                    <option value="mixto">Mixto (Combinado)</option>
+                                    <option value="otro">Otro (especificar)</option>
+                                </select>
+                                <input type="text" id="otro_formato_preferido" name="otro_formato_preferido" placeholder="Escribe tu formato preferido..." class="w-full p-2.5 rounded-lg text-sm bg-slate-900 border border-indigo-500/30 text-slate-200 outline-none mt-2 hidden" oninput="actualizarOtroFormato()" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-400 uppercase tracking-wide mb-1.5">Nivel de Experiencia</label>
+                                <select id="intereses_nivel_experiencia" name="intereses_nivel_experiencia" class="w-full p-2.5 rounded-lg text-sm bg-slate-900 border border-white/5 text-slate-200 outline-none" onchange="toggleOtroInput(this, 'otro_nivel_experiencia')" data-tooltip="Nivel de experiencia profesional" data-tooltip-position="top">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="principiante">Principiante</option>
+                                    <option value="intermedio">Intermedio</option>
+                                    <option value="avanzado">Avanzado</option>
+                                    <option value="senior">Senior</option>
+                                    <option value="otro">Otro (especificar)</option>
+                                </select>
+                                <input type="text" id="otro_nivel_experiencia" name="otro_nivel_experiencia" placeholder="Escribe tu nivel..." class="w-full p-2.5 rounded-lg text-sm bg-slate-900 border border-indigo-500/30 text-slate-200 outline-none mt-2 hidden" oninput="actualizarOtroNivel()" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-400 uppercase tracking-wide mb-1.5">Objetivo Principal</label>
+                                <select id="intereses_objetivo_principal" name="intereses_objetivo_principal" class="w-full p-2.5 rounded-lg text-sm bg-slate-900 border border-white/5 text-slate-200 outline-none" onchange="toggleOtroInput(this, 'otro_objetivo_principal')" data-tooltip="¿Qué buscas lograr prioritariamente?" data-tooltip-position="top">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="aprendizaje">Aprender nuevas habilidades</option>
+                                    <option value="actualizacion">Actualizar conocimientos</option>
+                                    <option value="certificacion">Obtener certificación</option>
+                                    <option value="mejora_continua">Mejora continua</option>
+                                    <option value="nuevo_empleo">Buscar nuevo empleo</option>
+                                    <option value="emprendimiento">Emprendimiento</option>
+                                    <option value="otro">Otro (especificar)</option>
+                                </select>
+                                <input type="text" id="otro_objetivo_principal" name="otro_objetivo_principal" placeholder="Escribe tu objetivo..." class="w-full p-2.5 rounded-lg text-sm bg-slate-900 border border-indigo-500/30 text-slate-200 outline-none mt-2 hidden" oninput="actualizarOtroObjetivo()" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guardar Cambios (Tour Step 6) -->
+                    <div class="flex flex-col items-end pt-4" id="tour-step-guardar">
+                        <button type="submit" id="btnGuardarPerfil" class="bg-gradient-to-r from-indigo-600 to-emerald-600 text-white px-10 py-3.5 rounded-xl shadow-lg hover:shadow-indigo-500/20 transition-all font-bold text-lg">Guardar Cambios</button>
+                        <div id="respuesta" class="mt-4 text-sm text-center w-full"></div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- PESTAÑA 2: COMPETENCIAS -->
+            <div id="tab-competencias-content" class="profile-tab-content space-y-6 hidden">
+                
+                <!-- Competencias (Tour Step 5) -->
+                <div id="tour-step-competencias" class="border border-emerald-500/20 rounded-2xl p-5 bg-emerald-500/5">
+                     <div class="flex items-center justify-between mb-3 border-b border-emerald-500/10 pb-2">
+                         <h3 class="text-lg font-bold text-emerald-400 flex items-center gap-2"><span>🛡️</span> Competencias / Habilidades</h3>
+                         <button type="button" id="btnEditarCompetencias" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl shadow-md transition-all font-semibold" data-tooltip="Haz clic para abrir el editor avanzado de competencias" data-tooltip-position="top">Editar Competencias</button>
+                     </div>
+                     <div id="skillsView" class="flex flex-wrap gap-2 mb-2.5"></div>
+                     <div id="langsView" class="flex flex-wrap gap-2 mb-2.5"></div>
+                     <p class="text-sm text-slate-300 mt-2 font-medium">
+                         <span id="nivelAcademicoView"></span>
+                         <span id="areaConocimientoView"></span>
+                         <span id="aniosExperienciaView"></span>
+                     </p>
+                     <p class="text-sm text-slate-400 mt-2 italic" id="perfilamientoView"></p>
+                </div>
+            </div>
+
+            <!-- PESTAÑA 3: HOJA DE VIDA INTELIGENTE (RRHH) -->
+            <div id="tab-rrhh-content" class="profile-tab-content space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- Subir Hoja de Vida -->
+                    <div class="p-5 bg-slate-950/40 rounded-2xl border border-white/5 flex flex-col justify-between">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-200 mb-2 flex items-center"><i class="fas fa-upload text-indigo-400 mr-2"></i> Subir Hoja de Vida</h2>
+                            <p class="text-slate-400 text-xs mb-4">Sube tu archivo PDF, DOCX o TXT. El motor de Inteligencia Artificial VirtualMind extraerá y estructurará automáticamente tus datos de perfilamiento profesional.</p>
+                            
+                            <div id="dropZone" class="drop-zone-cyber rounded-2xl p-8 text-center cursor-pointer" 
+                                 ondragover="event.preventDefault(); this.classList.add('dragover')" 
+                                 ondragleave="this.classList.remove('dragover')" 
+                                 ondrop="event.preventDefault(); this.classList.remove('dragover'); handleFile(event.dataTransfer.files[0])" 
+                                 onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-indigo-400/50 mb-3"></i>
+                                <p class="text-slate-200 font-semibold text-sm">Arrastra tu hoja de vida aquí</p>
+                                <p class="text-slate-500 text-xs mt-1">o haz clic para seleccionar (PDF, DOCX, TXT)</p>
+                            </div>
+                            <input type="file" id="fileInput" accept=".pdf,.docx,.txt" class="hidden" onchange="handleFile(this.files[0])">
+                            
+                            <div class="mt-4">
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Proyecto Relacionado (Opcional)</label>
+                                <select id="projectSelect" class="w-full p-2.5 rounded-lg text-sm bg-slate-900 border border-white/5 text-slate-200 outline-none">
+                                    <option value="">Sin proyecto</option>
+                                </select>
+                            </div>
+                            <div id="uploadStatus" class="hidden mt-4"></div>
+                        </div>
+
+                        <!-- Contingencia ROSA IA: Si falla el parser de archivos, Gemini procesará el texto plano -->
+                        <div class="mt-4 p-4 bg-slate-900/40 border border-white/5 rounded-2xl shadow-inner">
+                            <h4 class="text-xs font-bold text-indigo-400 mb-1 flex items-center gap-1.5">
+                                <span>🤖</span> Contingencia ROSA IA: Dictado o Copiado
+                            </h4>
+                            <p class="text-[10px] text-slate-400 mb-3 leading-relaxed">¿La IA no extrajo datos de tu archivo? Pega el texto plano de tu Hoja de Vida y Gemini estructurará tus competencias de inmediato.</p>
+                            <textarea id="rawCVText" rows="3" class="w-full p-2.5 rounded-xl text-xs bg-slate-950 border border-white/5 text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 resize-none" placeholder="Pega aquí tu experiencia, educación y habilidades..."></textarea>
+                            <button type="button" onclick="analizarTextoCVConGemini()" id="btnAnalizarTextoCV" class="w-full mt-2.5 py-2.5 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 hover:border-transparent text-indigo-300 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow">
+                                <span>✨</span> Estructurar Texto con Gemini
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Datos Extraídos por IA -->
+                    <div class="p-5 bg-slate-950/40 rounded-2xl border border-white/5">
+                        <h2 class="text-xl font-bold text-slate-200 mb-2 flex items-center"><i class="fas fa-robot text-indigo-400 mr-2"></i> Datos Extraídos por IA</h2>
+                        <p class="text-slate-400 text-xs mb-4" id="parseStatus">Carga una hoja de vida o utiliza el procesador de contingencia para estructurar la información analizada.</p>
+                        <div id="parsedData" class="hidden space-y-4 max-h-[500px] overflow-y-auto custom-scroll pr-2"></div>
+                    </div>
+                </div>
+
+                <div id="usuarioExistenteAlert" class="hidden bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-2xl p-4"></div>
+
+                <!-- Repositorio Seguro de Hojas de Vida (Estrictamente Privado) -->
+                <div id="repositorioSection" class="p-5 bg-slate-950/40 rounded-2xl border border-white/5">
+                    <h2 class="text-xl font-bold text-slate-200 mb-3 flex items-center"><i class="fas fa-database text-indigo-400 mr-2"></i> Historial de mis Hojas de Vida Analizadas</h2>
+                    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                        <input type="text" id="searchHV" placeholder="Buscar en mi historial..." class="flex-1 p-2.5 rounded-lg text-xs bg-slate-900 border border-white/5 text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500" onkeyup="cargarRepositorio()">
+                        <select id="projectFilter" class="p-2.5 rounded-lg text-xs bg-slate-900 border border-white/5 text-slate-200 outline-none" onchange="cargarRepositorio()">
+                            <option value="">Todos los proyectos</option>
+                        </select>
+                    </div>
+                    <div id="hvList" class="space-y-3 max-h-[300px] overflow-y-auto custom-scroll pr-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR COMPETENCIAS -->
+    <div id="modalCompetencias" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-900 rounded-3xl border border-white/10 shadow-2xl w-full max-w-2xl p-8 flex flex-col max-h-[90vh]">
+            <h3 class="text-2xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent mb-6 flex-shrink-0">Editar Competencias</h3>
+            <form id="competenciasForm" class="flex flex-col h-full overflow-hidden">
+                <div class="flex-grow overflow-y-auto space-y-4 pr-2 custom-scroll text-left">
+                    <div>
+                        <label for="habilidades" class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Habilidades (separadas por comas)</label>
+                        <input type="text" id="habilidades" name="habilidades" class="w-full p-3 rounded-xl input-focus" placeholder="Ej: Python, Liderazgo, Scrum, UI/UX" data-tooltip="Lista tus principales destrezas separadas por comas" data-tooltip-position="top">
+                    </div>
+                    <div>
+                        <label for="idiomas" class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Idiomas (separados por comas)</label>
+                        <input type="text" id="idiomas" name="idiomas" class="w-full p-3 rounded-xl input-focus" placeholder="Ej: Inglés, Español, Alemán" data-tooltip="Lista los idiomas que dominas" data-tooltip-position="top">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5" for="nivel_academico">Nivel Académico</label>
+                            <select id="nivel_academico" name="nivel_academico" class="w-full p-3 rounded-xl bg-slate-950 border border-white/5 text-slate-200 outline-none" data-tooltip="Tu último nivel académico obtenido" data-tooltip-position="top">
+                                <option value="">No especificado</option>
+                                <option value="Bachiller">Bachiller</option>
+                                <option value="Técnico">Técnico</option>
+                                <option value="Tecnólogo">Tecnólogo</option>
+                                <option value="Profesional">Profesional</option>
+                                <option value="Especialización">Especialización</option>
+                                <option value="Maestría">Maestría</option>
+                                <option value="Doctorado">Doctorado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="anios_experiencia" class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Años de Experiencia</label>
+                            <input type="number" id="anios_experiencia" name="anios_experiencia" class="w-full p-3 rounded-xl input-focus" min="0" max="50" data-tooltip="Tus años totales de experiencia laboral" data-tooltip-position="top">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="area_conocimiento" class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Área de Conocimiento Principal</label>
+                        <input type="text" id="area_conocimiento" name="area_conocimiento" class="w-full p-3 rounded-xl input-focus" placeholder="Ej: Intelgencia Artificial, Marketing Digital" data-tooltip="Especialidad técnica" data-tooltip-position="top">
+                    </div>
+                    <div>
+                        <label for="otros_estudios" class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Otros Estudios / Certificaciones</label>
+                        <input type="text" id="otros_estudios" name="otros_estudios" class="w-full p-3 rounded-xl input-focus" placeholder="Ej: Certificación AWS Cloud, Coursera Deep Learning..." data-tooltip="Cursos o certificaciones adicionales" data-tooltip-position="top">
+                    </div>
+                    <div>
+                        <label for="disponibilidad" class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Disponibilidad</label>
+                        <input type="text" id="disponibilidad" name="disponibilidad" class="w-full p-3 rounded-xl input-focus" placeholder="Ej: Tiempo completo, Por proyecto, Consultor..." data-tooltip="Disponibilidad horaria" data-tooltip-position="top">
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="perfilamiento" class="block text-xs font-bold text-slate-400 uppercase tracking-wide">Perfilamiento (Breve Descripción)</label>
+                            <button type="button" id="btnSugerirPerfilamientoIA" onclick="sugerirPerfilamientoConIA()" class="text-xs bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white px-3 py-1 rounded-lg transition-all font-semibold" data-tooltip="Redactar descripción corta de tu perfil con ROSA IA" data-tooltip-position="top">
+                                🤖 Redactar con IA
+                            </button>
+                        </div>
+                        <textarea id="perfilamiento" name="perfilamiento" rows="3" class="w-full p-3 rounded-xl input-focus resize-none text-slate-200" placeholder="Escribe tu presentación profesional..." data-tooltip="Escribe un resumen sobre ti o utiliza la ayuda de la IA" data-tooltip-position="top"></textarea>
+                    </div>
+                </div>
+                <div class="flex-shrink-0 flex justify-end gap-4 pt-6 mt-4 border-t border-white/5">
+                    <button type="button" id="btnCancelarCompetencias" class="text-slate-400 hover:text-white transition-colors">Cancelar</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl shadow-lg transition-all font-semibold">Guardar Competencias</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CÁMARA (FOTO DE PERFIL EN TIEMPO REAL) -->
+    <div id="modalCamara" class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[200]">
+        <div class="bg-slate-900 border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl">
+            <h3 class="text-lg font-bold text-center mb-4 text-slate-100 flex items-center justify-center gap-2"><span>📷</span> Capturar Foto</h3>
+            <video id="videoCamara" autoplay playsinline class="w-full rounded-2xl bg-black border border-white/5 shadow-inner"></video>
+            <canvas id="canvasFotoPerfil" class="hidden"></canvas>
+            <div class="flex justify-center gap-3 mt-4">
+                <button type="button" id="btnCapturarFoto" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl font-semibold transition-all shadow-md">Capturar</button>
+                <button type="button" id="btnCerrarCamara" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl font-medium transition-all border border-white/5">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VISUALIZADOR DE DOCUMENTOS (EVITA BLOQUEADORES DE POPUPS) -->
+    <div id="modalVisualizador" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 hidden z-[150]">
+        <div class="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="bg-slate-950 p-4 flex justify-between items-center border-b border-white/5">
+                <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <i class="fas fa-file-pdf text-rose-500 animate-pulse"></i> Visualizador Seguro de Hojas de Vida
+                </h3>
+                <button onclick="cerrarVisualizador()" class="text-slate-400 hover:text-white text-lg focus:outline-none transition-colors">✕</button>
+            </div>
+            <div class="flex-grow bg-slate-950 relative flex items-center justify-center">
+                <iframe id="iframeVisualizador" class="w-full h-full border-0 hidden"></iframe>
+                <div id="loadingVisualizador" class="absolute flex flex-col items-center gap-3">
+                    <div class="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full loading-spinner animate-spin"></div>
+                    <p class="text-xs text-slate-400">Descargando documento de forma segura...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.10/build/js/intlTelInput.min.js"></script>
+  <script>
+    const API_URL = "https://gestordecursos.pegui.edu.co:8000";
+    const API = "https://gestordecursos.pegui.edu.co:8000";
+    const $ = (selector) => document.querySelector(selector);
+        
+    let competenciasActual = {};
+    let fotoActualUrl = null;
+    let iti_telefono = null;
+    let iti_celular = null;
+    let emailOriginal = null;
+    let perfilExiste = false;
+    let usuarioUID = ""; // Sincronizado globalmente de forma segura
+
+    function scrollAError(el) {
+        if (!el) return;
+        setTimeout(function() {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (typeof el.focus === 'function') el.focus({ preventScroll: true });
+        }, 100);
+    }
+
+    // RRHH Module Global Variables
+    let currentHVId = null;
+    let currentParseData = null;
+    let currentSugerencias = {};
+
+    // === TOAST NOTIFICATIONS (Sustituye alerts de navegador) ===
+    function showNotification(type, message) {
+      const container = document.getElementById('customToastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `flex items-center p-3 rounded-xl shadow-xl border backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+        type === 'success' 
+          ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' 
+          : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+      }`;
+      toast.innerHTML = `
+        <span class="mr-2 text-lg">${type === 'success' ? '✨' : '⚠️'}</span>
+        <div class="text-xs font-semibold tracking-wide">${message}</div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 50);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+    
+    // Override alert globally
+    window.alert = function(msg) {
+      const isSuccess = msg.includes('✅') || msg.toLowerCase().includes('éxito') || msg.toLowerCase().includes('copiado') || msg.toLowerCase().includes('capturada');
+      showNotification(isSuccess ? 'success' : 'error', msg.replace(/[✅❌]/g, '').trim());
+    };
+
+    // --- Tab Switcher Logic ---
+    function switchProfileTab(tabId) {
+        document.querySelectorAll('.profile-tab-content').forEach(el => el.classList.add('hidden'));
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) targetTab.classList.remove('hidden');
+
+        document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+            btn.classList.remove('tab-active');
+            btn.classList.add('tab-inactive');
+        });
+        const currentBtn = Array.from(document.querySelectorAll('.profile-tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+        if (currentBtn) {
+            currentBtn.classList.add('tab-active');
+            currentBtn.classList.remove('tab-inactive');
+        }
+    }
+
+    // Tab Switch Helper for Guided Tour
+    function switchProfileTabDirect(tabId, btnEl) {
+        document.querySelectorAll('.profile-tab-content').forEach(el => el.classList.add('hidden'));
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) targetTab.classList.remove('hidden');
+
+        document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+            btn.classList.remove('tab-active');
+            btn.classList.add('tab-inactive');
+        });
+        if (btnEl) {
+            btnEl.classList.add('tab-active');
+            btnEl.classList.remove('tab-inactive');
+        }
+    }
+
+    // === TOUR GUIADO INTERACTIVO ===
+    let currentTourStep = 0;
+    const tourSteps = [
+      {
+        id: "tour-step-foto",
+        title: "📸 Foto de Perfil",
+        desc: "Personaliza tu avatar cargando un archivo o tomando una foto instantánea con tu cámara en vivo.",
+        pos: "bottom",
+        tab: "tab-info-content",
+        btn: "btn-tab-info"
+      },
+      {
+        id: "tour-step-datos-personales",
+        title: "👤 Datos Básicos",
+        desc: "Completa tu nombre, apellido y correo institucional. Estos campos son indispensables.",
+        pos: "bottom",
+        tab: "tab-info-content",
+        btn: "btn-tab-info"
+      },
+      {
+        id: "tour-step-contacto",
+        title: "📞 Contacto Seguro",
+        desc: "Registra tu teléfono y celular. Nuestro motor de país validará de forma segura el formato internacional.",
+        pos: "bottom",
+        tab: "tab-info-content",
+        btn: "btn-tab-info"
+      },
+      {
+        id: "tour-step-intereses",
+        title: "🎯 Áreas de Interés",
+        desc: "Selecciona tus preferencias profesionales. La IA utilizará esto para sugerirte contenidos a medida.",
+        pos: "top",
+        tab: "tab-competencias-content",
+        btn: "btn-tab-competencias"
+      },
+      {
+        id: "tour-step-competencias",
+        title: "🛡️ Habilidades",
+        desc: "Registra tus habilidades y nivel de estudios aquí. Esta es la base para tu perfilamiento en VirtualMind.",
+        pos: "top",
+        tab: "tab-competencias-content",
+        btn: "btn-tab-competencias"
+      },
+      {
+        id: "tour-step-guardar",
+        title: "💾 Guardar Cambios",
+        desc: "Una vez completada la edición, haz clic aquí para sincronizar tu perfil en toda la plataforma.",
+        pos: "top",
+        tab: "tab-info-content",
+        btn: "btn-tab-info"
+      }
+    ];
+
+    function iniciarTourPerfil(forzado = false) {
+      if (!forzado && localStorage.getItem('seen_profile_tour') === 'true') {
+        return; 
+      }
+      
+      let overlay = document.getElementById('tourOverlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'tourOverlay';
+        overlay.className = 'tour-overlay';
+        document.body.appendChild(overlay);
+      }
+      overlay.classList.add('visible');
+      currentTourStep = 0;
+      mostrarPasoTour();
+    }
+
+    function mostrarPasoTour() {
+      document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+      let cardExistente = document.getElementById('tourCardActive');
+      if (cardExistente) cardExistente.remove();
+
+      if (currentTourStep >= tourSteps.length) {
+        finalizarTour();
+        return;
+      }
+
+      const paso = tourSteps[currentTourStep];
+      
+      // Auto-cambio de pestañas según el paso del tutorial
+      switchProfileTabDirect(paso.tab, document.getElementById(paso.btn));
+
+      const targetEl = document.getElementById(paso.id);
+      if (!targetEl) {
+        currentTourStep++;
+        mostrarPasoTour();
+        return;
+      }
+
+      targetEl.classList.add('tour-highlight');
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      const tourCard = document.createElement('div');
+      tourCard.id = 'tourCardActive';
+      tourCard.className = `tour-card tour-card-${paso.pos}`;
+      tourCard.innerHTML = `
+        <h4 class="font-bold text-indigo-400 text-sm mb-1.5">${paso.title}</h4>
+        <p class="text-xs text-slate-300 mb-4 leading-relaxed">${paso.desc}</p>
+        <div class="flex justify-between items-center text-[10px] text-slate-500 mb-3 border-t pt-2.5 border-white/5">
+          <span>Paso ${currentTourStep + 1} de ${tourSteps.length}</span>
+          <button onclick="finalizarTour()" class="text-rose-400 hover:underline font-semibold focus:outline-none">Omitir</button>
+        </div>
+        <div class="flex gap-2 justify-end">
+          ${currentTourStep > 0 ? `<button onclick="anteriorPasoTour()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold">Atrás</button>` : ''}
+          <button onclick="siguientePasoTour()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-lg shadow-indigo-500/20">${currentTourStep === tourSteps.length - 1 ? 'Finalizar' : 'Siguiente'}</button>
+        </div>
+      `;
+      document.body.appendChild(tourCard);
+
+      requestAnimationFrame(() => {
+        const rect = targetEl.getBoundingClientRect();
+        const cardRect = tourCard.getBoundingClientRect();
+        let top = 0;
+        let left = rect.left + window.scrollX;
+
+        if (paso.pos === "bottom") {
+          top = rect.bottom + window.scrollY + 12;
+        } else {
+          top = rect.top + window.scrollY - cardRect.height - 12;
+        }
+
+        if (left + cardRect.width > window.innerWidth - 10) {
+          left = window.innerWidth - cardRect.width - 15;
+        }
+        if (left < 10) left = 10;
+
+        tourCard.style.top = `${top}px`;
+        tourCard.style.left = `${left}px`;
+        tourCard.classList.add('visible');
+      });
+    }
+
+    window.siguientePasoTour = () => {
+      currentTourStep++;
+      mostrarPasoTour();
+    };
+
+    window.anteriorPasoTour = () => {
+      currentTourStep--;
+      mostrarPasoTour();
+    };
+
+    window.finalizarTour = () => {
+      localStorage.setItem('seen_profile_tour', 'true');
+      const overlay = document.getElementById('tourOverlay');
+      if (overlay) overlay.classList.remove('visible');
+      document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+      const card = document.getElementById('tourCardActive');
+      if (card) card.remove();
+    };
+
+    // === ROSA IA - SUGERENCIAS Y PERFILAMIENTO ===
+    async function sugerirInteresesConIA() {
+      const cargo = document.getElementById('cargo').value.trim();
+      const empresa = document.getElementById('empresa').value.trim();
+            
+      if (!cargo) {
+        alert("Por favor, escribe primero tu Cargo en la sección de Entorno Laboral para que ROSA IA pueda sugerirte tus intereses.");
+        switchProfileTab('tab-info-content');
+        document.getElementById('cargo').focus();
+        return;
+      }
+            
+      const btn = document.getElementById('btnSugerirInteresesIA');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Analizando...';
+            
+      const prompt = `Actúas como un experto en desarrollo profesional e-learning. Basándote en el cargo de "${cargo}" ${empresa ? `en la empresa "${empresa}"` : ''}, analiza y selecciona de manera óptima las mejores opciones profesionales de entre las listas provistas:
+      1. Área de Interés (elige estrictamente una de estas opciones exactas): desarrollo_software, diseno_instruccional, diseno_grafico, produccion_multimedia, gestion_proyectos, marketing, inteligencia_artificial, ciencia_datos, ciberseguridad, educacion, comunicacion, audiovisual, animacion_3d, investigacion, innovacion
+      2. Formato Preferido (elige estrictamente una de estas opciones exactas): video, lectura, interactivo, practico, auditivo, mixto
+      3. Nivel de Experiencia (elige estrictamente una de estas opciones exactas): principiante, intermedio, avanzado, senior
+      4. Objetivo Principal (elige estrictamente una de estas opciones exactas): aprendizaje, actualizacion, certificacion, mejora_continua, nuevo_empleo, emprendimiento
+            
+      Responde estrictamente en formato JSON plano plano, sin bloques de código Markdown ni backticks de ningún tipo, con el siguiente formato:
+      {"interes": "valor_elegido", "formato": "valor_elegido", "nivel": "valor_elegido", "objetivo": "valor_elegido"}`;
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/chat/gemini`, {
+          method: 'POST',
+          headers: { 
+             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ prompt })
+        });
+                
+        if (!response.ok) throw new Error("Error en la llamada de IA");
+        const data = await response.json();
+                
+        let cleanText = (data.respuesta || data.mensaje || "").trim();
+        if (cleanText.includes("```json")) {
+            cleanText = cleanText.split("```json")[1].split("```")[0].trim();
+        } else if (cleanText.includes("```")) {
+            cleanText = cleanText.split("```")[1].split("```")[0].trim();
+        }
+                
+        const resObj = JSON.parse(cleanText);
+                
+        if (resObj.interes) document.getElementById('intereses_interes_principal').value = resObj.interes;
+        if (resObj.formato) document.getElementById('intereses_formato_preferido').value = resObj.formato;
+        if (resObj.nivel) document.getElementById('intereses_nivel_experiencia').value = resObj.nivel;
+        if (resObj.objetivo) document.getElementById('intereses_objetivo_principal').value = resObj.objetivo;
+                
+        // Auto-guardado asíncrono e instantáneo al sugerir
+        await guardarInteresesAutomatico();
+        alert("✅ Intereses profesionales sugeridos por ROSA IA aplicados y guardados automáticamente.");
+      } catch (e) {
+        console.error("Fallo al procesar JSON estructurado de Gemini:", e);
+        alert("ROSA IA no pudo procesar la sugerencia estructurada en este momento. Vuelve a intentarlo.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    async function sugerirPerfilamientoConIA() {
+      const cargo = document.getElementById('cargo').value.trim();
+      const empresa = document.getElementById('empresa').value.trim();
+      const habilidades = document.getElementById('habilidades').value.trim();
+            
+      if (!cargo) {
+        alert("Por favor, escribe primero tu Cargo en el formulario principal antes de redactar tu perfilamiento.");
+        closeSkillsModal();
+        switchProfileTab('tab-info-content');
+        document.getElementById('cargo').focus();
+        return;
+      }
+            
+      const btn = document.getElementById('btnSugerirPerfilamientoIA');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Redactando...';
+            
+      const prompt = `Escribe un extracto de presentación perfil profesional de alto impacto y moderno (máximo 80 palabras) para un profesional cuyo cargo es "${cargo}" ${empresa ? `en la empresa "${empresa}"` : ''} ${habilidades ? `y que tiene habilidades clave en: ${habilidades}` : ''}. Genera estrictamente el texto final redactado, sin prefijos, sin introducciones y sin comillas adicionales.`;
+            
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/chat/gemini`, {
+          method: 'POST',
+          headers: { 
+             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ prompt })
+        });
+                
+        if (!response.ok) throw new Error("Error en la llamada de IA");
+        const data = await response.json();
+                
+        const perfilTexto = (data.respuesta || data.mensaje || "").trim().replace(/^["']|["']$/g, '');
+        document.getElementById('perfilamiento').value = perfilTexto;
+      } catch (e) {
+        console.error(e);
+        alert("Error de conexión segura con el servicio de IA de VirtualMind.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    // CONTINGENCIA INTELIGENTE: Parseador de texto plano de CV si falla el extractor de archivos
+    async function analizarTextoCVConGemini() {
+        const rawText = document.getElementById('rawCVText').value.trim();
+        if (!rawText) {
+            alert("Por favor, copia y pega el texto de tu Hoja de Vida en la caja antes de analizar.");
+            return;
+        }
+        const btn = document.getElementById('btnAnalizarTextoCV');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> ROSA IA procesando...';
+
+        const prompt = `Actúas como un procesador de datos de Hojas de Vida. Analiza el siguiente texto y extrae la información estructurada estrictamente en el formato JSON plano requerido (sin bloques de código markdown, sin prefijos, sin introducciones).
+
+        Texto de la Hoja de Vida:
+        ${rawText}
+
+        Formato JSON requerido:
+        {
+          "nombre_completo": "Nombre de la persona",
+          "email": "Email de la persona",
+          "telefono": "Teléfono",
+          "habilidades": ["Habilidad 1", "Habilidad 2"],
+          "experiencia": [
+            {
+              "cargo": "Cargo",
+              "empresa": "Empresa",
+              "fecha_inicio": "Fecha inicio",
+              "fecha_fin": "Fecha fin",
+              "descripcion": "Descripción del cargo"
+            }
+          ],
+          "educacion": [
+            {
+              "titulo": "Título obtenido",
+              "institucion": "Institución",
+              "nivel": "Nivel de estudios (ej: Profesional, Técnico, Maestría)"
+            }
+          ]
+        }`;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/chat/gemini`, {
+                method: 'POST',
+                headers: { 
+                   'Content-Type': 'application/json',
+                   'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ prompt })
+            });
+            if (!response.ok) throw new Error("Fallo al contactar el motor de IA");
+            const data = await response.json();
+            let cleanText = (data.respuesta || data.mensaje || "").trim();
+            if (cleanText.includes("```json")) {
+                cleanText = cleanText.split("```json")[1].split("```")[0].trim();
+            } else if (cleanText.includes("```")) {
+                cleanText = cleanText.split("```")[1].split("```")[0].trim();
+            }
+            const resObj = JSON.parse(cleanText);
+            
+            // Populate extracted data interface
+            mostrarDatosParseados(resObj);
+            alert("✨ ¡Hoja de Vida analizada y estructurada con éxito por ROSA IA!");
+        } catch(e) {
+            console.error(e);
+            alert("❌ Ocurrió un error al procesar el texto con ROSA IA. Asegúrate de que el texto contenga información legible.");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    // FIX: Se corrige la referencia de competenciesActual a competenciasActual
+    function renderCompetenciasView() {
+      const skillsEl = $('#skillsView');
+      const langsEl = $('#langsView');
+      const levelEl = $('#nivelAcademicoView');
+      const areaEl = $('#areaConocimientoView');
+      const expEl = $('#aniosExperienciaView');
+      const profileEl = $('#perfilamientoView');
+
+      if (skillsEl) skillsEl.innerHTML = (competenciasActual.habilidades || []).map(h => `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-semibold">${h}</span>`).join(' ');
+      if (langsEl) langsEl.innerHTML = (competenciasActual.idiomas || []).map(l => `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full px-3 py-1 text-xs font-semibold">${l}</span>`).join(' ');
+      if (levelEl) levelEl.innerText = competenciasActual.nivel_academico ? `Nivel: ${competenciasActual.nivel_academico}` : "";
+      if (areaEl) areaEl.innerText = competenciasActual.area_conocimiento ? ` | Área: ${competenciasActual.area_conocimiento}` : "";
+      if (expEl) expEl.innerText = competenciasActual.anios_experiencia ? ` | Experiencia: ${competenciasActual.anios_experiencia} años` : "";
+      if (profileEl) profileEl.innerText = competenciasActual.perfilamiento ? `Sobre mí: ${competenciasActual.perfilamiento}` : "";
+    }
+
+    function initializePhoneInputs() {
+      const telInput = $('#telefono');
+      const celInput = $('#celular');
+      const itiOptions = {
+         utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.10/build/js/utils.js",
+         initialCountry: "auto",
+         geoIpLookup: function(callback) {
+           fetch("https://ipapi.co/json").then(res => res.json()).then(data => callback(data.country_code || "us")).catch(() => callback("us"));
+         },
+         separateDialCode: true,
+         preferredCountries: ['co', 'us', 'es', 'mx', 'ar']
+       };
+      if (telInput) iti_telefono = window.intlTelInput(telInput, itiOptions);
+      if (celInput) iti_celular = window.intlTelInput(celInput, itiOptions);
+      function soloNumeros(input, iti, counterId, maxLen) {
+        if (!input) return;
+        var counter = document.getElementById(counterId);
+        function actualizarContador() {
+          if (!counter) return;
+          var pais = iti ? iti.getSelectedCountryData() : null;
+          if (pais && pais.iso2 === 'co') {
+            var restan = maxLen - input.value.length;
+            if (restan > 0) {
+              counter.textContent = restan === 1 ? 'falta 1 número' : 'faltan ' + restan + ' números';
+              counter.classList.remove('hidden');
+            } else {
+              counter.classList.add('hidden');
+            }
+          } else {
+            counter.classList.add('hidden');
+          }
+        }
+        input.addEventListener('input', function() {
+          this.value = this.value.replace(/\D/g, '');
+          var pais = iti ? iti.getSelectedCountryData() : null;
+          if (pais && pais.iso2 === 'co' && this.value.length > maxLen) {
+            this.value = this.value.slice(0, maxLen);
+          }
+          actualizarContador();
+        });
+        input.addEventListener('countrychange', function() {
+          var pais = iti ? iti.getSelectedCountryData() : null;
+          if (pais && pais.iso2 === 'co' && input.value.length > maxLen) {
+            input.value = input.value.slice(0, maxLen);
+          }
+          actualizarContador();
+        });
+        actualizarContador();
+      }
+      soloNumeros(telInput, iti_telefono, 'telCounter', 10);
+      soloNumeros(celInput, iti_celular, 'celCounter', 10);
+    }
+
+    async function cargarPerfil(userId) {
+      const token = localStorage.getItem('token');
+      const respuestaDiv = $('#respuesta');
+      if (!token) {
+          if (respuestaDiv) respuestaDiv.innerHTML = '<span class="text-red-500 font-semibold">⚠️ Sesión inválida.</span>';
+          $('#btnGuardarPerfil').disabled = true;
+          return;
+        }
+      try {
+        const profileRes = await fetch(`${API_URL}/profiles/${userId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (profileRes.ok) {
+          perfilExiste = true; 
+          const profileData = await profileRes.json();
+          fotoActualUrl = profileData.foto_url || null;
+          if (fotoActualUrl) {
+              const fotoEl = document.getElementById('foto_actual');
+              const previewEl = document.getElementById('preview');
+              if (fotoEl) fotoEl.src = fotoActualUrl;
+              if (previewEl) previewEl.classList.remove('hidden');
+            }
+          var camposBasicos = ['nombre', 'apellidos', 'direccion', 'cargo', 'empresa', 'linkedin', 'twitter', 'facebook'];
+          console.log('Cargando datos perfil:', profileData);
+          camposBasicos.forEach(function(id) {
+              var el = document.getElementById(id);
+            if (el && profileData[id]) {
+              el.value = profileData[id];
+              console.log('Campo cargado:', id, '=', profileData[id]);
+            }
+          });
+          
+          // === FIX EXPLICIT LOAD: Carga robusta de intereses anidados o planos ===
+          const interes_principal_val = profileData.intereses_interes_principal || profileData.interes_principal;
+          const formato_preferido_val = profileData.intereses_formato_preferido || profileData.formato_preferido;
+          const nivel_experiencia_val = profileData.intereses_nivel_experiencia || profileData.nivel_experiencia;
+          const objetivo_principal_val = profileData.intereses_objetivo_principal || profileData.objetivo_principal;
+
+          if (interes_principal_val && document.getElementById('intereses_interes_principal')) {
+            document.getElementById('intereses_interes_principal').value = interes_principal_val;
+          }
+          if (formato_preferido_val && document.getElementById('intereses_formato_preferido')) {
+            document.getElementById('intereses_formato_preferido').value = formato_preferido_val;
+          }
+          if (nivel_experiencia_val && document.getElementById('intereses_nivel_experiencia')) {
+            document.getElementById('intereses_nivel_experiencia').value = nivel_experiencia_val;
+          }
+          if (objetivo_principal_val && document.getElementById('intereses_objetivo_principal')) {
+            document.getElementById('intereses_objetivo_principal').value = objetivo_principal_val;
+          }
+
+          if (profileData.intereses) {
+            let intObj = profileData.intereses;
+            if (typeof intObj === 'string') {
+              try { intObj = JSON.parse(intObj); } catch(e) {}
+            }
+            if (intObj && typeof intObj === 'object') {
+              const nested_ip = intObj.interes_principal || intObj.intereses_interes_principal || intObj.interes;
+              const nested_fp = intObj.formato_preferido || intObj.intereses_formato_preferido || intObj.formato;
+              const nested_ne = intObj.nivel_experiencia || intObj.intereses_nivel_experiencia || intObj.nivel;
+              const nested_op = intObj.objetivo_principal || intObj.intereses_objetivo_principal || intObj.objetivo;
+
+              if (nested_ip && document.getElementById('intereses_interes_principal')) {
+                document.getElementById('intereses_interes_principal').value = nested_ip;
+              }
+              if (nested_fp && document.getElementById('intereses_formato_preferido')) {
+                document.getElementById('intereses_formato_preferido').value = nested_fp;
+              }
+              if (nested_ne && document.getElementById('intereses_nivel_experiencia')) {
+                document.getElementById('intereses_nivel_experiencia').value = nested_ne;
+              }
+              if (nested_op && document.getElementById('intereses_objetivo_principal')) {
+                document.getElementById('intereses_objetivo_principal').value = nested_op;
+              }
+            }
+          }
+          // === FIN FIX LOAD ===
+                    
+          if (profileData.pais) {
+            var paisExistente = profileData.pais;
+            var paisSelect = document.getElementById('pais');
+            var opcionesPais = paisSelect ? paisSelect.options : [];
+            var existePais = false;
+            for (var i = 0; i < opcionesPais.length; i++) {
+              if (opcionesPais[i].value === paisExistente) {
+                existePais = true;
+                break;
+              }
+            }
+            if (existePais && paisSelect) {
+              paisSelect.value = paisExistente;
+              cargarCiudadesPorPais();
+              const ciudadEl = document.getElementById('ciudad');
+              if (ciudadEl) ciudadEl.value = profileData.ciudad || '';
+            } else if (paisSelect) {
+              paisSelect.value = 'Otro (especificar)';
+              const paisOtroEl = document.getElementById('pais_otro');
+              if (paisOtroEl) {
+                  paisOtroEl.value = paisExistente;
+                  paisOtroEl.classList.remove('hidden');
+              }
+            }
+          } else {
+            // Auto-detectar país/ciudad por IP si el perfil no tiene país
+            (async function() {
+              try {
+                var geoResp = await fetch('https://ipapi.co/json');
+                var geoData = await geoResp.json();
+                if (geoData.country_name) {
+                  var countryMap = {
+                    'Colombia': 'Colombia', 'Spain': 'España', 'United States': 'Estados Unidos',
+                    'United Kingdom': 'Reino Unido', 'Germany': 'Alemania', 'France': 'Francia',
+                    'Italy': 'Italia', 'Brazil': 'Brasil', 'Canada': 'Canadá',
+                    'Mexico': 'México', 'Peru': 'Perú', 'Venezuela': 'Venezuela',
+                    'Chile': 'Chile', 'Argentina': 'Argentina', 'Ecuador': 'Ecuador'
+                  };
+                  var paisNombre = countryMap[geoData.country_name] || geoData.country_name;
+                  var paisSelect = document.getElementById('pais');
+                  var opcionesPais = paisSelect ? paisSelect.options : [];
+                  var existePais = false;
+                  for (var i = 0; i < opcionesPais.length; i++) {
+                    if (opcionesPais[i].value === paisNombre) { existePais = true; break; }
+                  }
+                  if (existePais && paisSelect) {
+                    paisSelect.value = paisNombre;
+                    cargarCiudadesPorPais();
+                    if (geoData.city) {
+                      var ciudadSelect = document.getElementById('ciudad');
+                      if (ciudadSelect) {
+                        var opcionesCiudad = ciudadSelect.options;
+                        var existeCiudad = false;
+                        for (var j = 0; j < opcionesCiudad.length; j++) {
+                          if (opcionesCiudad[j].value === geoData.city) {
+                            ciudadSelect.value = geoData.city;
+                            existeCiudad = true;
+                            break;
+                          }
+                        }
+                        if (!existeCiudad) {
+                          var ciudadOtra = document.getElementById('ciudad_otra');
+                          if (ciudadOtra) {
+                            ciudadSelect.value = 'Otra';
+                            ciudadOtra.value = geoData.city;
+                            ciudadOtra.classList.remove('hidden');
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              } catch(e) {}
+            })();
+          }
+                    
+          if (profileData.telefono && iti_telefono) iti_telefono.setNumber(profileData.telefono);
+          if (profileData.celular && iti_celular) iti_celular.setNumber(profileData.celular);
+        } else if (profileRes.status === 404) {
+          perfilExiste = false; 
+          console.warn("No se encontró perfil (404). Entrando en modo de creación.");
+          if (respuestaDiv) respuestaDiv.innerHTML = `<span class="text-blue-400 font-medium">ℹ️ Estás creando un nuevo perfil para este usuario.</span>`;
+        } else {
+            console.error(`Error ${profileRes.status} al cargar perfil`);
+            if (respuestaDiv) respuestaDiv.innerHTML = `<span class="text-orange-400 font-semibold">⚠️ No se pudo cargar el perfil.</span>`;
+        }
+
+        try {
+            const userRes = await fetch(`${API_URL}/users/${userId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (userRes.ok) {
+                const userData = await userRes.json();
+                const emailEl = $('#email');
+                if (userData.email && emailEl) {
+                  emailEl.value = userData.email;
+                  emailOriginal = userData.email;
+                } else if (emailEl) {
+                  emailEl.value = '';
+                  emailOriginal = null;
+                }
+              } else {
+                console.error(`Error ${userRes.status} al cargar usuario`);
+                const emailEl = $('#email');
+                if (emailEl) emailEl.value = 'Error al cargar';
+                emailOriginal = null;
+                if (userRes.status === 401) logout();
+              }
+        } catch(userErr) {
+            console.error("Error de red cargando usuario", userErr);
+            const emailEl = $('#email');
+            if (emailEl) emailEl.value = 'Error de red';
+            emailOriginal = null;
+          }
+        await cargarCompetencias(userId);
+      } catch (err) {
+          console.error("Error general en cargarPerfil", err);
+          if (respuestaDiv) respuestaDiv.innerHTML = '<span class="text-red-500 font-semibold">⚠️ Error de red al cargar datos.</span>';
+        }
+    }
+
+    async function cargarCompetencias(userId) {
+      const token = localStorage.getItem('token'); if (!token) return;
+      try {
+          const res = await fetch(`${API_URL}/competencias/usuario/${userId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+          competenciasActual = res.ok ? await res.json() : {};
+        } catch {
+          competenciasActual = {};
+        }
+      renderCompetenciasView();
+    }
+
+    function openSkillsModal() {
+      $('#habilidades').value = (competenciasActual.habilidades || []).join(', ');
+      $('#idiomas').value = (competenciasActual.idiomas || []).join(', ');
+      $('#nivel_academico').value = competenciasActual.nivel_academico || '';
+      $('#area_conocimiento').value = competenciasActual.area_conocimiento || '';
+      $('#anios_experiencia').value = competenciasActual.anios_experiencia || '';
+      $('#perfilamiento').value = competenciasActual.perfilamiento || '';
+      $('#otros_estudios').value = competenciasActual.otros_estudios || '';
+      $('#disponibilidad').value = competenciasActual.disponibilidad || '';
+      $('#modalCompetencias').classList.remove('hidden');
+    }
+
+    function closeSkillsModal() {
+        $('#modalCompetencias').classList.add('hidden');
+    }
+
+    // FIX: Mecanismo de reintento robusto e inteligente de guardar (PUT -> Fallback POST -> Fallback PATCH) para solventar el error 405 Method Not Allowed
+    async function saveSkills(e) {
+        e.preventDefault();
+        const userId = $("#user_id").value.trim();
+        if (!userId) return;
+        const token = localStorage.getItem('token');
+        if(!token) { alert('Sesión inválida'); return; }
+                      
+        const newSkillsPayload = {
+          user_id: userId,
+          habilidades: $('#habilidades').value.split(',').map(s => s.trim()).filter(Boolean),
+          idiomas: $('#idiomas').value.split(',').map(s => s.trim()).filter(Boolean),
+          nivel_academico: $('#nivel_academico').value,
+          area_conocimiento: $('#area_conocimiento').value,
+          anios_experiencia: parseInt($('#anios_experiencia').value, 10) || 0,
+          perfilamiento: $('#perfilamiento').value,
+          otros_estudios: $('#otros_estudios').value,
+          disponibilidad: $('#disponibilidad').value,
+        };
+        
+        try {
+          // Intento inicial con PUT
+          let res = await fetch(`${API_URL}/competencias/usuario/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(newSkillsPayload)
+          });
+          
+          // Reintento con POST si PUT arroja 405 Method Not Allowed
+          if (res.status === 405) {
+             res = await fetch(`${API_URL}/competencias/usuario/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(newSkillsPayload)
+             });
+          }
+
+          // Reintento final con PATCH si POST también arroja 405
+          if (res.status === 405) {
+             res = await fetch(`${API_URL}/competencias/usuario/${userId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(newSkillsPayload)
+             });
+          }
+
+          if (res.ok) {
+            competenciasActual = await res.json(); 
+            renderCompetenciasView(); 
+            closeSkillsModal();
+            alert("✅ Competencias actualizadas.");
+          } else {
+             const error = await res.json(); 
+             throw new Error(error.detail || 'Error al guardar competencias'); 
+           }
+        } catch (error) { alert(`Error al guardar: ${error.message}`); }
+    }
+
+    // === RRHH MODULE IMPLEMENTATION (FUSIONADO EN PERFIL) ===
+    async function cargarProyectos() {
+        try {
+            const res = await fetch(`${API}/projects/`, { headers: { 'Authorization': 'Bearer ' + getToken() } });
+            if (!res.ok) return;
+            const proyectos = await res.json();
+            const selects = ['projectSelect', 'projectFilter'];
+            selects.forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                sel.innerHTML = id === 'projectSelect' ? '<option value="">Sin proyecto</option>' : '<option value="">Todos los proyectos</option>';
+                proyectos.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name || p.nombre || p.id;
+                    sel.appendChild(opt);
+                });
+            });
+        } catch(e) {}
+    }
+
+    function handleFile(file) {
+        if (!file) return;
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['pdf', 'docx', 'txt'].includes(ext)) {
+            alert('Solo se aceptan PDF, DOCX o TXT');
+            return;
+        }
+        subirArchivo(file);
+    }
+
+    async function subirArchivo(file) {
+        const status = document.getElementById('uploadStatus');
+        status.className = 'mt-4 p-4 bg-indigo-500/10 border border-indigo-500/25 rounded-xl text-indigo-300';
+        status.innerHTML = '<div class="flex items-center gap-2"><div class="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div> Procesando hoja de vida con IA...</div>';
+        status.classList.remove('hidden');
+
+        document.getElementById('parsedData').classList.add('hidden');
+        document.getElementById('usuarioExistenteAlert').classList.add('hidden');
+
+        const form = new FormData();
+        form.append('file', file);
+        const projectId = document.getElementById('projectSelect').value;
+        if (projectId) form.append('project_id', projectId);
+
+        try {
+            const res = await fetch(`${API}/rrhh/hoja-vida/upload`, {
+                method: 'POST', headers: { 'Authorization': `Bearer ${getToken()}` }, body: form
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                status.className = 'mt-4 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300';
+                status.innerHTML = `<i class="fas fa-exclamation-circle mr-1 text-rose-400"></i> ${data.detail || 'Error al procesar'}`;
+                return;
+            }
+
+            currentHVId = data.id;
+            currentParseData = data.datos_extraidos;
+            currentSugerencias = data.sugerencias_perfil || {};
+
+            status.className = 'mt-4 p-4 bg-emerald-500/10 border border-emerald-500/25 rounded-xl text-emerald-300';
+            status.innerHTML = `<i class="fas fa-check-circle mr-1 text-emerald-400"></i> ${data.mensaje}`;
+
+            if (data.datos_extraidos) {
+                mostrarDatosParseados(data.datos_extraidos);
+            } else {
+                document.getElementById('parseStatus').innerHTML = `<span class="text-amber-400 font-semibold">⚠️ La IA no logró leer la estructura interna del PDF.</span> <br>No te preocupes: copia el texto de tu CV y utiliza la caja de contingencia de ROSA IA abajo para analizarlo.`;
+            }
+
+            if (data.usuario_existente) {
+                mostrarAlertaUsuarioExistente(data.usuario_existente);
+            }
+
+            await cargarRepositorio();
+
+        } catch(e) {
+            status.className = 'mt-4 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300';
+            status.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i> Error de conexión';
+        }
+    }
+
+    // AUTOMATIZACIÓN SUPREMA: Integra de forma asíncrona todos los datos parseados de la HV directamente a tu Perfil/Competencias y los guarda
+    async function integrarDatosAlPerfil(datos) {
+        if (!datos) return;
+
+        // 1. Rellenar campos de texto del Perfil
+        if (datos.nombre_completo) {
+            const parts = datos.nombre_completo.split(' ');
+            const nombre = parts[0] || '';
+            const apellidos = parts.slice(1).join(' ') || '';
+            if (document.getElementById('nombre')) document.getElementById('nombre').value = nombre;
+            if (document.getElementById('apellidos')) document.getElementById('apellidos').value = apellidos;
+        }
+        if (datos.email && document.getElementById('email')) {
+            document.getElementById('email').value = datos.email;
+        }
+        if (datos.telefono && document.getElementById('telefono')) {
+            document.getElementById('telefono').value = datos.telefono;
+        }
+
+        // 2. Rellenar campos de Competencias
+        competenciasActual.habilidades = datos.habilidades || [];
+        competenciasActual.idiomas = datos.idiomas || [];
+        
+        if (datos.educacion && datos.educacion.length > 0) {
+            const nivel = datos.educacion[0].nivel || '';
+            const selectNivel = document.getElementById('nivel_academico');
+            if (selectNivel) {
+                const opciones = Array.from(selectNivel.options).map(o => o.value.toLowerCase());
+                const matchIdx = opciones.findIndex(o => nivel.toLowerCase().includes(o) && o !== '');
+                if (matchIdx !== -1) {
+                    selectNivel.value = selectNivel.options[matchIdx].value;
+                } else {
+                    selectNivel.value = "Profesional"; 
+                }
+            }
+            competenciasActual.nivel_academico = document.getElementById('nivel_academico')?.value || '';
+            competenciasActual.area_conocimiento = datos.educacion[0].titulo || '';
+        }
+
+        if (datos.experiencia && datos.experiencia.length > 0) {
+            competenciasActual.perfilamiento = `Profesional con experiencia como ${datos.experiencia.map(e => e.cargo).join(', ')}.`;
+            if (document.getElementById('cargo')) {
+                document.getElementById('cargo').value = datos.experiencia[0].cargo || '';
+            }
+            if (document.getElementById('empresa')) {
+                document.getElementById('empresa').value = datos.experiencia[0].empresa || '';
+            }
+        }
+
+        renderCompetenciasView();
+        
+        // Auto guardar competencias mediante reintentos
+        const userId = $("#user_id").value.trim();
+        const token = localStorage.getItem('token');
+        if (userId && token) {
+            const newSkillsPayload = {
+              user_id: userId,
+              habilidades: competenciasActual.habilidades,
+              idiomas: competenciasActual.idiomas,
+              nivel_academico: competenciasActual.nivel_academico || '',
+              area_conocimiento: competenciasActual.area_conocimiento || '',
+              anios_experiencia: competenciasActual.anios_experiencia || 0,
+              perfilamiento: competenciasActual.perfilamiento || '',
+              otros_estudios: competenciasActual.otros_estudios || '',
+              disponibilidad: competenciasActual.disponibilidad || '',
+            };
+
+            try {
+                await fetch(`${API_URL}/competencias/usuario/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(newSkillsPayload)
+                });
+            } catch (e) {
+                await fetch(`${API_URL}/competencias/usuario/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(newSkillsPayload)
+                });
+            }
+        }
+
+        alert("✨ ¡Datos de tu Hoja de Vida integrados y guardados automáticamente en tu Perfil y Competencias!");
+        switchProfileTab('tab-info-content'); // Mover a perfil general para visualización
+    }
+
+    function aplicarSugerenciasPerfil() {
+        const s = currentSugerencias || {};
+        if (s.cargo_sugerido && document.getElementById('cargo')) {
+            document.getElementById('cargo').value = s.cargo_sugerido;
+        }
+        if (s.empresa_sugerida && document.getElementById('empresa')) {
+            document.getElementById('empresa').value = s.empresa_sugerida;
+        }
+        const interesMap = {
+            'desarrollo_software': 'Desarrollo de Software',
+            'diseno_instruccional': 'Diseño Instruccional',
+            'diseno_grafico': 'Diseño Gráfico',
+            'produccion_multimedia': 'Producción Multimedia',
+            'gestion_proyectos': 'Gestión de Proyectos',
+            'marketing': 'Marketing Digital',
+            'inteligencia_artificial': 'Inteligencia Artificial',
+            'ciencia_datos': 'Ciencia de Datos',
+            'ciberseguridad': 'Ciberseguridad',
+            'educacion': 'Educación',
+            'comunicacion': 'Comunicación',
+            'audiovisual': 'Audiovisual',
+            'animacion_3d': 'Animación 3D',
+            'investigacion': 'Investigación',
+            'innovacion': 'Innovación'
+        };
+        if (s.interes_principal_sugerido) {
+            const select = document.getElementById('intereses_interes_principal');
+            if (select) {
+                const label = interesMap[s.interes_principal_sugerido] || s.interes_principal_sugerido;
+                const option = Array.from(select.options).find(o => o.value === s.interes_principal_sugerido || o.textContent === label || o.textContent === s.interes_principal_sugerido);
+                if (option) {
+                    select.value = option.value;
+                } else {
+                    const opt = document.createElement('option');
+                    opt.value = s.interes_principal_sugerido;
+                    opt.textContent = label;
+                    select.appendChild(opt);
+                    select.value = s.interes_principal_sugerido;
+                }
+            }
+        }
+        const formatMap = { 'video': 'Video Tutoriales', 'lectura': 'Lectura', 'interactivo': 'Interactivo', 'practico': 'Práctico', 'auditivo': 'Auditivo', 'mixto': 'Mixto' };
+        if (s.formato_preferido_sugerido) {
+            const select = document.getElementById('intereses_formato_preferido');
+            if (select) {
+                const label = formatMap[s.formato_preferido_sugerido] || s.formato_preferido_sugerido;
+                const option = Array.from(select.options).find(o => o.value === s.formato_preferido_sugerido || o.textContent === label);
+                if (option) {
+                    select.value = option.value;
+                } else {
+                    const opt = document.createElement('option');
+                    opt.value = s.formato_preferido_sugerido;
+                    opt.textContent = label;
+                    select.appendChild(opt);
+                    select.value = s.formato_preferido_sugerido;
+                }
+            }
+        }
+        const nivelMap = { 'principiante': 'Principiante', 'intermedio': 'Intermedio', 'avanzado': 'Avanzado', 'senior': 'Senior' };
+        if (s.nivel_experiencia_sugerido) {
+            const select = document.getElementById('intereses_nivel_experiencia');
+            if (select) {
+                const label = nivelMap[s.nivel_experiencia_sugerido] || s.nivel_experiencia_sugerido;
+                const option = Array.from(select.options).find(o => o.value === s.nivel_experiencia_sugerido || o.textContent === label);
+                if (option) select.value = option.value;
+            }
+        }
+        const objMap = { 'aprendizaje': 'Aprender nuevas habilidades', 'actualizacion': 'Actualizar conocimientos', 'certificacion': 'Obtener certificación', 'mejora_continua': 'Mejora continua', 'nuevo_empleo': 'Buscar nuevo empleo', 'emprendimiento': 'Emprendimiento' };
+        if (s.objetivo_principal_sugerido) {
+            const select = document.getElementById('intereses_objetivo_principal');
+            if (select) {
+                const label = objMap[s.objetivo_principal_sugerido] || s.objetivo_principal_sugerido;
+                const option = Array.from(select.options).find(o => o.value === s.objetivo_principal_sugerido || o.textContent === label);
+                if (option) select.value = option.value;
+            }
+        }
+        guardarInteresesAutomatico();
+        switchProfileTab('tab-info-content');
+        showNotification('success', 'Sugerencias aplicadas al perfil e intereses!');
+    }
+
+    function mostrarDatosParseados(datos) {
+        const container = document.getElementById('parsedData');
+        container.classList.remove('hidden');
+        document.getElementById('parseStatus').textContent = 'Datos extraídos por IA. Revisa e integra si es necesario:';
+
+        const expHTML = (datos.experiencia || []).map(e => `
+            <div class="bg-slate-900 border border-white/5 rounded-xl p-3 text-xs mb-2">
+                <p class="font-bold text-slate-200">${e.cargo || ''} <span class="text-indigo-400 font-normal">en ${e.empresa || ''}</span></p>
+                <p class="text-slate-500 font-mono mt-0.5">${e.fecha_inicio || ''} - ${e.fecha_fin || ''}</p>
+                <p class="text-slate-400 mt-1 leading-relaxed">${e.descripcion || ''}</p>
+            </div>
+        `).join('');
+
+        const eduHTML = (datos.educacion || []).map(e => `
+            <div class="bg-slate-900 border border-white/5 rounded-xl p-3 text-xs mb-2">
+                <p class="font-bold text-slate-200">${e.titulo || ''}</p>
+                <p class="text-slate-400 mt-0.5">${e.institucion || ''} <span class="text-indigo-400">(${e.nivel || ''})</span></p>
+            </div>
+        `).join('');
+
+        // Se inyecta la función de Integración Automática directamente en la interfaz
+        container.innerHTML = `
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div><label class="text-[10px] uppercase font-bold text-slate-500">Nombre</label>
+                    <input type="text" value="${datos.nombre_completo || ''}" class="w-full p-2.5 rounded-lg text-xs bg-slate-900 border border-white/5 text-slate-200 outline-none" id="edit-nombre"></div>
+                <div><label class="text-[10px] uppercase font-bold text-slate-500">Email</label>
+                    <input type="text" value="${datos.email || ''}" class="w-full p-2.5 rounded-lg text-xs bg-slate-900 border border-white/5 text-slate-200 outline-none" id="edit-email"></div>
+                <div><label class="text-[10px] uppercase font-bold text-slate-500">Teléfono</label>
+                    <input type="text" value="${datos.telefono || ''}" class="w-full p-2.5 rounded-lg text-xs bg-slate-900 border border-white/5 text-slate-200 outline-none" id="edit-telefono"></div>
+            </div>
+            <div class="mb-3"><label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Habilidades</label>
+                <div class="flex flex-wrap gap-1 mt-1">${(datos.habilidades || []).map(h => `<span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs rounded-full px-2.5 py-0.5 font-medium">${h}</span>`).join('')}</div>
+            </div>
+            ${expHTML ? `<div class="mb-3"><label class="text-[10px] uppercase font-bold text-slate-500 font-semibold block mb-1">Experiencia</label><div class="space-y-2 mt-1">${expHTML}</div></div>` : ''}
+            ${eduHTML ? `<div class="mb-3"><label class="text-[10px] uppercase font-bold text-slate-500 font-semibold block mb-1">Educación</label><div class="space-y-2 mt-1">${eduHTML}</div></div>` : ''}
+            <div class="flex flex-col gap-2 pt-3 border-t border-white/5">
+                <button onclick="aplicarSugerenciasPerfil()" class="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5">
+                    <i class="fas fa-wand-magic-sparkles"></i> Aplicar Sugerencias de Perfil e Intereses
+                </button>
+                <button onclick="integrarDatosAlPerfil(currentParseData)" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5">
+                    <i class="fas fa-magic"></i> ✨ Integrar Automáticamente a Mi Perfil
+                </button>
+                <button onclick="vincularACompetencias()" class="w-full bg-slate-850 hover:bg-slate-800 text-slate-300 py-2 rounded-xl text-xs font-semibold transition-all border border-white/5">
+                    <i class="fas fa-link"></i> Vincular de forma manual
+                </button>
+            </div>
+            <div id="sugerenciasSection" class="mt-3 p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl ${currentSugerencias && Object.values(currentSugerencias).some(v => v) ? '' : 'hidden'}">
+                <h4 class="text-xs font-bold text-amber-400 mb-2 flex items-center gap-1.5"><i class="fas fa-lightbulb text-amber-500"></i> Sugerencias de Perfil basadas en tu CV</h4>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    ${currentSugerencias.cargo_sugerido ? `<div><span class="text-slate-500">Cargo:</span> <span class="text-slate-200 font-medium">${currentSugerencias.cargo_sugerido}</span></div>` : ''}
+                    ${currentSugerencias.empresa_sugerida ? `<div><span class="text-slate-500">Empresa:</span> <span class="text-slate-200 font-medium">${currentSugerencias.empresa_sugerida}</span></div>` : ''}
+                    ${currentSugerencias.interes_principal_sugerido ? `<div><span class="text-slate-500">Área de Interés:</span> <span class="text-slate-200 font-medium">${currentSugerencias.interes_principal_sugerido}</span></div>` : ''}
+                    ${currentSugerencias.formato_preferido_sugerido ? `<div><span class="text-slate-500">Formato:</span> <span class="text-slate-200 font-medium">${currentSugerencias.formato_preferido_sugerido}</span></div>` : ''}
+                    ${currentSugerencias.nivel_experiencia_sugerido ? `<div><span class="text-slate-500">Nivel:</span> <span class="text-slate-200 font-medium">${currentSugerencias.nivel_experiencia_sugerido}</span></div>` : ''}
+                    ${currentSugerencias.objetivo_principal_sugerido ? `<div><span class="text-slate-500">Objetivo:</span> <span class="text-slate-200 font-medium">${currentSugerencias.objetivo_principal_sugerido}</span></div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    function mostrarAlertaUsuarioExistente(userData) {
+        const alertBox = document.getElementById('usuarioExistenteAlert');
+        alertBox.classList.remove('hidden');
+        alertBox.innerHTML = `
+            <div class="flex items-start gap-3">
+                <i class="fas fa-exclamation-triangle text-2xl text-amber-500 mt-1"></i>
+                <div class="flex-1">
+                    <h3 class="font-bold text-amber-300 text-sm">⚠️ Usuario ya registrado</h3>
+                    <p class="text-slate-300 text-xs mt-1">${userData.mensaje}</p>
+                    <div class="mt-3 flex gap-2">
+                        <button onclick="vincularHV('${userData.uid}')" class="bg-amber-600 hover:bg-amber-500 text-slate-900 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md">
+                            <i class="fas fa-link mr-1"></i> Sí, actualizar sus datos
+                        </button>
+                        <button onclick="document.getElementById('usuarioExistenteAlert').classList.add('hidden')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-medium transition-all">
+                            No, mantener actual
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function vincularHV(userId) {
+        if (!currentHVId) return;
+        const form = new URLSearchParams();
+        form.append('user_id', userId);
+        try {
+            const res = await fetch(`${API}/rrhh/hoja-vida/${currentHVId}/vincular-usuario`, {
+                method: 'PUT', headers: { ...headers(), 'Content-Type': 'application/x-www-form-urlencoded' }, body: form
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('✅ Hoja de vida vinculada y competencias actualizadas');
+                document.getElementById('usuarioExistenteAlert').classList.add('hidden');
+            } else {
+                alert(data.detail);
+            }
+        } catch(e) { alert('Error de conexión'); }
+    }
+
+    async function vincularACompetencias() {
+        if (!currentHVId) return;
+        const userId = prompt('Ingresa el User ID del usuario para vincular:');
+        if (!userId) return;
+        await vincularHV(userId);
+    }
+
+    async function mostrarRepositorio() {
+        document.getElementById('repositorioSection').classList.toggle('hidden');
+        if (!document.getElementById('repositorioSection').classList.contains('hidden')) {
+            await cargarRepositorio();
+        }
+    }
+
+    // === TOKENS SECURE DOWNLOADS: visualizador y descargador en vivo de hojas de vida subidas ===
+    async function verHojaVidaEnVivo(id) {
+        const modal = document.getElementById('modalVisualizador');
+        const iframe = document.getElementById('iframeVisualizador');
+        const loading = document.getElementById('loadingVisualizador');
+        
+        if (modal) modal.classList.remove('hidden');
+        if (iframe) iframe.classList.add('hidden');
+        if (loading) loading.classList.remove('hidden');
+
+        try {
+            const res = await fetch(`${API}/rrhh/hoja-vida/${id}/view`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            
+            let blob;
+            if (res.ok) {
+                blob = await res.blob();
+            } else {
+                const fallback = await fetch(`${API}/rrhh/hoja-vida/archivo/${id}`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                if (!fallback.ok) throw new Error();
+                blob = await fallback.blob();
+            }
+
+            const url = URL.createObjectURL(blob);
+            if (iframe) {
+                iframe.src = url;
+                iframe.classList.remove('hidden');
+            }
+            if (loading) loading.classList.add('hidden');
+        } catch(e) {
+            alert("❌ No se pudo previsualizar el PDF de manera directa. Intenta con Descargar.");
+            cerrarVisualizador();
+        }
+    }
+
+    function cerrarVisualizador() {
+        const modal = document.getElementById('modalVisualizador');
+        const iframe = document.getElementById('iframeVisualizador');
+        if (modal) modal.classList.add('hidden');
+        if (iframe) {
+            URL.revokeObjectURL(iframe.src);
+            iframe.src = "";
+        }
+    }
+
+    async function descargarHojaVidaEnVivo(id, filename) {
+        try {
+            const res = await fetch(`${API}/rrhh/hoja-vida/${id}/download`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            if (!res.ok) {
+                const fallback = await fetch(`${API}/rrhh/hoja-vida/archivo/${id}`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                if (!fallback.ok) throw new Error();
+                const blob = await fallback.blob();
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename || 'CV_VirtualMind.pdf';
+                link.click();
+                return;
+            }
+            const blob = await res.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename || 'CV_VirtualMind.pdf';
+            link.click();
+        } catch(e) {
+            alert("❌ Error al descargar el archivo físico de la hoja de vida.");
+        }
+    }
+
+    async function cargarRepositorio() {
+        const list = document.getElementById('hvList');
+        try {
+            const res = await fetch(`${API}/rrhh/hoja-vida/`, { headers: headers() });
+            if (!res.ok) {
+                list.innerHTML = '<p class="text-slate-500 text-center py-4 text-xs">No autorizado o sin datos registrados.</p>';
+                return;
+            }
+            const hvs = await res.json();
+
+            const q = document.getElementById('searchHV').value.toLowerCase();
+            const proj = document.getElementById('projectFilter').value;
+
+            // PRIVACIDAD RIGUROSA: El usuario solo ve su propia HV, protegiendo a los demás colaboradores
+            const filtered = hvs.filter(hv => {
+                if (hv.user_id !== usuarioUID) return false;
+                if (q && !(hv.nombre_completo || '').toLowerCase().includes(q) && !(hv.email || '').toLowerCase().includes(q)) return false;
+                if (proj && hv.project_id != proj) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p class="text-slate-500 text-center py-4 text-xs">No tienes hojas de vida cargadas en tu repositorio privado.</p>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(hv => {
+                const cleanFilename = (hv.filename_original || 'hoja_de_vida.pdf').replace(/'/g, "\\'");
+                return `
+                    <div class="border border-white/5 bg-slate-950/20 rounded-xl p-4 hover:shadow-sm transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="font-bold text-slate-200 text-sm">${hv.nombre_completo || 'Sin nombre'}</h3>
+                            <p class="text-xs text-slate-400 mt-1">${hv.email || ''} ${hv.telefono ? ' · ' + hv.telefono : ''}</p>
+                            <p class="text-[10px] text-slate-500 font-mono mt-1">${hv.filename_original || ''} · ${hv.fecha_subida ? new Date(hv.fecha_subida).toLocaleDateString() : ''}</p>
+                            ${hv.habilidades ? `<div class="flex flex-wrap gap-1 mt-3">${(hv.habilidades || []).map(h => `<span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] rounded px-2 py-0.5">${h}</span>`).join('')}</div>` : ''}
+                        </div>
+                        
+                        <!-- Visualización y descarga inyectando asíncronamente el Token JWT -->
+                        <div class="flex gap-2 flex-shrink-0 self-end md:self-center">
+                            <span class="text-[10px] font-bold rounded-xl px-2.5 py-1.5 h-fit self-center ${
+                                hv.user_id 
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            }">
+                                ${hv.user_id ? 'Vinculado' : 'Sin vincular'}
+                            </span>
+                            
+                            <button onclick="verHojaVidaEnVivo(${hv.id})" class="px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500 border border-indigo-500/20 hover:border-transparent text-indigo-300 hover:text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5">
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+                            <button onclick="descargarHojaVidaEnVivo(${hv.id}, '${cleanFilename}')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/20 hover:border-transparent text-emerald-300 hover:text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5">
+                                <i class="fas fa-download"></i> Descargar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch(e) {
+            list.innerHTML = '<p class="text-rose-400 text-center py-4 text-xs">Error al cargar repositorio</p>';
+        }
+    }
+
+    function toggleOtroInput(selectEl, otroId) {
+        const otroInput = document.getElementById(otroId);
+        if (otroInput) {
+            otroInput.classList.toggle('hidden', selectEl.value !== 'otro');
+            if (selectEl.value === 'otro') otroInput.focus();
+        }
+    }
+
+    function actualizarOtroInteres() {
+        const val = document.getElementById('otro_interes_principal')?.value || '';
+        if (val) document.getElementById('intereses_interes_principal').value = 'otro';
+        guardarInteresesAutomatico();
+    }
+    function actualizarOtroFormato() {
+        const val = document.getElementById('otro_formato_preferido')?.value || '';
+        if (val) document.getElementById('intereses_formato_preferido').value = 'otro';
+        guardarInteresesAutomatico();
+    }
+    function actualizarOtroNivel() {
+        const val = document.getElementById('otro_nivel_experiencia')?.value || '';
+        if (val) document.getElementById('intereses_nivel_experiencia').value = 'otro';
+        guardarInteresesAutomatico();
+    }
+    function actualizarOtroObjetivo() {
+        const val = document.getElementById('otro_objetivo_principal')?.value || '';
+        if (val) document.getElementById('intereses_objetivo_principal').value = 'otro';
+        guardarInteresesAutomatico();
+    }
+
+    // === GESTOR DE GUARDADO ASÍNCRONO AUTOMÁTICO DE INTERESES ===
+    async function guardarInteresesAutomatico() {
+        const userId = $("#user_id").value.trim();
+        const token = localStorage.getItem('token');
+        if (!userId || !token) return;
+
+        let interes_principal = document.getElementById('intereses_interes_principal')?.value || '';
+        const formato_preferido = document.getElementById('intereses_formato_preferido')?.value || '';
+        const nivel_experiencia = document.getElementById('intereses_nivel_experiencia')?.value || '';
+        const objetivo_principal = document.getElementById('intereses_objetivo_principal')?.value || '';
+
+        if (interes_principal === 'otro') {
+            interes_principal = document.getElementById('otro_interes_principal')?.value || 'otro';
+        }
+
+        const profileFormData = new FormData();
+        
+        // Se inyecta de manera segura con .set() para prevenir duplicación multipart/form-data
+        profileFormData.set('intereses_interes_principal', interes_principal);
+        profileFormData.set('intereses_formato_preferido', formato_preferido);
+        profileFormData.set('intereses_nivel_experiencia', nivel_experiencia);
+        profileFormData.set('intereses_objetivo_principal', objetivo_principal);
+
+        profileFormData.set('interes_principal', interes_principal);
+        profileFormData.set('formato_preferido', formato_preferido);
+        profileFormData.set('nivel_experiencia', nivel_experiencia);
+        profileFormData.set('objetivo_principal', objetivo_principal);
+
+        const interesesObj = {
+          interes_principal: interes_principal,
+          formato_preferido: formato_preferido,
+          nivel_experiencia: nivel_experiencia,
+          objetivo_principal: objetivo_principal
+        };
+        profileFormData.set('intereses', JSON.stringify(interesesObj));
+
+        // Inyectamos también los datos actuales del formulario de perfil para evitar que el backend limpie campos vacíos
+        var camposBasicos = ['nombre', 'apellidos', 'direccion', 'cargo', 'empresa', 'linkedin', 'twitter', 'facebook'];
+        camposBasicos.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el && el.value) {
+                profileFormData.set(id, el.value);
+            }
+        });
+        
+        var paisEl = document.getElementById('pais');
+        var paisVal = paisEl ? paisEl.value : '';
+        var paisOtroEl = document.getElementById('pais_otro');
+        var paisOtro = paisOtroEl ? paisOtroEl.value : '';
+        var paisFinal = paisVal === 'Otro (especificar)' && paisOtro ? paisOtro : paisVal;
+        if (paisFinal) profileFormData.set('pais', paisFinal);
+        
+        var ciudadEl = document.getElementById('ciudad');
+        var ciudadVal = ciudadEl ? ciudadEl.value : '';
+        var ciudadOtraEl = document.getElementById('ciudad_otra');
+        var ciudadOtra = ciudadOtraEl ? ciudadOtraEl.value : '';
+        var ciudadFinal = ciudadVal === 'Otra' && ciudadOtra ? ciudadOtra : ciudadVal;
+        if (ciudadFinal) profileFormData.set('ciudad', ciudadFinal);
+        
+        if (iti_telefono && iti_telefono.isValidNumber()) profileFormData.set('telefono', iti_telefono.getNumber());
+        if (iti_celular && iti_celular.isValidNumber()) profileFormData.set('celular', iti_celular.getNumber());
+
+        try {
+            await fetch(`${API_URL}/profiles/${userId}`, {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token },
+                body: profileFormData
+            });
+            showNotification('success', '🎯 Intereses actualizados automáticamente');
+        } catch (e) {
+            console.error("Error al auto-guardar intereses:", e);
+        }
+    }
+
+    function headers() {
+        const t = getToken();
+        return t ? { 'Authorization': `Bearer ${t}` } : {};
+    }
+
+    // === CORE INITIALIZATION AND FORM ACTIONS ===
+    window.addEventListener("DOMContentLoaded", async () => {
+        initializePhoneInputs();
+        
+        // Cargar proyectos de RRHH
+        await cargarProyectos();
+
+        const url = new URL(window.location.href);
+        let userId = url.searchParams.get("user_id");
+        if (userId) {
+            usuarioUID = userId; // Sincronizado para control global
+            const userIdInput = $("#user_id");
+            if (userIdInput) userIdInput.value = userId;
+            await cargarPerfil(userId);
+            setTimeout(() => iniciarTourPerfil(false), 800);
+        } else {
+            userId = localStorage.getItem("user_id");
+            if (!userId) {
+                try {
+                    const token = localStorage.getItem("token");
+                    if (token) {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        userId = payload.user_id;
+                        localStorage.setItem("user_id", userId);
+                    }
+                } catch (e) { console.error("Error obteniendo userId del token:", e); }
+            }
+            if (userId) {
+                usuarioUID = userId; // Sincronizado para control global
+                const userIdInput = $("#user_id");
+                if (userIdInput) userIdInput.value = userId;
+                await cargarPerfil(userId);
+                setTimeout(() => iniciarTourPerfil(false), 800);
+            } else {
+                console.warn("No se pudo identificar el usuario");
+                const saveBtn = $('#btnGuardarPerfil');
+                if (saveBtn) saveBtn.disabled = true;
+            }
+        }
+        await cargarRepositorio();
+
+        // Auto-guardado general con debounce
+        let autoSaveTimer = null;
+        const autoSaveIndicator = document.getElementById('autoSaveIndicator');
+        async function autoGuardarPerfil() {
+            if (!perfilExiste) return;
+            const userId = $("#user_id").value.trim();
+            const token = localStorage.getItem('token');
+            if (!userId || !token) return;
+            if (autoSaveIndicator) {
+                autoSaveIndicator.textContent = "Guardando...";
+                autoSaveIndicator.classList.remove('hidden', 'text-emerald-400');
+                autoSaveIndicator.classList.add('text-amber-400');
+            }
+            const fd = new FormData();
+            var campos = ['nombre', 'apellidos', 'direccion', 'cargo', 'empresa', 'linkedin', 'twitter', 'facebook'];
+            campos.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) fd.set(id, el.value);
+            });
+            var paisEl = document.getElementById('pais');
+            var paisVal = paisEl ? paisEl.value : '';
+            var paisOtroEl = document.getElementById('pais_otro');
+            var paisOtro = paisOtroEl ? paisOtroEl.value : '';
+            fd.set('pais', paisVal === 'Otro' && paisOtro ? paisOtro : paisVal);
+            var ciudadEl = document.getElementById('ciudad');
+            var ciudadVal = ciudadEl ? ciudadEl.value : '';
+            var ciudadOtraEl = document.getElementById('ciudad_otra');
+            var ciudadOtra = ciudadOtraEl ? ciudadOtraEl.value : '';
+            fd.set('ciudad', ciudadVal === 'Otra' && ciudadOtra ? ciudadOtra : ciudadVal);
+            if (iti_telefono && iti_telefono.isValidNumber()) fd.set('telefono', iti_telefono.getNumber());
+            if (iti_celular && iti_celular.isValidNumber()) fd.set('celular', iti_celular.getNumber());
+            ['intereses_interes_principal', 'intereses_formato_preferido', 'intereses_nivel_experiencia', 'intereses_objetivo_principal'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) fd.set(id, el.value);
+            });
+            try {
+                const res = await fetch(API_URL + "/profiles/" + userId, {
+                    method: "PUT",
+                    headers: { "Authorization": "Bearer " + token },
+                    body: fd
+                });
+                if (res.ok && autoSaveIndicator) {
+                    autoSaveIndicator.textContent = "✓ Auto-guardado";
+                    autoSaveIndicator.classList.remove('text-amber-400');
+                    autoSaveIndicator.classList.add('text-emerald-400');
+                    setTimeout(() => { autoSaveIndicator.classList.add('hidden'); }, 3000);
+                }
+            } catch(e) {}
+        }
+        function onChangeAutoSave() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(autoGuardarPerfil, 1500);
+        }
+        document.querySelectorAll('#profileForm input, #profileForm select, #profileForm textarea').forEach(function(el) {
+            if (el.id === 'user_id' || el.readonly) return;
+            el.addEventListener('input', onChangeAutoSave);
+            el.addEventListener('change', onChangeAutoSave);
+        });
+        document.getElementById('telefono')?.addEventListener('countrychange', onChangeAutoSave);
+        document.getElementById('celular')?.addEventListener('countrychange', onChangeAutoSave);
+
+        // Botón limpiar campo en inputs de texto
+        document.querySelectorAll('#profileForm input[type="text"], #profileForm input[type="email"], #profileForm input[type="url"]').forEach(function(inp) {
+            if (inp.id === 'user_id' || inp.readonly) return;
+            var wrapper = inp.parentNode;
+            if (wrapper.classList.contains('relative-clear')) return;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-sm leading-none px-1 hidden';
+            btn.textContent = '✕';
+            btn.tabIndex = -1;
+            btn.addEventListener('click', function() {
+                inp.value = '';
+                inp.dispatchEvent(new Event('input'));
+                inp.dispatchEvent(new Event('change'));
+                btn.classList.add('hidden');
+                inp.focus();
+            });
+            if (!wrapper.classList.contains('relative')) {
+                wrapper = document.createElement('div');
+                wrapper.className = 'relative-clear relative';
+                inp.parentNode.insertBefore(wrapper, inp);
+                wrapper.appendChild(inp);
+            } else {
+                wrapper.classList.add('relative-clear');
+            }
+            wrapper.appendChild(btn);
+            inp.addEventListener('input', function() {
+                btn.classList.toggle('hidden', this.value.length === 0);
+            });
+            // Añadir padding al input para que no se solape con el botón
+            if (inp.style.paddingRight === '') inp.style.paddingRight = '2rem';
+        });
+    });
+
+    function mostrarBotonesFoto() {
+        if (btnCancelarFoto) btnCancelarFoto.classList.remove("hidden");
+        if (btnGuardarFoto) btnGuardarFoto.classList.remove("hidden");
+    }
+    function ocultarBotonesFoto() {
+        if (btnCancelarFoto) btnCancelarFoto.classList.add("hidden");
+        if (btnGuardarFoto) btnGuardarFoto.classList.add("hidden");
+    }
+
+    const fotoFileInp = $("#foto");
+    const btnCancelarFoto = $("#btnCancelarFoto");
+    const btnGuardarFoto = $("#btnGuardarFoto");
+    if (fotoFileInp) {
+        fotoFileInp.addEventListener("change", function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const fotoAct = $("#foto_actual");
+                    const prevDiv = $("#preview");
+                    if (fotoAct) fotoAct.src = ev.target.result;
+                    if (prevDiv) prevDiv.classList.remove("hidden");
+                };
+                reader.readAsDataURL(file);
+                mostrarBotonesFoto();
+            }
+        });
+    }
+    if (btnCancelarFoto) {
+        btnCancelarFoto.addEventListener("click", function() {
+            if (fotoFileInp) fotoFileInp.value = "";
+            const fotoAct = $("#foto_actual");
+            const prevDiv = $("#preview");
+            if (fotoActualUrl) {
+                if (fotoAct) fotoAct.src = fotoActualUrl;
+            } else {
+                if (fotoAct) fotoAct.src = "";
+                if (prevDiv) prevDiv.classList.add("hidden");
+            }
+            ocultarBotonesFoto();
+        });
+    }
+    if (btnGuardarFoto) {
+        btnGuardarFoto.addEventListener("click", async function() {
+            const file = fotoFileInp ? fotoFileInp.files[0] : null;
+            if (!file) {
+                alert("Selecciona o toma una foto primero.");
+                return;
+            }
+            if (!perfilExiste) {
+                alert("Primero guarda el perfil completo con los datos básicos.");
+                return;
+            }
+            const userId = $("#user_id").value.trim();
+            const token = localStorage.getItem("token");
+            if (!userId || !token) {
+                alert("Error: falta ID de usuario o sesión.");
+                return;
+            }
+            const fd = new FormData();
+            fd.set("foto", file);
+            btnGuardarFoto.disabled = true;
+            btnGuardarFoto.textContent = "Guardando...";
+            try {
+                const res = await fetch(API_URL + "/profiles/" + userId, {
+                    method: "PUT",
+                    headers: { "Authorization": "Bearer " + token },
+                    body: fd
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    if (data.foto_url) {
+                        fotoActualUrl = data.foto_url;
+                        const fotoAct = $("#foto_actual");
+                        if (fotoAct) fotoAct.src = fotoActualUrl;
+                    }
+                    ocultarBotonesFoto();
+                    showNotification("success", "Foto guardada correctamente.");
+                } else {
+                    alert("Error al guardar foto: " + (data.detail || "Error"));
+                }
+            } catch (e) {
+                alert("Error de red: " + e.message);
+            } finally {
+                btnGuardarFoto.disabled = false;
+                btnGuardarFoto.textContent = "💾 Guardar Foto";
+            }
+        });
+    }
+
+    const mainFormEl = $('#profileForm');
+    if (mainFormEl) {
+        mainFormEl.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const saveButton = $('#btnGuardarPerfil');
+            const respuestaDiv = $('#respuesta');
+            if (respuestaDiv) respuestaDiv.innerHTML = '';
+
+            const form = e.target;
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                var primerInvalido = form.querySelector(':invalid');
+                scrollAError(primerInvalido);
+                if (respuestaDiv) respuestaDiv.innerHTML = '<span class="text-rose-400 font-semibold text-xs">⚠️ Por favor, completa todos los campos obligatorios (*).</span>';
+                return;
+            }
+
+            let telefonosValidos = true;
+            let errorTelefono = "";
+
+            const telItiInput = $('#telefono').closest('.iti')?.querySelector('.iti__input');
+            if (telItiInput) telItiInput.style.borderColor = '';
+            
+            const celItiInput = $('#celular').closest('.iti')?.querySelector('.iti__input');
+            if (celItiInput) celItiInput.style.borderColor = '';
+
+            if (!iti_telefono || !iti_telefono.isValidNumber()) {
+                telefonosValidos = false;
+                errorTelefono = "El número de Teléfono no es válido o está vacío.";
+                if (telItiInput) telItiInput.style.borderColor = '#ef4444';
+                scrollAError(telItiInput || $('#telefono'));
+            }
+            if (!iti_celular || !iti_celular.isValidNumber()) {
+                telefonosValidos = false;
+                errorTelefono = errorTelefono || "El número de Celular no es válido o está vacío.";
+                if (celItiInput) celItiInput.style.borderColor = '#ef4444';
+                if (!iti_telefono || iti_telefono.isValidNumber()) scrollAError(celItiInput || $('#celular'));
+            }
+            if (!telefonosValidos) {
+
+                if (respuestaDiv) respuestaDiv.innerHTML = `<span class="text-rose-400 font-semibold text-xs">⚠️ ${errorTelefono}</span>`;
+                return;
+            }
+
+            if (saveButton) {
+                saveButton.disabled = true;
+                saveButton.textContent = "Guardando...";
+            }
+
+            const userId = $("#user_id").value.trim();
+            const token = localStorage.getItem('token');
+
+            if (!userId || !token) {
+                if (respuestaDiv) respuestaDiv.innerHTML = '<span class="text-rose-400 font-semibold text-xs">⚠️ Error: Falta ID de usuario o sesión inválida.</span>';
+                if (saveButton) {
+                    saveButton.disabled = false;
+                    saveButton.textContent = "Guardar Cambios";
+                }
+                return;
+            }
+
+            const profileFormData = new FormData();
+            var camposBasicos = ['nombre', 'apellidos', 'direccion', 'cargo', 'empresa', 'linkedin', 'twitter', 'facebook'];
+            camposBasicos.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) {
+                    profileFormData.set(id, el.value); // Se cambia .append por .set para solventar llaves duplicadas
+                }
+            });
+            
+            var paisEl = document.getElementById('pais');
+            var paisVal = paisEl ? paisEl.value : '';
+            var paisOtroEl = document.getElementById('pais_otro');
+            var paisOtro = paisOtroEl ? paisOtroEl.value : '';
+            var paisFinal = paisVal === 'Otro (especificar)' && paisOtro ? paisOtro : paisVal;
+            profileFormData.set('pais', paisFinal);
+            
+            var ciudadEl = document.getElementById('ciudad');
+            var ciudadVal = ciudadEl ? ciudadEl.value : '';
+            var ciudadOtraEl = document.getElementById('ciudad_otra');
+            var ciudadOtra = ciudadOtraEl ? ciudadOtraEl.value : '';
+            var ciudadFinal = ciudadVal === 'Otra' && ciudadOtra ? ciudadOtra : ciudadVal;
+            profileFormData.set('ciudad', ciudadFinal);
+            
+            if (iti_telefono && iti_telefono.isValidNumber()) profileFormData.set('telefono', iti_telefono.getNumber());
+            if (iti_celular && iti_celular.isValidNumber()) profileFormData.set('celular', iti_celular.getNumber());
+            const file = document.getElementById('foto').files[0];
+            if (file) profileFormData.set("foto", file);
+
+            // === Sincronización libre de duplicaciones usando .set() ===
+            let interes_principal = document.getElementById('intereses_interes_principal')?.value || '';
+            const formato_preferido = document.getElementById('intereses_formato_preferido')?.value || '';
+            const nivel_experiencia = document.getElementById('intereses_nivel_experiencia')?.value || '';
+            const objetivo_principal = document.getElementById('intereses_objetivo_principal')?.value || '';
+
+            if (interes_principal === 'otro') {
+                interes_principal = document.getElementById('otro_interes_principal')?.value || 'otro';
+            }
+
+            profileFormData.set('intereses_interes_principal', interes_principal);
+            profileFormData.set('intereses_formato_preferido', formato_preferido);
+            profileFormData.set('intereses_nivel_experiencia', nivel_experiencia);
+            profileFormData.set('intereses_objetivo_principal', objetivo_principal);
+
+            profileFormData.set('interes_principal', interes_principal);
+            profileFormData.set('formato_preferido', formato_preferido);
+            profileFormData.set('nivel_experiencia', nivel_experiencia);
+            profileFormData.set('objetivo_principal', objetivo_principal);
+
+            const interesesObj = {
+              interes_principal: interes_principal,
+              formato_preferido: formato_preferido,
+              nivel_experiencia: nivel_experiencia,
+              objetivo_principal: objetivo_principal
+            };
+            profileFormData.set('intereses', JSON.stringify(interesesObj));
+
+            if (!perfilExiste) { profileFormData.set("user_id", userId); }
+            var httpMethod = perfilExiste ? 'PUT' : 'POST';
+            var fetchUrl = perfilExiste ? API_URL + '/profiles/' + userId : API_URL + '/profiles/';
+
+            let profileUpdateSuccess = false;
+            try {
+                const profileRes = await fetch(fetchUrl, {
+                    method: httpMethod,
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: profileFormData
+                });
+                const profileData = await profileRes.json();
+                if (profileRes.ok) {
+                    if (respuestaDiv) respuestaDiv.innerHTML = '<span class="text-emerald-400 font-semibold text-xs">✅ Perfil guardado correctamente.</span>';
+                    if (profileData.foto_url) {
+                        fotoActualUrl = profileData.foto_url;
+                        const fotoAct = $("#foto_actual");
+                        if (fotoAct) fotoAct.src = fotoActualUrl;
+                        const prevDiv = $("#preview");
+                        if (prevDiv) prevDiv.classList.remove("hidden");
+                    }
+                    profileUpdateSuccess = true;
+                    perfilExiste = true;
+                } else {
+                    if (respuestaDiv) respuestaDiv.innerHTML = `<span class="text-rose-400 font-semibold text-xs">❌ Error al guardar perfil: ${profileData.detail || 'Fallo en la solicitud'}</span>`;
+                }
+            } catch (error) {
+                if (respuestaDiv) respuestaDiv.innerHTML = `<span class="text-rose-400 font-semibold text-xs">⚠️ Error de red guardando perfil: ${error.message}</span>`;
+            }
+
+            const nuevoEmail = $('#email').value.trim();
+            let emailUpdateMessage = '';
+            if (profileUpdateSuccess && nuevoEmail && nuevoEmail !== emailOriginal) {
+                try {
+                    const emailRes = await fetch(`${API_URL}/users/${userId}/email`, {
+                        method: 'PATCH',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: nuevoEmail })
+                    });
+                    if (emailRes.ok) {
+                        emailUpdateMessage = '<br><span class="text-emerald-400 font-semibold text-xs">✅ Email actualizado correctamente.</span>';
+                        emailOriginal = nuevoEmail;
+                    } else {
+                        const errorData = await emailRes.json();
+                        emailUpdateMessage = `<br><span class="text-rose-400 font-semibold text-xs">❌ Error al actualizar email: ${errorData.detail || 'Email ya en uso.'}</span>`;
+                    }
+                } catch (emailError) {
+                    emailUpdateMessage = `<br><span class="text-rose-400 font-semibold text-xs">⚠️ Error de red actualizando email: ${emailError.message}</span>`;
+                }
+                if (respuestaDiv) respuestaDiv.innerHTML += emailUpdateMessage;
+            }
+
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.textContent = "Guardar Cambios";
+            }
+            if (profileUpdateSuccess) {
+                const rol = window.location.pathname.split("/")[2];
+                if (rol) {
+                    setTimeout(() => { window.location.href = `https://gestordecursos.pegui.edu.co/r/${rol}/`; }, 2500);
+                }
+            }
+        });
+    }
+
+    const btnEditComp = $('#btnEditarCompetencias');
+    if (btnEditComp) btnEditComp.addEventListener('click', openSkillsModal);
+
+    const btnCancelComp = $('#btnCancelarCompetencias');
+    if (btnCancelComp) btnCancelComp.addEventListener('click', closeSkillsModal);
+
+    const compForm = $('#competenciasForm');
+    if (compForm) compForm.addEventListener('submit', saveSkills);
+
+    const modalComp = $('#modalCompetencias');
+    if (modalComp) {
+        modalComp.addEventListener('click', (e) => { 
+            if (e.target === modalComp) closeSkillsModal(); 
+        });
+    }
+    
+    function logout() { localStorage.clear(); window.location.href = '/index.html'; }
+
+    // --- CÁMARA PROFILE CAPTURE ---
+    let camaraStreamPerfil = null;
+        
+    function abrirCamaraPerfil() {
+      var modal = document.getElementById('modalCamara');
+      if (modal) modal.classList.remove('hidden');
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+        .then(function(s) { camaraStreamPerfil = s; document.getElementById('videoCamara').srcObject = s; })
+        .catch(function(err) { alert('Error cámara: ' + err.message); cerrarCamaraPerfil(); });
+    }
+        
+    function cerrarCamaraPerfil() {
+      var modal = document.getElementById('modalCamara');
+      if (modal) modal.classList.add('hidden');
+      if (camaraStreamPerfil) {
+          camaraStreamPerfil.getTracks().forEach(function(t) { t.stop(); });
+          camaraStreamPerfil = null;
+        }
+    }
+        
+    function tomarFotoDelPerfil() {
+      var video = document.getElementById('videoCamara');
+      var canvas = document.getElementById('canvasFotoPerfil');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      var imagenDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+              
+      var arr = imagenDataUrl.split(','), mime = arr[0].match(/:(.*?);/)[1];
+      var bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+      while(n--) u8arr[n] = bstr.charCodeAt(n);
+      var filePerfil = new File([u8arr], 'foto_perfil.jpg', {type: mime});
+              
+      var dt = new DataTransfer();
+      dt.items.add(filePerfil);
+      const fotoInput = document.getElementById('foto');
+      if (fotoInput) fotoInput.files = dt.files;
+      const fotoAct = document.getElementById('foto_actual');
+      if (fotoAct) fotoAct.src = imagenDataUrl;
+      const previewDiv = document.getElementById('preview');
+      if (previewDiv) previewDiv.classList.remove('hidden');
+      mostrarBotonesFoto();
+              
+      cerrarCamaraPerfil();
+      showNotification("success", "Foto capturada. Presiona 💾 Guardar Foto para guardarla o ✕ Cancelar para descartarla.");
+    }
+    
+    const takePhotoBtn = document.getElementById('btnTomarFoto');
+    const capturePhotoBtn = document.getElementById('btnCapturarFoto');
+    const cancelCamBtn = document.getElementById('btnCerrarCamara');
+
+    if (takePhotoBtn) takePhotoBtn.addEventListener('click', abrirCamaraPerfil);
+    if (capturePhotoBtn) capturePhotoBtn.addEventListener('click', tomarFotoDelPerfil);
+    if (cancelCamBtn) cancelCamBtn.addEventListener('click', cerrarCamaraPerfil);
+
+    var ciudadesPorPais = {
+      'Colombia': ['Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Cúcuta', 'Bucaramanga', 'Pereira', 'Manizales', 'Ibagué', 'Neiva', 'Santa Marta', 'Pasto', 'Popayán', 'Armenia', 'Montería', 'Valledupar', 'Villavicencio', 'Otra'],
+      'España': ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao', 'Otra'],
+      'México': ['Ciudad de México', 'Guadalajara', 'Monterrey', 'Puebla', 'Tijuana', 'León', 'Juárez', 'Torreón', 'Otra'],
+      'Argentina': ['Buenos Aires', 'Córdoba', 'Rosario', 'Mendoza', 'La Plata', 'Mar del Plata', 'Salta', 'Otra'],
+      'Chile': ['Santiago', 'Valparaíso', 'Concepción', 'La Serena', 'Antofagasta', 'Otra'],
+      'Perú': ['Lima', 'Arequipa', 'Cuzco', 'Trujillo', 'Chiclayo', 'Otra'],
+      'Venezuela': ['Caracas', 'Maracaibo', 'Valencia', 'Barquisimeto', 'Ciudad Bolívar', 'Otra'],
+      'Ecuador': ['Quito', 'Guayaquil', 'Cuenca', 'Otra'],
+      'Estados Unidos': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Miami', 'Otra'],
+      'Canadá': ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Otra'],
+      'Reino Unido': ['Londres', 'Manchester', 'Birmingham', 'Glasgow', 'Otra'],
+      'Francia': ['París', 'Marsella', 'Lyon', 'Toulouse', 'Otra'],
+      'Alemania': ['Berlín', 'Múnich', 'Fráncfort', 'Hamburgo', 'Otra'],
+      'Italia': ['Roma', 'Milán', 'Nápoles', 'Turín', 'Otra'],
+      'Brasil': ['São Paulo', 'Río de Janeiro', 'Brasilia', 'Salvador', 'Otra'],
+      'Otro (especificar)': ['Otra']
+    };
+        
+    function cargarCiudadesPorPais() {
+      var paisSeleccionado = document.getElementById('pais').value;
+      var citySelect = document.getElementById('ciudad');
+      var paisOtroInput = document.getElementById('pais_otro');
+      var ciudadOtraInput = document.getElementById('ciudad_otra');
+              
+      citySelect.innerHTML = '';
+      paisOtroInput.classList.add('hidden');
+      ciudadOtraInput.classList.add('hidden');
+              
+      if (!paisSeleccionado) {
+        var opDefault = document.createElement('option');
+        opDefault.value = '';
+        opDefault.textContent = 'Selecciona primero un país...';
+        citySelect.appendChild(opDefault);
+        return;
+      }
+              
+      if (paisSeleccionado === 'Otro (especificar)') {
+        paisOtroInput.classList.remove('hidden');
+        var opDefault = document.createElement('option');
+        opDefault.value = '';
+        opDefault.textContent = 'Especifica tu país arriba';
+        citySelect.appendChild(opDefault);
+        return;
+      }
+              
+      var ciudades = ciudadesPorPais[paisSeleccionado] || ['Otra'];
+      ciudades.forEach(function(ciudad) {
+        var op = document.createElement('option');
+        op.value = ciudad;
+        op.textContent = ciudad;
+        citySelect.appendChild(op);
+      });
+    }
+        
+    function mostrarCiudadOtra() {
+      var citySelect = document.getElementById('ciudad');
+      var ciudadOtraInput = document.getElementById('ciudad_otra');
+      if (citySelect.value === 'Otra') {
+        ciudadOtraInput.classList.remove('hidden');
+      } else {
+        ciudadOtraInput.classList.add('hidden');
+      }
+    }
+    
+    const citySelectEl = document.getElementById('ciudad');
+    if (citySelectEl) citySelectEl.addEventListener('change', mostrarCiudadOtra);
+  </script>
+  
+  <script src="/js/roles.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const path = window.location.pathname;
+      const isSuperadmin = path.includes('/r/superadmin/');
+      const isAdmin = path.includes('/r/admin/');
+      const isCoordinador = path.includes('/r/coordinador/');
+      const isCliente = path.includes('/r/cliente/');
+      const isDisInst = path.includes('/r/disenador-instruccional/');
+      const isAutor = path.includes('/r/autor/');
+      const isRevisor = path.includes('/r/revisor-qa/');
+      const isEditor = path.includes('/r/editor/');
+      const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+      const isAbogado = path.includes('/r/abogado/');
+      const isDisGraf = path.includes('/r/disenador-grafico/');
+      const isAnim2d = path.includes('/r/animador-2d/');
+      const isAnim3d = path.includes('/r/animador-3d/');
+      const isVideo = path.includes('/r/video/');
+      const isCorrector = path.includes('/r/corrector-de-estilo/');
+      const isIngeniero = path.includes('/r/ingeniero-lms/');
+      const isRegistrado = path.includes('/r/registrado/');
+
+      const allowedRoles = [];
+      if (isSuperadmin) allowedRoles.push('superadmin');
+      if (isAdmin) allowedRoles.push('admin');
+      if (isCoordinador) allowedRoles.push('coordinador');
+      if (isCliente) allowedRoles.push('cliente');
+      if (isDisInst) allowedRoles.push('disenador-instruccional');
+      if (isAutor) allowedRoles.push('autor');
+      if (isRevisor) allowedRoles.push('revisor-qa');
+      if (isEditor) allowedRoles.push('editor');
+      if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+      if (isAbogado) allowedRoles.push('abogado');
+      if (isDisGraf) allowedRoles.push('disenador-grafico');
+      if (isAnim2d) allowedRoles.push('animador-2d');
+      if (isAnim3d) allowedRoles.push('animador-3d');
+      if (isVideo) allowedRoles.push('video');
+      if (isCorrector) allowedRoles.push('corrector-de-estilo');
+      if (isIngeniero) allowedRoles.push('ingeniero-lms');
+      if (isRegistrado) allowedRoles.push('registrado');
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+          window.location.href = '/';
+          return;
+      }
+
+      try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const userRoles = payload.roles || [payload.role].filter(Boolean);
+          if (!userRoles.some(r => allowedRoles.includes(r))) {
+              window.location.href = '/';
+              return;
+          }
+      } catch(e) {
+          window.location.href = '/';
+      }
+    });
+  </script>
+</body>
+</html>

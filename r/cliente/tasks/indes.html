@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Mis Tareas - Portal de Cliente</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { /* ... Tailwind config ... */ }
+    }
+  </script>
+</head>
+
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
+  
+  <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-2xl">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="bg-white/20 backdrop-blur-sm rounded-full p-3">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+          </div>
+          <div>
+            <h1 class="text-4xl font-bold text-white tracking-tight">Portal de Tareas</h1>
+            <p class="text-blue-100 text-lg">Gestiona las tareas de tus proyectos</p>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center space-x-6 text-blue-100">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-white" id="total-tareas">0</div>
+            <div class="text-sm">Total</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-green-300" id="tareas-completadas">0</div>
+            <div class="text-sm">Completadas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8 border border-white/50">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex items-center space-x-4">
+          <button id="btnNuevaTarea" class="group relative bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center space-x-2">
+             <svg class="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+             <span>Nueva Tarea</span>
+          </button>
+          <button onclick="cargarDatosCliente()" class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-xl font-medium border border-gray-200 transition-all duration-200 hover:shadow-md flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <span>Actualizar</span>
+          </button>
+        </div>
+        <div class="flex items-center space-x-3 flex-wrap gap-2">
+          <select id="filtroProyecto" class="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"><option value="">Todos mis proyectos</option></select>
+          <select id="filtroEstado" class="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"><option value="">Todos los estados</option><option value="Nuevo">Nuevo</option><option value="En curso">En curso</option><option value="En revisión">En revisión</option><option value="Resuelto">Resuelto</option><option value="Cerrado">Cerrado</option></select>
+          <select id="filtroPrioridad" class="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"><option value="">Todas las prioridades</option><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+            <tr>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Título</th>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Proyecto</th>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Responsable</th>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Prioridad</th>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Estado</th>
+              <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-tareas" class="divide-y divide-gray-100"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="loading" class="hidden text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div><p class="mt-2 text-gray-600">Cargando tus tareas...</p></div>
+    <div id="empty-state" class="hidden text-center py-12"><div class="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-white/50"><svg class="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg><h3 class="text-lg font-medium text-gray-900 mb-2">No tienes tareas asignadas</h3><p class="text-gray-500 mb-4">Puedes crear una nueva tarea para uno de tus proyectos.</p><button onclick="document.getElementById('btnNuevaTarea').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">Crear primera tarea</button></div></div>
+  </div>
+  <div id="modal-container"></div>
+
+
+  <script>
+    const API_URL = "https://gestordecursos.pegui.edu.co:8000";
+    const TAREAS_ENDPOINT = `${API_URL}/tareas/`;
+    const PROJECTS_ENDPOINT = `${API_URL}/projects/`;
+
+    let clienteProyectos = [];
+    let clienteTareas = [];
+
+    // Tu función para decodificar el token
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        console.error("Error decodificando token:", e);
+        return null;
+      }
+    }
+
+    function getAuthHeaders() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = "/index.html";
+            return null;
+        }
+        return { 'Authorization': `Bearer ${token}` };
+    }
+    
+    // FUNCIÓN PRINCIPAL CON LA LÓGICA CORREGIDA
+    async function cargarDatosCliente() {
+      const loadingEl = document.getElementById('loading');
+      const tbody = document.getElementById('tbody-tareas');
+      loadingEl.classList.remove('hidden');
+      tbody.innerHTML = '';
+
+      const headers = getAuthHeaders();
+      const token = localStorage.getItem('token');
+      if (!token || !headers) return;
+
+      // 1. Decodificar el token para obtener el ID del usuario
+      const payload = parseJwt(token);
+      // Buscamos 'user_id' o 'uid', lo que esté presente en tu token
+      const userIdFromToken = payload.user_id || payload.uid; 
+      
+      if (!userIdFromToken) {
+          loadingEl.classList.add('hidden');
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-600">Error: No se pudo identificar al usuario en el token.</td></tr>`;
+          return;
+      }
+      
+      try {
+        // 2. Obtener la lista COMPLETA de proyectos y tareas
+        const [tareasResponse, proyectosResponse] = await Promise.all([
+          fetch(TAREAS_ENDPOINT, { headers }),
+          fetch(PROJECTS_ENDPOINT, { headers })
+        ]);
+
+        if (!proyectosResponse.ok || !tareasResponse.ok) throw new Error("Fallo al cargar datos de la API.");
+
+        const todosLosProyectos = await proyectosResponse.json();
+        const todasLasTareas = await tareasResponse.json();
+
+        // 3. CAMBIO CLAVE: Filtrar los proyectos que pertenecen al cliente
+        // Comparamos el ID del usuario del token con el campo 'client_id' de cada proyecto.
+        // **Ajusta 'proyecto.client_id' si el campo en tu API se llama diferente (ej: 'cliente_id', 'user_id')**
+        clienteProyectos = todosLosProyectos.filter(proyecto => proyecto.client_id === userIdFromToken);
+        
+        // Si no se encontraron proyectos, terminar aquí
+        if (clienteProyectos.length === 0) {
+          console.warn(`No se encontraron proyectos para el usuario con ID: ${userIdFromToken}`);
+          clienteTareas = []; // Asegurarse que no haya tareas
+        } else {
+           // 4. Filtrar las tareas que pertenecen a los proyectos del cliente
+          const idsProyectosCliente = clienteProyectos.map(p => p.id);
+          clienteTareas = todasLasTareas.filter(t => idsProyectosCliente.includes(t.project_id));
+        }
+
+        // 5. Renderizar la interfaz con los datos ya filtrados
+        actualizarFiltroProyectos();
+        renderTareas(clienteTareas);
+        actualizarEstadisticas(clienteTareas);
+
+      } catch (err) {
+        console.error('Error cargando datos del cliente:', err);
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-600">${err.message}</td></tr>`;
+      } finally {
+        loadingEl.classList.add('hidden');
+      }
+    }
+
+    // --- El resto de funciones auxiliares (renderizado, filtros, etc.) no necesitan cambios ---
+    
+    function getPrioridadBadge(p) { return {'Alta':'bg-red-100 text-red-800','Media':'bg-yellow-100 text-yellow-800','Baja':'bg-green-100 text-green-800'}[p]||'bg-gray-100'; }
+    function getEstadoBadge(e) { return {'Nuevo':'bg-blue-100 text-blue-800','En curso':'bg-orange-100 text-orange-800','En revisión':'bg-purple-100 text-purple-800','Resuelto':'bg-green-100 text-green-800','Cerrado':'bg-gray-100'}[e]||'bg-gray-100'; }
+    function getProyectoBadge() { return 'bg-indigo-100 text-indigo-800'; }
+
+    function actualizarFiltroProyectos() {
+      const filtro = document.getElementById('filtroProyecto');
+      filtro.innerHTML = '<option value="">Todos mis proyectos</option>';
+      clienteProyectos.forEach(p => {
+        filtro.innerHTML += `<option value="${p.id}">${p.nombre || p.name}</option>`;
+      });
+    }
+
+    function actualizarEstadisticas(tareas) {
+        document.getElementById('total-tareas').textContent = tareas.length;
+        document.getElementById('tareas-completadas').textContent = tareas.filter(t => t.estado === 'Resuelto' || t.estado === 'Cerrado').length;
+    }
+    
+    function renderTareas(tareas) {
+        const tbody = document.getElementById('tbody-tareas');
+        const emptyState = document.getElementById('empty-state');
+        tbody.innerHTML = '';
+        emptyState.classList.toggle('hidden', tareas.length > 0);
+
+        tareas.forEach((tarea, index) => {
+            const proyecto = clienteProyectos.find(p => p.id === tarea.project_id);
+            const nombreProyecto = proyecto ? (proyecto.nombre || proyecto.name) : 'N/A';
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-blue-50/50';
+            row.innerHTML = `
+              <td class="px-6 py-4 border-b font-medium text-gray-900">${tarea.titulo}</td>
+              <td class="px-6 py-4 border-b"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium ${getProyectoBadge()}">${nombreProyecto}</span></td>
+              <td class="px-6 py-4 border-b text-gray-700">${tarea.asignado || 'N/A'}</td>
+              <td class="px-6 py-4 border-b"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium ${getPrioridadBadge(tarea.prioridad)}">${tarea.prioridad || 'N/A'}</span></td>
+              <td class="px-6 py-4 border-b"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium ${getEstadoBadge(tarea.estado)}">${tarea.estado || 'N/A'}</span></td>
+              <td class="px-6 py-4 border-b text-center">
+                <div class="flex justify-center space-x-2">
+                  <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm" onclick="verDetalleTarea(${tarea.id})">Ver</button>
+                  <a href="cliente_editar_tarea.html?id=${tarea.id}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm">Editar</a>
+                </div>
+              </td>`;
+            tbody.appendChild(row);
+        });
+    }
+
+    function aplicarFiltros() {
+      const pFiltro = document.getElementById('filtroProyecto').value;
+      const eFiltro = document.getElementById('filtroEstado').value;
+      const prioFiltro = document.getElementById('filtroPrioridad').value;
+      let tareasFiltradas = clienteTareas;
+      if (pFiltro) tareasFiltradas = tareasFiltradas.filter(t => t.project_id == pFiltro);
+      if (eFiltro) tareasFiltradas = tareasFiltradas.filter(t => t.estado === eFiltro);
+      if (prioFiltro) tareasFiltradas = tareasFiltradas.filter(t => t.prioridad === prioFiltro);
+      renderTareas(tareasFiltradas);
+    }
+
+    document.getElementById('filtroProyecto').onchange = aplicarFiltros;
+    document.getElementById('filtroEstado').onchange = aplicarFiltros;
+    document.getElementById('filtroPrioridad').onchange = aplicarFiltros;
+    document.getElementById('btnNuevaTarea').onclick = () => {
+        const ids = clienteProyectos.map(p => p.id).join(',');
+        window.location.href = `cliente_crear_tarea.html?proyectos=${ids}`;
+    };
+    function verDetalleTarea(id) { alert(`Ver detalle de tarea ID: ${id}`); }
+    document.addEventListener('DOMContentLoaded', cargarDatosCliente);
+  </script>
+</body>
+</html>
+

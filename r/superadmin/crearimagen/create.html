@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image Studio Pro | Virtualmind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            secondary: '#a855f7',
+            accent: '#22d3ee',
+            dark: '#020617',
+            surface: '#1e293b',
+            'surface-light': '#334155'
+          },
+          animation: {
+            'gradient': 'gradient 8s ease infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'shimmer': 'shimmer 2s linear infinite'
+          },
+          keyframes: {
+            gradient: {
+              '0%, 100%': { 'background-position': '0% 50%' },
+              '50%': { 'background-position': '100% 50%' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-20px)' }
+            },
+            shimmer: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(100%)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    body {
+      background: radial-gradient(circle at top right, #1e1b4b, #020617);
+      background-attachment: fixed;
+    }
+
+    .glass-card {
+      background: rgba(30, 41, 59, 0.5);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    .glass-input {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    .btn-action {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    .btn-action:active { transform: translateY(0); }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    .loading-shimmer {
+      background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    .gallery-item:hover .gallery-overlay { opacity: 1; }
+  </style>
+</head>
+<body class="min-h-screen text-slate-200 selection:bg-primary/30 selection:text-primary-foreground">
+
+  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-float"></div>
+    <div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-secondary/10 blur-[120px] rounded-full animate-float" style="animation-delay: -3s"></div>
+  </div>
+
+  <div class="relative z-10 p-4 md:p-8 max-w-[1600px] mx-auto">
+    <header class="flex flex-col md:flex-row items-center justify-between mb-10 gap-6">
+      <div class="flex items-center gap-4">
+        <div class="p-3 bg-gradient-to-br from-primary to-secondary rounded-2xl shadow-lg shadow-primary/20">
+          <i data-lucide="sparkles" class="w-8 h-8 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-3xl font-extrabold text-white tracking-tight">AI Image Studio <span class="text-primary">Pro</span></h1>
+          <p class="text-slate-400 text-sm">Engineered by William Andrés</p>
+        </div>
+      </div>
+      
+      <div id="statusBadge" class="flex items-center gap-2 px-4 py-2 rounded-full glass-card text-xs font-medium border-yellow-500/30 text-yellow-500">
+        <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+        Verificando servidor...
+      </div>
+    </header>
+
+    <main class="grid lg:grid-cols-12 gap-8">
+      <aside class="lg:col-span-5 space-y-6">
+        
+        <section class="glass-card rounded-3xl p-6">
+          <div class="space-y-4">
+            <div>
+              <label class="flex items-center gap-2 text-sm font-semibold mb-2 text-slate-300">
+                <i data-lucide="type" class="w-4 h-4 text-primary"></i> Prompt Positivo
+              </label>
+              <textarea id="prompt" title="Prompt positivo para la generación de imagen" class="w-full h-32 glass-input rounded-2xl p-4 text-sm resize-none focus:outline-none" 
+                placeholder="Describe tu visión... (ej: Un ciber-jaguar neón en la selva amazónica, estilo arte digital, 8k)"></textarea>
+            </div>
+            
+            <div>
+              <label class="flex items-center gap-2 text-sm font-semibold mb-2 text-slate-300">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-red-400"></i> Prompt Negativo
+              </label>
+              <textarea id="negative_prompt" title="Prompt negativo para evitar elementos no deseados" class="w-full h-20 glass-input rounded-2xl p-4 text-xs resize-none focus:outline-none" 
+                placeholder="Lo que NO quieres... (ej: desenfoque, deforme, mala anatomía)"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="glass-card rounded-3xl overflow-hidden">
+          <button onclick="toggleSection('advSettings')" class="w-full px-6 py-4 flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors">
+            <span class="flex items-center gap-2 font-bold text-sm"><i data-lucide="settings-2" class="w-4 h-4"></i> Ajustes Avanzados</span>
+            <i data-lucide="chevron-down" id="advSettingsIcon" class="w-4 h-4 transition-transform"></i>
+          </button>
+          <div id="advSettings" class="p-6 space-y-5 hidden">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="text-xs font-medium text-slate-400">Pasos (Steps)</label>
+                <input type="number" id="steps" value="20" title="Número de pasos de generación" class="w-full glass-input rounded-lg p-2 text-sm">
+              </div>
+              <div class="space-y-2">
+                <label class="text-xs font-medium text-slate-400">CFG Scale</label>
+                <input type="number" id="cfg" value="7" class="w-full glass-input rounded-lg p-2 text-sm">
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-slate-400">Dimensiones</label>
+              <select id="dimensions" class="w-full glass-input rounded-lg p-2 text-sm">
+                <option value="512x512">Cuadrado (512x512)</option>
+                <option value="512x768">Vertical (512x768)</option>
+                <option value="768x512">Horizontal (768x512)</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="glass-card rounded-3xl p-6">
+          <label class="flex items-center gap-2 text-sm font-semibold mb-4 text-slate-300">
+            <i data-lucide="image-plus" class="w-4 h-4 text-accent"></i> Referencia Visual
+          </label>
+          <div id="dropZone" class="relative group border-2 border-dashed border-slate-700 rounded-2xl p-8 transition-all hover:border-primary/50 hover:bg-primary/5 text-center cursor-pointer">
+            <input type="file" id="image_input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+            <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-3 text-slate-500 group-hover:text-primary transition-colors"></i>
+            <p id="fileLabel" class="text-sm text-slate-400 group-hover:text-slate-300">Suelte una imagen o haga clic</p>
+          </div>
+        </section>
+
+        <div class="grid grid-cols-2 gap-4">
+          <button onclick="handleGenerate('txt2img')" class="btn-action col-span-2 bg-gradient-to-r from-primary to-secondary p-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
+            <i data-lucide="zap" class="w-5 h-5"></i> GENERAR OBRA MAESTRA
+          </button>
+          <button onclick="handleGenerate('img2img')" class="btn-action bg-surface-light p-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 border border-white/5">
+            <i data-lucide="replace" class="w-4 h-4"></i> Transformar
+          </button>
+          <button onclick="handleInterrogate()" class="btn-action bg-surface-light p-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 border border-white/5">
+            <i data-lucide="eye" class="w-4 h-4"></i> Analizar CLIP
+          </button>
+        </div>
+      </aside>
+
+      <section class="lg:col-span-7 space-y-6">
+        
+        <div class="glass-card rounded-[2rem] p-4 min-h-[500px] flex flex-col">
+          <div id="progressContainer" class="mb-4 opacity-0 transition-opacity">
+            <div class="flex justify-between text-xs font-bold mb-1 px-1">
+              <span class="text-primary uppercase tracking-widest">Procesando en CPU...</span>
+              <span id="progressPct">0%</span>
+            </div>
+            <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+              <div id="progressBar" class="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="relative flex-1 rounded-2xl bg-dark/50 overflow-hidden flex items-center justify-center border border-white/5 group">
+            <div id="emptyState" class="text-center p-12">
+              <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
+                <i data-lucide="image" class="w-10 h-10 text-slate-600"></i>
+              </div>
+              <h3 class="text-slate-400 font-medium italic">Esperando tu creatividad...</h3>
+            </div>
+
+            <img id="mainOutput" class="max-w-full max-h-full object-contain hidden" alt="Resultado">
+            
+            <div id="outputControls" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity translate-y-4 group-hover:translate-y-0 duration-300">
+              <button onclick="downloadCurrent()" class="p-3 bg-white text-dark rounded-xl shadow-xl hover:scale-110 transition-transform"><i data-lucide="download" class="w-5 h-5"></i></button>
+              <button onclick="handleUpscale()" class="p-3 bg-primary text-white rounded-xl shadow-xl hover:scale-110 transition-transform"><i data-lucide="maximize" class="w-5 h-5"></i></button>
+              <button onclick="clearCanvas()" class="p-3 bg-red-500 text-white rounded-xl shadow-xl hover:scale-110 transition-transform"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-3xl p-6">
+          <h3 class="flex items-center gap-2 text-sm font-bold mb-4 uppercase tracking-tighter text-slate-400">
+            <i data-lucide="history" class="w-4 h-4"></i> Galería de la Sesión
+          </h3>
+          <div id="gallery" class="grid grid-cols-4 md:grid-cols-6 gap-3 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+            </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="toastContainer" class="fixed bottom-8 right-8 z-[100] flex flex-col gap-3"></div>
+
+  <script>
+    // Configuración Centralizada
+    const API_BASE = "https://ia.pegui.edu.co/sdapi/v1";
+    let isProcessing = false;
+    let currentImageBase64 = null;
+
+    // Inicializar Iconos Lucide
+    lucide.createIcons();
+
+    // --- Helper Functions ---
+
+    function toggleSection(id) {
+      const el = document.getElementById(id);
+      const icon = document.getElementById(id + 'Icon');
+      const isHidden = el.classList.contains('hidden');
+      el.classList.toggle('hidden');
+      icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    function showToast(msg, type = 'info') {
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'border-green-500 text-green-400',
+        error: 'border-red-500 text-red-400',
+        info: 'border-primary text-primary-light'
+      };
+      toast.className = `glass-card px-6 py-4 rounded-2xl border-l-4 ${colors[type]} animate-float shadow-2xl flex items-center gap-3 min-w-[300px]`;
+      toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'info'}" class="w-5 h-5"></i> <span class="text-sm font-medium text-white">${msg}</span>`;
+      document.getElementById('toastContainer').appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    async function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    // --- API Logic ---
+
+    async function checkServer() {
+      const badge = document.getElementById('statusBadge');
+      try {
+        const res = await fetch(`${API_BASE}/progress`, { mode: 'cors' });
+        if(res.ok) {
+          badge.className = "flex items-center gap-2 px-4 py-2 rounded-full glass-card text-xs font-medium border-green-500/30 text-green-500";
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> Servidor Online`;
+        }
+      } catch (e) {
+        badge.className = "flex items-center gap-2 px-4 py-2 rounded-full glass-card text-xs font-medium border-red-500/30 text-red-500";
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Servidor Offline`;
+      }
+    }
+
+    async function startProgressPolling() {
+      if (!isProcessing) return;
+      try {
+        const res = await fetch(`${API_BASE}/progress`, { mode: 'cors' });
+        const data = await res.json();
+        const pct = Math.round(data.progress * 100);
+        document.getElementById('progressBar').style.width = `${pct}%`;
+        document.getElementById('progressPct').innerText = `${pct}%`;
+        
+        if (pct < 99 && isProcessing) setTimeout(startProgressPolling, 800);
+      } catch (e) { console.error("Polling error:", e); }
+    }
+
+    async function handleGenerate(endpoint) {
+      if (isProcessing) return;
+      
+      const prompt = document.getElementById('prompt').value.trim();
+      if (!prompt) return showToast("¡Escribe un prompt primero!", "error");
+
+      isProcessing = true;
+      document.getElementById('progressContainer').style.opacity = '1';
+      document.getElementById('emptyState').innerHTML = `<div class="loading-shimmer w-32 h-32 rounded-3xl mx-auto mb-4"></div><p class="text-primary animate-pulse font-bold">PROCESANDO RED NEURONAL...</p>`;
+      startProgressPolling();
+
+      const dims = document.getElementById('dimensions').value.split('x');
+      
+      let payload = {
+        prompt: prompt,
+        negative_prompt: document.getElementById('negative_prompt').value,
+        steps: parseInt(document.getElementById('steps').value),
+        cfg_scale: parseInt(document.getElementById('cfg').value),
+        width: parseInt(dims[0]),
+        height: parseInt(dims[1]),
+        sampler_name: "Euler a",
+        restore_faces: true
+      };
+
+      try {
+        if (endpoint === 'img2img') {
+          const fileInput = document.getElementById('image_input');
+          if (!fileInput.files[0]) throw new Error("Debes subir una imagen de referencia.");
+          payload.init_images = [await toBase64(fileInput.files[0])];
+        }
+
+        const response = await fetch(`${API_BASE}/${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error("Error en la respuesta del servidor.");
+        
+        const data = await response.json();
+        const b64Image = data.images[0];
+        displayResult(b64Image);
+        addToGallery(b64Image);
+        showToast("¡Imagen generada con éxito!", "success");
+
+      } catch (e) {
+        showToast(e.message, "error");
+        clearCanvas();
+      } finally {
+        isProcessing = false;
+        document.getElementById('progressContainer').style.opacity = '0';
+      }
+    }
+
+    async function handleInterrogate() {
+      const file = document.getElementById('image_input').files[0];
+      if(!file) return showToast("Sube una imagen primero", "error");
+      
+      showToast("Analizando imagen...", "info");
+      try {
+        const b64 = await toBase64(file);
+        const res = await fetch(`${API_BASE}/interrogate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: b64, model: "clip" })
+        });
+        const data = await res.json();
+        document.getElementById('prompt').value = data.caption;
+        showToast("¡Análisis completado!", "success");
+      } catch (e) { showToast("Error al analizar", "error"); }
+    }
+
+    async function handleUpscale() {
+      if(!currentImageBase64) return;
+      showToast("Aumentando resolución (2x)...", "info");
+      try {
+        const res = await fetch(`${API_BASE}/extra-single-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            image: currentImageBase64, 
+            upscaling_resize: 2, 
+            upscaler_1: "R-ESRGAN 4x+" 
+          })
+        });
+        const data = await res.json();
+        displayResult(data.image);
+        showToast("¡Imagen mejorada!", "success");
+      } catch (e) { showToast("Error en Upscale", "error"); }
+    }
+
+    // --- UI State Management ---
+
+    function displayResult(b64) {
+      currentImageBase64 = b64;
+      const img = document.getElementById('mainOutput');
+      img.src = `data:image/png;base64,${b64}`;
+      img.classList.remove('hidden');
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('outputControls').classList.remove('hidden');
+    }
+
+    function clearCanvas() {
+      currentImageBase64 = null;
+      document.getElementById('mainOutput').classList.add('hidden');
+      document.getElementById('outputControls').classList.add('hidden');
+      document.getElementById('emptyState').classList.remove('hidden');
+      document.getElementById('emptyState').innerHTML = `<div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5"><i data-lucide="image" class="w-10 h-10 text-slate-600"></i></div><h3 class="text-slate-400 font-medium italic">Esperando tu creatividad...</h3>`;
+      lucide.createIcons();
+    }
+
+    function addToGallery(b64) {
+      const gallery = document.getElementById('gallery');
+      const container = document.createElement('div');
+      container.className = "gallery-item relative aspect-square rounded-xl overflow-hidden glass-card cursor-pointer group border border-white/5";
+      container.onclick = () => displayResult(b64);
+      container.innerHTML = `
+        <img src="data:image/png;base64,${b64}" class="w-full h-full object-cover transition-transform group-hover:scale-110">
+        <div class="gallery-overlay absolute inset-0 bg-primary/40 opacity-0 transition-opacity flex items-center justify-center">
+          <i data-lucide="maximize-2" class="w-4 h-4 text-white"></i>
+        </div>
+      `;
+      gallery.prepend(container);
+      lucide.createIcons();
+    }
+
+    function downloadCurrent() {
+      if(!currentImageBase64) return;
+      const link = document.createElement('a');
+      link.href = `data:image/png;base64,${currentImageBase64}`;
+      link.download = `art-studio-${Date.now()}.png`;
+      link.click();
+    }
+
+    // --- Event Listeners ---
+
+    document.getElementById('image_input').addEventListener('change', (e) => {
+      const name = e.target.files[0]?.name || "Suelte una imagen o haga clic";
+      document.getElementById('fileLabel').innerText = name;
+    });
+
+    // Atajos de Teclado
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'Enter') handleGenerate('txt2img');
+    });
+
+    // Inicio
+    window.onload = () => {
+      checkServer();
+      setInterval(checkServer, 10000);
+    };
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

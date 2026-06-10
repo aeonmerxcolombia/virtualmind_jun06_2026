@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor de Tareas de Desarrollo para la IA - VirtualMind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); }
+    .card { transition: all 0.3s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+    .priority-high { border-left: 4px solid #ef4444; }
+    .priority-medium { border-left: 4px solid #f59e0b; }
+    .priority-low { border-left: 4px solid #22c55e; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-in_progress { background: #dbeafe; color: #1e40af; }
+    .status-completed { background: #d1fae5; color: #065f46; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .ai-thinking { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+  
+  <!-- Header -->
+  <header class="gradient-bg text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">
+            🤖
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold">Gestor de Tareas de Desarrollo para la IA</h1>
+            <p class="text-blue-200 text-sm">Sistema de gestión de tareas con IA - OpenCode</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm text-blue-200">Última actualización</p>
+          <p id="lastUpdate" class="font-semibold">-</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-2xl p-6 shadow card" title="Total de tareas registradas en el sistema">
+        <p class="text-3xl font-bold text-slate-800" id="totalTasks">0</p>
+        <p class="text-slate-500 text-sm">Total Tareas</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow card" title="Tareas que esperan ser procesadas por la IA">
+        <p class="text-3xl font-bold text-red-600" id="pendingTasks">0</p>
+        <p class="text-slate-500 text-sm">Pendientes</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow card" title="Tareas en las que la IA está trabajando actualmente">
+        <p class="text-3xl font-bold text-blue-600" id="inProgressTasks">0</p>
+        <p class="text-slate-500 text-sm">En Progreso</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow card" title="Tareas que la IA ya ha completado exitosamente">
+        <p class="text-3xl font-bold text-green-600" id="completedTasks">0</p>
+        <p class="text-slate-500 text-sm">Completadas</p>
+      </div>
+    </div>
+
+    <!-- Add Task Form -->
+    <div class="bg-white rounded-2xl shadow card mb-8">
+      <div class="p-6 border-b">
+          <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <span class="text-2xl">➕</span>
+            Nueva Tarea
+            <span class="group relative inline-block cursor-help ml-1">
+              <span class="text-blue-500 text-sm">ⓘ</span>
+              <span class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-80 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg z-50 leading-relaxed">Las tareas aquí creadas son ejecutadas por la IA (OpenCode). Escribe prompts claros y específicos. La IA leerá estas tareas y trabajará en ellas automáticamente según su prioridad.</span>
+            </span>
+          </h2>
+      </div>
+      <div class="p-6">
+        <form id="taskForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Prompt * <span class="group relative inline-block cursor-help">
+                <span class="text-blue-500 text-xs">ⓘ</span>
+                <span class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-72 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg z-50 leading-relaxed">Escribe un prompt claro para la IA. Ej: <br><br><strong>Backend:</strong> "Crea endpoint GET /users/:id con validación de permisos"<br><strong>Frontend:</strong> "Agrega modal de confirmación al eliminar en proyectos"<br><strong>Bug:</strong> "Error 500 al cargar lista de usuarios cuando no hay conexión"<br><br>Usa palabras clave como: crear, arreglar, agregar, modificar, optimizar</span>
+              </span></label>
+              <input type="text" id="taskDescription" required placeholder="Ej: Crea un endpoint GET /users/:id con autenticación" title="Describe claramente qué necesita hacer la IA: qué archivo, qué debe hacer y por qué" class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Prioridad <span class="group relative inline-block cursor-help"><span class="text-blue-500 text-xs">ⓘ</span><span class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-56 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg z-50 leading-relaxed">Define la urgencia de la tarea. <strong>Alta</strong> = bloqueante, <strong>Media</strong> = importante, <strong>Baja</strong> = mejora</span></span></label>
+              <select id="taskPriority" title="Alta: urgente/bloqueante | Media: importante | Baja: mejora futura" class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500">
+                <option value="high">🔴 Alta</option>
+                <option value="medium" selected>🟡 Media</option>
+                <option value="low">🟢 Baja</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Categoría <span class="group relative inline-block cursor-help"><span class="text-blue-500 text-xs">ⓘ</span><span class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-56 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg z-50 leading-relaxed">Clasifica la tarea para que la IA sepa qué área aplicar: backend, frontend, bug, etc.</span></span></label>
+              <select id="taskCategory" title="Clasifica la tarea para que la IA sepa el área a aplicar" class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500">
+                <option value="backend">Backend</option>
+                <option value="frontend">Frontend</option>
+                <option value="bug">Bug</option>
+                <option value="feature">Nueva funcionalidad</option>
+                <option value="refactor">Refactorización</option>
+                <option value="docs">Documentación</option>
+                <option value="test">Pruebas</option>
+                <option value="other">Otro</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Responsable <span class="group relative inline-block cursor-help"><span class="text-blue-500 text-xs">ⓘ</span><span class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-56 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg z-50 leading-relaxed">¿Quién ejecutará esta tarea? <strong>Backend</strong> = servidor/FastAPI, <strong>Frontend</strong> = HTML/JS, <strong>QA</strong> = pruebas y validación</span></span></label>
+              <select id="taskResponsable" title="Define si la tarea es para backend, frontend o QA" class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500">
+                <option value="backend">⚙️ Backend</option>
+                <option value="frontend">🎨 Frontend</option>
+                <option value="qa">🧪 QA</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Notas adicionales <span class="group relative inline-block cursor-help"><span class="text-blue-500 text-xs">ⓘ</span><span class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-56 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg z-50 leading-relaxed">Añade contexto extra, rutas de archivos, ejemplos de código, o requisitos específicos para la IA</span></span></label>
+              <textarea id="taskNotes" rows="2" placeholder="Ej: Ruta del archivo, ejemplos, contexto adicional..." title="Información adicional para ayudar a la IA a entender mejor la tarea" class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="flex items-end">
+              <button type="submit" title="Guardar la tarea en la base de datos para que la IA pueda trabajar en ella" class="w-full bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center gap-2">
+                <span>💾</span> Guardar Tarea
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex flex-wrap gap-4 mb-6">
+      <button onclick="filterTasks('all')" title="Mostrar todas las tareas sin filtrar" class="filter-btn px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold" data-filter="all">Todas</button>
+      <button onclick="filterTasks('pending')" title="Tareas pendientes que esperan ser iniciadas" class="filter-btn px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-semibold" data-filter="pending">Pendientes</button>
+      <button onclick="filterTasks('in_progress')" title="Tareas actualmente en desarrollo por la IA" class="filter-btn px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-semibold" data-filter="in_progress">En Progreso</button>
+      <button onclick="filterTasks('completed')" title="Tareas que la IA ya completó exitosamente" class="filter-btn px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-semibold" data-filter="completed">Completadas</button>
+      
+      <div class="ml-auto flex gap-2">
+        <select id="sortBy" onchange="renderTasks()" title="Cambia el orden de visualización de las tareas" class="px-4 py-2 border rounded-lg">
+          <option value="priority">Ordenar por Prioridad</option>
+          <option value="date">Ordenar por Fecha</option>
+          <option value="category">Ordenar por Categoría</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tasks List -->
+    <div id="tasksList" class="space-y-4">
+      <!-- Tasks will be rendered here -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-16">
+      <div class="text-6xl mb-4">📋</div>
+      <h3 class="text-xl font-semibold text-slate-700 mb-2">No hay tareas</h3>
+      <p class="text-slate-500">Agrega una nueva tarea usando el formulario de arriba</p>
+    </div>
+  </main>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b flex items-center justify-between">
+        <h3 class="text-xl font-bold text-slate-800">Editar Tarea</h3>
+        <button onclick="closeEditModal()" class="text-slate-500 hover:text-slate-700 text-2xl">&times;</button>
+      </div>
+      <form id="editTaskForm" class="p-6 space-y-4">
+        <input type="hidden" id="editTaskId">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Prompt</label>
+          <input type="text" id="editDescription" required title="Edita el prompt para la IA" class="w-full px-4 py-3 border rounded-xl">
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Prioridad</label>
+            <select id="editPriority" title="Define el nivel de urgencia de la tarea" class="w-full px-4 py-3 border rounded-xl">
+              <option value="high">🔴 Alta</option>
+              <option value="medium">🟡 Media</option>
+              <option value="low">🟢 Baja</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Categoría</label>
+            <select id="editCategory" title="Clasifica el tipo de tarea para la IA" class="w-full px-4 py-3 border rounded-xl">
+              <option value="backend">Backend</option>
+              <option value="frontend">Frontend</option>
+              <option value="bug">Bug</option>
+              <option value="feature">Nueva funcionalidad</option>
+              <option value="refactor">Refactorización</option>
+              <option value="docs">Documentación</option>
+              <option value="test">Pruebas</option>
+              <option value="other">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Responsable</label>
+            <select id="editResponsable" title="Cambia quién ejecutará esta tarea" class="w-full px-4 py-3 border rounded-xl">
+              <option value="backend">⚙️ Backend</option>
+              <option value="frontend">🎨 Frontend</option>
+              <option value="qa">🧪 QA</option>
+            </select>
+          </div>
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Estado</label>
+            <select id="editStatus" title="Cambia el estado actual de la tarea para la IA" class="w-full px-4 py-3 border rounded-xl">
+            <option value="pending">⏳ Pendiente</option>
+            <option value="in_progress">🔄 En Progreso</option>
+            <option value="completed">✅ Completada</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Notas</label>
+          <textarea id="editNotes" rows="3" title="Información adicional o contexto para la IA" class="w-full px-4 py-3 border rounded-xl"></textarea>
+        </div>
+        <div class="flex gap-3 pt-4">
+          <button type="button" onclick="closeEditModal()" title="Descartar cambios y cerrar" class="flex-1 bg-slate-200 text-slate-700 px-4 py-3 rounded-xl hover:bg-slate-300 font-semibold">Cancelar</button>
+          <button type="submit" title="Guardar los cambios de la tarea" class="flex-1 bg-blue-600 text-white px-4 py-3 rounded-xl hover:bg-blue-700 font-semibold">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+    let tasks = [];
+    let currentFilter = 'all';
+    
+    async function loadTasks() {
+      try {
+        const token = localStorage.getItem('token') || '';
+        const response = await fetch(`${API_URL}/tareas-ia/`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          tasks = data.map(t => ({
+            id: t.id,
+            description: t.descripcion,
+            priority: t.prioridad,
+            category: t.categoria,
+            status: t.estado,
+            responsable: t.responsable,
+            notes: t.notas,
+            created_at: t.fecha_creacion,
+            updated_at: t.fecha_actualizacion
+          }));
+        } else {
+          loadLocalTasks();
+        }
+      } catch (e) {
+        loadLocalTasks();
+      }
+      updateStats();
+      renderTasks();
+    }
+    
+    function loadLocalTasks() {
+      const saved = localStorage.getItem('ia_tasks');
+      if (saved) {
+        tasks = JSON.parse(saved);
+      } else {
+        tasks = [];
+        saveTasks();
+      }
+    }
+    
+    async function saveTasks() {
+      localStorage.setItem('ia_tasks', JSON.stringify(tasks));
+      localStorage.setItem('ia_tasks_updated', new Date().toISOString());
+      updateStats();
+    }
+    
+    async function apiCallTarea(method, endpoint, body = null) {
+      try {
+        const token = localStorage.getItem('token') || '';
+        const options = {
+          method,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        };
+        if (body) options.body = JSON.stringify(body);
+        const response = await fetch(`${API_URL}${endpoint}`, options);
+        if (!response.ok) {
+          console.error('API Error:', response.status, await response.text());
+          return null;
+        }
+        return await response.json();
+      } catch (e) {
+        console.error('API Exception:', e);
+        return null;
+      }
+    }
+    
+    // Update statistics
+    function updateStats() {
+      document.getElementById('totalTasks').textContent = tasks.length;
+      document.getElementById('pendingTasks').textContent = tasks.filter(t => t.status === 'pending').length;
+      document.getElementById('inProgressTasks').textContent = tasks.filter(t => t.status === 'in_progress').length;
+      document.getElementById('completedTasks').textContent = tasks.filter(t => t.status === 'completed').length;
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleString('es-CO');
+    }
+    
+    // Filter tasks
+    function filterTasks(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.dataset.filter === filter) {
+          btn.classList.remove('bg-slate-200', 'text-slate-700');
+          btn.classList.add('bg-blue-600', 'text-white');
+        } else {
+          btn.classList.remove('bg-blue-600', 'text-white');
+          btn.classList.add('bg-slate-200', 'text-slate-700');
+        }
+      });
+      renderTasks();
+    }
+    
+    // Render tasks
+    function renderTasks() {
+      const container = document.getElementById('tasksList');
+      const emptyState = document.getElementById('emptyState');
+      
+      let filteredTasks = tasks;
+      if (currentFilter !== 'all') {
+        filteredTasks = tasks.filter(t => t.status === currentFilter);
+      }
+      
+      // Sort
+      const sortBy = document.getElementById('sortBy').value;
+      filteredTasks.sort((a, b) => {
+        if (sortBy === 'priority') {
+          const order = { high: 0, medium: 1, low: 2 };
+          return order[a.priority] - order[b.priority];
+        } else if (sortBy === 'date') {
+          return new Date(b.created_at) - new Date(a.created_at);
+        } else {
+          return a.category.localeCompare(b.category);
+        }
+      });
+      
+      if (filteredTasks.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      
+      const priorityColors = {
+        high: 'priority-high',
+        medium: 'priority-medium',
+        low: 'priority-low'
+      };
+      
+      const priorityLabels = {
+        high: '🔴 Alta',
+        medium: '🟡 Media',
+        low: '🟢 Baja'
+      };
+      
+      const categoryLabels = {
+        backend: '⚙️ Backend',
+        frontend: '🎨 Frontend',
+        bug: '🐛 Bug',
+        feature: '✨ Nueva funcionalidad',
+        refactor: '🔧 Refactorización',
+        docs: '📝 Documentación',
+        test: '🧪 Pruebas',
+        other: '📌 Otro'
+      };
+      
+      const responsableLabels = {
+        backend: '⚙️ Backend',
+        frontend: '🎨 Frontend',
+        qa: '🧪 QA'
+      };
+      
+      const statusLabels = {
+        pending: '⏳ Pendiente',
+        in_progress: '🔄 En Progreso',
+        completed: '✅ Completada'
+      };
+      
+      container.innerHTML = filteredTasks.map(task => `
+        <div class="bg-white rounded-2xl shadow card p-6 fade-in ${priorityColors[task.priority]}">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold status-${task.status}">${statusLabels[task.status]}</span>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">${categoryLabels[task.category]}</span>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold ${task.responsable === 'backend' ? 'bg-indigo-100 text-indigo-700' : task.responsable === 'frontend' ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'}">${responsableLabels[task.responsable] || '⚙️ Backend'}</span>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold ${task.priority === 'high' ? 'bg-red-100 text-red-700' : task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}">${priorityLabels[task.priority]}</span>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800 mb-2">${task.description}</h3>
+              ${task.notes ? `<p class="text-slate-500 text-sm mb-3">${task.notes}</p>` : ''}
+              <p class="text-xs text-slate-400">Creada: ${new Date(task.created_at).toLocaleString('es-CO')}</p>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button onclick="triggerTask(${task.id}, this)" title="Disparar opencode para que ejecute esta tarea ahora" class="px-4 py-2 rounded-lg text-sm font-semibold bg-purple-100 text-purple-700 hover:bg-purple-200">
+                🚀 Disparar
+              </button>
+              <button onclick="startTask(${task.id})" title="${task.status === 'in_progress' ? 'Detener progreso' : 'Iniciar tarea - la IA comenzará a trabajar en esto'}" class="px-4 py-2 rounded-lg text-sm font-semibold ${task.status === 'in_progress' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}">
+                ${task.status === 'in_progress' ? '🔄' : '▶️'}
+              </button>
+              <button onclick="completeTask(${task.id})" title="${task.status === 'completed' ? 'Reabrir tarea' : 'Marcar como completada por la IA'}" class="px-4 py-2 rounded-lg text-sm font-semibold ${task.status === 'completed' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'}">
+                ✅
+              </button>
+              <button onclick="openEditModal(${task.id})" title="Editar prompt, prioridad, categoría o estado de la tarea" class="px-4 py-2 rounded-lg text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">
+                ✏️
+              </button>
+              <button onclick="deleteTask(${task.id})" title="Eliminar esta tarea permanentemente" class="px-4 py-2 rounded-lg text-sm font-semibold bg-red-100 text-red-700 hover:bg-red-200">
+                🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // Add task
+    document.getElementById('taskForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const newTask = {
+        id: Date.now(),
+        description: document.getElementById('taskDescription').value,
+        priority: document.getElementById('taskPriority').value,
+        category: document.getElementById('taskCategory').value,
+        responsable: document.getElementById('taskResponsable').value,
+        status: 'pending',
+        notes: document.getElementById('taskNotes').value,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      const apiTask = {
+        descripcion: newTask.description,
+        prioridad: newTask.priority,
+        categoria: newTask.category,
+        responsable: newTask.responsable,
+        notas: newTask.notes
+      };
+
+      const result = await apiCallTarea('POST', '/tareas-ia/', apiTask);
+      if (result && result.id) {
+        newTask.id = result.id;
+        newTask.created_at = result.fecha_creacion;
+      }
+      
+      tasks.unshift(newTask);
+      saveTasks();
+      renderTasks();
+      
+      e.target.reset();
+    });
+    
+    // Start task
+    async function startTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        task.status = 'in_progress';
+        task.updated_at = new Date().toISOString();
+        await apiCallTarea('PUT', `/tareas-ia/${id}`, { estado: 'in_progress' });
+        saveTasks();
+        renderTasks();
+      }
+    }
+    
+    // Complete task
+    async function completeTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        task.status = 'completed';
+        task.updated_at = new Date().toISOString();
+        await apiCallTarea('PUT', `/tareas-ia/${id}`, { estado: 'completed' });
+        saveTasks();
+        renderTasks();
+        
+        const history = JSON.parse(localStorage.getItem('ia_task_history') || '[]');
+        history.unshift({
+          ...task,
+          completed_at: new Date().toISOString()
+        });
+        localStorage.setItem('ia_task_history', JSON.stringify(history.slice(0, 50)));
+      }
+    }
+    
+    // Open edit modal
+    function openEditModal(id) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        document.getElementById('editTaskId').value = task.id;
+        document.getElementById('editDescription').value = task.description;
+        document.getElementById('editPriority').value = task.priority;
+        document.getElementById('editCategory').value = task.category;
+        document.getElementById('editResponsable').value = task.responsable || 'backend';
+        document.getElementById('editStatus').value = task.status;
+        document.getElementById('editNotes').value = task.notes || '';
+        document.getElementById('editModal').classList.remove('hidden');
+      }
+    }
+    
+    // Close edit modal
+    function closeEditModal() {
+      document.getElementById('editModal').classList.add('hidden');
+    }
+    
+    // Edit task form
+    document.getElementById('editTaskForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = parseInt(document.getElementById('editTaskId').value);
+      const task = tasks.find(t => t.id === id);
+      
+      if (task) {
+        task.description = document.getElementById('editDescription').value;
+        task.priority = document.getElementById('editPriority').value;
+        task.category = document.getElementById('editCategory').value;
+        task.responsable = document.getElementById('editResponsable').value;
+        task.status = document.getElementById('editStatus').value;
+        task.notes = document.getElementById('editNotes').value;
+        task.updated_at = new Date().toISOString();
+        
+        await apiCallTarea('PUT', `/tareas-ia/${id}`, {
+          descripcion: task.description,
+          prioridad: task.priority,
+          categoria: task.category,
+          responsable: task.responsable,
+          estado: task.status,
+          notas: task.notes
+        });
+        
+        saveTasks();
+        renderTasks();
+        closeEditModal();
+      }
+    });
+    
+    // Trigger task (disparar orquestador)
+    async function triggerTask(id, btn) {
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '⏳';
+      btn.disabled = true;
+      
+      const result = await apiCallTarea('POST', `/orquestador-ia/disparar?tarea_id=${id}`);
+      
+      if (result && result.status === 'dispatched') {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+          task.status = 'in_progress';
+          task.updated_at = new Date().toISOString();
+        }
+        saveTasks();
+        renderTasks();
+        showToast(`🚀 Tarea #${id} disparada a opencode`, 'success');
+      } else {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showToast(result?.message || 'Error al disparar tarea', 'error');
+      }
+    }
+    
+    // Toast notification
+    function showToast(msg, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fixed top-4 right-4 px-6 py-3 rounded-xl shadow-2xl text-white font-semibold z-50 fade-in ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    // Delete task
+    async function deleteTask(id) {
+      if (confirm('¿Estás seguro de eliminar esta tarea?')) {
+        await apiCallTarea('DELETE', `/tareas-ia/${id}`);
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
+        renderTasks();
+      }
+    }
+    
+    // Initialize
+    loadTasks();
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

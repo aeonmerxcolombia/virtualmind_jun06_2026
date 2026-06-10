@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría de Usuarios</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f5f5; padding: 20px; }
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 24px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        .btn-back { background: #3498db; color: white; text-decoration: none; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat-card h3 { color: #7f8c8d; font-size: 14px; margin-bottom: 5px; }
+        .stat-card .value { font-size: 28px; font-weight: bold; color: #2c3e50; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { padding: 12px 24px; background: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .tab.active { background: #3498db; color: white; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; overflow: hidden; }
+        .card-header { padding: 15px 20px; border-bottom: 1px solid #eee; font-weight: 600; background: #f8f9fa; }
+        .card-body { padding: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: #2c3e50; font-weight: 600; }
+        tr:hover { background: #f8f9fa; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .mapa-container { height: 400px; border-radius: 8px; overflow: hidden; background: #e0e0e0; position: relative; }
+        #mapa { width: 100%; height: 100%; }
+        .mapa-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; color: #666; }
+        .location-dot { width: 20px; height: 20px; background: #e74c3c; border: 3px solid white; border-radius: 50%; position: absolute; transform: translate(-50%, -50%); box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .filter-row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 12px; color: #666; }
+        .filter-group input, .filter-group select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; }
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .pagination button { padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 5px; cursor: pointer; }
+        .pagination button.active { background: #3498db; color: white; border-color: #3498db; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .no-data { text-align: center; padding: 40px; color: #666; }
+        .session-active { color: #27ae60; font-weight: 600; }
+        .session-ended { color: #95a5a6; }
+        @media (max-width: 768px) {
+            table { font-size: 12px; }
+            th, td { padding: 8px; }
+            .header { flex-direction: column; gap: 15px; }
+        }
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Auditoría de Usuarios</h1>
+        <a href="/r/superadmin/index.html" class="btn btn-back">← Volver al Panel</a>
+    </div>
+
+    <div class="stats" id="stats">
+        <div class="stat-card">
+            <h3>Total Sesiones</h3>
+            <div class="value" id="stat-total">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>Sesiones Activas</h3>
+            <div class="value" id="stat-activas">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>Usuarios Activos (30 días)</h3>
+            <div class="value" id="stat-usuarios">-</div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('sesiones')">Sesiones</button>
+        <button class="tab" onclick="showTab('usuarios')">Por Usuario</button>
+        <button class="tab" onclick="showTab('mapa')">Mapa de Ubicaciones</button>
+    </div>
+
+    <div id="tab-sesiones" class="tab-content">
+        <div class="card">
+            <div class="card-header">Historial de Sesiones</div>
+            <div class="card-body">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Usuario</label>
+                        <select id="filter-user" onchange="loadSesiones()">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Fecha Desde</label>
+                        <input type="date" id="filter-date-from" onchange="loadSesiones()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Fecha Hasta</label>
+                        <input type="date" id="filter-date-to" onchange="loadSesiones()">
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>IP</th>
+                            <th>Ubicación</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th>Duración</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sesiones-tbody">
+                        <tr><td colspan="7" class="loading">Cargando...</td></tr>
+                    </tbody>
+                </table>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-usuarios" class="tab-content" style="display:none;">
+        <div class="card">
+            <div class="card-header">Resumen por Usuario</div>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Total Sesiones</th>
+                            <th>Tiempo Total</th>
+                            <th>Primera Sesión</th>
+                            <th>Última Sesión</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usuarios-tbody">
+                        <tr><td colspan="6" class="loading">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-mapa" class="tab-content" style="display:none;">
+        <div class="card">
+            <div class="card-header">Mapa de Ubicaciones</div>
+            <div class="card-body">
+                <div class="mapa-container" id="mapa-container">
+                    <div class="mapa-placeholder">
+                        <p>Cargando mapa de ubicaciones...</p>
+                    </div>
+                </div>
+                <table style="margin-top: 20px;">
+                    <thead>
+                        <tr>
+                            <th>Ciudad</th>
+                            <th>País</th>
+                            <th>Coordenadas</th>
+                            <th>Cantidad de Accesos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mapa-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+        let currentPage = 0;
+        let pageSize = 20;
+        let token = localStorage.getItem('token');
+
+        if (!token) {
+            window.location.href = '/index.html';
+        }
+
+            async function fetchAPI(url, method = 'GET', body = null) {
+                const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
+                try {
+                    const options = {
+                        method,
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+                    };
+                    if (body) options.body = JSON.stringify(body);
+                    const res = await fetch(fullUrl, options);
+                    if (res.status === 401) { localStorage.removeItem('token'); window.location.href = '/index.html'; }
+                    return await res.json();
+                } catch (e) { console.error(e); return null; }
+            }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleString('es-CO');
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return '-';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            if (h > 0) return `${h}h ${m}m`;
+            if (m > 0) return `${m}m ${s}s`;
+            return `${s}s`;
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`tab-${tab}`).style.display = 'block';
+            if (tab === 'sesiones') loadSesiones();
+            else if (tab === 'usuarios') loadUsuarios();
+            else if (tab === 'mapa') loadMapa();
+        }
+
+        async function loadStats() {
+            const data = await fetchAPI('/auditoria/estadisticas');
+            if (data) {
+                document.getElementById('stat-total').textContent = data.total_sesiones || 0;
+                document.getElementById('stat-activas').textContent = data.sesiones_activas || 0;
+                document.getElementById('stat-usuarios').textContent = data.usuarios_activos_30_dias || 0;
+            }
+        }
+
+        async function loadSesiones() {
+            const userFilter = document.getElementById('filter-user').value;
+            let url = `/auditoria/?skip=${currentPage * pageSize}&limit=${pageSize}`;
+            if (userFilter) url += `&user_uid=${userFilter}`;
+            
+            const data = await fetchAPI(url);
+            const tbody = document.getElementById('sesiones-tbody');
+            
+            if (!data || !data.data || data.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No hay registros de auditoría</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.data.map(s => `
+                <tr>
+                    <td>${s.user_nombre || '-'}</td>
+                    <td>${s.user_email || '-'}</td>
+                    <td><code>${s.ip}</code></td>
+                    <td>${s.ciudad || '-'}, ${s.pais || '-'}</td>
+                    <td>${formatDate(s.fecha_entrada)}</td>
+                    <td class="${s.fecha_salida ? 'session-ended' : 'session-active'}">
+                        ${s.fecha_salida ? formatDate(s.fecha_salida) : 'En curso'}
+                    </td>
+                    <td>${formatDuration(s.duracion_segundos)}</td>
+                </tr>
+            `).join('');
+
+            renderPagination(data.total);
+        }
+
+        async function loadUsuarios() {
+            const data = await fetchAPI('/auditoria/usuarios');
+            const tbody = document.getElementById('usuarios-tbody');
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="no-data">No hay datos de usuarios</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(u => `
+                <tr>
+                    <td>${u.nombre}</td>
+                    <td>${u.email}</td>
+                    <td>${u.total_sesiones}</td>
+                    <td>${u.tiempo_total_formato}</td>
+                    <td>${formatDate(u.primera_sesion)}</td>
+                    <td>${formatDate(u.ultima_sesion)}</td>
+                </tr>
+            `).join('');
+        }
+
+        let map = null;
+
+        async function loadMapa() {
+            const data = await fetchAPI('/auditoria/mapa');
+            const tbody = document.getElementById('mapa-tbody');
+            const container = document.getElementById('mapa-container');
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="no-data">No hay datos de geolocalización</td></tr>';
+                container.innerHTML = '<div style="padding:40px;text-align:center;color:#666;">No hay datos de geolocalización</div>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(m => `
+                <tr>
+                    <td>${m.ciudad || '-'}</td>
+                    <td>${m.pais || '-'}</td>
+                    <td>${m.latitud?.toFixed(4)}, ${m.longitud?.toFixed(4)}</td>
+                    <td><span class="badge badge-success">${m.cantidad} accesos</span></td>
+                </tr>
+            `).join('');
+
+            const validCoords = data.filter(m => m.latitud && m.longitud);
+            if (validCoords.length > 0) {
+                container.innerHTML = '<div id="map" style="width:100%;height:350px;border-radius:8px;"></div>';
+                
+                if (map) { map.remove(); map = null; }
+                
+                setTimeout(() => {
+                    map = L.map('map').setView([validCoords[0].latitud, validCoords[0].longitud], 4);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap'
+                    }).addTo(map);
+                    
+                    validCoords.forEach(loc => {
+                        const circle = L.circle([loc.latitud, loc.longitud], {
+                            color: '#3498db',
+                            fillColor: '#3498db',
+                            fillOpacity: 0.5,
+                            radius: loc.cantidad * 200
+                        }).addTo(map);
+                        circle.bindPopup(`<b>${loc.ciudad || 'Unknown'}</b><br>${loc.pais || ''}<br>${loc.cantidad} accesos`);
+                    });
+                }, 100);
+            }
+        }
+
+        function renderPagination(total) {
+            const totalPages = Math.ceil(total / pageSize);
+            const pagination = document.getElementById('pagination');
+            if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+            
+            let html = '';
+            if (currentPage > 0) html += `<button onclick="changePage(-1)">◀ Anterior</button>`;
+            html += `<span style="padding:8px;">Página ${currentPage + 1} de ${totalPages}</span>`;
+            if (currentPage < totalPages - 1) html += `<button onclick="changePage(1)">Siguiente ▶</button>`;
+            pagination.innerHTML = html;
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            loadSesiones();
+        }
+
+        loadStats();
+        loadSesiones();
+    </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

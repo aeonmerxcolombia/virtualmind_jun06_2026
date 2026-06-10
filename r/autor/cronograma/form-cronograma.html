@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear Cronograma</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    /* Custom styles for specific components */
+    .select-multiple {
+      min-height: 120px;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      width: 100%;
+      transition: border-color 0.2s ease;
+    }
+    .select-multiple:focus {
+      border-color: #6366f1;
+      outline: none;
+    }
+    .select-multiple option:checked {
+      background: #6366f1;
+      color: white;
+    }
+    .input-field {
+      border: 2px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      width: 100%;
+      transition: border-color 0.2s ease;
+    }
+    .input-field:focus {
+      border-color: #6366f1;
+      outline: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .form-section {
+      background: white;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s ease;
+    }
+    .form-section:hover {
+      transform: translateY(-2px);
+    }
+    .error {
+      border-color: #ef4444 !important;
+    }
+    .error-message {
+      color: #ef4444;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-6 font-sans antialiased">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl md:text-3xl font-bold mb-6 flex items-center text-gray-800">
+      <i class="fas fa-calendar-plus mr-3 text-indigo-600"></i>Crear Cronograma
+    </h1>
+
+    <form id="cronogramaForm" class="bg-white p-4 md:p-6 rounded-xl shadow-lg space-y-6">
+      <div id="fasesContainer" class="space-y-6"></div>
+
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <button type="reset" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Resetear</button>
+        <button type="submit" class="btn-primary flex items-center gap-2">
+          <span>Guardar Cronograma</span>
+          <i class="fas fa-save"></i>
+        </button>
+      </div>
+    </form>
+
+    <div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl p-6 text-center max-w-sm w-full">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">¡Cronograma Guardado!</h2>
+        <button id="goToListButton" class="btn-primary">Ver lista</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+    const token = localStorage.getItem("token");
+    const projectId = new URLSearchParams(window.location.search).get("project_id");
+
+    let usersData = [];
+    let fasesData = [
+      { key: 'inicio', nombre: 'Fase Inicio' },
+      { key: 'desarrollo', nombre: 'Fase Desarrollo' },
+      { key: 'final', nombre: 'Fase Final' }
+    ];
+
+    const meses = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+
+    async function fetchData(endpoint) {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error(`Error fetching ${endpoint}`);
+      return res.json();
+    }
+
+    async function init() {
+      try {
+        usersData = await fetchData("/users/");
+        renderFases();
+      } catch (e) {
+        console.error(e);
+        alert("Error cargando usuarios");
+      }
+    }
+
+    function renderFases() {
+      const container = document.getElementById("fasesContainer");
+      container.innerHTML = "";
+
+      fasesData.forEach(fase => {
+        const div = document.createElement("div");
+        div.className = "form-section";
+        div.innerHTML = `
+          <h2 class="text-lg md:text-xl font-semibold mb-4 text-gray-800">${fase.nombre}</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Responsables (mantén Ctrl/Cmd para varios)</label>
+            <select multiple name="responsables_${fase.key}" class="select-multiple" required aria-label="Seleccionar responsables para ${fase.nombre}">
+              ${usersData.map(u => `<option value="${u.id}">${u.nombre || u.username}</option>`).join("")}
+            </select>
+            <p class="error-message hidden" id="error_responsables_${fase.key}">Debe seleccionar al menos un responsable.</p>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Mes de Ejecución</label>
+            <select name="mes_${fase.key}" class="input-field" required aria-label="Seleccionar mes para ${fase.nombre}">
+              <option value="">Seleccione mes...</option>
+              ${meses.map(m => `<option value="${m}">${m.charAt(0).toUpperCase() + m.slice(1)}</option>`).join("")}
+            </select>
+            <p class="error-message hidden" id="error_mes_${fase.key}">Debe seleccionar un mes.</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Día Inicio</label>
+              <input type="number" min="1" max="31" name="dia_inicio_${fase.key}" class="input-field" required aria-label="Día de inicio para ${fase.nombre}">
+              <p class="error-message hidden" id="error_dia_inicio_${fase.key}">Debe ingresar un día válido (1-31).</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Día Fin</label>
+              <input type="number" min="1" max="31" name="dia_fin_${fase.key}" class="input-field" required aria-label="Día de fin para ${fase.nombre}">
+              <p class="error-message hidden" id="error_dia_fin_${fase.key}">Debe ingresar un día válido (1-31).</p>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function validateForm() {
+      let isValid = true;
+      fasesData.forEach(fase => {
+        const select = document.querySelector(`select[name="responsables_${fase.key}"]`);
+        const mes = document.querySelector(`select[name="mes_${fase.key}"]`);
+        const diaInicio = document.querySelector(`input[name="dia_inicio_${fase.key}"]`);
+        const diaFin = document.querySelector(`input[name="dia_fin_${fase.key}"]`);
+
+        // Reset error states
+        select.classList.remove("error");
+        mes.classList.remove("error");
+        diaInicio.classList.remove("error");
+        diaFin.classList.remove("error");
+        document.getElementById(`error_responsables_${fase.key}`).classList.add("hidden");
+        document.getElementById(`error_mes_${fase.key}`).classList.add("hidden");
+        document.getElementById(`error_dia_inicio_${fase.key}`).classList.add("hidden");
+        document.getElementById(`error_dia_fin_${fase.key}`).classList.add("hidden");
+
+        // Validate fields
+        if (!select.selectedOptions.length) {
+          select.classList.add("error");
+          document.getElementById(`error_responsables_${fase.key}`).classList.remove("hidden");
+          isValid = false;
+        }
+        if (!mes.value) {
+          mes.classList.add("error");
+          document.getElementById(`error_mes_${fase.key}`).classList.remove("hidden");
+          isValid = false;
+        }
+        if (!diaInicio.value || diaInicio.value < 1 || diaInicio.value > 31) {
+          diaInicio.classList.add("error");
+          document.getElementById(`error_dia_inicio_${fase.key}`).classList.remove("hidden");
+          isValid = false;
+        }
+        if (!diaFin.value || diaFin.value < 1 || diaFin.value > 31) {
+          diaFin.classList.add("error");
+          document.getElementById(`error_dia_fin_${fase.key}`).classList.remove("hidden");
+          isValid = false;
+        }
+      });
+      return isValid;
+    }
+
+    function buildPayload() {
+      const payload = { project_id: parseInt(projectId) };
+      fasesData.forEach(fase => {
+        const select = document.querySelector(`select[name="responsables_${fase.key}"]`);
+        const mes = document.querySelector(`select[name="mes_${fase.key}"]`);
+        const diaInicio = document.querySelector(`input[name="dia_inicio_${fase.key}"]`);
+        const diaFin = document.querySelector(`input[name="dia_fin_${fase.key}"]`);
+
+        const responsables = Array.from(select.selectedOptions).map(o => o.textContent.trim());
+        payload[`responsables_${fase.key}`] = responsables.join(",");
+        payload[`mes_${fase.key}`] = mes.value || "";
+        payload[`dia_inicio_${fase.key}`] = diaInicio.value ? parseInt(diaInicio.value) : null;
+        payload[`dia_fin_${fase.key}`] = diaFin.value ? parseInt(diaFin.value) : null;
+      });
+      return payload;
+    }
+
+    document.getElementById("cronogramaForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      if (!validateForm()) return;
+
+      const submitButton = e.target.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+      try {
+        const res = await fetch(`${API_BASE}/cronogramas/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify(buildPayload())
+        });
+        if (res.ok) {
+          document.getElementById("successModal").classList.remove("hidden");
+        } else {
+          const err = await res.text();
+          alert("Error al guardar: " + err);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error de conexión");
+      } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<span>Guardar Cronograma</span><i class="fas fa-save"></i>';
+      }
+    });
+
+    document.getElementById("goToListButton").addEventListener("click", () => {
+      window.location.href = "/r/superadmin/cronograma";
+    });
+
+    init();
+  </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/login.html';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

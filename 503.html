@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>503 - Servicio No Disponible | VirtualMind</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .container { text-align: center; padding: 40px; max-width: 600px; }
+    .error-code {
+      font-size: 120px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 32px; margin-bottom: 15px; color: #e5e7eb; }
+    .emoji { font-size: 80px; margin-bottom: 20px; }
+    .causa {
+      background: rgba(20, 184, 166, 0.1);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    .causa h3 { color: #5eead4; margin-bottom: 10px; font-size: 16px; }
+    .causa ul { list-style: none; padding: 0; }
+    .causa li { padding: 5px 0; color: #d1d5db; font-size: 14px; }
+    .causa li::before { content: "🛠️ "; }
+    p { font-size: 18px; color: #9ca3af; margin-bottom: 30px; line-height: 1.6; }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6); }
+    .logo { margin-bottom: 30px; }
+    .logo span { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo"><span>VirtualMind</span></div>
+    <div class="emoji">🛠️</div>
+    <div class="error-code">503</div>
+    <h1>Servicio en Mantenimiento</h1>
+    <p>Estamos realizando tareas de mantenimiento. Pronto volveremos con mejor desempeño.</p>
+    <div class="causa">
+      <h3>¿Qué pudo haber pasado?</h3>
+      <ul>
+        <li>El sistema está en mantenimiento programado</li>
+        <li>Se están instalando actualizaciones</li>
+        <li>Estamos mejorando la infraestructura</li>
+        <li>El servidor está siendo optimizado</li>
+      </ul>
+    </div>
+    <a href="https://gestordecursos.pegui.edu.co" class="btn">Volver más Tarde</a>
+  </div>
+</body>
+</html>

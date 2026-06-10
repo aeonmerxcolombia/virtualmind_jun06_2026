@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard - VirtualMind</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Inter', sans-serif; background: #090D16; color: #cbd5e1; overflow-x: hidden; }
+.glow { position: fixed; width: 500px; height: 500px; border-radius: 50%; pointer-events: none; z-index: 0; }
+.glow-1 { top: -200px; left: -200px; background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%); }
+.glow-2 { bottom: -200px; right: -200px; background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%); }
+.card-glass { background: rgba(15,23,42,0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+.card-glass:hover { border-color: rgba(99,102,241,0.3); }
+.feature-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.stat-card { transition: all 0.3s ease; }
+.stat-card:hover { transform: translateY(-3px); border-color: rgba(99,102,241,0.4); }
+.ia-card { background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(16,185,129,0.05) 100%); }
+.driverjs-theme .driver-popover { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 16px !important; padding: 20px !important; }
+.driverjs-theme .driver-popover-title { color: #f8fafc !important; font-weight: 700 !important; font-size: 16px !important; }
+.driverjs-theme .driver-popover-description { color: #94a3b8 !important; font-size: 13px !important; line-height: 1.6 !important; }
+.driverjs-theme .driver-popover-prev-btn { background: transparent !important; color: #94a3b8 !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 10px !important; font-size: 12px !important; padding: 6px 14px !important; }
+.driverjs-theme .driver-popover-next-btn { background: #6366f1 !important; color: white !important; border: none !important; border-radius: 10px !important; font-size: 12px !important; font-weight: 600 !important; padding: 6px 14px !important; }
+.driverjs-theme .driver-popover-close-btn { color: #ef4444 !important; font-size: 18px !important; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade { animation: fadeInUp 0.6s ease forwards; }
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+</style>
+</head>
+<body>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<div class="relative z-10 max-w-6xl mx-auto px-4 py-6 md:py-10">
+
+  <div class="card-glass rounded-3xl p-6 md:p-10 animate-fade delay-1">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-1.5 text-xs text-indigo-300 mb-4">
+          <span class="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></span>
+          <span id="roleBadge">Rol: superadmin</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-2">
+          Panel de Control <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">VirtualMind</span>
+        </h1>
+        <p id="subtitle" class="text-slate-400 text-base">Resumen inteligente de la plataforma.</p>
+      </div>
+      <div class="flex gap-3 mt-4 md:mt-0">
+        <button id="btnRefresh" class="bg-slate-800/50 hover:bg-slate-700/50 text-slate-400 hover:text-white px-4 py-2.5 rounded-xl text-xs font-medium border border-white/5 transition-all flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Actualizar
+        </button>
+        <button id="btnComenzarTour" class="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+          Tour Guiado
+        </button>
+      </div>
+    </div>
+
+    <div id="statsLoading" class="text-center py-8 text-slate-500 text-sm">Cargando datos de la plataforma...</div>
+
+    <div id="dashboardContent" class="hidden">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card card-glass rounded-2xl p-5 border-l-4 border-indigo-500">
+          <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Proyectos</div>
+          <div id="statTotalProyectos" class="text-3xl font-extrabold text-white">-</div>
+          <div class="text-[10px] text-slate-500 mt-1">Totales en el sistema</div>
+        </div>
+        <div class="stat-card card-glass rounded-2xl p-5 border-l-4 border-emerald-500">
+          <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Activos</div>
+          <div id="statActivos" class="text-3xl font-extrabold text-emerald-400">-</div>
+          <div class="text-[10px] text-slate-500 mt-1">Proyectos en desarrollo</div>
+        </div>
+        <div id="statClientesCard" class="stat-card card-glass rounded-2xl p-5 border-l-4 border-amber-500 cursor-pointer hover:border-amber-400">
+          <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Clientes</div>
+          <div id="statClientes" class="text-3xl font-extrabold text-amber-400">-</div>
+          <div class="text-[10px] text-slate-500 mt-1">Click para ver detalle</div>
+        </div>
+        <div class="stat-card card-glass rounded-2xl p-5 border-l-4 border-cyan-500">
+          <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Planes Estudio</div>
+          <div id="statPlanes" class="text-3xl font-extrabold text-cyan-400">-</div>
+          <div class="text-[10px] text-slate-500 mt-1">Con proyectos vinculados</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="card-glass rounded-2xl p-5">
+          <h3 class="text-white font-bold text-sm mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+            Proyectos por Estado
+          </h3>
+          <div id="estadosContainer" class="space-y-2 min-h-[60px]"></div>
+        </div>
+        <div class="card-glass rounded-2xl p-5">
+          <h3 class="text-white font-bold text-sm mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            Últimos Proyectos
+          </h3>
+          <div id="ultimosProyectos" class="space-y-2 min-h-[60px]"></div>
+        </div>
+      </div>
+
+      <div class="ia-card card-glass rounded-2xl p-5 md:p-6 mb-6 border-indigo-500/20">
+        <div class="flex items-start gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-lg shrink-0">🤖</div>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-white font-bold text-sm flex items-center gap-2">
+              Análisis Inteligente
+              <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full">IA</span>
+            </h3>
+            <p class="text-slate-400 text-xs mt-0.5">La IA analiza los datos de la plataforma y te sugiere los siguientes pasos.</p>
+          </div>
+        </div>
+        <div id="iaAnalysis" class="text-sm text-slate-300 leading-relaxed whitespace-pre-line min-h-[60px]">
+          <div class="flex items-center gap-2 text-slate-500">
+            <span class="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></span>
+            Analizando datos...
+          </div>
+        </div>
+        <button id="btnReanalizar" class="mt-3 text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Re-analizar con IA
+        </button>
+      </div>
+
+      <div class="text-center mb-4">
+        <h2 class="text-lg font-bold text-white mb-4">Tus herramientas principales</h2>
+        <div id="featuresGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mt-6 text-slate-600 text-xs">
+    <span id="footerText">VirtualMind &copy; 2026</span>
+  </div>
+</div>
+
+<div id="clientesModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="cerrarModalClientes()"></div>
+  <div class="relative bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] mx-4 flex flex-col">
+    <div class="flex items-center justify-between p-5 border-b border-white/5">
+      <div>
+        <h3 class="text-white font-bold text-lg">Clientes Registrados</h3>
+        <p class="text-slate-400 text-xs mt-0.5">Lista de clientes y sus proyectos vinculados</p>
+      </div>
+      <button onclick="cerrarModalClientes()" class="text-slate-500 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-all">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="clientesList" class="flex-1 overflow-y-auto p-5 space-y-2 min-h-[200px]">
+      <div class="text-center text-slate-500 text-sm py-8">Cargando...</div>
+    </div>
+    <div class="p-4 border-t border-white/5 flex justify-end gap-3">
+      <button onclick="cerrarModalClientes()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-white/5 transition-all">Cerrar</button>
+      <button onclick="irACrearCliente()" class="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Crear Nuevo Cliente
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://gestordecursos.pegui.edu.co:8000";
+
+const featureMap = [
+  { id: 'proyectos', icon: '📊', label: 'Proyectos', perms: ['proyectos_crear','proyectos_consultar'], url: 'projects/index.html' },
+  { id: 'planes', icon: '📚', label: 'Planes de Estudio', perms: ['proyectos_planes_formacion_listar'], url: 'studyplan/index.html' },
+  { id: 'modulos', icon: '🧩', label: 'Módulos', perms: ['proyectos_modulos_listar'], url: 'modulos/index.html' },
+  { id: 'tareas', icon: '✅', label: 'Tareas', perms: ['proyectos_tareas_listar'], url: 'tasks/index.html' },
+  { id: 'ia', icon: '🤖', label: 'Inteligencia Artificial', perms: ['ia_linguistica_usar','ia_produccion_imagen','ia_produccion_audio','ia_podcast_crear','ia_videocast_crear'], url: 'i.a/index.html' },
+  { id: 'biblioteca', icon: '📖', label: 'Biblioteca', perms: ['recursos_biblioteca_ver'], url: 'biblioteca/index.html' },
+  { id: 'perfil', icon: '👤', label: 'Mi Perfil', perms: [], url: 'perfil/index.html' },
+  { id: 'rrhh', icon: '👥', label: 'RRHH Inteligente', perms: [], url: 'perfil/index.html#rrhh' }
+];
+
+let userPermissions = new Set();
+let currentRole = '';
+let cachedData = {};
+
+function getToken() {
+  try { return window.parent.localStorage.getItem('token') || localStorage.getItem('token') || ''; } catch(e) { return localStorage.getItem('token') || ''; }
+}
+
+async function fetchAPI(url) {
+  const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + getToken() } });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+async function loadDashboard() {
+  const loading = document.getElementById('statsLoading');
+  const content = document.getElementById('dashboardContent');
+
+  try {
+    const [projects, users, plans] = await Promise.all([
+      fetchAPI(`${API}/projects/?limit=100`),
+      fetchAPI(`${API}/users/`),
+      fetchAPI(`${API}/study_plans/`).catch(() => [])
+    ]);
+
+    const projectList = projects.projects || projects.items || projects.data || (Array.isArray(projects) ? projects : []);
+    const userList = Array.isArray(users) ? users : [];
+    const planList = Array.isArray(plans) ? plans : [];
+
+    cachedData = { projects: projectList, users: userList, plans: planList };
+
+    const totalProyectos = projectList.length;
+    const estados = {};
+    projectList.forEach(p => {
+      const est = p.estado || p.state || 'Desconocido';
+      estados[est] = (estados[est] || 0) + 1;
+    });
+    const activos = (estados['Activo'] || 0) + (estados['En desarrollo'] || 0);
+    const clientes = userList.filter(u => {
+      const roles = u.roles || [];
+      return roles.some(r => (typeof r === 'string' ? r : r.name || r) === 'cliente');
+    }).length;
+    const planesConProyecto = planList.filter(p => p.project_id).length;
+
+    document.getElementById('statTotalProyectos').textContent = totalProyectos;
+    document.getElementById('statActivos').textContent = activos;
+    document.getElementById('statClientes').textContent = clientes;
+    document.getElementById('statPlanes').textContent = planesConProyecto;
+
+    const estadosContainer = document.getElementById('estadosContainer');
+    estadosContainer.innerHTML = '';
+    const colores = { 'Planificado': '#6366f1', 'Activo': '#10b981', 'En desarrollo': '#f59e0b', 'Completado': '#06b6d4', 'Cerrado': '#8b5cf6' };
+    Object.entries(estados).forEach(([estado, count]) => {
+      const pct = Math.round((count / totalProyectos) * 100);
+      const color = colores[estado] || '#64748b';
+      estadosContainer.innerHTML += `
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-slate-400 w-24 truncate">${estado}</span>
+          <div class="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
+            <div class="h-full rounded-full transition-all" style="width:${pct}%;background:${color}"></div>
+          </div>
+          <span class="text-xs text-white font-bold w-6 text-right">${count}</span>
+        </div>`;
+    });
+    if (Object.keys(estados).length === 0) {
+      estadosContainer.innerHTML = '<div class="text-slate-500 text-xs text-center py-2">Sin proyectos registrados</div>';
+    }
+
+    const ultimos = document.getElementById('ultimosProyectos');
+    ultimos.innerHTML = '';
+    projectList.slice(0, 5).forEach(p => {
+      const est = p.estado || p.state || '?';
+      const color = colores[est] || '#64748b';
+      ultimos.innerHTML += `
+        <div class="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
+          <span class="text-xs text-slate-300 truncate flex-1">${p.nombre || p.name || 'Sin nombre'}</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full font-medium" style="background:${color}20;color:${color}">${est}</span>
+        </div>`;
+    });
+    if (projectList.length === 0) {
+      ultimos.innerHTML = '<div class="text-slate-500 text-xs text-center py-2">Aún no hay proyectos</div>';
+    }
+
+    loading.classList.add('hidden');
+    content.classList.remove('hidden');
+
+    generateIAnalysis();
+
+  } catch (e) {
+    loading.innerHTML = `<div class="text-rose-400 text-sm">Error al cargar datos: ${e.message}</div>`;
+  }
+}
+
+async function generateIAnalysis() {
+  const container = document.getElementById('iaAnalysis');
+  container.innerHTML = `<div class="flex items-center gap-2 text-slate-500">
+    <span class="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></span>
+    Analizando datos...
+  </div>`;
+
+  const { projects, users, plans } = cachedData;
+  const estados = {};
+  projects.forEach(p => {
+    const est = p.estado || p.state || 'Desconocido';
+    estados[est] = (estados[est] || 0) + 1;
+  });
+  const clientes = users.filter(u => {
+    const roles = u.roles || [];
+    return roles.some(r => (typeof r === 'string' ? r : r.name || r) === 'cliente');
+  }).length;
+  const clientesSinProyecto = clientes - new Set(projects.map(p => p.cliente_id || p.client_id).filter(Boolean)).size;
+  const proyectosSinPlan = projects.filter(p => !plans.some(pl => pl.project_id === (p.id || p.project_id))).length;
+
+  const prompt = `Eres un asistente de análisis para VirtualMind, una plataforma de gestión educativa. Analiza estos datos y da recomendaciones breves y concretas en español, como si fueras un consultor:
+
+DATOS:
+- Total proyectos: ${projects.length}
+- Proyectos por estado: ${JSON.stringify(estados)}
+- Total clientes registrados: ${clientes}
+- Clientes sin proyecto: ${Math.max(0, clientesSinProyecto)}
+- Planes de estudio creados: ${plans.length}
+- Proyectos sin plan de estudio: ${proyectosSinPlan}
+
+INSTRUCCIONES:
+1. Da un breve resumen (2 líneas)
+2. Sugiere 2-3 acciones concretas basadas en los datos
+3. Mantén un tono profesional pero amigable
+4. NO uses markdown, solo texto plano
+5. Máximo 6 líneas`;
+
+  try {
+    const res = await fetch(`${API}/chat/gemini`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+      body: JSON.stringify({ prompt, mensaje: prompt })
+    });
+    const data = await res.json();
+    container.innerHTML = data.respuesta || 'No se pudo generar el análisis.';
+  } catch (e) {
+    container.innerHTML = `📊 Resumen rápido:\n• ${projects.length} proyectos en el sistema\n• ${clientes} clientes registrados\n• ${plans.length} planes de estudio\n• ${Math.max(0, clientesSinProyecto)} clientes sin proyectos asignados\n\n💡 Sugerencia: Revisa la sección de Proyectos para crear nuevos y asignarles planes de estudio.`;
+  }
+}
+
+function abrirModalClientes() {
+  const modal = document.getElementById('clientesModal');
+  modal.classList.remove('hidden');
+  const list = document.getElementById('clientesList');
+  list.innerHTML = '<div class="text-center text-slate-500 text-sm py-8">Cargando clientes...</div>';
+
+  const { projects, users } = cachedData;
+  if (!users || users.length === 0) {
+    list.innerHTML = '<div class="text-center text-slate-500 text-sm py-8">No hay datos de usuarios</div>';
+    return;
+  }
+
+  const projectMap = {};
+  projects.forEach(p => {
+    const cid = p.cliente_id || p.client_id;
+    if (cid) {
+      if (!projectMap[cid]) projectMap[cid] = [];
+      projectMap[cid].push(p.nombre || p.name || 'Proyecto');
+    }
+  });
+
+  const clientes = users.filter(u => {
+    const roles = u.roles || [];
+    return roles.some(r => (typeof r === 'string' ? r : r.name || r) === 'cliente');
+  });
+
+  if (clientes.length === 0) {
+    list.innerHTML = '<div class="text-center text-slate-400 py-8"><div class="text-3xl mb-3">👥</div><p class="text-sm font-medium">No hay clientes registrados</p><p class="text-xs text-slate-500 mt-1">Crea tu primer cliente para empezar</p></div>';
+    return;
+  }
+
+  let html = '';
+  clientes.forEach(c => {
+    const uid = c.uid || c.id;
+    const email = c.email || 'Sin email';
+    const nombre = c.nombre || c.name || email.split('@')[0];
+    const userProjects = projectMap[uid] || [];
+    const tieneProyectos = userProjects.length > 0;
+    html += `
+      <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-white/5 hover:border-indigo-500/20 transition-all">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br ${tieneProyectos ? 'from-emerald-500 to-emerald-600' : 'from-slate-600 to-slate-700'} flex items-center justify-center text-white text-sm font-bold shrink-0">
+            ${nombre.charAt(0).toUpperCase()}
+          </div>
+          <div class="min-w-0">
+            <div class="text-white text-xs font-semibold truncate">${nombre}</div>
+            <div class="text-[10px] text-slate-500 truncate">${email}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          ${tieneProyectos
+            ? `<span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-full font-medium">${userProjects.length} proyecto${userProjects.length > 1 ? 's' : ''}</span>`
+            : `<span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-1 rounded-full font-medium">Sin proyectos</span>`
+          }
+        </div>
+      </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function cerrarModalClientes() {
+  document.getElementById('clientesModal').classList.add('hidden');
+}
+
+function irACrearCliente() {
+  cerrarModalClientes();
+  try { window.parent.cargarVista('crm/clientes_crear.html'); } catch(e) { window.location.href = 'crm/clientes_crear.html'; }
+}
+
+function obtenerPermisos(rol) {
+  if (rol === 'superadmin') return new Set(featureMap.flatMap(f => f.perms).filter(Boolean));
+  return new Set();
+}
+
+function tienePermiso(perms) {
+  if (currentRole === 'superadmin') return true;
+  if (!perms || perms.length === 0) return true;
+  return perms.some(p => userPermissions.has(p));
+}
+
+function renderFeatures() {
+  const grid = document.getElementById('featuresGrid');
+  const visible = featureMap.filter(f => tienePermiso(f.perms));
+  grid.innerHTML = '';
+  visible.forEach((f, i) => {
+    const btn = document.createElement('button');
+    btn.id = `feature-${f.id}`;
+    btn.className = `card-glass rounded-2xl p-4 text-center transition-all hover:border-indigo-500/30 animate-fade delay-${Math.min(i+1,4)}`;
+    btn.innerHTML = `<div class="text-2xl mb-2">${f.icon}</div><div class="text-white text-xs font-semibold">${f.label}</div>`;
+    btn.onclick = () => { try { window.parent.cargarVista(f.url); } catch(e) { window.location.href = f.url; } };
+    grid.appendChild(btn);
+  });
+  if (visible.length === 0) {
+    grid.innerHTML = '<div class="col-span-full text-slate-500 text-sm py-4">Cargando tus herramientas...</div>';
+  }
+}
+
+function getRoleName(rol) {
+  const names = { superadmin: 'Super Administrador', admin: 'Administrador', autor: 'Autor', cliente: 'Cliente', coordinador: 'Coordinador', editor: 'Editor', abogado: 'Abogado', 'animador-2d': 'Animador 2D', 'animador-3d': 'Animador 3D', 'corrector-de-estilo': 'Corrector de Estilo', 'desarrollador-multimedia': 'Desarrollador Multimedia', 'disenador-grafico': 'Diseñador Gráfico', 'disenador-instruccional': 'Diseñador Instruccional', 'gerente-general': 'Gerente General', guionista: 'Guionista', 'ingeniero-lms': 'Ingeniero LMS', registrado: 'Registrado', 'revisor-qa': 'Revisor QA', video: 'Video' };
+  return names[rol] || rol;
+}
+
+function iniciarTour() {
+  const driver = window.driver.js.driver;
+  const cards = document.querySelectorAll('#featuresGrid .card-glass');
+  const steps = [
+    { element: '#dashboardContent', popover: { title: '🎯 Panel de Control', description: 'Este es tu dashboard inteligente. Aquí ves estadísticas en tiempo real de toda la plataforma.', side: "bottom", align: "center" } },
+    { element: '.stat-card', popover: { title: '📊 Métricas Clave', description: 'Resumen de proyectos, clientes y planes de estudio en el sistema.', side: "bottom", align: "center" } },
+    { element: '#estadosContainer', popover: { title: '📈 Estados', description: 'Distribución de proyectos por estado: planificados, activos, completados.', side: "top", align: "center" } },
+    { element: '#iaAnalysis', popover: { title: '🤖 Análisis IA', description: 'La IA analiza los datos y te sugiere acciones concretas para avanzar.', side: "top", align: "center" } },
+    { element: '#featuresGrid', popover: { title: '🛠️ Herramientas', description: 'Acceso directo a todas tus herramientas. También disponibles en el menú lateral.', side: "top", align: "center" } }
+  ];
+  if (cards.length > 0) {
+    steps.push({ element: cards[0], popover: { title: '👆 Herramientas', description: 'Haz clic en cualquier tarjeta para abrir la herramienta.', side: "bottom", align: "center" } });
+  }
+  steps.push({ element: '#btnComenzarTour', popover: { title: '✅ ¡Listo!', description: 'Explora cada herramienta desde el menú lateral o las tarjetas.', side: "top", align: "center" } });
+  const tour = driver({ showProgress: true, animate: true, nextBtnText: 'Siguiente →', prevBtnText: '← Anterior', doneBtnText: '¡Entendido!', progressText: 'Paso {{current}} de {{total}}', popoverClass: 'driverjs-theme', steps });
+  tour.drive();
+}
+
+async function init() {
+  try { currentRole = window.location.pathname.split('/')[2]; } catch(e) { currentRole = 'superadmin'; }
+  const roleName = getRoleName(currentRole);
+  document.getElementById('roleBadge').textContent = '👤 ' + roleName;
+  document.getElementById('subtitle').textContent = `Resumen inteligente de la plataforma para ${roleName}.`;
+  document.getElementById('footerText').textContent = `VirtualMind © 2026 · ${roleName}`;
+  document.title = `Dashboard - ${roleName} | VirtualMind`;
+
+  userPermissions = await obtenerPermisos(currentRole);
+  renderFeatures();
+  await loadDashboard();
+
+  document.getElementById('btnComenzarTour').addEventListener('click', function() {
+    try { if (window.parent && window.parent.iniciarTourSidebar) { window.parent.iniciarTourSidebar(); } else { iniciarTour(); } }
+    catch(e) { iniciarTour(); }
+  });
+
+  document.getElementById('btnRefresh').addEventListener('click', loadDashboard);
+  document.getElementById('btnReanalizar').addEventListener('click', generateIAnalysis);
+  document.getElementById('statClientesCard').addEventListener('click', abrirModalClientes);
+
+  const seen = (() => { try { return localStorage.getItem('seen_tutorial_' + currentRole) === 'true'; } catch(e) { return false; } })();
+  if (!seen) {
+    setTimeout(() => {
+      try { if (window.parent && window.parent.iniciarTourSidebar) { window.parent.iniciarTourSidebar(); } else { iniciarTour(); } }
+      catch(e) { iniciarTour(); }
+      try { localStorage.setItem('seen_tutorial_' + currentRole, 'true'); } catch(e) {}
+    }, 1200);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

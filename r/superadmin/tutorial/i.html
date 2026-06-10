@@ -1,0 +1,251 @@
+<!DOCTYPE html><html lang="es"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Bienvenido a Virtualmind</title>    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/fetch-con-token.js"></script>    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">    <style>        body {            font-family: 'Inter', sans-serif;            background-color: #f3f4f6;            color: #1f2937;        }        .bg-gradient-welcome {            background-image: linear-gradient(135deg, #e0f2fe 0%, #d1e5f8 100%);        }        .card-gradient-1 { background-image: linear-gradient(to bottom right, #4c51bf, #6b46c1); }        .card-gradient-2 { background-image: linear-gradient(to bottom right, #3b82f6, #2563eb); }        .card-gradient-3 { background-image: linear-gradient(to bottom right, #f59e0b, #d97706); }        .card-gradient-4 { background-image: linear-gradient(to bottom right, #10b981, #059669); }        .text-gradient {            background-image: linear-gradient(to right, #4c51bf, #6b46c1);            -webkit-background-clip: text;            -webkit-text-fill-color: transparent;        }        .modal {            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;            overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);            animation: fadeIn 0.3s forwards;        }        .modal-content {            background-color: #fff; margin: 10% auto; padding: 2.5rem; border-radius: 1.5rem; width: 90%;            max-width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative;            transform: scale(0.9); animation: scaleIn 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);        }        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }        @keyframes scaleIn { from { transform: scale(0.9); } to { transform: scale(1); } }        .close-btn {            color: #aaa; position: absolute; top: 1rem; right: 1.5rem; font-size: 2rem;            font-weight: bold; cursor: pointer; transition: color 0.3s;        }        .close-btn:hover, .close-btn:focus { color: #1f2937; }        .hover-lift:hover {            transform: translateY(-8px) scale(1.02);            box-shadow: 0 12px 25px rgba(0,0,0,0.15);        }    </style></head><body class="p-6 md:p-10 lg:p-16 bg-gradient-welcome">
+    <div class="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">        <div class="p-8 md:p-12 lg:p-16">            <h1 class="text-4xl lg:text-5xl font-extrabold text-center mb-4 text-gradient">                Bienvenido a <br>Virtualmind            </h1>            <p id="subtitle" class="text-xl lg:text-2xl text-gray-600 mb-10 text-center font-light">                Tus herramientas y accesos directos.            </p>
+            <div class="grid lg:grid-cols-2 gap-12 items-start">                <div>                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Empecemos a trabajar</h2>                    <div id="cards-container" class="grid sm:grid-cols-2 gap-6">
+                        <div id="cardProyectos" class="bg-white rounded-xl p-6 shadow-xl cursor-pointer hover-lift transition-all duration-300" onclick="openModal('projectModal')" style="display: none;">                            <div class="flex items-center justify-center w-12 h-12 rounded-full mb-4 card-gradient-1 text-white"> <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path></svg> </div>                            <h3 class="text-xl font-bold mb-2">Gestión de Proyectos</h3>                            <p class="text-gray-500 text-sm">Organiza, crea y gestiona proyectos, cursos, módulos y tareas.</p>                        </div>
+                        <div id="cardUsuarios" class="bg-white rounded-xl p-6 shadow-xl cursor-pointer hover-lift transition-all duration-300" onclick="openModal('usersModal')" style="display: none;">                            <div class="flex items-center justify-center w-12 h-12 rounded-full mb-4 card-gradient-2 text-white"> <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg> </div>                            <h3 class="text-xl font-bold mb-2">Gestión de Usuarios</h3>                            <p class="text-gray-500 text-sm">Crea usuarios, asigna roles, y gestiona los permisos.</p>                        </div>
+                        <div id="cardIA" class="bg-white rounded-xl p-6 shadow-xl cursor-pointer hover-lift transition-all duration-300" onclick="openModal('iaModal')" style="display: none;">                            <div class="flex items-center justify-center w-12 h-12 rounded-full mb-4 card-gradient-3 text-white"> <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path></svg> </div>                            <h3 class="text-xl font-bold mb-2">Utilidades de IA</h3>                            <p class="text-gray-500 text-sm">Genera texto, imágenes, audio y más, con inteligencia artificial.</p>                        </div>
+                        <div id="cardSeguridad" class="bg-white rounded-xl p-6 shadow-xl cursor-pointer hover-lift transition-all duration-300" onclick="openModal('securityModal')" style="display: none;">                            <div class="flex items-center justify-center w-12 h-12 rounded-full mb-4 card-gradient-4 text-white"> <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1.944a11.954 11.954 0 018.166 3.079L18 5.061v4.439c0 3.328-2.306 6.333-5.438 7.531A12.02 12.02 0 0110 18.056a12.02 12.02 0 01-2.562-.525C4.306 16.333 2 13.328 2 9.5V5.061l.166-.038A11.954 11.954 0 0110 1.944zM9 13a1 1 0 112 0 1 1 0 01-2 0zm1-5a1 1 0 00-1 1v3a1 1 0 102 0V9a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> </div>                            <h3 class="text-xl font-bold mb-2">Administración y Seguridad</h3>                            <p class="text-gray-500 text-sm">Audita la actividad, gestiona la seguridad y firma documentos.</p>                        </div>
+                    </div>
+                </div>                <div class="space-y-8"> <h2 class="text-2xl font-bold text-gray-800 mb-4">Guía Rápida</h2> <div class="space-y-6"> <div class="flex items-start space-x-4"> <div class="flex-shrink-0 bg-gray-200 text-gray-700 p-3 rounded-full"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></div><div> <h3 class="text-lg font-bold">Navegación</h3> <p class="text-gray-500 text-sm">En la barra lateral izquierda, encontrarás todas tus herramientas disponibles organizadas por categorías.</p></div></div><div class="flex items-start space-x-4"> <div class="flex-shrink-0 bg-gray-200 text-gray-700 p-3 rounded-full"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path></svg></div><div> <h3 class="text-lg font-bold">Espacio de Trabajo</h3> <p class="text-gray-500 text-sm">Esta área central es tu panel de control. Aquí se cargan todas las vistas para que trabajes.</p></div></div><div class="flex items-start space-x-4"> <div class="flex-shrink-0 bg-gray-200 text-gray-700 p-3 rounded-full"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7.667 3.667l-2-2-1.333 1.333L10.333 16 16 10.333l-1.333-1.333-4.667 4.667z"></path></svg></div><div> <h3 class="text-lg font-bold">Asistente Virtual</h3> <p class="text-gray-500 text-sm">El asistente de IA está disponible en la esquina inferior para ayudarte con cualquier consulta o tarea.</p></div></div></div></div>            </div>        </div>    </div>
+    <div id="projectModal" class="modal"> <div class="modal-content text-center"> <span class="close-btn" onclick="closeModal('projectModal')">&times;</span> <h2 class="text-2xl font-bold mb-4 text-indigo-700">Gestión de Proyectos</h2> <div id="projectModal-buttons" class="space-y-4"> </div> </div> </div>    <div id="usersModal" class="modal"> <div class="modal-content text-center"> <span class="close-btn" onclick="closeModal('usersModal')">&times;</span> <h2 class="text-2xl font-bold mb-4 text-indigo-700">Gestión de Usuarios</h2> <div id="usersModal-buttons" class="space-y-4"> </div> </div> </div>    <div id="iaModal" class="modal"> <div class="modal-content text-center"> <span class="close-btn" onclick="closeModal('iaModal')">&times;</span> <h2 class="text-2xl font-bold mb-4 text-indigo-700">Utilidades de IA</h2> <div id="iaModal-buttons" class="space-y-4"> </div> </div> </div>    <div id="securityModal" class="modal"> <div class="modal-content text-center"> <span class="close-btn" onclick="closeModal('securityModal')">&times;</span> <h2 class="text-2xl font-bold mb-4 text-indigo-700">Administración y Seguridad</h2> <div id="securityModal-buttons" class="space-y-4"> </div> </div> </div>
+    <script>
+        const API = "https://gestordecursos.pegui.edu.co:8000";
+
+        // Mapeo de elementos del tutorial a los permisos requeridos
+        const tutorialPermissionsMap = {
+            // Tarjetas Principales (visibles si el usuario tiene CUALQUIERA de estos permisos)
+            cards: {
+                'cardProyectos': ['proyectos_crear', 'proyectos_consultar', 'proyectos_planes_formacion_listar', 'proyectos_cursos_listar', 'proyectos_modulos_listar', 'proyectos_unidades_listar', 'proyectos_tareas_listar', 'proyectos_evaluaciones_listar', 'proyectos_fases_etapas_gestionar', 'proyectos_cronogramas_crear', 'proyectos_calendario_ver'],
+                'cardUsuarios': ['usuarios_crear', 'roles_permisos_gestionar', 'usuarios_carga_masiva'],
+                'cardIA': ['ia_produccion_imagen', 'ia_produccion_audio', 'comunicacion_chat_video', 'ia_linguistica_usar', 'ia_podcast_crear', 'ia_videocast_crear', 'recursos_biblioteca_ver', 'herramientas_canvas_usar', 'ia_animacion_3d_crear', 'herramientas_powerpoint_usar'],
+                'cardSeguridad': ['seguridad_auditoria_ver', 'seguridad_firma_digital', 'seguridad_bitacora_usuarios_ver', 'seguridad_bloqueo_edicion_fase']
+            },
+            // Botones dentro de los modales (visibles solo si el usuario tiene el permiso EXACTO)
+            buttons: {
+                'projectModal-buttons': [
+                    { label: 'Crear Proyecto', url: 'projects/create.html', permission: 'proyectos_crear', style: 'bg-indigo-600 text-white hover:bg-indigo-700' },
+                    { label: 'Consultar Proyectos', url: 'projects/', permission: 'proyectos_consultar', style: 'bg-gray-200 text-gray-800 hover:bg-gray-300' }
+                ],
+                'usersModal-buttons': [
+                    { label: 'Crear Usuarios', url: 'usuarios/index.html', permission: 'usuarios_crear', style: 'bg-blue-600 text-white hover:bg-blue-700' },
+                    { label: 'Gestionar Roles y Permisos', url: 'roles/index.html', permission: 'roles_permisos_gestionar', style: 'bg-gray-200 text-gray-800 hover:bg-gray-300' }
+                ],
+                'iaModal-buttons': [
+                    { label: 'Ir a I.A Lingüística', url: 'editor/ia.html', permission: 'ia_linguistica_usar', style: 'bg-yellow-600 text-white hover:bg-yellow-700' },
+                    { label: 'Crear Imagen con IA', url: 'crearimagen', permission: 'ia_produccion_imagen', style: 'bg-gray-200 text-gray-800 hover:bg-gray-300' }
+                ],
+                'securityModal-buttons': [
+                    { label: 'Ir a Auditoría de Logs', url: 'logs', permission: 'seguridad_auditoria_ver', style: 'bg-green-600 text-white hover:bg-green-700' },
+                    { label: 'Firmar Documentos', url: 'firmadigital', permission: 'seguridad_firma_digital', style: 'bg-gray-200 text-gray-800 hover:bg-gray-300' }
+                ]
+            }
+        };
+
+        async function fetchPermissionsForCurrentRole(token, currentRole) {
+            // Superadmin tiene todos los permisos por defecto
+            if (currentRole === 'superadmin') {
+                const allPermissions = new Set();
+                Object.values(tutorialPermissionsMap.cards).forEach(perms => perms.forEach(p => allPermissions.add(p)));
+                return allPermissions;
+            }
+
+            try {
+                const res = await fetch(`${API}/roles/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
+                const allRoles = await res.json();
+                const currentRoleObject = allRoles.find(r => r.name === currentRole);
+                
+                if (currentRoleObject && currentRoleObject.permissions) {
+                    return new Set(currentRoleObject.permissions.map(p => p.name));
+                }
+                return new Set();
+            } catch (error) {
+                console.error(`Error al obtener permisos para el rol '${currentRole}':`, error);
+                return new Set(); // Devuelve un conjunto vacío en caso de error
+            }
+        }
+
+        async function initializeTutorial() {
+            const token = window.parent.localStorage.getItem("token");
+            if (!token) {
+                console.error("No se encontró el token de autenticación.");
+                return;
+            }
+
+            const currentRole = window.location.pathname.split('/')[2];
+            document.querySelector('title').textContent = `Bienvenido a Virtualmind - ${currentRole.charAt(0).toUpperCase() + currentRole.slice(1)}`;
+            document.getElementById('subtitle').textContent = `Sistema de gestión para proyectos E-learning. `
+
+            const userPermissions = await fetchPermissionsForCurrentRole(token, currentRole);
+
+            // 1. Mostrar/Ocultar tarjetas principales
+            for (const cardId in tutorialPermissionsMap.cards) {
+                const requiredPermissions = tutorialPermissionsMap.cards[cardId];
+                const hasPermissionForCard = requiredPermissions.some(p => userPermissions.has(p));
+
+                if (hasPermissionForCard) {
+                    document.getElementById(cardId).style.display = 'block';
+                }
+            }
+            
+            // 2. Generar botones de los modales
+            for (const modalContainerId in tutorialPermissionsMap.buttons) {
+                const buttons = tutorialPermissionsMap.buttons[modalContainerId];
+                const container = document.getElementById(modalContainerId);
+                container.innerHTML = ''; // Limpiar contenedor
+
+                buttons.forEach(buttonInfo => {
+                    if (userPermissions.has(buttonInfo.permission)) {
+                        const button = document.createElement('button');
+                        button.textContent = buttonInfo.label;
+                        button.className = `w-full font-bold py-3 px-6 rounded-lg transition ${buttonInfo.style}`;
+                        button.onclick = () => {
+                            window.parent.cargarVista(buttonInfo.url);
+                            closeModal(modalContainerId.replace('-buttons', ''));
+                        };
+                        container.appendChild(button);
+                    }
+                });
+            }
+        }
+
+        // Funciones de utilidad para los modales
+        function openModal(modalId) { document.getElementById(modalId).style.display = "block"; }
+        function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+
+        // Iniciar el tutorial dinámico cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', initializeTutorial);
+
+    </script>
+<script src="/js/roles.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    const isSuperadmin = path.includes('/r/superadmin/');
+    const isAdmin = path.includes('/r/admin/');
+    const isCoordinador = path.includes('/r/coordinador/');
+    const isCliente = path.includes('/r/cliente/');
+    const isDisInst = path.includes('/r/disenador-instruccional/');
+    const isAutor = path.includes('/r/autor/');
+    const isRevisor = path.includes('/r/revisor-qa/');
+    const isEditor = path.includes('/r/editor/');
+    const isDesaMult = path.includes('/r/desarrollador-multimedia/');
+    const isAbogado = path.includes('/r/abogado/');
+    const isDisGraf = path.includes('/r/disenador-grafico/');
+    const isAnim2d = path.includes('/r/animador-2d/');
+    const isAnim3d = path.includes('/r/animador-3d/');
+    const isVideo = path.includes('/r/video/');
+    const isCorrector = path.includes('/r/corrector-de-estilo/');
+    const isIngeniero = path.includes('/r/ingeniero-lms/');
+    const isRegistrado = path.includes('/r/registrado/');
+
+    const allowedRoles = [];
+    if (isSuperadmin) allowedRoles.push('superadmin');
+    if (isAdmin) allowedRoles.push('admin');
+    if (isCoordinador) allowedRoles.push('coordinador');
+    if (isCliente) allowedRoles.push('cliente');
+    if (isDisInst) allowedRoles.push('disenador-instruccional');
+    if (isAutor) allowedRoles.push('autor');
+    if (isRevisor) allowedRoles.push('revisor-qa');
+    if (isEditor) allowedRoles.push('editor');
+    if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
+    if (isAbogado) allowedRoles.push('abogado');
+    if (isDisGraf) allowedRoles.push('disenador-grafico');
+    if (isAnim2d) allowedRoles.push('animador-2d');
+    if (isAnim3d) allowedRoles.push('animador-3d');
+    if (isVideo) allowedRoles.push('video');
+    if (isCorrector) allowedRoles.push('corrector-de-estilo');
+    if (isIngeniero) allowedRoles.push('ingeniero-lms');
+    if (isRegistrado) allowedRoles.push('registrado');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRoles = payload.roles || [payload.role].filter(Boolean);
+        if (!userRoles.some(r => allowedRoles.includes(r))) {
+            window.location.href = '/';
+            return;
+        }
+    } catch(e) {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+// ==================== VERIFICACIÓN DE PERMISOS DE MENÚ ====================
+(function() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const permissions = payload.permissions || [];
+        
+        const hasPermission = (perm) => permissions.includes(perm);
+        const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+        
+        const menuPermissions = {
+            'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+            'menu-crear-proyecto': ['proyectos_crear'],
+            'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-crear-entidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+            'menu-crear-plan': ['diseno_instruccional_crear'],
+            'menu-cursos': ['proyectos_cursos_listar'],
+            'menu-crear-curso': ['autor_crear'],
+            'menu-modulos': ['proyectos_modulos_listar'],
+            'menu-crear-modulo': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-unidades': ['proyectos_unidades_listar'],
+            'menu-crear-unidad': ['autor_crear', 'diseno_instruccional_crear'],
+            'menu-tareas': ['proyectos_tareas_listar'],
+            'menu-crear-tarea': ['autor_crear'],
+            'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+            'menu-crear-evaluacion': ['autor_crear'],
+            'menu-fases': ['proyectos_fases_etapas_gestionar'],
+            'menu-cronogramas': ['proyectos_cronogramas_crear'],
+            'menu-calendario': ['proyectos_calendario_ver'],
+            'menu-usuarios': ['usuarios_crear'],
+            'menu-clientes': ['usuarios_crear'],
+            'menu-crm': ['usuarios_crear'],
+            'menu-roles': ['roles_permisos_gestionar'],
+            'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+            'menu-ia': ['ia_produccion_imagen', 'ia_produccion_audio', 'ia_linguistica_usar'],
+            'menu-canvas': ['herramientas_canvas_usar'],
+            'menu-powerpoint': ['herramientas_powerpoint_usar'],
+            'menu-auditoria': ['seguridad_auditoria_ver'],
+            'menu-bitacora': ['seguridad_bitacora_usuarios_ver'],
+            'menu-estadisticas': ['reportes_estadisticas_ver'],
+            'menu-metricas': ['reportes_metricas_ver'],
+            'menu-diseno-instruccional': ['diseno_instruccional_ver', 'diseno_instruccional_crear'],
+            'menu-autor-contenido': ['autor_ver', 'autor_crear'],
+            'menu-microcursos': ['capacitacion_microcursos_ver'],
+            'menu-tutoriales': ['capacitacion_tutoriales_ver'],
+            'menu-faq': ['capacitacion_faq_ver'],
+        };
+        
+        Object.entries(menuPermissions).forEach(([id, required]) => {
+            const el = document.getElementById(id);
+            if (el && !hasAnyPermission(required)) {
+                el.style.display = 'none';
+            }
+        });
+    } catch(e) {}
+})();
+</script>
+
+</body></html>
