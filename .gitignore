@@ -1,0 +1,8 @@
+.env
+env/
+uploads/
+static/
+__pycache__/
+*.pyc
+.venv/
+token.txt

@@ -1,0 +1,22 @@
+# Entornos virtuales
+env/
+venv/
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# Archivos grandes
+uploads/
+sattic/
+static/uploads/
+*.pdf
+
+# Sistema
+.DS_Store
+Thumbs.db
+
