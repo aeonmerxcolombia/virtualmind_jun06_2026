@@ -1,0 +1,14 @@
+Juan Pérez
+Email: juan@email.com
+Teléfono: +57 300 123 4567
+
+Experiencia:
+Desarrollador Senior en TechCorp (2020-2025)
+Desarrollador Junior en StartupCo (2018-2020)
+
+Educación:
+Ingeniería de Sistemas - Universidad Nacional (2018)
+
+Habilidades: Python, JavaScript, React, Node.js
+
+Idiomas: Español (Nativo), Inglés (Avanzado)
