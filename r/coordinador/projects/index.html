@@ -16,57 +16,21 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #090D16;
-            color: #cbd5e1;
             overflow-x: hidden;
         }
                 
-        .gradient-bg { 
-            background: linear-gradient(135deg, #090d16 0%, #0f172a 100%); 
-        }
-                
-        .card-glass {             
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-                
-        .input-focus {             
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            background: rgba(15, 23, 42, 0.8) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            color: #f8fafc !important;
-        }
-                
-        .input-focus:focus {             
-            transform: translateY(-1px);             
-            border-color: #6366f1 !important;
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
-            background: rgba(15, 23, 42, 0.95) !important;
-        }
-                
-        .section-card {             
-            transition: all 0.3s ease;
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-                
-        .section-card:hover {             
-            border-color: rgba(99, 102, 241, 0.2);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);         
-        }
+        .gradient-bg { background: #ffffff; }
                 
         /* Checkboxes & Radios Customizados Tecnológicos */
         .checkbox-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
         .checkbox-custom input[type=checkbox] { opacity: 0; position: absolute; }
         .checkbox-custom .checkmark {             
-            display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8);             
+            display: inline-block; width: 20px; height: 20px; background: #ffffff;             
             border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 6px; margin-right: 8px; transition: all 0.3s ease;         
         }
         .checkbox-custom input:checked + .checkmark { 
             background: #4f46e5; 
-            border-color: #6366f1; 
+            border-color: #4f46e5; 
             box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
         }
         .checkbox-custom input:checked + .checkmark:after {             
@@ -76,12 +40,12 @@
         .radio-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
         .radio-custom input[type=radio] { opacity: 0; position: absolute; }
         .radio-custom .radiomark {             
-            display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8);             
+            display: inline-block; width: 20px; height: 20px; background: #ffffff;             
             border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 50%; margin-right: 8px; transition: all 0.3s ease;         
         }
         .radio-custom input:checked + .radiomark { 
             background: #4f46e5; 
-            border-color: #6366f1; 
+            border-color: #4f46e5; 
             box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
         }
         .radio-custom input:checked + .radiomark:after {             
@@ -99,16 +63,16 @@
         .hidden { display: none !important; }
         .help-icon {             
             display: inline-flex; align-items: center; justify-content: center;             
-            width: 16px; height: 16px; background: #3b82f6; color: #fff; border-radius: 50%;             
+            width: 16px; height: 16px; background: #4f46e5; color: #ffffff; border-radius: 50%;             
             font-size: 10px; font-weight: 700; cursor: help; margin-left: 4px; flex-shrink: 0;         
         }
-        .help-icon:hover { background: #2563eb; }
+        .help-icon:hover { background: #4338ca; }
 
         /* Estilos Grabación Whisper Premium (Siempre Visibles y Estéticos) */
         .btn-mic-premium {
-            background-color: rgba(99, 102, 241, 0.1) !important;
-            border: 1px solid rgba(99, 102, 241, 0.25) !important;
-            color: #818cf8 !important;
+            background-color: #eef2ff !important;
+            border: 1px solid #c7d2fe !important;
+            color: #4f46e5 !important;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             border-radius: 12px;
             display: flex;
@@ -120,10 +84,10 @@
             flex-shrink: 0;
         }
         .btn-mic-premium:hover {
-            background-color: rgba(99, 102, 241, 0.25) !important;
-            border-color: rgba(99, 102, 241, 0.5) !important;
-            color: #ffffff !important;
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+            background-color: #e0e7ff !important;
+            border-color: #4f46e5 !important;
+            color: #4f46e5 !important;
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
         }
         .mic-recording {            
             animation: micPulse 1.2s infinite ease-in-out !important;            
@@ -143,25 +107,17 @@
         }
 
         /* Ambient glowing background blobs */
-        .glow-blob {
-            position: absolute;
-            width: 550px;
-            height: 550px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-        }
+        /* .glow-blob removed */
 
         /* Tema Custom para el Tutorial Interactivo Driver.js */
         .driverjs-theme { 
             font-family: 'Inter', sans-serif; 
             border-radius: 16px; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+            border: 2px solid #e2e8f0; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
             padding: 20px; 
-            background: rgba(15, 23, 42, 0.95) !important;
-            color: #f1f5f9 !important;
+            background: #ffffff !important;
+            color: #1e293b !important;
         }
         .driverjs-theme .driver-popover-title { font-size: 18px; font-weight: 700; color: #818cf8; margin-bottom: 8px; }
         .driverjs-theme .driver-popover-description { color: #94a3b8; font-size: 14px; line-height: 1.6; }
@@ -169,129 +125,118 @@
             background-color: #4f46e5; color: white; border-radius: 8px; text-shadow: none; border: none; padding: 6px 14px; font-weight: 600; 
             transition: all 0.2s;
         }
-        .driverjs-theme .driver-popover-next-btn:hover, .driverjs-theme .driver-popover-prev-btn:hover { background-color: #6366f1; }
+        .driverjs-theme .driver-popover-next-btn:hover, .driverjs-theme .driver-popover-prev-btn:hover { background-color: #4f46e5; }
         .driverjs-theme .driver-popover-close-btn { color: #64748b; }
 
         /* Badges de Estados en Modo Oscuro */
         .badge-status { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
-        .badge-planificado { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
-        .badge-desarrollo { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
-        .badge-aprobado { background-color: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
-        .badge-aplazado { background-color: rgba(249, 115, 22, 0.15); color: #ff9d43; border: 1px solid rgba(249, 115, 22, 0.25); }
-        .badge-finalizado { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.25); }
-        .badge-cancelado { background-color: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.25); }
+        ..badge-planificado { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        ..badge-desarrollo { background-color: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+        ..badge-aprobado { background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        ..badge-aplazado { background-color: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+        ..badge-finalizado { background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        ..badge-cancelado { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
         .hidden-view { display: none !important; }
 
         /* Estilo de Pestaña Activa */
-        .tab-active { background-color: rgba(255, 255, 255, 0.08); border-bottom: 2px solid #6366f1; color: #ffffff !important; }
+        .tab-active { background-color: rgba(255, 255, 255, 0.08); border-bottom: 2px solid #4f46e5; color: #ffffff !important; }
         .tab-inactive { background-color: transparent; border-bottom: 2px solid transparent; color: #94a3b8; }
         .tab-inactive:hover { background-color: rgba(255, 255, 255, 0.03); color: #ffffff; }
 
         /* Custom premium select menu scroll */
         select option {
-            background-color: #0f172a;
-            color: #cbd5e1;
+            background-color: #ffffff;
+            color: #000000;
         }
 
         /* Tooltip System CSS */
-        .vm-tooltip { position:absolute; background:#0f172a; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.45); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; white-space:nowrap; border: 1px solid rgba(255, 255, 255, 0.08); }
+        .vm-tooltip { position:absolute; background:#1e293b; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.45); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; white-space:nowrap; border: 1px solid rgba(255, 255, 255, 0.08); }
         .vm-tooltip.visible { opacity:1; transform:translateY(0); }
     </style>
     <!-- Driver.js para Tutorial Interactivo -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
 </head>
-<body class="gradient-bg min-h-screen relative pb-12">
+<body class="bg-slate-50 min-h-screen font-['Inter'] text-slate-900">
+    <div id="customToastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
-    <div class="glow-blob top-10 left-10"></div>
-    <div class="glow-blob bottom-10 right-10"></div>
-
-    <!-- Custom Notification Container (Toasts) -->
-    <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
-
-    <!-- HEADER PREMIUM GLASSMORPHIC -->
-    <div class="backdrop-blur-md bg-slate-900/80 shadow-xl border-b border-indigo-500/10 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <span class="p-2 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20 text-xl">🚀</span>
-                    <div>
-                        <h1 class="text-2xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent tracking-wide">VirtualMind</h1>
-                        <p class="text-indigo-400 text-xs font-semibold">Gestión inteligente de proyectos E-learning</p>
-                    </div>
-                </div>
-                        
-                <div class="flex gap-2">
-                    <button onclick="switchView('dashboard')" id="btnTabDashboard" class="tab-active px-5 py-2.5 rounded-t-lg font-semibold transition-all">
-                        📊 Tablero
-                    </button>
-                    <button onclick="switchView('creacion')" id="btnTabCreacion" class="tab-inactive px-5 py-2.5 rounded-t-lg font-semibold transition-all">
-                        ➕ Crear Proyecto
-                    </button>
-                </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900">🚀 Gestión de Proyectos</h1>
+                <p class="text-slate-500 text-sm mt-1">Administración y seguimiento de proyectos e-learning</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="switchView('dashboard')" id="btnTabDashboard" class="bg-white hover:bg-slate-100 text-slate-700 px-5 py-2.5 rounded-lg font-semibold border-2 border-slate-300 transition shadow-sm">
+                    📊 Tablero
+                </button>
+                <button onclick="switchView('creacion')" id="btnTabCreacion" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-semibold transition shadow-sm">
+                    ➕ Crear Proyecto
+                </button>
             </div>
         </div>
-    </div>
 
     <!-- VISTA 1: TABLERO (DASHBOARD) -->
     <div id="vistaDashboard" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
         
         <!-- Filtros y Controles -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 card-glass p-4 rounded-2xl">
-            <div class="flex flex-wrap gap-3 w-full md:w-auto">
-                <div class="relative">
-                    <select id="filtroEstado" title="Filtra los proyectos por estado" class="appearance-none bg-slate-900/80 text-slate-200 px-4 py-3 pr-10 rounded-xl border border-white/5 focus:ring-2 focus:ring-indigo-500 cursor-pointer text-sm outline-none">
-                        <option value="">📋 Todos los estados</option>
-                        <option value="Planificado">📋 Planificado</option>
-                        <option value="En desarrollo">⚡ En desarrollo</option>
-                        <option value="Aprobado">✅ Aprobado</option>
-                        <option value="Aplazado">⏸️ Aplazado</option>
-                        <option value="Finalizado">🎉 Finalizado</option>
-                        <option value="Cancelado">❌ Cancelado</option>
-                    </select>
-                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+        <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-4 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                    <div class="relative">
+                        <select id="filtroEstado" title="Filtra los proyectos por estado" class="appearance-none border-2 border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-slate-700 cursor-pointer text-sm">
+                            <option value="">📋 Todos los estados</option>
+                            <option value="Planificado">📋 Planificado</option>
+                            <option value="En desarrollo">⚡ En desarrollo</option>
+                            <option value="Aprobado">✅ Aprobado</option>
+                            <option value="Aplazado">⏸️ Aplazado</option>
+                            <option value="Finalizado">🎉 Finalizado</option>
+                            <option value="Cancelado">❌ Cancelado</option>
+                        </select>
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                    </div>
+                    
+                    <input type="text" id="filtroCliente" data-tooltip="Busca proyectos por nombre del cliente" data-tooltip-position="bottom" placeholder="🔍 Buscar por Cliente..." class="border-2 border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-slate-800 w-full md:w-48 text-sm">
+                    <input type="text" id="filtroNombre" data-tooltip="Busca proyectos por nombre del proyecto" data-tooltip-position="bottom" placeholder="🔍 Buscar Proyecto..." class="border-2 border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-slate-800 w-full md:w-48 text-sm">
                 </div>
                 
-                <input type="text" id="filtroCliente" data-tooltip="Busca proyectos por nombre del cliente" data-tooltip-position="bottom" placeholder="🔍 Buscar por Cliente..." class="bg-slate-900/80 text-slate-200 px-4 py-3 rounded-xl border border-white/5 focus:ring-2 focus:ring-indigo-500 w-full md:w-48 text-sm outline-none">
-                <input type="text" id="filtroNombre" data-tooltip="Busca proyectos por nombre del proyecto" data-tooltip-position="bottom" placeholder="🔍 Buscar Proyecto..." class="bg-slate-900/80 text-slate-200 px-4 py-3 rounded-xl border border-white/5 focus:ring-2 focus:ring-indigo-500 w-full md:w-48 text-sm outline-none">
-            </div>
-            
-            <div class="flex gap-3">
-                <button onclick="cargarProyectos()" class="bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 text-indigo-300 px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all text-sm">
-                    <span>🔄</span> Actualizar
-                </button>
-                <button onclick="exportarPDF()" class="bg-rose-600/10 hover:bg-rose-600 border border-rose-500/20 hover:border-transparent text-rose-300 hover:text-white px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all text-sm shadow-md">
-                    <span>📄</span> Exportar PDF
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="cargarProyectos()" class="bg-white hover:bg-slate-100 text-slate-700 px-4 py-2 rounded-lg font-medium border-2 border-slate-300 transition shadow-sm flex items-center gap-2 text-sm">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                    <button onclick="exportarPDF()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm flex items-center gap-2 text-sm">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Estadísticas -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="card-glass rounded-2xl p-5 flex flex-col items-center justify-center">
-                <div class="text-3xl font-bold text-indigo-400" id="statTotal">0</div>
-                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider text-center mt-1">Total Proyectos</div>
+            <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-5 flex flex-col items-center justify-center">
+                <div class="text-3xl font-bold text-indigo-600" id="statTotal">0</div>
+                <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider text-center mt-1">Total Proyectos</div>
             </div>
-            <div class="card-glass rounded-2xl p-5 flex flex-col items-center justify-center">
-                <div class="text-3xl font-bold text-blue-400" id="statPlanificado">0</div>
-                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider text-center mt-1">Planificados</div>
+            <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-5 flex flex-col items-center justify-center">
+                <div class="text-3xl font-bold text-blue-600" id="statPlanificado">0</div>
+                <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider text-center mt-1">Planificados</div>
             </div>
-            <div class="card-glass rounded-2xl p-5 flex flex-col items-center justify-center">
-                <div class="text-3xl font-bold text-amber-400" id="statDesarrollo">0</div>
-                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider text-center mt-1">En Desarrollo</div>
+            <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-5 flex flex-col items-center justify-center">
+                <div class="text-3xl font-bold text-amber-600" id="statDesarrollo">0</div>
+                <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider text-center mt-1">En Desarrollo</div>
             </div>
-            <div class="card-glass rounded-2xl p-5 flex flex-col items-center justify-center">
-                <div class="text-3xl font-bold text-emerald-400" id="statFinalizado">0</div>
-                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider text-center mt-1">Finalizados</div>
+            <div class="bg-white rounded-xl shadow-md border-2 border-slate-200 p-5 flex flex-col items-center justify-center">
+                <div class="text-3xl font-bold text-emerald-600" id="statFinalizado">0</div>
+                <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider text-center mt-1">Finalizados</div>
             </div>
         </div>
 
         <!-- Grid de Proyectos -->
         <div id="proyectosGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <div class="col-span-full py-20 text-center">
-                <div class="inline-flex items-center gap-3 text-slate-400 text-lg">
-                    <div class="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full loading-spinner"></div>
+                <div class="inline-flex items-center gap-3 text-slate-500 text-lg">
+                    <div class="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full loading-spinner"></div>
                     Cargando proyectos desde el servidor...
                 </div>
             </div>
@@ -300,15 +245,15 @@
 
     <!-- VISTA 2: CREACIÓN DE PROYECTO -->
     <div id="vistaCreacion" class="max-w-6xl mx-auto px-4 py-8 hidden-view animate-fade-in">
-        <div class="card-glass rounded-3xl p-8">
-            <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 border-b border-white/5 pb-6">
+        <div class="card-glass rounded-3xl p-8 bg-white border-2 border-slate-200">
+            <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 border-b border-slate-200 pb-6">
                 <div class="flex items-center">
                     <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-md">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
                     </div>
-                    <h2 class="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">
+                    <h2 class="text-3xl font-bold text-slate-900">
                         Crear Nuevo Proyecto
                     </h2>
                 </div>
@@ -322,10 +267,10 @@
             <form id="formProyecto" class="space-y-8">
                 
                 <!-- Sección 1: Información Básica -->
-                <div class="section-card rounded-2xl p-6 shadow-xl">
-                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                <div class="section-card rounded-2xl p-6">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center border-b border-slate-200 pb-3">
                         <span class="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center mr-3 border border-blue-500/20">
-                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </span>
                         Información Básica del Proyecto
                     </h3>
@@ -333,17 +278,17 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Nombre del Proyecto -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-300" for="name">
+                            <label class="block text-sm font-semibold text-slate-700" for="name">
                                 Nombre del Proyecto <span class="help-icon" title="Nombre único para identificar el proyecto. Ej: Curso de Inglés">?</span>
                             </label>
                             <div class="flex gap-2.5">
-                                <input type="text" id="name" name="name" required class="flex-1 px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" placeholder="Ingresa el nombre del proyecto"/>
+                                <input type="text" id="name" name="name" required class="flex-1 px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 input-focus" placeholder="Ingresa el nombre del proyecto"/>
                                                                 
                                 <button type="button" onclick="gestionarGrabacionWhisper(event,'name')" id="btn-mic-name" class="btn-mic-premium" title="Grabar con Whisper IA">
                                     <i id="ico-mic-name" class="fas fa-microphone text-lg"></i>
                                 </button>
                                                                 
-                                <button type="button" onclick="generarNombreConIA()" id="btnGenerarNombreIA" class="px-4 py-2 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-xl flex items-center gap-2 transition-all font-semibold text-sm">
+                                <button type="button" onclick="generarNombreConIA()" id="btnGenerarNombreIA" class="px-4 py-2 bg-purple-50 hover:bg-purple-600 border-2 border-purple-200 hover:border-purple-600 text-purple-600 hover:text-white rounded-xl flex items-center gap-2 transition-all font-semibold text-sm">
                                     <i class="fas fa-robot"></i> IA
                                 </button>
                             </div>
@@ -351,40 +296,40 @@
 
                         <!-- Cliente -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-300" for="clienteSelect">Cliente</label>
-                            <select id="clienteSelect" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                            <label class="block text-sm font-semibold text-slate-700" for="clienteSelect">Cliente</label>
+                            <select id="clienteSelect" required class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 input-focus">
                                 <option value="">Seleccione un cliente…</option>
                             </select>
                         </div>
 
                         <!-- ID Cliente -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-300" for="clientId">ID Cliente (uid)</label>
-                            <input type="text" id="clientId" name="client_id" readonly required class="w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-950/60 text-slate-400 font-mono outline-none border-white/5"/>
+                            <label class="block text-sm font-semibold text-slate-700" for="clientId">ID Cliente (uid)</label>
+                            <input type="text" id="clientId" name="client_id" readonly required class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl bg-slate-50 text-slate-500 font-mono outline-none"/>
                         </div>
 
                         <!-- Código Referencia -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-300" for="codigoReferencia">Código Interno/Referencia</label>
-                            <input type="text" id="codigoReferencia" name="codigo_referencia" readonly class="w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-950/60 text-slate-400 font-mono outline-none border-white/5"/>
+                            <label class="block text-sm font-semibold text-slate-700" for="codigoReferencia">Código Interno/Referencia</label>
+                            <input type="text" id="codigoReferencia" name="codigo_referencia" readonly class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl bg-slate-50 text-slate-500 font-mono outline-none"/>
                         </div>
 
                         <!-- Fechas -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-300" for="start_date">Fecha de Inicio</label>
-                            <input type="date" id="start_date" name="start_date" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                            <label class="block text-sm font-semibold text-slate-700" for="start_date">Fecha de Inicio</label>
+                            <input type="date" id="start_date" name="start_date" required class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 input-focus"/>
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-300" for="end_date">Fecha de Finalización</label>
-                            <input type="date" id="end_date" name="end_date" class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                            <label class="block text-sm font-semibold text-slate-700" for="end_date">Fecha de Finalización</label>
+                            <input type="date" id="end_date" name="end_date" class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 input-focus"/>
                         </div>
 
                         <!-- Tipo Proyecto -->
                         <div class="space-y-2 md:col-span-2">
-                            <label class="block text-sm font-semibold text-slate-300" for="tipoProyecto">Tipo de Proyecto</label>
-                            <select id="tipoProyecto" name="tipo_proyecto" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                            <label class="block text-sm font-semibold text-slate-700" for="tipoProyecto">Tipo de Proyecto</label>
+                            <select id="tipoProyecto" name="tipo_proyecto" required class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 input-focus">
                                 <option value="">Selecciona...</option>
-                                <optgroup label="Cursos" class="bg-slate-900">
+                                <optgroup label="Cursos" class="bg-white">
                                     <option value="Curso virtual">Curso virtual</option>
                                     <option value="Mooc">MOOC</option>
                                     <option value="OVA">OVA</option>
@@ -392,7 +337,7 @@
                                     <option value="VideoLearning">Video learning</option>
                                     <option value="Gamificados">Gamificados</option>
                                 </optgroup>
-                                <optgroup label="Otros" class="bg-slate-900">
+                                <optgroup label="Otros" class="bg-white">
                                     <option value="AppEducativa">App Educativa</option>
                                     <option value="Podcast">Podcast</option>
                                     <option value="EbookEducativo">Ebook</option>
@@ -403,7 +348,7 @@
 
                         <!-- Tipo Personalizado -->
                         <div id="divTipoProyectoPersonalizado" style="display:none;" class="space-y-2 md:col-span-2">
-                            <label class="block text-sm font-semibold text-slate-300" for="tipoProyectoPersonalizado">Tipo de Proyecto Personalizado</label>
+                            <label class="block text-sm font-semibold text-slate-700" for="tipoProyectoPersonalizado">Tipo de Proyecto Personalizado</label>
                             <div class="flex gap-2.5">
                                 <input type="text" id="tipoProyectoPersonalizado" name="tipo_proyecto_personalizado" placeholder="Especifique el tipo" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
                                 <button type="button" onclick="gestionarGrabacionWhisper(event,'tipoProyectoPersonalizado')" id="btn-mic-tipoProyectoPersonalizado" class="btn-mic-premium" title="Grabar con Whisper IA">
@@ -414,23 +359,23 @@
 
                         <!-- Estado -->
                         <div class="space-y-2 md:col-span-2">
-                            <label class="block text-sm font-semibold text-slate-300" for="estado">Estado Inicial</label>
-                            <select id="estado" name="estado" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                            <label class="block text-sm font-semibold text-slate-700" for="estado">Estado Inicial</label>
+                            <select id="estado" name="estado" required class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 input-focus">
                                 <option value="Planificado">Planificado</option>
                                 <option value="En desarrollo">En desarrollo</option>
                                 <option value="Aprobado">Aprobado</option>
                                 <option value="Finalizado">Finalizado</option>
                             </select>
-                            <div id="estadoWarning" class="hidden text-xs text-amber-400 bg-amber-900/20 border border-amber-700/30 rounded-lg px-3 py-2 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i> Debes agregar colaboradores al proyecto después de crearlo para poder cambiar a este estado.</div>
+                            <div id="estadoWarning" class="hidden text-xs text-amber-600 bg-amber-900/20 border border-amber-700/30 rounded-lg px-3 py-2 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i> Debes agregar colaboradores al proyecto después de crearlo para poder cambiar a este estado.</div>
                         </div>
                     </div>
 
                     <!-- Descripción -->
                     <div class="mt-6 space-y-2">
-                        <label class="block text-sm font-semibold text-slate-300" for="description">Descripción</label>
+                        <label class="block text-sm font-semibold text-slate-700" for="description">Descripción</label>
                         <div class="flex gap-2.5 items-start">
                             <div class="relative flex-1">
-                                <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus resize-none" placeholder="Describe brevemente..."></textarea>
+                                <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl input-focus resize-none" placeholder="Describe brevemente..."></textarea>
                                 <button type="button" onclick="generarDescripcionConIA()" id="btnGenerarDescIA" class="absolute top-2.5 right-2.5 px-3 py-1 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-all">
                                     <i class="fas fa-robot"></i> IA
                                 </button>
@@ -443,10 +388,10 @@
                 </div>
 
                 <!-- Sección 2: Configuración de Lenguaje e Inclusión -->
-                <div class="section-card rounded-2xl p-6 shadow-xl">
-                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                <div class="section-card rounded-2xl p-6">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center border-b border-slate-200 pb-3">
                         <span class="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center mr-3 border border-green-500/20">
-                            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                         </span>
                         Configuración de Lenguaje e Inclusión
                     </h3>
@@ -456,11 +401,11 @@
                         <div class="space-y-4">
                             <h4 class="font-semibold text-slate-300 text-sm">Lenguaje Inclusivo</h4>
                             <div class="flex space-x-6">
-                                <label class="radio-custom flex items-center text-slate-300">
+                                <label class="radio-custom flex items-center text-slate-700">
                                     <input type="radio" name="lenguaje_incluyente" value="true" id="incluyenteSi">
                                     <span class="radiomark"></span> Sí
                                 </label>
-                                <label class="radio-custom flex items-center text-slate-300">
+                                <label class="radio-custom flex items-center text-slate-700">
                                     <input type="radio" name="lenguaje_incluyente" value="false" id="incluyenteNo" checked>
                                     <span class="radiomark"></span> No
                                 </label>
@@ -487,15 +432,15 @@
                         <div class="space-y-4">
                             <h4 class="font-semibold text-slate-300 text-sm">Idioma</h4>
                             <div class="flex flex-wrap gap-4">
-                                <label class="radio-custom flex items-center text-slate-300">
+                                <label class="radio-custom flex items-center text-slate-700">
                                     <input type="radio" name="idioma" value="Español" checked id="idiomaEs">
                                     <span class="radiomark"></span> Español
                                 </label>
-                                <label class="radio-custom flex items-center text-slate-300">
+                                <label class="radio-custom flex items-center text-slate-700">
                                     <input type="radio" name="idioma" value="Inglés" id="idiomaEn">
                                     <span class="radiomark"></span> Inglés
                                 </label>
-                                <label class="radio-custom flex items-center text-slate-300">
+                                <label class="radio-custom flex items-center text-slate-700">
                                     <input type="radio" name="idioma" value="Bilingüe" id="idiomaBi">
                                     <span class="radiomark"></span> Bilingüe
                                 </label>
@@ -513,29 +458,29 @@
                     <div class="mt-8 space-y-4">
                         <h4 class="font-semibold text-slate-300 text-sm">Inclusión Digital</h4>
                         <div class="flex space-x-6 mb-4">
-                            <label class="radio-custom flex items-center text-slate-300">
+                            <label class="radio-custom flex items-center text-slate-700">
                                 <input type="radio" name="inclusion_digital" value="true" id="inclusionSi">
                                 <span class="radiomark"></span> Sí
                             </label>
-                            <label class="radio-custom flex items-center text-slate-300">
+                            <label class="radio-custom flex items-center text-slate-700">
                                 <input type="radio" name="inclusion_digital" value="false" id="inclusionNo" checked>
                                 <span class="radiomark"></span> No
                             </label>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 border border-white/5 rounded-2xl p-4 bg-slate-950/40">
-                            <label class="checkbox-custom flex items-center text-slate-300">
+                        <div class="grid grid-cols-2 gap-4 border-2 border-slate-200 rounded-2xl p-4 bg-slate-50">
+                            <label class="checkbox-custom flex items-center text-slate-700">
                                 <input type="checkbox" name="inclusion_digital_web" value="true" id="inclWeb">
                                 <span class="checkmark"></span> Accesibilidad web
                             </label>
-                            <label class="checkbox-custom flex items-center text-slate-300">
+                            <label class="checkbox-custom flex items-center text-slate-700">
                                 <input type="checkbox" name="inclusion_digital_asistiva" value="true" id="inclAsist">
                                 <span class="checkmark"></span> Tecnología asistiva
                             </label>
-                            <label class="checkbox-custom flex items-center text-slate-300">
+                            <label class="checkbox-custom flex items-center text-slate-700">
                                 <input type="checkbox" name="inclusion_digital_universal" value="true" id="inclUniv">
                                 <span class="checkmark"></span> Diseño universal
                             </label>
-                            <label class="checkbox-custom flex items-center text-slate-300">
+                            <label class="checkbox-custom flex items-center text-slate-700">
                                 <input type="checkbox" name="inclusion_digital_educativa" value="true" id="inclEdu">
                                 <span class="checkmark"></span> Educación digital inclusiva
                             </label>
@@ -550,10 +495,10 @@
                 </div>
 
                 <!-- Sección 3: Diseño Visual -->
-                <div class="section-card rounded-2xl p-6 shadow-xl">
-                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                <div class="section-card rounded-2xl p-6">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center border-b border-slate-200 pb-3">
                         <span class="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center mr-3 border border-purple-500/20">
-                            <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                         </span>
                         Diseño Visual y Tipografía
                     </h3>
@@ -561,7 +506,7 @@
                     <div class="space-y-6">
                         <!-- Título -->
                         <div>
-                            <h4 class="font-semibold text-slate-300 mb-3 text-sm">Tipografía de Título</h4>
+                            <h4 class="font-semibold text-slate-700 mb-3 text-sm">Tipografía de Título</h4>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start bg-slate-950/20 p-3 rounded-xl border border-white/5">
                                 <div>
                                     <label class="text-xs font-semibold text-slate-400 block mb-1.5">Fuente</label>
@@ -584,7 +529,7 @@
 
                         <!-- Subtítulo -->
                         <div>
-                            <h4 class="font-semibold text-slate-300 mb-3 text-sm">Tipografía de Subtítulo</h4>
+                            <h4 class="font-semibold text-slate-700 mb-3 text-sm">Tipografía de Subtítulo</h4>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start bg-slate-950/20 p-3 rounded-xl border border-white/5">
                                 <div>
                                     <label class="text-xs font-semibold text-slate-400 block mb-1.5">Fuente</label>
@@ -607,7 +552,7 @@
 
                         <!-- Párrafo -->
                         <div>
-                            <h4 class="font-semibold text-slate-300 mb-3 text-sm">Tipografía de Párrafo</h4>
+                            <h4 class="font-semibold text-slate-700 mb-3 text-sm">Tipografía de Párrafo</h4>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start bg-slate-950/20 p-3 rounded-xl border border-white/5">
                                 <div>
                                     <label class="text-xs font-semibold text-slate-400 block mb-1.5">Fuente</label>
@@ -633,34 +578,34 @@
                 <!-- Sección 4: Configuración de Tiempo, Derechos y Permisos -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Configuración de Tiempo -->
-                    <div class="section-card rounded-2xl p-6 shadow-xl h-full">
-                        <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                    <div class="section-card rounded-2xl p-6 h-full">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center border-b border-slate-200 pb-3">
                             <span class="w-8 h-8 bg-orange-500/10 rounded-lg flex items-center justify-center mr-3 border border-orange-500/20">
-                                <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </span>
                             Configuración de Tiempo
                         </h3>
                         <div class="space-y-4">
                             <div class="space-y-2">
-                                <label for="horas_curso" class="block text-sm font-semibold text-slate-300">Total Horas del Curso</label>
+                                <label for="horas_curso" class="block text-sm font-semibold text-slate-700">Total Horas del Curso</label>
                                 <input type="number" id="horas_curso" name="horas_curso" min="0" step="0.1" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
                             </div>
                             <div class="space-y-2">
-                                <label for="horas_autonomo" class="block text-sm font-semibold text-slate-300">Horas Autónomas</label>
+                                <label for="horas_autonomo" class="block text-sm font-semibold text-slate-700">Horas Autónomas</label>
                                 <input type="number" id="horas_autonomo" name="horas_aprendizaje_autonomo_virtual" min="0" step="0.1" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
                             </div>
                             <div class="space-y-2">
-                                <label for="horas_actividades" class="block text-sm font-semibold text-slate-300">Horas Actividades</label>
+                                <label for="horas_actividades" class="block text-sm font-semibold text-slate-700">Horas Actividades</label>
                                 <input type="number" id="horas_actividades" name="horas_actividades_aprendizaje" min="0" step="0.1" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
                             </div>
                         </div>
                     </div>
 
                     <!-- Derechos y Entregas -->
-                    <div class="section-card rounded-2xl p-6 shadow-xl h-full">
-                        <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                    <div class="section-card rounded-2xl p-6 h-full">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center border-b border-slate-200 pb-3">
                             <span class="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center mr-3 border border-red-500/20">
-                                <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                             </span>
                             Derechos y Entregas
                         </h3>
@@ -669,22 +614,22 @@
                                 <div>
                                     <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Cesión de Derechos</label>
                                     <div class="flex space-x-4">
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="cesion_derechos" value="true" id="cesionSi"><span class="radiomark"></span> Sí</label>
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="cesion_derechos" value="false" checked id="cesionNo"><span class="radiomark"></span> No</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="cesion_derechos" value="true" id="cesionSi"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="cesion_derechos" value="false" checked id="cesionNo"><span class="radiomark"></span> No</label>
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Derechos Patrimon.</label>
                                     <div class="flex space-x-4">
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="derechos_patrimoniales_autor" value="true"><span class="radiomark"></span> Sí</label>
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="derechos_patrimoniales_autor" value="false" checked><span class="radiomark"></span> No</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="derechos_patrimoniales_autor" value="true"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="derechos_patrimoniales_autor" value="false" checked><span class="radiomark"></span> No</label>
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Confidencialidad</label>
                                     <div class="flex space-x-4">
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="acuerdo_confidencialidad" value="true"><span class="radiomark"></span> Sí</label>
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="acuerdo_confidencialidad" value="false" checked><span class="radiomark"></span> No</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="acuerdo_confidencialidad" value="true"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="acuerdo_confidencialidad" value="false" checked><span class="radiomark"></span> No</label>
                                     </div>
                                 </div>
                             </div>
@@ -692,22 +637,22 @@
                                 <div>
                                     <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Entrega Fuentes</label>
                                     <div class="flex space-x-4">
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_fuentes" value="true"><span class="radiomark"></span> Sí</label>
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_fuentes" value="false" checked><span class="radiomark"></span> No</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="entrega_fuentes" value="true"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="entrega_fuentes" value="false" checked><span class="radiomark"></span> No</label>
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Escrito Autor</label>
                                     <div class="flex space-x-4">
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_escrito_autor" value="true"><span class="radiomark"></span> Sí</label>
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_escrito_autor" value="false" checked><span class="radiomark"></span> No</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="entrega_escrito_autor" value="true"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="entrega_escrito_autor" value="false" checked><span class="radiomark"></span> No</label>
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Diseño Instruccional</label>
                                     <div class="flex space-x-4">
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_diseno_instruccional" value="true"><span class="radiomark"></span> Sí</label>
-                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_diseno_instruccional" value="false" checked><span class="radiomark"></span> No</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="entrega_diseno_instruccional" value="true"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-700"><input type="radio" name="entrega_diseno_instruccional" value="false" checked><span class="radiomark"></span> No</label>
                                     </div>
                                 </div>
                             </div>
@@ -716,11 +661,11 @@
                 </div>
 
                 <!-- Sección 6: Público Objetivo -->
-                <div class="section-card rounded-2xl p-6 shadow-xl">
-                    <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-3">
+                <div class="section-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
                         <h3 class="text-xl font-semibold text-slate-100 flex items-center">
                             <span class="w-8 h-8 bg-indigo-500/10 rounded-lg flex items-center justify-center mr-3 border border-indigo-500/20">
-                                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             </span>
                             Público Objetivo
                         </h3>
@@ -731,16 +676,16 @@
                                         
                     <p class="text-sm text-slate-400 mb-4 font-medium">¿A quién está dirigido el proyecto?</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 rounded-xl p-4 bg-slate-950/40 border border-white/5">
-                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Primera infancia"><span class="checkmark"></span> Primera infancia (0-5)</label>
-                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Niños 6 a 11 años"><span class="checkmark"></span> Niños (6-11)</label>
-                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Adolescentes"><span class="checkmark"></span> Adolescentes (12-17)</label>
-                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Jóvenes"><span class="checkmark"></span> Jóvenes (18-25)</label>
-                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Adultos"><span class="checkmark"></span> Adultos (26-59)</label>
-                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Mayores"><span class="checkmark"></span> Mayores (60+)</label>
-                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Docentes"><span class="checkmark"></span> Docentes / Educadores</label>
-                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Empresas"><span class="checkmark"></span> Empresas / Equipos</label>
-                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Instituciones educativas"><span class="checkmark"></span> Instituciones</label>
-                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Público general"><span class="checkmark"></span> Público general</label>
+                        <label class="checkbox-custom flex items-center text-slate-700"><input type="checkbox" name="publico_objetivo" value="Primera infancia"><span class="checkmark"></span> Primera infancia (0-5)</label>
+                        <label class="checkbox-custom flex items-center text-slate-700"><input type="checkbox" name="publico_objetivo" value="Niños 6 a 11 años"><span class="checkmark"></span> Niños (6-11)</label>
+                        <label class="checkbox-custom flex items-center text-slate-700"><input type="checkbox" name="publico_objetivo" value="Adolescentes"><span class="checkmark"></span> Adolescentes (12-17)</label>
+                        <label class="checkbox-custom flex items-center text-slate-700"><input type="checkbox" name="publico_objetivo" value="Jóvenes"><span class="checkmark"></span> Jóvenes (18-25)</label>
+                        <label class="checkbox-custom flex items-center text-slate-700"><input type="checkbox" name="publico_objetivo" value="Adultos"><span class="checkmark"></span> Adultos (26-59)</label>
+                        <label class="checkbox-custom flex items-center text-slate-700"><input type="checkbox" name="publico_objetivo" value="Mayores"><span class="checkmark"></span> Mayores (60+)</label>
+                        <label class="checkbox-custom flex items-center text-slate-700"><input type="checkbox" name="publico_objetivo" value="Docentes"><span class="checkmark"></span> Docentes / Educadores</label>
+                        <label class="checkbox-custom flex items-center text-slate-700"><input type="checkbox" name="publico_objetivo" value="Empresas"><span class="checkmark"></span> Empresas / Equipos</label>
+                        <label class="checkbox-custom flex items-center text-slate-700"><input type="checkbox" name="publico_objetivo" value="Instituciones educativas"><span class="checkmark"></span> Instituciones</label>
+                        <label class="checkbox-custom flex items-center text-slate-700"><input type="checkbox" name="publico_objetivo" value="Público general"><span class="checkmark"></span> Público general</label>
                     </div>
                                         
                     <div class="flex gap-2.5 mt-4">
@@ -752,7 +697,7 @@
                 </div>
 
                 <!-- Sección 7: Observaciones -->
-                <div class="section-card rounded-2xl p-6 shadow-xl">
+                <div class="section-card rounded-2xl p-6">
                     <h3 class="text-xl font-semibold text-slate-100 mb-4">Observaciones Adicionales</h3>
                     <div class="flex gap-2.5 items-start">
                         <textarea id="observaciones" name="observaciones" rows="3" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus resize-none" placeholder="Escribe notas adicionales..."></textarea>
@@ -765,7 +710,7 @@
                 <!-- Controles Submit -->
                 <div id="form-message" class="mt-4 text-center"></div>
                 <div class="text-center pt-4">
-                    <button type="submit" id="submitButton" class="px-10 py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-lg font-bold rounded-2xl shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all transform hover:-translate-y-1">
+                    <button type="submit" id="submitButton" class="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold rounded-2xl shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/40 transition-all transform hover:-translate-y-0.5">
                         <span id="submitButtonText">💾 Crear Proyecto</span>
                     </button>
                 </div>
@@ -777,41 +722,41 @@
     <!-- MODAL DETALLES -->
     <div id="modalDetalles" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
         <div class="card-glass rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-t-2xl flex justify-between items-center text-white border-b border-white/5">
+            <div class="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-t-2xl flex justify-between items-center text-white border-b border-slate-200">
                 <h2 class="text-2xl font-bold" id="modalTitulo text-white">Detalles del Proyecto</h2>
-                <button onclick="cerrarModal()" class="text-white/80 hover:text-white text-3xl leading-none">&times;</button>
+                <button onclick="cerrarModal()" class="text-indigo-200 hover:text-white text-3xl leading-none">&times;</button>
             </div>
-            <div class="p-6 text-slate-200" id="modalContenido"></div>
+            <div class="p-6 text-slate-700" id="modalContenido"></div>
         </div>
     </div>
 
     <!-- MODAL GESTIONAR PARTICIPANTES -->
     <div id="modalParticipantes" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
         <div class="card-glass rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 border-b border-white/5">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 border-b border-slate-200">
                 <div class="flex justify-between items-center text-white">
                     <h2 class="text-2xl font-bold flex items-center gap-2">
                         <span>👥</span> <span id="participantesModalTitulo">Participantes del Proyecto</span>
                     </h2>
-                    <button onclick="cerrarModalParticipantes()" class="text-white/80 hover:text-white text-3xl leading-none focus:outline-none">&times;</button>
+                    <button onclick="cerrarModalParticipantes()" class="text-indigo-200 hover:text-white text-3xl leading-none focus:outline-none">&times;</button>
                 </div>
             </div>
             <div class="p-6 overflow-y-auto flex-1 space-y-6">
                 <!-- Formulario de Asociación -->
-                <div class="bg-slate-950/40 p-5 rounded-2xl border border-white/5 shadow-inner">
+                <div class="bg-slate-50 p-5 rounded-2xl border-2 border-slate-200">
                     <h3 class="font-bold text-slate-200 mb-4 flex items-center gap-2 text-xs uppercase tracking-wider">
                         <span>➕</span> Asociar Nuevo Colaborador
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Usuario</label>
-                            <select id="partUsuarioSelect" title="Seleccione el usuario" class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 bg-slate-900 text-slate-200 transition-all outline-none text-sm">
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">Usuario</label>
+                            <select id="partUsuarioSelect" title="Seleccione el usuario" class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 bg-white text-slate-800 transition-all outline-none text-sm">
                                 <option value="">Seleccione un usuario...</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Rol en Proyecto</label>
-                            <select id="partRolSelect" title="Seleccione el rol del participante" class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 bg-slate-900 text-slate-200 transition-all outline-none text-sm">
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-1.5">Rol en Proyecto</label>
+                            <select id="partRolSelect" title="Seleccione el rol del participante" class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-600 bg-white text-slate-800 transition-all outline-none text-sm">
                                 <option value="1">Superadmin</option>
                                 <option value="2">Admin</option>
                                 <option value="3">Coordinador</option>
@@ -842,10 +787,10 @@
                     <h3 class="font-bold text-slate-300 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
                         <span>📋</span> Colaboradores Asignados
                     </h3>
-                    <div class="border border-white/5 rounded-2xl overflow-hidden bg-slate-900/35 shadow-sm">
+                    <div class="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="bg-slate-950/60 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5">
+                                <tr class="bg-slate-950/60 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200">
                                     <th class="p-4">Colaborador</th>
                                     <th class="p-4">Rol asignado</th>
                                     <th class="p-4 text-right">Acción</th>
@@ -868,21 +813,21 @@
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="cerrarTutorial()"></div>
         <div class="fixed inset-0 z-10 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0 animate-fade-in">
-                <div class="relative transform overflow-hidden rounded-2xl bg-slate-900 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-white/10">
-                    <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center border-b border-white/5">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border-2 border-slate-200">
+                    <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center border-b border-slate-200">
                         <h3 class="text-lg font-bold text-white flex items-center gap-2"><span>🎓</span> <span id="tutTitle">Tutorial</span></h3>
-                        <button type="button" class="text-indigo-100 hover:text-white text-2xl leading-none focus:outline-none" onclick="cerrarTutorial()">&times;</button>
+                        <button type="button" class="text-indigo-200 hover:text-white text-2xl leading-none focus:outline-none" onclick="cerrarTutorial()">&times;</button>
                     </div>
-                    <div class="px-6 py-6 text-slate-300">
+                    <div class="px-6 py-6 text-slate-600">
                         <div id="tutVideoContainer" class="aspect-video w-full rounded-xl overflow-hidden bg-black mb-6 shadow-md hidden">
                             <iframe id="tutVideoFrame" class="w-full h-full" src="" title="Video Tutorial" frameborder="0" allowfullscreen></iframe>
                         </div>
                         <div class="space-y-4">
-                            <h4 class="font-semibold text-slate-200 border-b border-white/5 pb-2">Pasos a seguir:</h4>
-                            <ul id="tutSteps" class="list-none space-y-3 text-sm text-slate-400"></ul>
+                            <h4 class="font-semibold text-slate-200 border-b border-slate-200 pb-2">Pasos a seguir:</h4>
+                            <ul id="tutSteps" class="list-none space-y-3 text-sm text-slate-500"></ul>
                         </div>
                     </div>
-                    <div class="bg-slate-950/60 px-6 py-3 flex justify-end border-t border-white/5">
+                    <div class="bg-slate-950/60 px-6 py-3 flex justify-end border-t border-slate-200">
                         <button type="button" class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500" onclick="cerrarTutorial()">Entendido</button>
                     </div>
                 </div>
@@ -1123,8 +1068,8 @@
 
             grid.innerHTML = `
                 <div class="col-span-full py-20 text-center">
-                    <div class="inline-flex items-center gap-3 text-slate-400 text-lg">
-                        <div class="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full loading-spinner"></div>
+                    <div class="inline-flex items-center gap-3 text-slate-500 text-lg">
+                        <div class="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full loading-spinner"></div>
                         Consultando API...
                     </div>
                 </div>
@@ -1160,9 +1105,9 @@
             } catch (e) {
                 grid.innerHTML = `
                     <div class="col-span-full py-20 text-center">
-                        <div class="text-rose-500 text-4xl mb-4">⚠️</div>
-                        <div class="text-rose-600 text-xl font-bold">Error de Conexión</div>
-                        <p class="text-slate-400 mt-2">${e.message}</p>
+                        <div class="text-rose-600 text-4xl mb-4">⚠️</div>
+                        <div class="text-rose-700 text-xl font-bold">Error de Conexión</div>
+                        <p class="text-slate-500 mt-2">${e.message}</p>
                         <button onclick="cargarProyectos()" class="mt-6 bg-indigo-600 text-white px-8 py-3 rounded-xl hover:bg-indigo-700 transition-all shadow-lg text-sm font-semibold">Reintentar</button>
                     </div>
                 `;
@@ -1185,7 +1130,7 @@
 
             if (!proyectos.length) {
                 grid.innerHTML = `
-                    <div class="col-span-full py-20 text-center text-slate-500"> 
+                    <div class="col-span-full py-20 text-center text-slate-400"> 
                          <span class="text-6xl block mb-4">📋</span>
                          <p class="text-lg font-medium">No se encontraron proyectos con estos criterios.</p>
                     </div>`;
@@ -1197,25 +1142,25 @@
                 const inicial = clienteNombre.charAt(0).toUpperCase();
                 
                 return `
-                    <div class="card-glass rounded-2xl overflow-hidden transition-all duration-300 hover:border-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/5 animate-fade-in" style="animation-delay: ${idx * 0.03}s">
-                        <div class="bg-slate-950/40 p-4 border-b border-white/5">
+                    <div class="card-glass rounded-2xl overflow-hidden bg-white border-2 border-slate-200 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/5 animate-fade-in" style="animation-delay: ${idx * 0.03}s">
+                        <div class="bg-slate-50 p-4 border-b border-slate-200">
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center">
                                     <span class="inline-flex items-center justify-center w-7 h-7 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-md">${proj.id}</span>
                                     <span class="ml-2.5 badge-status ${getBadge(proj.estado)}">${proj.estado || 'Planificado'}</span>
-                                    ${(window.participantCounts || {})[proj.id] > 0 ? '' : '<span class="ml-1.5 badge-status bg-amber-900/40 text-amber-400 border border-amber-600/30 text-[10px] px-2 py-0.5 rounded-full">⚠️ Sin colaboradores</span>'}
+                                    ${(window.participantCounts || {})[proj.id] > 0 ? '' : '<span class="ml-1.5 badge-status bg-amber-900/40 text-amber-600 border border-amber-600/30 text-[10px] px-2 py-0.5 rounded-full">⚠️ Sin colaboradores</span>'}
                                 </div>
-                                <span class="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-md uppercase tracking-wide">${proj.tipo_proyecto || 'E-learning'}</span>
+                                <span class="text-[10px] font-bold text-indigo-600 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-md uppercase tracking-wide">${proj.tipo_proyecto || 'E-learning'}</span>
                             </div>
                         </div>
                                                 
                         <div class="p-5">
-                            <h3 class="font-bold text-base text-slate-100 mb-3 truncate" title="${proj.name}">${proj.name || 'Sin título'}</h3>
+                            <h3 class="font-bold text-base text-slate-800 mb-3 truncate" title="${proj.name}">${proj.name || 'Sin título'}</h3>
                                                     
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-md">${inicial}</div>
                                 <div>
-                                    <div class="text-xs font-bold text-slate-300">${clienteNombre}</div>
+                                    <div class="text-xs font-semibold text-slate-700">${clienteNombre}</div>
                                     <div class="text-[10px] text-slate-500 font-mono mt-0.5">${proj.codigo_referencia || 'VM-PROJECT'}</div>
                                 </div>
                             </div>
@@ -1231,14 +1176,14 @@
                                 </div>
                             </div>
 
-                            <p class="text-xs text-slate-400 line-clamp-2 mb-5 h-8 italic">"${proj.description || 'Sin descripción disponible'}"</p>
+                            <p class="text-xs text-slate-500 line-clamp-2 mb-5 h-8 italic">"${proj.description || 'Sin descripción disponible'}"</p>
 
-                            <div class="flex flex-wrap gap-1.5 border-t border-white/5 pt-4">
+                            <div class="flex flex-wrap gap-1.5 border-t border-slate-200 pt-4">
                                 <button onclick="verProyecto(${proj.id})" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-3 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">👁️ Ver</button>
-                                <button onclick="verDocumentos(${proj.id})" class="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-blue-500/20" title="Documentos del Proyecto">📁</button>
-                                <button onclick="gestionarParticipantes(${proj.id}, '${proj.name.replace(/'/g, "\\'")}')" class="bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-purple-500/20" title="Gestionar Participantes">👥</button>
+                                <button onclick="verDocumentos(${proj.id})" class="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-blue-500/20" title="Documentos del Proyecto">📁</button>
+                                <button onclick="gestionarParticipantes(${proj.id}, '${proj.name.replace(/'/g, "\\'")}')" class="bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-purple-500/20" title="Gestionar Participantes">👥</button>
                                 <button onclick="actualizarProyecto(${proj.id})" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-white/5" title="Editar">✏️</button>
-                                <button onclick="crearPlanFormacion(${proj.id})" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-emerald-500/20" title="Plan de Formación">📋</button>
+                                <button onclick="crearPlanFormacion(${proj.id})" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-emerald-500/20" title="Plan de Formación">📋</button>
                             </div>
                         </div>
                     </div>
@@ -1336,16 +1281,16 @@
                     const roleName = rolesMap[p.role_id] || `Rol ${p.role_id}`;
 
                     return `
-                        <tr class="border-b border-white/5 hover:bg-white/5 text-sm text-slate-300">
+                        <tr class="border-b border-slate-200 hover:bg-white/5 text-sm text-slate-300">
                             <td class="p-4">
-                                <div class="font-bold text-slate-200">${userName}</div>
+                                <div class="font-bold text-slate-700">${userName}</div>
                                 <div class="text-[10px] text-slate-500 font-mono mt-0.5">${userEmail}</div>
                             </td>
                             <td class="p-4">
                                 <span class="px-2.5 py-1 bg-purple-500/10 text-purple-300 text-xs font-semibold rounded-full border border-purple-500/20">${roleName}</span>
                             </td>
                             <td class="p-4 text-right">
-                                <button onclick="eliminarColaboradorProyecto(${p.project_id}, '${p.user_uid}')" class="p-2 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-400 rounded-xl transition-all border border-rose-500/20" title="Eliminar del proyecto">
+                                <button onclick="eliminarColaboradorProyecto(${p.project_id}, '${p.user_uid}')" class="p-2 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-600 rounded-xl transition-all border border-rose-500/20" title="Eliminar del proyecto">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </td>
@@ -1356,7 +1301,7 @@
             } catch (e) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="p-4 text-center text-rose-400 text-sm">
+                        <td colspan="3" class="p-4 text-center text-rose-600 text-sm">
                             Error al cargar los participantes: ${e.message}
                         </td>
                     </tr>
@@ -1793,7 +1738,7 @@
                 const project_desc = encodeURIComponent(data.description || '');
                 const project_horas = data.horas_curso || '';
 
-                mensajeDiv.innerHTML = `<p class="text-lg font-semibold text-emerald-400">✅ Proyecto creado con éxito (ID: ${project_id}). Redirigiendo a planificación...</p>`;
+                mensajeDiv.innerHTML = `<p class="text-lg font-semibold text-emerald-600">✅ Proyecto creado con éxito (ID: ${project_id}). Redirigiendo a planificación...</p>`;
                 const urlHijo = "https://gestordecursos.pegui.edu.co/r/superadmin/studyplan/";
                 setTimeout(() => {
                     window.location.href = `${urlHijo}?project_id=${project_id}&project_name=${project_name}&project_desc=${project_desc}&project_horas=${project_horas}`;

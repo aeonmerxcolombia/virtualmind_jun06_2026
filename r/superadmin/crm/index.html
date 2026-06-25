@@ -4,194 +4,202 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Clientes - VirtualMind</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/js/fetch-con-token.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/staging/js/fetch-con-token.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #090D16;
-            color: #cbd5e1;
+            background-color: #ffffff;
+            color: #000000;
             overflow-x: hidden;
         }
-        
+                
         .glass-card { 
-            background: rgba(15, 23, 42, 0.65); 
-            backdrop-filter: blur(16px); 
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            background: #ffffff;
+            border: 2px solid #94a3b8;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
-        
+                
         .action-btn { 
             cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            transition: all 0.2s ease-in-out; 
             border-radius: 12px; 
             padding: 0.5rem 0.7rem; 
         }
+        
         .action-btn:hover { 
-            transform: translateY(-2px); 
-            filter: brightness(1.2); 
+            transform: translateY(-1px); 
+            filter: brightness(0.9); 
         }
 
-        .input-focus {             
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            background: rgba(15, 23, 42, 0.8) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            color: #f8fafc !important;
+        .input-focus { 
+            transition: all 0.2s ease-in-out;
+            background: #ffffff !important;
+            border: 2px solid #94a3b8 !important;
+            color: #000000 !important;
         }
-        .input-focus:focus {             
-            transform: translateY(-1px);             
-            border-color: #6366f1 !important;
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
-            background: rgba(15, 23, 42, 0.95) !important;
+        
+        .input-focus:focus { 
+            border-color: #4f46e5 !important;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
+            background: #ffffff !important;
         }
 
         .help-icon { 
             display: inline-flex; 
             align-items: center; 
             justify-content: center; 
-            width: 18px; 
-            height: 18px; 
-            background: #4f46e5; 
-            color: #fff; 
+            width: 20px; 
+            height: 20px; 
+            background: #1e293b; 
+            color: #ffffff; 
             border-radius: 50%; 
-            font-size: 10px; 
+            font-size: 11px; 
             font-weight: bold;
             cursor: help; 
         }
+        
         .help-icon:hover {
-            background: #6366f1;
-            box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+            background: #000000;
         }
 
-        /* Ambient glowing background blobs */
+        /* Ambient subtle styling */
         .glow-blob {
             position: absolute;
             width: 600px;
             height: 600px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.04) 0%, rgba(0,0,0,0) 70%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
         }
 
-        /* Custom premium select option scroll */
+        /* Select robusto para lectura clara */
         select option {
-            background-color: #0f172a;
-            color: #cbd5e1;
+            background-color: #ffffff;
+            color: #000000;
         }
 
-        /* Tooltip System CSS */
+        /* Tooltip System con contraste Ultra Nivel */
         .vm-tooltip { 
-            position:absolute; 
-            background:#0f172a; 
-            color:#fff; 
-            font-size:12px; 
-            padding:6px 12px; 
-            border-radius:8px; 
-            box-shadow:0 4px 15px rgba(0,0,0,0.45); 
-            pointer-events:none; 
-            opacity:0; 
-            transform:translateY(4px); 
-            transition:opacity 0.15s ease-out, transform 0.15s ease-out; 
-            z-index:10000; 
-            max-width:250px; 
-            text-align:center; 
-            white-space:nowrap; 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
+            position: absolute; 
+            background: #000000; 
+            color: #ffffff; 
+            font-size: 12px; 
+            font-weight: 600;
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            pointer-events: none; 
+            opacity: 0; 
+            transform: translateY(4px); 
+            transition: opacity 0.15s ease-out, transform 0.15s ease-out; 
+            z-index: 10000; 
+            max-width: 250px; 
+            text-align: center; 
+            border: 1px solid #000000;
         }
-        .vm-tooltip.visible { opacity:1; transform:translateY(0); }
+        
+        .vm-tooltip.visible { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
     </style>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="/staging/css/themes.css">
+    <link rel="stylesheet" href="/staging/css/theme-white.css?v=20260615" id="themeWhiteCSS">
 </head>
 <body class="min-h-screen p-4 md:p-8 relative">
 
     <div class="glow-blob top-10 left-10"></div>
     <div class="glow-blob bottom-10 right-10"></div>
 
-    <!-- Custom Notification Container (Toasts) -->
     <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
 
     <div class="max-w-6xl mx-auto glass-card p-8 rounded-3xl z-10 relative">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 border-b border-white/5 pb-6">
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent tracking-wide">Gestión de Clientes</h1>
-            <button id="btnCreate" title="Registrar un nuevo cliente en el sistema" class="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/20 transition-all transform hover:-translate-y-0.5">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 border-b-2 border-slate-200 pb-6">
+            <h1 class="text-3xl font-normal text-black tracking-wide">Gestión de Clientes</h1>
+            <button id="btnCreate" title="Registrar un nuevo cliente en el sistema" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-normal text-sm shadow-md transition-all transform hover:-translate-y-0.5">
                 <i class="fas fa-plus mr-2"></i>Crear Cliente
             </button>
         </div>
 
-        <!-- Filtros -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          
             <div class="relative">
-                <input id="filtroTexto" type="text" placeholder="Buscar clientes por nombre, documento o email..." title="Busca clientes por nombre, documento o email" class="w-full p-3 rounded-xl input-focus text-sm outline-none" />
+                <input id="filtroTexto" type="text" placeholder="Buscar clientes por nombre, documento o email..." title="Busca clientes por nombre, documento o email" class="w-full p-3 rounded-xl input-focus text-sm outline-none font-medium" />
                 <span class="absolute right-4 top-1/2 -translate-y-1/2 help-icon flex items-center justify-center" title="Busca clientes por nombre, documento o email">?</span>
             </div>
+            
             <div class="relative">
-                <select id="filtroEstado" title="Filtra clientes por estado: Activos o Inactivos" class="w-full p-3 pr-12 rounded-xl bg-slate-900 border border-white/5 text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm cursor-pointer appearance-none">
+                <select id="filtroEstado" title="Filtra clientes por estado: Activos o Inactivos" class="w-full p-3 pr-12 rounded-xl bg-white border-2 border-slate-400 text-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm font-normal cursor-pointer appearance-none">
                     <option value="todos">Todos los estados</option>
                     <option value="activo">Activos</option>
                     <option value="inactivo">Inactivos</option>
                 </select>
                 <span class="absolute right-10 top-1/2 -translate-y-1/2 help-icon flex items-center justify-center" title="Filtra clientes por estado: Activos o Inactivos">?</span>
-                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-black font-normal text-xs">▼</div>
             </div>
+            
         </div>
 
-        <!-- Tabla de Resultados -->
-        <div class="overflow-x-auto rounded-2xl border border-white/5 bg-slate-950/40 shadow-inner">
-            <table class="min-w-full text-sm text-slate-300">
-                <thead class="bg-slate-950/80 text-slate-400 font-bold border-b border-white/5">
+        <div class="overflow-x-auto rounded-2xl border-2 border-slate-300 bg-white shadow-inner">
+            <table class="min-w-full text-sm text-black">
+                <thead class="bg-slate-100 text-slate-900 font-normal border-b-2 border-slate-300">
                     <tr>
-                        <th class="px-6 py-4 text-left">Cliente</th>
-                        <th class="px-6 py-4 text-left">Documento</th>
-                        <th class="px-6 py-4 text-left">Email</th>
-                        <th class="px-6 py-4 text-left">Estado</th>
-                        <th class="px-6 py-4 text-left">Acciones</th>
+                        <th class="px-6 py-4 text-left uppercase tracking-wider">Cliente</th>
+                        <th class="px-6 py-4 text-left uppercase tracking-wider">Documento</th>
+                        <th class="px-6 py-4 text-left uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-4 text-left uppercase tracking-wider">Estado</th>
+                        <th class="px-6 py-4 text-left uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="clientTableBody" class="divide-y divide-white/5"></tbody>
+                <tbody id="clientTableBody" class="divide-y-2 divide-slate-200 bg-white font-medium"></tbody>
             </table>
 
-            <!-- Tarjeta Bienvenida -->
             <div id="welcomeContainer" class="p-12 text-center hidden">
-                <div class="bg-indigo-950/20 border border-indigo-500/10 p-8 rounded-2xl text-center cursor-pointer hover:border-indigo-500/30 transition-all shadow-xl inline-block max-w-md" onclick="openEdit(null)">
-                    <div class="w-16 h-16 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mx-auto mb-4">
+                <div class="bg-slate-50 border-2 border-slate-300 p-8 rounded-2xl text-center cursor-pointer hover:border-indigo-500 transition-all shadow-md inline-block max-w-md" onclick="openEdit(null)">
+                    <div class="w-16 h-16 rounded-full bg-indigo-50 text-indigo-600 border-2 border-indigo-200 flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-user-plus text-2xl"></i>
                     </div>
-                    <h2 class="text-xl font-bold text-slate-100 mb-2">¡Todo listo para comenzar!</h2>
-                    <p class="text-slate-400 text-xs mb-6 leading-relaxed">No tienes clientes registrados aún.<br>El primer paso indispensable es crear un cliente para poder asignarle proyectos.</p>
-                    <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-indigo-600/20 transition-all">Crear mi primer cliente</button>
+                    <h2 class="text-xl font-normal text-black mb-2">¡Todo listo para comenzar!</h2>
+                    <p class="text-slate-700 text-xs mb-6 leading-relaxed font-medium">No tienes clientes registrados aún.<br>El primer paso indispensable es crear un cliente para poder asignarle proyectos.</p>
+                    <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-normal text-xs shadow-md transition-all">Crear mi primer cliente</button>
                 </div>
             </div>
         </div>
 
-        <!-- Paginación -->
         <div class="flex justify-between items-center mt-6 text-sm">
-            <button id="btnPrev" title="Página anterior de resultados" class="px-4 py-2 bg-slate-900 border border-white/5 hover:bg-slate-800 text-slate-300 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold">← Anterior</button>
-            <span id="pagerInfo" class="text-slate-500 font-mono font-semibold">Página 1</span>
-            <button id="btnNext" title="Página siguiente de resultados" class="px-4 py-2 bg-slate-900 border border-white/5 hover:bg-slate-800 text-slate-300 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all font-semibold">Siguiente →</button>
+            <button id="btnPrev" title="Página anterior de resultados" class="px-4 py-2 bg-white border-2 border-slate-400 hover:bg-slate-100 text-black rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all font-normal">← Anterior</button>
+            <span id="pagerInfo" class="text-black font-mono font-normal">Página 1</span>
+            <button id="btnNext" title="Página siguiente de resultados" class="px-4 py-2 bg-white border-2 border-slate-400 hover:bg-slate-100 text-black rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all font-normal">Siguiente →</button>
         </div>
+        
     </div>
 
-    <!-- MODAL DE CONFIRMACIÓN CUSTOM (Sustituye a confirm() nativo de forma premium) -->
-    <div id="confirmModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden items-center justify-center p-4">
-        <div class="card-glass rounded-2xl max-w-md w-full p-6 text-center border border-white/10 shadow-2xl">
-            <div class="w-16 h-16 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
-                <i class="fas fa-exclamation-triangle text-2xl animate-pulse"></i>
+    <div id="confirmModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 text-center border-2 border-slate-400 shadow-2xl">
+            <div class="w-16 h-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border-2 border-rose-300">
+                <i class="fas fa-exclamation-triangle text-2xl"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-100 mb-2" id="confirmTitle">Confirmar Acción</h3>
-            <p class="text-sm text-slate-400 mb-6" id="confirmText">¿Estás seguro de realizar esta acción?</p>
+            <h3 class="text-lg font-normal text-black mb-2" id="confirmTitle">Confirmar Acción</h3>
+            <p class="text-sm text-slate-800 font-medium mb-6" id="confirmText">¿Estás seguro de realizar esta acción?</p>
             <div class="flex gap-3 justify-center">
-                <button id="btnConfirmCancel" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold border border-white/5 transition-all">Cancelar</button>
-                <button id="btnConfirmAccept" class="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-rose-600/20">Confirmar</button>
+                <button id="btnConfirmCancel" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-black rounded-xl text-xs font-normal transition-all">Cancelar</button>
+                <button id="btnConfirmAccept" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-normal transition-all shadow-md">Confirmar</button>
             </div>
         </div>
     </div>
 
     <script>
-        const API_BASE = "https://gestordecursos.pegui.edu.co:8000";
+        var API_BASE = "https://gestordecursos.pegui.edu.co:8000";
         const API_CLIENTS = `${API_BASE}/clients`;
         const HEADERS = { "Content-Type": "application/json" };
         let currentPage = 1, limit = 10, lastPageCount = 0;
@@ -208,14 +216,14 @@
             const container = document.getElementById('customToastContainer');
             if (!container) return;
             const toast = document.createElement('div');
-            toast.className = `flex items-center p-3 rounded-xl shadow-xl border backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+            toast.className = `flex items-center p-3 rounded-xl shadow-xl border-2 backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
                 type === 'success' 
-                    ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' 
-                    : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+                    ? 'bg-emerald-50 border-emerald-400 text-emerald-900' 
+                    : 'bg-rose-50 border-rose-400 text-rose-900'
             }`;
             toast.innerHTML = `
                 <span class="mr-2 text-lg">${type === 'success' ? '✨' : '⚠️'}</span>
-                <div class="text-xs font-semibold tracking-wide">${message}</div>
+                <div class="text-xs font-normal tracking-wide">${message}</div>
             `;
             container.appendChild(toast);
             setTimeout(() => {
@@ -267,7 +275,7 @@
 
         async function fetchClients(page = 1) {
             currentPage = page;
-            const url = new URL(API_CLIENTS);
+            const url = new URL(API_CLIENTS, window.location.origin);
             url.searchParams.set("skip", (page - 1) * limit);
             url.searchParams.set("limit", limit);
 
@@ -308,34 +316,34 @@
             welcomeContainer.classList.add("hidden");
 
             if (clients.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-500 font-medium">No se encontraron clientes con esos filtros.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-700 font-normal">No se encontraron clientes con esos filtros.</td></tr>`;
                 return;
             }
 
             clients.forEach(c => {
                 const row = `
-                <tr class="hover:bg-slate-900/40 transition-colors">
-                    <td class="px-6 py-4 font-bold text-slate-200">${c.nombre}</td>
-                    <td class="px-6 py-4 text-slate-400 font-mono text-xs">${c.tipo_documento || ""} ${c.documento || ""}</td>
-                    <td class="px-6 py-4 text-slate-400">${c.email}</td>
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-200">
+                    <td class="px-6 py-4 font-normal text-black">${c.nombre}</td>
+                    <td class="px-6 py-4 text-slate-800 font-mono text-xs font-normal">${c.tipo_documento || ""} ${c.documento || ""}</td>
+                    <td class="px-6 py-4 text-slate-800 font-normal">${c.email}</td>
                     <td class="px-6 py-4">
                         ${c.estado 
-                            ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">🟢 Activo</span>' 
-                            : '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">🔴 Inactivo</span>'
+                            ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-normal bg-emerald-100 text-emerald-800 border-2 border-emerald-300">🟢 Activo</span>' 
+                            : '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-normal bg-rose-100 text-rose-800 border-2 border-rose-300">🔴 Inactivo</span>'
                         }
                     </td>
                     <td class="px-6 py-4 flex gap-1.5">
-                        <button class="action-btn bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 view-btn" data-id="${c.uid}" title="Ver Detalles"><i class="fas fa-eye"></i></button>
-                        <button class="action-btn bg-amber-500/10 text-amber-400 border border-amber-500/20 edit-btn" data-id="${c.uid}" title="Editar Cliente"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="action-btn bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-2 border-indigo-300 view-btn" data-id="${c.uid}" title="Ver Detalles"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn bg-amber-50 hover:bg-amber-100 text-amber-700 border-2 border-amber-300 edit-btn" data-id="${c.uid}" title="Editar Cliente"><i class="fas fa-pencil-alt"></i></button>
                         
-                        <button class="action-btn bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 create-project-btn" 
+                        <button class="action-btn bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-2 border-emerald-300 create-project-btn" 
                                 data-id="${c.uid}" 
                                 data-name="${encodeURIComponent(c.nombre)}" 
                                 title="Crear Proyecto para este Cliente">
                             <i class="fas fa-folder-plus"></i>
                         </button>
 
-                        <button class="action-btn ${c.estado ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"} toggle-btn" 
+                        <button class="action-btn ${c.estado ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-2 border-rose-300' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-2 border-emerald-300'} toggle-btn" 
                                 data-id="${c.uid}" data-active="${c.estado}" title="${c.estado ? 'Desactivar' : 'Activar'}">
                             ${c.estado ? '<i class="fas fa-trash-alt"></i>' : '<i class="fas fa-check-circle"></i>'}
                         </button>
@@ -410,7 +418,6 @@
         });
     </script>
 
-    <!-- Tooltips Dinámicos Estables -->
     <script>
         (function(){
             if(window.__ttLoaded) return;
@@ -458,62 +465,25 @@
             });
         })();
     </script>
-    <script src="/js/roles.js"></script>
+    <script src="/staging/js/roles.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const path = window.location.pathname;
-            const isSuperadmin = path.includes('/r/superadmin/');
-            const isAdmin = path.includes('/r/admin/');
-            const isCoordinador = path.includes('/r/coordinador/');
-            const isCliente = path.includes('/r/cliente/');
-            const isDisInst = path.includes('/r/disenador-instruccional/');
-            const isAutor = path.includes('/r/autor/');
-            const isRevisor = path.includes('/r/revisor-qa/');
-            const isEditor = path.includes('/r/editor/');
-            const isDesaMult = path.includes('/r/desarrollador-multimedia/');
-            const isAbogado = path.includes('/r/abogado/');
-            const isDisGraf = path.includes('/r/disenador-grafico/');
-            const isAnim2d = path.includes('/r/animador-2d/');
-            const isAnim3d = path.includes('/r/animador-3d/');
-            const isVideo = path.includes('/r/video/');
-            const isCorrector = path.includes('/r/corrector-de-estilo/');
-            const isIngeniero = path.includes('/r/ingeniero-lms/');
-            const isRegistrado = path.includes('/r/registrado/');
-
-            const allowedRoles = [];
-            if (isSuperadmin) allowedRoles.push('superadmin');
-            if (isAdmin) allowedRoles.push('admin');
-            if (isCoordinador) allowedRoles.push('coordinador');
-            if (isCliente) allowedRoles.push('cliente');
-            if (isDisInst) allowedRoles.push('disenador-instruccional');
-            if (isAutor) allowedRoles.push('autor');
-            if (isRevisor) allowedRoles.push('revisor-qa');
-            if (isEditor) allowedRoles.push('editor');
-            if (isDesaMult) allowedRoles.push('desarrollador-multimedia');
-            if (isAbogado) allowedRoles.push('abogado');
-            if (isDisGraf) allowedRoles.push('disenador-grafico');
-            if (isAnim2d) allowedRoles.push('animador-2d');
-            if (isAnim3d) allowedRoles.push('animador-3d');
-            if (isVideo) allowedRoles.push('video');
-            if (isCorrector) allowedRoles.push('corrector-de-estilo');
-            if (isIngeniero) allowedRoles.push('ingeniero-lms');
-            if (isRegistrado) allowedRoles.push('registrado');
-
+            const allowedRoles = ['superadmin', 'admin', 'coordinador', 'cliente', 'disenador-instruccional', 'autor', 'revisor-qa', 'editor', 'desarrollador-multimedia', 'abogado', 'disenador-grafico', 'animador-2d', 'animador-3d', 'video', 'corrector-de-estilo', 'ingeniero-lms', 'registrado'];
             const token = localStorage.getItem('token');
             if (!token) {
-                window.location.href = '/';
+                window.location.href = '/staging/';
                 return;
             }
-                
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 const userRoles = payload.roles || [payload.role].filter(Boolean);
                 if (!userRoles.some(r => allowedRoles.includes(r))) {
-                    window.location.href = '/';
+                    window.location.href = '/staging/';
                     return;
                 }
             } catch(e) {
-                window.location.href = '/';
+                window.location.href = '/staging/';
             }
         });
     </script>
@@ -521,11 +491,9 @@
         (function() {
             const token = localStorage.getItem('token');
             if (!token) return;
-                
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 const permissions = payload.permissions || [];
-                const hasPermission = (perm) => permissions.includes(perm);
                 const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
                 const menuPermissions = {
                     'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
@@ -574,5 +542,6 @@
             } catch(e) {}
         })();
     </script>
+    <script src="/staging/js/theme-manager.js"></script>
 </body>
 </html>

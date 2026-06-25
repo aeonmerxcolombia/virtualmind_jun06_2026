@@ -74,6 +74,7 @@
 </head>
 
 <body class="flex items-center justify-center min-h-screen p-4">
+  <script src="/staging/js/staging-banner.js"></script>
 
   <div class="bg-overlay"></div>
 
@@ -419,7 +420,7 @@
                     const roles = payload.roles || [payload.role];
                     if(roles && roles.length > 0) {
                       const target = roles.includes("superadmin") ? "superadmin" : roles[0];
-                      window.location.href = `r/${target}/`;
+                      window.location.href = `/staging/r/${target}/`;
                     }
                     else alert("Usuario sin roles");
                 } catch(e) { 
@@ -447,7 +448,7 @@
         const password = document.getElementById('password').value.trim();
 
         try {
-            const res = await fetch("https://gestordecursos.pegui.edu.co:8000/auth/login", {
+            const res = await fetch("/staging-api/auth/login", {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password })
             });
@@ -474,7 +475,7 @@
         const code = document.getElementById('otpCode').value.trim();
 
         try {
-            const res = await fetch("https://gestordecursos.pegui.edu.co:8000/auth/verify-2fa", {
+            const res = await fetch("/staging-api/auth/verify-2fa", {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: currentEmail, code })
             });
@@ -494,7 +495,7 @@
     // ==========================================
     // LÓGICA DE BIOMETRÍA FACIAL (FACE-API.JS)
     // ==========================================
-    const API_URL = "https://gestordecursos.pegui.edu.co:8000";
+    const API_URL = "/staging-api";
     let faceStream = null;
     let modelsLoaded = false;
     const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
@@ -950,7 +951,7 @@
     window.onload = function() {
         google.accounts.id.initialize({
             client_id: "559021257590-fk52s7o9oct3lcu43aggujimacqjju2f.apps.googleusercontent.com",
-            callback: (r) => window.location.href = `https://gestordecursos.pegui.edu.co:8000/auth/google/callback?credential=${r.credential}`
+            callback: (r) => window.location.href = `/staging-api/auth/google/callback?credential=${r.credential}`
         });
         google.accounts.id.renderButton(document.getElementById("googleSignInDiv"), { theme: "outline", size: "large", width: "100%" });
 
@@ -977,7 +978,7 @@
             if (response.status === 'connected') {
                 FB.api('/me', { fields: 'id,name,email' }, function(userData) {
                     if (userData.email) {
-                        window.location.href = `https://gestordecursos.pegui.edu.co:8000/auth/facebook/callback?access_token=${response.authResponse.accessToken}`;
+                        window.location.href = `/staging-api/auth/facebook/callback?access_token=${response.authResponse.accessToken}`;
                     } else {
                         showError('Facebook no proporcionó tu correo electrónico. Configura tu cuenta de Facebook para permitir el acceso.');
                     }

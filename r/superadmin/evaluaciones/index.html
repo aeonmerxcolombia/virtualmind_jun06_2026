@@ -16,21 +16,21 @@
   <style>
     body { 
       font-family: 'Inter', sans-serif; 
-      background-color: #090D16;
-      color: #cbd5e1;
+      background-color: #f8fafc;
+      color: #334155;
       overflow-x: hidden;
     }
 
     .gradient-bg { 
-      background: linear-gradient(135deg, #090d16 0%, #0f172a 100%); 
+      background: #f8fafc; 
     }
             
     .card-glass {             
-      background: rgba(15, 23, 42, 0.65);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
 
     /* Input styling premium */
@@ -40,9 +40,9 @@
     #evalForm select,
     #evalForm textarea {
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      background: rgba(15, 23, 42, 0.6) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      color: #f8fafc !important;
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      color: #1e293b !important;
       border-radius: 0.75rem !important; 
       padding: 0.75rem 1rem !important;
       outline: none !important;
@@ -53,24 +53,24 @@
     #evalForm select:focus,
     #evalForm textarea:focus {
       border-color: #6366f1 !important; 
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
-      background: rgba(15, 23, 42, 0.95) !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+      background: #ffffff !important;
     }
 
     /* Custom Checkbox */
     .checkbox-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
     .checkbox-custom input[type=checkbox] { opacity: 0; position: absolute; }
     .checkbox-custom .checkmark { 
-      display: inline-block; width: 18px; height: 18px; background: rgba(15, 23, 42, 0.8); 
-      border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 6px; margin-right: 10px; transition: all 0.3s ease; flex-shrink: 0;
+      display: inline-block; width: 18px; height: 18px; background: #ffffff; 
+      border: 2px solid #cbd5e1; border-radius: 6px; margin-right: 10px; transition: all 0.3s ease; flex-shrink: 0;
     }
     .checkbox-custom input:checked + .checkmark { background: #059669; border-color: #34d399; box-shadow: 0 0 10px rgba(52, 211, 153, 0.4); }
     .checkbox-custom input:checked + .checkmark:after { 
-      content: "✓"; color: #fff; font-size: 11px; font-weight: bold; position: absolute; left: 4px; top: 0px; 
+      content: "✓"; color: #fff; font-size: 11px; font-weight: bold; position: absolute; left: 3px; top: 0px; 
     }
 
     select { 
-      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23cbd5e1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); 
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); 
       background-position: right 0.75rem center; 
       background-repeat: no-repeat; 
       background-size: 1.2em 1.2em; 
@@ -79,23 +79,19 @@
       -moz-appearance: none;
       appearance: none;
     }
-    select option { background-color: #0f172a; color: #cbd5e1; }
+    select option { background-color: #ffffff; color: #334155; }
 
     .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scroll::-webkit-scrollbar-thumb { background-color: rgba(99, 102, 241, 0.3); border-radius: 9999px; }
     .custom-scroll::-webkit-scrollbar-track { background-color: transparent; }
 
-    .glow-blob {
-      position: fixed; width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0) 70%);
-      border-radius: 50%; pointer-events: none; z-index: 0;
-    }
+    .glow-blob { display: none; }
 
     /* Estilos de grabación Whisper IA */
     .btn-mic-premium {
-        background-color: rgba(99, 102, 241, 0.1) !important;
-        border: 1px solid rgba(99, 102, 241, 0.25) !important;
-        color: #818cf8 !important;
+        background-color: rgba(99, 102, 241, 0.08) !important;
+        border: 1px solid rgba(99, 102, 241, 0.2) !important;
+        color: #6366f1 !important;
         transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         border-radius: 0.75rem;
         display: flex;
@@ -107,49 +103,49 @@
         flex-shrink: 0;
     }
     .btn-mic-premium:hover {
-        background-color: rgba(99, 102, 241, 0.25) !important;
-        border-color: rgba(99, 102, 241, 0.5) !important;
-        color: #ffffff !important;
-        box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        background-color: rgba(99, 102, 241, 0.15) !important;
+        border-color: #6366f1 !important;
+        color: #4f46e5 !important;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
     }
     .mic-recording {            
         animation: micPulse 1.2s infinite ease-in-out !important;            
-        background-color: rgba(239, 68, 68, 0.25) !important;            
-        color: #fca5a5 !important;            
-        border-color: rgba(239, 68, 68, 0.5) !important;        
+        background-color: rgba(239, 68, 68, 0.1) !important;            
+        color: #dc2626 !important;            
+        border-color: rgba(239, 68, 68, 0.4) !important;        
     }
     .mic-processing {            
-        background-color: rgba(234, 179, 8, 0.2) !important;            
-        color: #fef08a !important;            
-        border-color: rgba(234, 179, 8, 0.4) !important;        
+        background-color: rgba(234, 179, 8, 0.1) !important;            
+        color: #ca8a04 !important;            
+        border-color: rgba(234, 179, 8, 0.3) !important;        
     }
     @keyframes micPulse {            
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }            
-        50% { transform: scale(1.04); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }            
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }        
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }            
+        50% { transform: scale(1.04); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }            
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }        
     }
 
-    /* Tema Custom para el Tutorial Interactivo Driver.js (DARK MODE) */
+    /* Tema Custom para el Tutorial Interactivo Driver.js (LIGHT MODE) */
     .driverjs-theme { 
         font-family: 'Inter', sans-serif; 
         border-radius: 16px; 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+        border: 1px solid #e2e8f0; 
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); 
         padding: 20px; 
-        background: rgba(15, 23, 42, 0.95) !important;
-        color: #f1f5f9 !important;
+        background: #ffffff !important;
+        color: #334155 !important;
     }
-    .driverjs-theme .driver-popover-title { font-size: 18px; font-weight: 700; color: #818cf8; margin-bottom: 8px; }
-    .driverjs-theme .driver-popover-description { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+    .driverjs-theme .driver-popover-title { font-size: 18px; font-weight: 700; color: #4f46e5; margin-bottom: 8px; }
+    .driverjs-theme .driver-popover-description { color: #64748b; font-size: 14px; line-height: 1.6; }
     .driverjs-theme .driver-popover-next-btn, .driverjs-theme .driver-popover-prev-btn { 
         background-color: #4f46e5; color: white; border-radius: 8px; text-shadow: none; border: none; padding: 6px 14px; font-weight: 600; 
         transition: all 0.2s;
     }
     .driverjs-theme .driver-popover-next-btn:hover, .driverjs-theme .driver-popover-prev-btn:hover { background-color: #6366f1; }
-    .driverjs-theme .driver-popover-close-btn { color: #64748b; }
+    .driverjs-theme .driver-popover-close-btn { color: #94a3b8; }
 
     /* Tooltip System CSS */
-    .vm-tooltip { position:absolute; background:#0f172a; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.45); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; border: 1px solid rgba(255, 255, 255, 0.08); font-weight: 500; }
+    .vm-tooltip { position:absolute; background:#1e293b; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.15); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; border: 1px solid rgba(255, 255, 255, 0.1); font-weight: 500; }
     .vm-tooltip.visible { opacity:1; transform:translateY(0); }
   </style>
 </head>
@@ -163,17 +159,17 @@
 
   <div class="max-w-4xl mx-auto card-glass rounded-3xl p-6 md:p-8 z-10 relative shadow-2xl">
     
-    <header class="flex flex-col sm:flex-row justify-between items-center mb-8 border-b border-white/5 pb-5 gap-4">
+    <header class="flex flex-col sm:flex-row justify-between items-center mb-8 border-b border-slate-200 pb-5 gap-4">
       <div class="flex items-center gap-4">
         <div class="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
             <i class="fas fa-brain text-white text-xl"></i>
         </div>
         <div>
-            <h2 class="text-2xl font-bold bg-gradient-to-r from-white via-slate-100 to-emerald-300 bg-clip-text text-transparent tracking-wide">Crear Evaluación Inteligente</h2>
-            <p class="text-xs text-emerald-400 font-semibold mt-1">Configuración curricular con asistencia de IA y Voz</p>
+            <h2 class="text-2xl font-bold text-slate-800 tracking-wide">Crear Evaluación Inteligente</h2>
+            <p class="text-xs text-emerald-600 font-semibold mt-1">Configuración curricular con asistencia de IA y Voz</p>
         </div>
       </div>
-      <button type="button" onclick="verTutorial('crear_evaluacion')" class="group flex items-center gap-2 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 hover:border-transparent px-5 py-2.5 rounded-full shadow-md transition-all text-indigo-300 hover:text-white font-bold cursor-pointer">
+      <button type="button" onclick="verTutorial('crear_evaluacion')" class="group flex items-center gap-2 bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 hover:border-transparent px-5 py-2.5 rounded-full shadow-md transition-all text-indigo-700 hover:text-white font-bold cursor-pointer">
           <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm">?</span>
           <span>Ver Tutorial</span>
       </button>
@@ -184,11 +180,11 @@
         
         <!-- Título -->
         <div class="md:col-span-2" id="tour-step-titulo">
-          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Título de la Evaluación <span class="text-rose-500">*</span></label>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5">Título de la Evaluación <span class="text-rose-500">*</span></label>
           <div class="flex gap-2.5 items-start">
             <div class="relative flex-1">
               <input type="text" name="titulo" id="titulo" required placeholder="Ej: Evaluación Final de Arquitectura de Software" class="pr-12 w-full">
-              <button type="button" id="btn-ia-titulo" onclick="generarTituloIA()" class="absolute top-1/2 -translate-y-1/2 right-2 px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-lg text-xs font-semibold flex items-center transition-all" title="Generar con IA">
+              <button type="button" id="btn-ia-titulo" onclick="generarTituloIA()" class="absolute top-1/2 -translate-y-1/2 right-2 px-2.5 py-1.5 bg-purple-50 hover:bg-purple-600 border border-purple-200 hover:border-transparent text-purple-700 hover:text-white rounded-lg text-xs font-semibold flex items-center transition-all" title="Generar con IA">
                 <i class="fas fa-robot"></i>
               </button>
             </div>
@@ -198,7 +194,7 @@
 
         <!-- Descripción -->
         <div class="md:col-span-2" id="tour-step-descripcion">
-          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Descripción General <span class="text-rose-500">*</span></label>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5">Descripción General <span class="text-rose-500">*</span></label>
           <div class="flex gap-2.5 items-start">
             <div class="relative flex-1">
               <textarea name="descripcion" id="descripcion" rows="2" required placeholder="Ingresa las instrucciones o un resumen del examen..." class="resize-none pr-12 w-full"></textarea>
@@ -212,31 +208,31 @@
 
         <!-- Fecha límite -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Fecha y Hora Límite</label>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5">Fecha y Hora Límite</label>
           <input type="datetime-local" name="fecha_limite" id="fecha_limite">
         </div>
 
         <!-- Cantidad de preguntas -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Cantidad de Preguntas <span class="text-rose-500">*</span></label>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5">Cantidad de Preguntas <span class="text-rose-500">*</span></label>
           <input type="number" min="1" max="50" name="cantidad" id="cantidad" value="5" required>
         </div>
 
         <!-- Duración -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Duración (minutos) <span class="text-rose-500">*</span></label>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5">Duración (minutos) <span class="text-rose-500">*</span></label>
           <input type="number" min="1" max="360" name="duracion" id="duracion" value="40" required>
         </div>
 
         <!-- Intentos permitidos -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Intentos Permitidos <span class="text-rose-500">*</span></label>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5">Intentos Permitidos <span class="text-rose-500">*</span></label>
           <input type="number" min="1" max="10" name="intentos" id="intentos" value="1" required>
         </div>
 
         <!-- Área / Asignatura -->
         <div id="tour-step-area">
-          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Área / Asignatura <span class="text-rose-500">*</span></label>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5">Área / Asignatura <span class="text-rose-500">*</span></label>
           <div class="flex gap-2.5 items-start">
             <input type="text" name="area" id="area" required placeholder="Ej: Ingeniería de Sistemas" class="flex-grow">
             <button type="button" onclick="gestionarGrabacionWhisper(event, 'area')" id="btn-mic-area" class="btn-mic-premium h-12" title="Grabar con Whisper IA"><i id="ico-mic-area" class="fas fa-microphone text-lg"></i></button>
@@ -245,7 +241,7 @@
 
         <!-- Nivel educativo -->
         <div id="tour-step-nivel">
-          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Nivel Educativo <span class="text-rose-500">*</span></label>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5">Nivel Educativo <span class="text-rose-500">*</span></label>
           <div class="flex gap-2.5 items-start">
             <input type="text" name="nivel" id="nivel" required placeholder="Ej: Universitario" class="flex-grow">
             <button type="button" onclick="gestionarGrabacionWhisper(event, 'nivel')" id="btn-mic-nivel" class="btn-mic-premium h-12" title="Grabar con Whisper IA"><i id="ico-mic-nivel" class="fas fa-microphone text-lg"></i></button>
@@ -254,7 +250,7 @@
 
         <!-- Temas clave -->
         <div class="md:col-span-2" id="tour-step-temas">
-          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Temas Clave <span class="text-rose-500">*</span></label>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5">Temas Clave <span class="text-rose-500">*</span></label>
           <div class="flex gap-2.5 items-start">
             <div class="relative flex-1">
               <input type="text" name="temas" id="temas" required placeholder="Separados por comas. Ej: Microservicios, Docker, API Rest" class="pr-12 w-full">
@@ -268,7 +264,7 @@
 
         <!-- Competencias -->
         <div class="md:col-span-2" id="tour-step-competencias">
-          <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Competencias a Evaluar <span class="text-rose-500">*</span></label>
+          <label class="block text-xs font-bold uppercase tracking-wide text-slate-600 mb-1.5">Competencias a Evaluar <span class="text-rose-500">*</span></label>
           <div class="flex gap-2.5 items-start">
             <div class="relative flex-1">
               <input type="text" name="competencias" id="competencias" required placeholder="Separadas por comas. Ej: Arquitectura de software, Diseño de infraestructura" class="pr-12 w-full">
