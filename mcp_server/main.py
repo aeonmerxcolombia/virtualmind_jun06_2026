@@ -688,13 +688,9 @@ _sessions: dict[str, SessionState] = {}
 _gemini_clients: list = []
 _gemini_key_index = 0
 
-# Pool de 5 API keys multiplexadas en round-robin (mismas que Colmena)
+# Pool de API keys desde variable de entorno (separadas por coma)
 GEMINI_API_KEYS = [
-    "YOUR_GEMINI_KEY_1",
-    "YOUR_GEMINI_KEY_2",
-    "YOUR_GEMINI_KEY_3",
-    "YOUR_GEMINI_KEY_4",
-    "YOUR_GEMINI_KEY_5",
+    k.strip() for k in os.environ.get("GEMINI_API_KEYS", "").split(",") if k.strip()
 ]
 
 
@@ -1233,6 +1229,15 @@ def root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/config")
+def get_config():
+    return {
+        "gemini_api_keys": GEMINI_API_KEYS,
+        "model": "gemini-2.5-flash-lite",
+        "tools_count": len(TOOLS),
+    }
 
 
 @app.get("/tools")
