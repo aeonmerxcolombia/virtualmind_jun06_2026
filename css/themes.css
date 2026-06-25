@@ -1,0 +1,117 @@
+/* ============================================
+   THEMES - VirtualMind Staging v3
+   Solo definición de variables CSS
+   Las paletas completas están en:
+     - theme-white.css (claro)
+     - theme-dark.css  (oscuro)
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+*, input, textarea, select, button {
+  font-family: 'Inter', sans-serif !important;
+}
+i[class^="fa-"], i[class*=" fa-"], span[class^="fa-"], span[class*=" fa-"], svg[class^="fa-"], svg[class*=" fa-"],
+.fas, .far, .fal, .fab, .fa, .fa-solid, .fa-regular, .fa-light, .fa-brands {
+  font-family: "Font Awesome 6 Free" !important;
+}
+.fab {
+  font-family: "Font Awesome 6 Brands" !important;
+}
+.fal {
+  font-family: "Font Awesome 6 Pro" !important;
+}
+
+/* ========== TEMA CLARO (default) ========== */
+:root {
+  --bg-body: #ffffff;
+  --bg-card: #ffffff;
+  --bg-surface: #f8fafc;
+  --bg-sidebar: #fafafa;
+  --bg-header: #ffffff;
+  --bg-input: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-on-accent: #ffffff;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: rgba(79, 70, 229, 0.08);
+  --accent-border: #c7d2fe;
+  --border: #e2e8f0;
+  --border-input: #d1d5db;
+  --btn-primary-bg: #4f46e5;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: #4338ca;
+  --btn-secondary-bg: #f1f5f9;
+  --btn-secondary-text: #334155;
+  --btn-secondary-hover: #e2e8f0;
+  --btn-danger-bg: #e11d48;
+  --btn-danger-text: #ffffff;
+  --btn-danger-hover: #be123c;
+  --link: #4f46e5;
+  --link-hover: #3730a3;
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -2px rgba(0,0,0,0.04);
+  --shadow-md: 0 1px 3px 0 rgba(0,0,0,0.04), 0 2px 8px -1px rgba(0,0,0,0.03), 0 4px 12px -2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 12px -2px rgba(0,0,0,0.04), 0 2px 6px -1px rgba(0,0,0,0.03), 0 10px 24px -4px rgba(0,0,0,0.04);
+  --shadow-xl: 0 8px 24px -4px rgba(0,0,0,0.04), 0 4px 12px -2px rgba(0,0,0,0.03), 0 20px 48px -8px rgba(0,0,0,0.04);
+  --gradient-bg: #ffffff;
+  --card-glass-bg: #ffffff;
+  --card-glass-border: #e2e8f0;
+  --code-bg: #f1f5f9;
+  --badge-bg: #f1f5f9;
+  --kbd-bg: #f1f5f9;
+  --overlay: rgba(255,255,255,0.95);
+}
+
+/* ========== TEMA OSCURO ========== */
+[data-theme="dark"] {
+  --bg-body: #090D16;
+  --bg-card: rgba(15, 23, 42, 0.65);
+  --bg-surface: rgba(15, 23, 42, 0.5);
+  --bg-sidebar: rgba(15, 23, 42, 0.8);
+  --bg-header: rgba(15, 23, 42, 0.8);
+  --bg-input: rgba(15, 23, 42, 0.8);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-on-accent: #ffffff;
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --accent-soft: rgba(99, 102, 241, 0.15);
+  --accent-border: rgba(99, 102, 241, 0.3);
+  --border: rgba(255,255,255,0.08);
+  --border-input: rgba(255,255,255,0.15);
+  --btn-primary-bg: #6366f1;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: #818cf8;
+  --btn-secondary-bg: rgba(255,255,255,0.08);
+  --btn-secondary-text: #e2e8f0;
+  --btn-secondary-hover: rgba(255,255,255,0.15);
+  --btn-danger-bg: #e11d48;
+  --btn-danger-text: #ffffff;
+  --btn-danger-hover: #fb7185;
+  --link: #818cf8;
+  --link-hover: #a5b4fc;
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.2), 0 1px 4px -1px rgba(0,0,0,0.15);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.2);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+  --shadow-xl: 0 12px 48px rgba(0,0,0,0.35), 0 8px 24px rgba(0,0,0,0.25);
+  --gradient-bg: linear-gradient(135deg, #090d16 0%, #0f172a 100%);
+  --card-glass-bg: rgba(15, 23, 42, 0.65);
+  --card-glass-border: rgba(255,255,255,0.08);
+  --code-bg: rgba(0,0,0,0.3);
+  --badge-bg: rgba(255,255,255,0.08);
+  --kbd-bg: rgba(255,255,255,0.08);
+  --overlay: rgba(0,0,0,0.8);
+}
+
+/* ========== Custom mode: solo body bg/text, el resto vía JS ========== */
+[data-theme="custom"] {
+  --card-glass-border: var(--border, rgba(255,255,255,0.08));
+}
+
+/* Transiciones suaves en body */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
