@@ -1,0 +1,33 @@
+Nombre Completo: María García López
+Email: maria.garcia@email.com
+Teléfono: +57 300 987 6543
+Dirección: Calle 123 #45-67, Bogotá
+
+Perfil Profesional:
+Ingeniera de Sistemas con 8 años de experiencia en desarrollo web y liderazgo técnico.
+
+Habilidades:
+- Python, JavaScript, TypeScript
+- FastAPI, Django, React
+- PostgreSQL, MySQL, MongoDB
+- Docker, Kubernetes, AWS
+- Liderazgo de equipos, Metodologías Ágiles
+
+Experiencia:
+- Tech Lead | Empresa Tech S.A.S | 2020 - 2026
+  Lideré equipo de 10 desarrolladores, implementé arquitectura de microservicios.
+- Senior Developer | Soluciones Web Ltda | 2017 - 2020
+  Desarrollé APIs REST con FastAPI y Django.
+
+Educación:
+- Maestría en Ingeniería de Software | Universidad de Los Andes | 2020
+- Pregrado en Ingeniería de Sistemas | Universidad Nacional | 2015
+
+Idiomas:
+- Español (Nativo)
+- Inglés (Avanzado - C1)
+- Francés (Básico - A2)
+
+Certificaciones:
+- AWS Solutions Architect - 2023
+- Scrum Master Certified - 2022
