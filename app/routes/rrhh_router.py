@@ -18,7 +18,8 @@ router = APIRouter(prefix="/rrhh", tags=["RRHH"])
 UPLOAD_DIR = "/home/ubuntu/backend/documentos/hojas_vida"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+from app.services.ai.gemini_pool import get_gemini_key
+
 GEMINI_MODEL = "gemini-2.5-flash"
 
 
@@ -31,7 +32,7 @@ def get_db():
 
 
 def parsear_hoja_vida_con_gemini(texto: str) -> dict:
-    if not GEMINI_API_KEY or not texto.strip():
+    if not texto.strip():
         return {"error": "No hay API key o texto vacío"}
 
     prompt = f"""Eres un asistente de RRHH experto en parsear hojas de vida y sugerir mejoras de perfil.
@@ -74,15 +75,21 @@ Texto de la hoja de vida:
 {texto[:15000]}"""
 
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={get_gemini_key()}"
         body = {"contents": [{"parts": [{"text": prompt}]}]}
         resp = requests.post(url, json=body, timeout=60)
         data = resp.json()
-        text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+        text = (
+            data.get("candidates", [{}])[0]
+            .get("content", {})
+            .get("parts", [{}])[0]
+            .get("text", "")
+            .strip()
+        )
         text = text.replace("```json", "").replace("```", "").strip()
         return json.loads(text)
     except Exception as e:
-        return {"error": str(e), "raw": text if 'text' in dir() else ""}
+        return {"error": str(e), "raw": text if "text" in dir() else ""}
 
 
 def extraer_texto_archivo(filepath: str) -> str:
@@ -91,6 +98,7 @@ def extraer_texto_archivo(filepath: str) -> str:
     try:
         if ext == ".pdf":
             import pdfplumber
+
             with pdfplumber.open(filepath) as pdf:
                 text = "\n".join(page.extract_text() or "" for page in pdf.pages)
             if len(text.strip()) < 50:
@@ -99,13 +107,16 @@ def extraer_texto_archivo(filepath: str) -> str:
                     from PIL import Image
                     import io
                     import pypdfium2 as pdfium
+
                     pdf_doc = pdfium.PdfDocument(filepath)
                     ocr_pages = []
                     for i in range(len(pdf_doc)):
                         page = pdf_doc[i]
                         bitmap = page.render(scale=3)
                         pil_image = bitmap.to_pil()
-                        ocr_text = pytesseract.image_to_string(pil_image, lang='spa+eng')
+                        ocr_text = pytesseract.image_to_string(
+                            pil_image, lang="spa+eng"
+                        )
                         ocr_pages.append(ocr_text)
                     ocr_result = "\n".join(ocr_pages)
                     if len(ocr_result.strip()) > len(text.strip()):
@@ -114,6 +125,7 @@ def extraer_texto_archivo(filepath: str) -> str:
                     pass
         elif ext == ".docx":
             from docx import Document
+
             doc = Document(filepath)
             text = "\n".join(p.text for p in doc.paragraphs)
         elif ext == ".txt":
@@ -241,9 +253,15 @@ def ver_hoja_vida(
     if not hv or not hv.ruta_archivo:
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
     if not os.path.exists(hv.ruta_archivo):
-        raise HTTPException(status_code=404, detail="Archivo físico no encontrado en el servidor")
+        raise HTTPException(
+            status_code=404, detail="Archivo físico no encontrado en el servidor"
+        )
     media_type, _ = mimetypes.guess_type(hv.ruta_archivo)
-    return FileResponse(hv.ruta_archivo, media_type=media_type or "application/octet-stream", filename=hv.filename_original)
+    return FileResponse(
+        hv.ruta_archivo,
+        media_type=media_type or "application/octet-stream",
+        filename=hv.filename_original,
+    )
 
 
 @router.get("/hoja-vida/{hv_id}/download")
@@ -256,8 +274,14 @@ def descargar_hoja_vida(
     if not hv or not hv.ruta_archivo:
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
     if not os.path.exists(hv.ruta_archivo):
-        raise HTTPException(status_code=404, detail="Archivo físico no encontrado en el servidor")
-    return FileResponse(hv.ruta_archivo, media_type="application/octet-stream", filename=hv.filename_original)
+        raise HTTPException(
+            status_code=404, detail="Archivo físico no encontrado en el servidor"
+        )
+    return FileResponse(
+        hv.ruta_archivo,
+        media_type="application/octet-stream",
+        filename=hv.filename_original,
+    )
 
 
 @router.get("/archivo/{hv_id}")
@@ -270,9 +294,15 @@ def archivo_hoja_vida(
     if not hv or not hv.ruta_archivo:
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
     if not os.path.exists(hv.ruta_archivo):
-        raise HTTPException(status_code=404, detail="Archivo físico no encontrado en el servidor")
+        raise HTTPException(
+            status_code=404, detail="Archivo físico no encontrado en el servidor"
+        )
     media_type, _ = mimetypes.guess_type(hv.ruta_archivo)
-    return FileResponse(hv.ruta_archivo, media_type=media_type or "application/octet-stream", filename=hv.filename_original)
+    return FileResponse(
+        hv.ruta_archivo,
+        media_type=media_type or "application/octet-stream",
+        filename=hv.filename_original,
+    )
 
 
 @router.get("/hoja-vida/usuario/{user_id}")
@@ -281,7 +311,12 @@ def obtener_hv_por_usuario(
     db: Session = Depends(get_db),
     token_data: dict = Depends(verify_token),
 ):
-    hv_list = db.query(HojaVida).filter(HojaVida.user_id == user_id).order_by(HojaVida.fecha_subida.desc()).all()
+    hv_list = (
+        db.query(HojaVida)
+        .filter(HojaVida.user_id == user_id)
+        .order_by(HojaVida.fecha_subida.desc())
+        .all()
+    )
     return hv_list
 
 
@@ -294,7 +329,12 @@ def listar_hv_por_proyecto(
     roles = token_data.get("roles", [])
     if not any(r in roles for r in ("superadmin", "admin", "coordinador", "cliente")):
         raise HTTPException(status_code=403, detail="No autorizado")
-    hv_list = db.query(HojaVida).filter(HojaVida.project_id == project_id).order_by(HojaVida.fecha_subida.desc()).all()
+    hv_list = (
+        db.query(HojaVida)
+        .filter(HojaVida.project_id == project_id)
+        .order_by(HojaVida.fecha_subida.desc())
+        .all()
+    )
     return hv_list
 
 
@@ -353,15 +393,20 @@ def vincular_usuario(
     if hv.habilidades:
         competencia.habilidades = hv.habilidades
     if hv.educacion:
-        niveles = {"pregrado": "Profesional", "especializacion": "Especialización", "maestria": "Maestría", "doctorado": "Doctorado"}
+        niveles = {
+            "pregrado": "Profesional",
+            "especializacion": "Especialización",
+            "maestria": "Maestría",
+            "doctorado": "Doctorado",
+        }
         niv = None
-        for e in (hv.educacion or []):
+        for e in hv.educacion or []:
             if isinstance(e, dict) and e.get("nivel"):
                 niv = niveles.get(e["nivel"].lower(), e["nivel"])
         if niv:
             competencia.nivel_academico = niv
         areas = []
-        for e in (hv.educacion or []):
+        for e in hv.educacion or []:
             if isinstance(e, dict) and e.get("titulo"):
                 areas.append(e["titulo"])
         if areas:
@@ -372,12 +417,17 @@ def vincular_usuario(
         competencia.perfilamiento = hv.perfil_profesional
     if hv.experiencia:
         total_anios = sum(
-            _calcular_anios_exp(e) for e in (hv.experiencia or []) if isinstance(e, dict)
+            _calcular_anios_exp(e)
+            for e in (hv.experiencia or [])
+            if isinstance(e, dict)
         )
         competencia.anios_experiencia = total_anios
 
     db.commit()
-    return {"ok": True, "mensaje": "Hoja de vida vinculada al usuario y competencias actualizadas"}
+    return {
+        "ok": True,
+        "mensaje": "Hoja de vida vinculada al usuario y competencias actualizadas",
+    }
 
 
 def _calcular_anios_exp(exp: dict) -> int:
@@ -416,10 +466,17 @@ def check_email_rrhh(
 ):
     email_lower = email.strip().lower()
     user = db.query(User).filter(User.email == email_lower).first()
-    hv = db.query(HojaVida).filter(HojaVida.email == email_lower).order_by(HojaVida.fecha_subida.desc()).first()
+    hv = (
+        db.query(HojaVida)
+        .filter(HojaVida.email == email_lower)
+        .order_by(HojaVida.fecha_subida.desc())
+        .first()
+    )
     return {
         "usuario_existe": bool(user),
-        "usuario": {"uid": user.uid, "nombre": user.nombre, "email": user.email} if user else None,
+        "usuario": {"uid": user.uid, "nombre": user.nombre, "email": user.email}
+        if user
+        else None,
         "hv_existe": bool(hv),
         "hv": {
             "id": hv.id,
@@ -429,5 +486,7 @@ def check_email_rrhh(
             "perfil_profesional": hv.perfil_profesional,
             "experiencia": hv.experiencia,
             "educacion": hv.educacion,
-        } if hv else None,
+        }
+        if hv
+        else None,
     }

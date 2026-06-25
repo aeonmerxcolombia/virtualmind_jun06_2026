@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 
@@ -8,21 +9,17 @@ class EnswarmConfig:
     DATABASE_URL: str = (
         "mysql+aiomysql://root:YOUR_DB_PASSWORD@localhost:3306/agentic_os"
     )
-    CODE_SIGN_KEY: str = "YOUR_CODE_SIGN_KEY_HERE"
+    CODE_SIGN_KEY: str = "CODE_SIGNING_HMAC_ADN_PROTECTED_KEY_9999X_ETHICAL"
     SQLITE_DB_PATH: str = "/tmp/agentic_os_hibernation.db"
 
-    # Pool de API Keys — reemplazar con tus propias keys
+    # Pool de API Keys multiplexadas en round-robin, desde env var
     GEMINI_API_KEYS: List[str] = [
-        "YOUR_GEMINI_KEY_1",
-        "YOUR_GEMINI_KEY_2",
-        "YOUR_GEMINI_KEY_3",
-        "YOUR_GEMINI_KEY_4",
-        "YOUR_GEMINI_KEY_5",
+        k.strip() for k in os.environ.get("GEMINI_API_KEYS", "").split(",") if k.strip()
     ]
 
     # Modelos Google (nada de 1.5)
     MODEL_FAST: str = "gemini-2.5-flash"
-    MODEL_COMPLEX: str = "gemini-3.5-flash"
+    MODEL_COMPLEX: str = "gemini-2.5-flash"
     MODEL_EMBEDDING: str = "gemini-embedding-2"
 
     ROLES_INTERFAZ: List[str] = [

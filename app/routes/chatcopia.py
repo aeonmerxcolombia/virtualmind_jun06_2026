@@ -69,7 +69,7 @@ async def chat_openai(request: ChatRequest):
 # ----------------------------
 # GEMINI
 # ----------------------------
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+from app.services.ai.gemini_pool import get_gemini_key
 
 
 class GeminiRequest(BaseModel):
@@ -79,7 +79,7 @@ class GeminiRequest(BaseModel):
 @router.post("/chat/gemini")
 async def chat_gemini(request: GeminiRequest):
     prompt = request.prompt
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={get_gemini_key()}"
     body = {"contents": [{"parts": [{"text": prompt}]}]}
     try:
         response = requests.post(
@@ -144,8 +144,7 @@ class GenerarContenidoRequest(BaseModel):
 
 @router.post("/chat/generar-contenido")
 async def generar_contenido(request: GenerarContenidoRequest):
-    GEMINI_API_KEY_FORM = os.getenv("GEMINI_API_KEY", "")
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY_FORM}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={get_gemini_key()}"
     body = {"contents": [{"parts": [{"text": request.prompt}]}]}
     try:
         response = requests.post(
@@ -267,7 +266,7 @@ from google.genai import types
 import time
 
 # API Key de AI Studio (segura)
-GEMINI_API_KEY_STUDIO = "YOUR_GEMINI_STUDIO_KEY"
+GEMINI_API_KEY_STUDIO = get_gemini_key()
 
 client_ai_studio = genai.Client(
     http_options={"api_version": "v1beta"},

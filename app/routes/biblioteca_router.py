@@ -6,9 +6,17 @@ from datetime import datetime
 
 from app.database.db import SessionLocal
 from app.auth.jwt_handler import verify_token
-from app.models.biblioteca import DocumentoBiblioteca, AccesoBiblioteca, SolicitudAccesoBiblioteca
+from app.models.biblioteca import (
+    DocumentoBiblioteca,
+    AccesoBiblioteca,
+    SolicitudAccesoBiblioteca,
+)
 from app.schemas.biblioteca_schema import DocumentoBibliotecaOut
-from app.models.documento_office import DocumentoOficina, DocumentoVersion, DocumentoRevision
+from app.models.documento_office import (
+    DocumentoOficina,
+    DocumentoVersion,
+    DocumentoRevision,
+)
 from app.models.project import Project
 from app.services.log_service import crear_notificacion
 from app.services.email_service import send_email, get_user_email
@@ -18,7 +26,8 @@ router = APIRouter(prefix="/biblioteca", tags=["Biblioteca de Documentos"])
 BIBLIOTECA_DIR = "/home/ubuntu/backend/documentos/biblioteca"
 os.makedirs(BIBLIOTECA_DIR, exist_ok=True)
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+from app.services.ai.gemini_pool import get_gemini_key
+
 GEMINI_MODEL = "gemini-2.5-flash"
 
 
@@ -30,9 +39,9 @@ def get_db():
         db.close()
 
 
-def generar_nota_bibliografica(nombre: str, autor: str, proyecto: str, tipo: str, year: int) -> str:
-    if not GEMINI_API_KEY:
-        return f"{autor} ({year}). {nombre}. {proyecto}."
+def generar_nota_bibliografica(
+    nombre: str, autor: str, proyecto: str, tipo: str, year: int
+) -> str:
 
     prompt = f"""Genera una nota bibliográfica en formato APA 7ª edición para el siguiente documento:
 
@@ -45,11 +54,17 @@ Año: {year}
 Responde SOLO con la cita bibliográfica en formato APA, sin explicaciones adicionales."""
 
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={get_gemini_key()}"
         body = {"contents": [{"parts": [{"text": prompt}]}]}
         resp = requests.post(url, json=body, timeout=30)
         data = resp.json()
-        return data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+        return (
+            data.get("candidates", [{}])[0]
+            .get("content", {})
+            .get("parts", [{}])[0]
+            .get("text", "")
+            .strip()
+        )
     except Exception as e:
         return f"{autor} ({year}). {nombre}. {proyecto}."
 
@@ -70,19 +85,25 @@ def listar_biblioteca(
 
     # Superadmin ve todo; otros ven solo documentos con acceso
     if "superadmin" not in roles:
-        doc_ids_con_acceso = db.query(AccesoBiblioteca.documento_id).filter(
-            (AccesoBiblioteca.usuario_id == user_id) | (AccesoBiblioteca.rol.in_(roles))
-        ).distinct().subquery()
+        doc_ids_con_acceso = (
+            db.query(AccesoBiblioteca.documento_id)
+            .filter(
+                (AccesoBiblioteca.usuario_id == user_id)
+                | (AccesoBiblioteca.rol.in_(roles))
+            )
+            .distinct()
+            .subquery()
+        )
         query = query.filter(DocumentoBiblioteca.id.in_(doc_ids_con_acceso))
 
     if q:
         f = f"%{q}%"
         query = query.filter(
-            DocumentoBiblioteca.nombre.ilike(f) |
-            DocumentoBiblioteca.descripcion.ilike(f) |
-            DocumentoBiblioteca.etiquetas.ilike(f) |
-            DocumentoBiblioteca.usuario_nombre.ilike(f) |
-            DocumentoBiblioteca.proyecto_nombre.ilike(f)
+            DocumentoBiblioteca.nombre.ilike(f)
+            | DocumentoBiblioteca.descripcion.ilike(f)
+            | DocumentoBiblioteca.etiquetas.ilike(f)
+            | DocumentoBiblioteca.usuario_nombre.ilike(f)
+            | DocumentoBiblioteca.proyecto_nombre.ilike(f)
         )
     if tipo:
         query = query.filter(DocumentoBiblioteca.tipo == tipo)
@@ -112,24 +133,37 @@ async def agregar_a_biblioteca(
     db: Session = Depends(get_db),
     token_data: dict = Depends(verify_token),
 ):
-    doc_office = db.query(DocumentoOficina).filter(DocumentoOficina.id == documento_id).first()
+    doc_office = (
+        db.query(DocumentoOficina).filter(DocumentoOficina.id == documento_id).first()
+    )
     if not doc_office:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
 
     if doc_office.estado_version not in ("aprobada", "cerrada"):
-        raise HTTPException(status_code=400, detail="El documento debe estar en estado 'aprobada' o 'cerrada' para agregarse a la biblioteca")
+        raise HTTPException(
+            status_code=400,
+            detail="El documento debe estar en estado 'aprobada' o 'cerrada' para agregarse a la biblioteca",
+        )
 
-    ya_existe = db.query(DocumentoBiblioteca).filter(
-        DocumentoBiblioteca.documento_id == documento_id,
-        DocumentoBiblioteca.version == doc_office.version_actual
-    ).first()
+    ya_existe = (
+        db.query(DocumentoBiblioteca)
+        .filter(
+            DocumentoBiblioteca.documento_id == documento_id,
+            DocumentoBiblioteca.version == doc_office.version_actual,
+        )
+        .first()
+    )
     if ya_existe:
-        raise HTTPException(status_code=400, detail="Esta versión del documento ya está en la biblioteca")
+        raise HTTPException(
+            status_code=400,
+            detail="Esta versión del documento ya está en la biblioteca",
+        )
 
     project = db.query(Project).filter(Project.id == doc_office.project_id).first()
     proyecto_nombre = project.name if project else "Sin proyecto"
 
     from app.models.user import User
+
     user = db.query(User).filter(User.uid == doc_office.usuario_id).first()
     usuario_nombre = user.nombre if user else doc_office.usuario_id
 
@@ -219,7 +253,9 @@ def listar_permisos(
     db: Session = Depends(get_db),
     token_data: dict = Depends(verify_token),
 ):
-    permisos = db.query(AccesoBiblioteca).filter(AccesoBiblioteca.documento_id == doc_id).all()
+    permisos = (
+        db.query(AccesoBiblioteca).filter(AccesoBiblioteca.documento_id == doc_id).all()
+    )
     return permisos
 
 
@@ -233,8 +269,12 @@ def asignar_permiso(
     token_data: dict = Depends(verify_token),
 ):
     roles_user = token_data.get("roles", [])
-    if not any(r in roles_user for r in ("superadmin", "admin", "coordinador", "cliente")):
-        raise HTTPException(status_code=403, detail="No tienes permiso para gestionar accesos")
+    if not any(
+        r in roles_user for r in ("superadmin", "admin", "coordinador", "cliente")
+    ):
+        raise HTTPException(
+            status_code=403, detail="No tienes permiso para gestionar accesos"
+        )
 
     acceso = AccesoBiblioteca(
         documento_id=doc_id,
@@ -278,15 +318,23 @@ async def solicitar_acceso(
 
     user_id = token_data.get("user_id")
 
-    ya_existe = db.query(SolicitudAccesoBiblioteca).filter(
-        SolicitudAccesoBiblioteca.documento_id == doc_id,
-        SolicitudAccesoBiblioteca.solicitante_id == user_id,
-        SolicitudAccesoBiblioteca.estado == "pendiente",
-    ).first()
+    ya_existe = (
+        db.query(SolicitudAccesoBiblioteca)
+        .filter(
+            SolicitudAccesoBiblioteca.documento_id == doc_id,
+            SolicitudAccesoBiblioteca.solicitante_id == user_id,
+            SolicitudAccesoBiblioteca.estado == "pendiente",
+        )
+        .first()
+    )
     if ya_existe:
-        raise HTTPException(status_code=400, detail="Ya tienes una solicitud pendiente para este documento")
+        raise HTTPException(
+            status_code=400,
+            detail="Ya tienes una solicitud pendiente para este documento",
+        )
 
     from app.models.user import User
+
     user = db.query(User).filter(User.uid == user_id).first()
     nombre = user.nombre if user else user_id
 
@@ -309,6 +357,7 @@ async def solicitar_acceso(
     # Notificar por email a admins/superadmins
     from app.services.log_service import obtener_usuarios_por_rol
     from app.services.email_service import get_user_email
+
     admins = obtener_usuarios_por_rol(db, "superadmin")
     admin_emails = [u.email for u in admins if u.email]
     for email in admin_emails:
@@ -316,11 +365,14 @@ async def solicitar_acceso(
             to=email,
             subject=f"🔑 Nueva solicitud de acceso: {doc.nombre}",
             body=f"El usuario {nombre} ({user_id}) ha solicitado acceso al documento '{doc.nombre}'.\n\n"
-                 f"Razón: {razon}\n\n"
-                 f"Ingresa al panel de Biblioteca > Solicitudes para gestionarla.",
+            f"Razón: {razon}\n\n"
+            f"Ingresa al panel de Biblioteca > Solicitudes para gestionarla.",
         )
 
-    return {"ok": True, "mensaje": "Solicitud enviada. Recibirás una respuesta cuando sea gestionada."}
+    return {
+        "ok": True,
+        "mensaje": "Solicitud enviada. Recibirás una respuesta cuando sea gestionada.",
+    }
 
 
 @router.get("/solicitudes/pendientes")
@@ -329,14 +381,21 @@ def listar_solicitudes_pendientes(
     token_data: dict = Depends(verify_token),
 ):
     roles_user = token_data.get("roles", [])
-    if not any(r in roles_user for r in ("superadmin", "admin", "coordinador", "cliente")):
+    if not any(
+        r in roles_user for r in ("superadmin", "admin", "coordinador", "cliente")
+    ):
         raise HTTPException(status_code=403)
 
-    solicitudes = db.query(SolicitudAccesoBiblioteca, DocumentoBiblioteca).join(
-        DocumentoBiblioteca, SolicitudAccesoBiblioteca.documento_id == DocumentoBiblioteca.id
-    ).filter(SolicitudAccesoBiblioteca.estado == "pendiente").order_by(
-        SolicitudAccesoBiblioteca.fecha_solicitud.desc()
-    ).all()
+    solicitudes = (
+        db.query(SolicitudAccesoBiblioteca, DocumentoBiblioteca)
+        .join(
+            DocumentoBiblioteca,
+            SolicitudAccesoBiblioteca.documento_id == DocumentoBiblioteca.id,
+        )
+        .filter(SolicitudAccesoBiblioteca.estado == "pendiente")
+        .order_by(SolicitudAccesoBiblioteca.fecha_solicitud.desc())
+        .all()
+    )
 
     return [
         {
@@ -362,15 +421,23 @@ async def resolver_solicitud_acceso(
     token_data: dict = Depends(verify_token),
 ):
     roles_user = token_data.get("roles", [])
-    if not any(r in roles_user for r in ("superadmin", "admin", "coordinador", "cliente")):
+    if not any(
+        r in roles_user for r in ("superadmin", "admin", "coordinador", "cliente")
+    ):
         raise HTTPException(status_code=403)
 
-    sol = db.query(SolicitudAccesoBiblioteca).filter(SolicitudAccesoBiblioteca.id == solicitud_id).first()
+    sol = (
+        db.query(SolicitudAccesoBiblioteca)
+        .filter(SolicitudAccesoBiblioteca.id == solicitud_id)
+        .first()
+    )
     if not sol:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
 
     if estado not in ("aprobada", "rechazada"):
-        raise HTTPException(status_code=400, detail="Estado debe ser 'aprobada' o 'rechazada'")
+        raise HTTPException(
+            status_code=400, detail="Estado debe ser 'aprobada' o 'rechazada'"
+        )
 
     sol.estado = estado
     sol.respuesta_admin = respuesta_admin
@@ -387,7 +454,11 @@ async def resolver_solicitud_acceso(
 
     db.commit()
 
-    doc = db.query(DocumentoBiblioteca).filter(DocumentoBiblioteca.id == sol.documento_id).first()
+    doc = (
+        db.query(DocumentoBiblioteca)
+        .filter(DocumentoBiblioteca.id == sol.documento_id)
+        .first()
+    )
     if doc:
         emoji = "✅" if estado == "aprobada" else "❌"
         crear_notificacion(
@@ -417,7 +488,9 @@ def eliminar_de_biblioteca(
 ):
     roles = token_data.get("roles", [])
     if "superadmin" not in roles:
-        raise HTTPException(status_code=403, detail="Solo superadmin puede eliminar de la biblioteca")
+        raise HTTPException(
+            status_code=403, detail="Solo superadmin puede eliminar de la biblioteca"
+        )
 
     doc = db.query(DocumentoBiblioteca).filter(DocumentoBiblioteca.id == doc_id).first()
     if not doc:
@@ -442,4 +515,5 @@ async def descargar_archivo_biblioteca(filename: str):
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
 
     from fastapi.responses import FileResponse
+
     return FileResponse(filepath, filename=filename)
