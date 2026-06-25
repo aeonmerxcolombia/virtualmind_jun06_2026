@@ -71,10 +71,10 @@
       });
     };
   </script>
-<script src="/staging/js/staging-banner.js"></script>
 </head>
 
 <body class="flex items-center justify-center min-h-screen p-4">
+  <script src="/staging/js/staging-banner.js"></script>
 
   <div class="bg-overlay"></div>
 
@@ -951,7 +951,7 @@
     window.onload = function() {
         google.accounts.id.initialize({
             client_id: "559021257590-fk52s7o9oct3lcu43aggujimacqjju2f.apps.googleusercontent.com",
-            callback: (r) =>         window.location.href = `https://gestordecursos.pegui.edu.co/staging-api/auth/google/callback?credential=${r.credential}`
+            callback: (r) => window.location.href = `/staging-api/auth/google/callback?credential=${r.credential}`
         });
         google.accounts.id.renderButton(document.getElementById("googleSignInDiv"), { theme: "outline", size: "large", width: "100%" });
 
@@ -978,7 +978,7 @@
             if (response.status === 'connected') {
                 FB.api('/me', { fields: 'id,name,email' }, function(userData) {
                     if (userData.email) {
-                        window.location.href = `https://gestordecursos.pegui.edu.co/staging-api/auth/facebook/callback?access_token=${response.authResponse.accessToken}`;
+                        window.location.href = `/staging-api/auth/facebook/callback?access_token=${response.authResponse.accessToken}`;
                     } else {
                         showError('Facebook no proporcionó tu correo electrónico. Configura tu cuenta de Facebook para permitir el acceso.');
                     }

@@ -11,28 +11,26 @@
   <style>
     body { 
       font-family: 'Inter', sans-serif; 
-      background-color: #090D16;
-      color: #cbd5e1;
+      background-color: #ffffff;
+      color: #1e293b;
       overflow-x: hidden;
     }
 
     .gradient-bg { 
-      background: linear-gradient(135deg, #090d16 0%, #0f172a 100%); 
+      background: #ffffff; 
     }
             
     .card-glass {             
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      background: #ffffff;
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
     .input-focus {             
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      background: rgba(15, 23, 42, 0.8) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      color: #f8fafc !important;
+      transition: all 0.2s ease-in-out;
+      background: #ffffff !important;
+      border: 2px solid #94a3b8 !important;
+      color: #000000 !important;
       border-radius: 0.75rem !important; 
       padding: 0.75rem 1rem !important;
       outline: none !important;
@@ -40,8 +38,8 @@
     .input-focus:focus {             
       transform: translateY(-1px);             
       border-color: #6366f1 !important;
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
-      background: rgba(15, 23, 42, 0.95) !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+      background: #ffffff !important;
     }
 
     #modalidad_otro_wrapper { display: none; }
@@ -60,7 +58,7 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     select { 
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23cbd5e1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); 
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); 
         background-position: right 0.75rem center; 
         background-repeat: no-repeat; 
         background-size: 1.2em 1.2em; 
@@ -69,7 +67,7 @@
         -moz-appearance: none;
         appearance: none;
     }
-    select option { background-color: #0f172a; color: #cbd5e1; }
+    select option { background-color: #ffffff; color: #1e293b; }
 
     /* Ambient glowing background blobs */
     .glow-blob {
@@ -120,8 +118,8 @@
     .checkbox-custom { position: relative; cursor: pointer; display: inline-flex; align-items: start; }
     .checkbox-custom input[type=checkbox] { opacity: 0; position: absolute; }
     .checkbox-custom .checkmark { 
-      display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8); 
-      border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 6px; margin-right: 12px; transition: all 0.3s ease; flex-shrink: 0; mt-0.5;
+      display: inline-block; width: 20px; height: 20px; background: #ffffff; 
+      border: 2px solid #d1d5db; border-radius: 6px; margin-right: 12px; transition: all 0.3s ease; flex-shrink: 0; mt-0.5;
     }
     .checkbox-custom input:checked + .checkmark { background: #8b5cf6; border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
     .checkbox-custom input:checked + .checkmark:after { 
@@ -131,8 +129,8 @@
     .radio-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
     .radio-custom input[type=radio] { opacity: 0; position: absolute; }
     .radio-custom .radiomark { 
-      display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8); 
-      border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 50%; margin-right: 8px; transition: all 0.3s ease; 
+      display: inline-block; width: 20px; height: 20px; background: #ffffff; 
+      border: 2px solid #d1d5db; border-radius: 50%; margin-right: 8px; transition: all 0.3s ease; 
     }
     .radio-custom input:checked + .radiomark { background: #4f46e5; border-color: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
     .radio-custom input:checked + .radiomark:after { 
@@ -150,9 +148,9 @@
   <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
 
   <div class="max-w-5xl mx-auto card-glass p-8 shadow-2xl rounded-3xl z-10 relative mt-10">
-    <div class="mb-8 pb-6 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="mb-8 pb-6 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-4">
-        <a href="listar.html" class="w-10 h-10 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-slate-300 hover:text-white transition-all shadow-md border border-white/5" title="Volver a la lista">
+        <a href="listar.html" class="w-10 h-10 bg-white hover:bg-slate-700 rounded-full flex items-center justify-center text-slate-700 hover:text-white transition-all shadow-md border border-slate-200" title="Volver a la lista">
           <i class="fas fa-arrow-left"></i>
         </a>
         <div>
@@ -174,8 +172,8 @@
     <form id="studyPlanForm" class="space-y-8 hidden" onsubmit="return false;">
       
       <!-- 1. Información Básica -->
-      <div id="sec-info-basica" class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
-        <h3 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
+      <div id="sec-info-basica" class="bg-slate-50 rounded-2xl p-6 border border-slate-200 shadow-inner">
+        <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-3">
             <i class="fas fa-info-circle text-indigo-400"></i> Información Básica
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -233,11 +231,11 @@
           <fieldset>
             <legend class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">Sincronía</legend>
             <div class="flex gap-8">
-              <label class="radio-custom text-sm font-medium text-slate-300">
+              <label class="radio-custom text-sm font-medium text-slate-700">
                 <input type="radio" name="sincronia" value="Síncrono">
                 <span class="radiomark"></span> Síncrono
               </label>
-              <label class="radio-custom text-sm font-medium text-slate-300">
+              <label class="radio-custom text-sm font-medium text-slate-700">
                 <input type="radio" name="sincronia" value="Asíncrono">
                 <span class="radiomark"></span> Asíncrono
               </label>
@@ -248,8 +246,8 @@
       </div>
 
       <!-- 2. Objetivos y Aprendizaje -->
-      <div id="sec-objetivos" class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
-        <h3 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
+      <div id="sec-objetivos" class="bg-slate-50 rounded-2xl p-6 border border-slate-200 shadow-inner">
+        <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-3">
             <i class="fas fa-bullseye text-purple-400"></i> Objetivos y Aprendizaje
         </h3>
         <div class="grid grid-cols-1 gap-6">
@@ -271,7 +269,7 @@
             <label class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">Objetivos Específicos</label>
             <div id="objetivos_container" class="space-y-3 mb-4"></div>
             <div class="flex gap-3">
-              <button type="button" onclick="agregarObjetivo()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg transition-all font-semibold border border-white/5 shadow-sm">
+              <button type="button" onclick="agregarObjetivo()" class="text-xs bg-white hover:bg-slate-700 text-slate-700 px-4 py-2 rounded-lg transition-all font-semibold border border-slate-200 shadow-sm">
                 <i class="fas fa-plus-circle mr-1 text-indigo-400"></i> Agregar objetivo
               </button>
               <button type="button" onclick="generarObjetivosIA()" id="btnGenerarIA" class="text-xs bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white px-4 py-2 rounded-lg transition-all font-semibold shadow-sm">
@@ -297,9 +295,9 @@
       </div>
 
       <!-- 3. Recursos y Evaluaciones -->
-      <div id="sec-recursos" class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 mb-6 pb-3">
-            <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+      <div id="sec-recursos" class="bg-slate-50 rounded-2xl p-6 border border-slate-200 shadow-inner">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 mb-6 pb-3">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i class="fas fa-laptop-code text-emerald-400"></i> Recursos y Evaluaciones
             </h3>
             <button type="button" id="btn-ia-recursos" onclick="sugerirRecursosIA()" class="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/20 hover:border-transparent text-emerald-400 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
@@ -392,9 +390,9 @@
       </div>
 
       <!-- Controles Formulario -->
-      <div class="pt-6 border-t border-white/5 text-center space-y-4 md:space-y-0 md:flex md:justify-between md:items-center">
+      <div class="pt-6 border-t border-slate-200 text-center space-y-4 md:space-y-0 md:flex md:justify-between md:items-center">
         <div class="flex gap-3 w-full md:w-auto">
-          <button type="button" id="btnLimpiarProgreso" class="flex-1 md:flex-none px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition-all border border-white/5 shadow-sm">
+          <button type="button" id="btnLimpiarProgreso" class="flex-1 md:flex-none px-5 py-3 bg-white hover:bg-slate-700 text-slate-700 text-sm font-semibold rounded-xl transition-all border border-slate-200 shadow-sm">
             <i class="fas fa-eraser mr-1.5"></i> Restaurar
           </button>
           <button type="button" id="btnGuardarProgreso" class="flex-1 md:flex-none px-5 py-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-sm font-bold rounded-xl transition-all hover:bg-indigo-500/20 shadow-sm" onclick="guardarPlan()">
@@ -409,14 +407,14 @@
     </form>
 
     <!-- Review Section -->
-    <div id="reviewSection" class="hidden bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner mt-8 animate-fade-in">
-      <h3 class="text-xl font-bold text-slate-200 mb-6 border-b border-white/5 pb-3">
+    <div id="reviewSection" class="hidden bg-slate-50 rounded-2xl p-6 border border-slate-200 shadow-inner mt-8 animate-fade-in">
+      <h3 class="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">
         <i class="fas fa-clipboard-check text-emerald-400 mr-2"></i> Auditoría Final del Plan de Formación
       </h3>
-      <div id="reviewContent" class="space-y-4 p-5 bg-slate-900/60 rounded-xl border border-white/5 shadow-inner"></div>
+      <div id="reviewContent" class="space-y-4 p-5 bg-white/60 rounded-xl border border-slate-200 shadow-inner"></div>
       
       <div class="pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <button type="button" id="btnEditar" class="w-full sm:w-auto px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl border border-white/5 transition-all text-sm shadow-sm">
+        <button type="button" id="btnEditar" class="w-full sm:w-auto px-6 py-3 bg-white hover:bg-slate-700 text-slate-700 font-semibold rounded-xl border border-slate-200 transition-all text-sm shadow-sm">
           <i class="fas fa-arrow-left mr-1.5"></i> Volver a Editar
         </button>
         <button type="button" id="btnConfirmarCrear" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-75 disabled:cursor-wait text-sm">
@@ -437,7 +435,7 @@
       <h3 class="text-lg font-bold text-slate-100 mb-2" id="confirmTitle">Confirmar Acción</h3>
       <p class="text-sm text-slate-400 mb-8 leading-relaxed whitespace-pre-wrap" id="confirmText">¿Estás seguro de realizar esta acción?</p>
       <div class="flex gap-3 justify-center">
-        <button id="btnConfirmCancel" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-semibold border border-white/5 transition-all">Cancelar</button>
+        <button id="btnConfirmCancel" class="px-5 py-2.5 bg-white hover:bg-slate-700 text-slate-700 rounded-xl text-sm font-semibold border border-slate-200 transition-all">Cancelar</button>
         <button id="btnConfirmAccept" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-rose-600/20">Sí, proceder</button>
       </div>
     </div>
@@ -553,7 +551,7 @@
       objetivosCount++;
       const container = document.getElementById('objetivos_container');
       const div = document.createElement('div');
-      div.className = 'flex items-center gap-2.5 w-full bg-slate-900/50 p-2 rounded-xl border border-white/5 transition-all';
+      div.className = 'flex items-center gap-2.5 w-full bg-white/50 p-2 rounded-xl border border-slate-200 transition-all';
       div.id = 'obj_wrap_' + objetivosCount;
             
       const tempInputId = 'obj-input-' + objetivosCount;
@@ -984,9 +982,9 @@
                     <h4 class="text-sm font-bold text-indigo-400 mb-2 flex items-center gap-2">
                         <i class="fas fa-robot"></i> Auditoría de ROSA IA
                     </h4>
-                    <p class="text-sm text-slate-300 italic">"${aiFeedback}"</p>
+                    <p class="text-sm text-slate-700 italic">"${aiFeedback}"</p>
                 </div>
-                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-white/5 pb-2">Resumen de Datos</h4>
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-200 pb-2">Resumen de Datos</h4>
                 <dl class="divide-y divide-white/5">
             `;
             
@@ -999,7 +997,7 @@
                     displayValue = `<ul class="list-disc pl-5 space-y-1">` + displayValue.map(i => `<li>${i}</li>`).join('') + `</ul>`;
                 }
 
-                html += `<div class="py-3 grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 items-start"><dt class="text-xs font-bold uppercase tracking-wide text-slate-500">${key.replace(/_/g, ' ')}</dt><dd class="text-sm text-slate-200 font-medium md:col-span-2">${displayValue}</dd></div>`;
+                html += `<div class="py-3 grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 items-start"><dt class="text-xs font-bold uppercase tracking-wide text-slate-500">${key.replace(/_/g, ' ')}</dt><dd class="text-sm text-slate-800 font-medium md:col-span-2">${displayValue}</dd></div>`;
             }
             preview.innerHTML = html + '</dl>';
 

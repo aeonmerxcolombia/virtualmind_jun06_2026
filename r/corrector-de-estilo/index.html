@@ -113,19 +113,7 @@
     body.focus-highlight *:focus { outline: 3px solid #4f46e5 !important; outline-offset: 2px !important; }
     body.show-keys { -webkit-user-select: none; user-select: none; }
     body.show-keys kbd { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; padding: 2px 6px; font-family: monospace; box-shadow: 0 2px 0 #d1d5db; margin: 0 2px; }
-    body.screen-reader * { pointer-events: auto !important; }
-    
-    body.dark-mode { background-color: #1a1a2e !important; }
-    body.dark-mode .bg-gray-100 { background-color: #16213e !important; }
-    body.dark-mode .bg-white { background-color: #1f2937 !important; }
-    body.dark-mode .text-gray-800 { color: #e5e7eb !important; }
-    body.dark-mode .text-gray-700 { color: #d1d5db !important; }
-    body.dark-mode .text-gray-600 { color: #9ca3af !important; }
-    body.dark-mode header { background-color: #0f3460 !important; }
-    body.dark-mode aside { background-color: #16213e !important; }
-    body.dark-mode .shadow-xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; }
-    
-    #chatWidgetContainer {
+    body.screen-reader * { pointer-events: auto !important; }#chatWidgetContainer {
       position: fixed;
       bottom: 0.5rem;
       left: calc(18rem + 1.5rem);
@@ -268,14 +256,14 @@
   <link href="https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.css" rel="stylesheet">
 <script src="/staging/js/staging-banner.js"></script>
 </head>
-<body class="min-h-screen font-[Inter] bg-[#090D16] text-slate-100 flex flex-col overflow-x-hidden">
+<body class="min-h-screen font-[Inter] bg-white text-gray-900 flex flex-col overflow-x-hidden">
   <!-- Glowing blobs for background styling -->
   <div class="glow-blob top-10 left-10"></div>
   <div class="glow-blob bottom-10 right-10"></div>
   
-  <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-900/85 border-b border-indigo-500/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)] flex items-center justify-between px-6 py-4">
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/90 border-b border-indigo-600 shadow-sm flex items-center justify-between px-6 py-4">
     <div class="flex items-center space-x-3">
-      <img src="/assets/logo.png" alt="Logo" class="h-9 w-9 rounded-full object-cover ring-2 ring-indigo-500/30">
+      <img src="/assets/logo.png" alt="Logo" class="h-9 w-9 rounded-full object-cover ring-2 ring-indigo-600/30">
       <h1 class="text-xl font-bold text-white/90 tracking-wide">VirtualMind - Corrector de Estilo</h1>
     </div>
     <div class="flex items-center space-x-3">
@@ -302,69 +290,55 @@
             <div class="border-b border-white/5 pb-3 mb-3">
               <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">👁️ Vista</h4>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition mb-2">
-                <div class="flex items-center gap-2"><span class="text-lg">🌗</span><span class="block text-sm font-medium text-slate-200">Alto Contraste</span></div>
-                <input type="checkbox" data-act="contrast" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
-              </label>
-              <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition mb-2">
-                <div class="flex items-center gap-2"><span class="text-lg">🔠</span><span class="block text-sm font-medium text-slate-200">Texto Grande (+15%)</span></div>
-                <input type="checkbox" data-act="large-text" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
-              </label>
-              <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition mb-2">
-                <div class="flex items-center gap-2"><span class="text-lg">⚫</span><span class="block text-sm font-medium text-slate-200">Escala de Grises</span></div>
-                <input type="checkbox" data-act="grayscale" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
-              </label>
-              <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition mb-2">
-                <div class="flex items-center gap-2"><span class="text-lg">🌙</span><span class="block text-sm font-medium text-slate-200">Tema Oscuro</span></div>
-                <input type="checkbox" data-act="dark-mode" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
-              </label>
+</label>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-lg">🔍</span><span class="block text-sm font-medium text-slate-200">Cursor Grande</span></div>
-                <input type="checkbox" data-act="large-cursor" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
+                <input type="checkbox" data-act="large-cursor" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-600 bg-slate-600">
               </label>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition">
                 <div class="flex items-center gap-2"><span class="text-lg">🔗</span><span class="block text-sm font-medium text-slate-200">Resaltar Enlaces</span></div>
-                <input type="checkbox" data-act="highlight-links" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
+                <input type="checkbox" data-act="highlight-links" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-600 bg-slate-600">
               </label>
             </div>
             <div class="border-b border-white/5 pb-3 mb-3">
               <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">📖 Lectura</h4>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-lg">📖</span><span class="block text-sm font-medium text-slate-200">Fuente Disléxica</span></div>
-                <input type="checkbox" data-act="dyslexia" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
+                <input type="checkbox" data-act="dyslexia" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-600 bg-slate-600">
               </label>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-lg">📏</span><span class="block text-sm font-medium text-slate-200">Guías de Lectura</span></div>
-                <input type="checkbox" data-act="reading-guide" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
+                <input type="checkbox" data-act="reading-guide" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-600 bg-slate-600">
               </label>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition">
                 <div class="flex items-center gap-2"><span class="text-lg">📝</span><span class="block text-sm font-medium text-slate-200">Espaciado de Párrafos</span></div>
-                <input type="checkbox" data-act="paragraph-spacing" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
+                <input type="checkbox" data-act="paragraph-spacing" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-600 bg-slate-600">
               </label>
             </div>
             <div class="border-b border-white/5 pb-3 mb-3">
               <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">⏸️ Movimiento</h4>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-lg">⏸️</span><span class="block text-sm font-medium text-slate-200">Reducir Animaciones</span></div>
-                <input type="checkbox" data-act="reduce-motion" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
+                <input type="checkbox" data-act="reduce-motion" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-600 bg-slate-600">
               </label>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition">
                 <div class="flex items-center gap-2"><span class="text-lg">🚫</span><span class="block text-sm font-medium text-slate-200">Evitar Parpadeo</span></div>
-                <input type="checkbox" data-act="no-flashing" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
+                <input type="checkbox" data-act="no-flashing" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-600 bg-slate-600">
               </label>
             </div>
             <div class="pb-2 bg-slate-800/95">
               <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">⌨️ Navegación</h4>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-lg">🎯</span><span class="block text-sm font-medium text-slate-200">Resaltar Enfoque</span></div>
-                <input type="checkbox" data-act="focus-highlight" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
+                <input type="checkbox" data-act="focus-highlight" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-600 bg-slate-600">
               </label>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-lg">⌨️</span><span class="block text-sm font-medium text-slate-200">Mostrar Teclas</span></div>
-                <input type="checkbox" data-act="show-keys" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
+                <input type="checkbox" data-act="show-keys" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-600 bg-slate-600">
               </label>
               <label class="flex items-center justify-between p-2 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-600/50 transition">
                 <div class="flex items-center gap-2"><span class="text-lg">🔊</span><span class="block text-sm font-medium text-slate-200">Lector de Pantalla</span></div>
-                <input type="checkbox" id="screenReaderToggle" class="w-5 h-5 text-indigo-500 rounded focus:ring-indigo-400 bg-slate-600">
+                <input type="checkbox" id="screenReaderToggle" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-600 bg-slate-600">
               </label>
             </div>
           </div>
@@ -380,14 +354,14 @@
       </div>
       
       <label for="roleSelect" class="text-sm font-medium text-slate-300">Cambiar de rol:</label>
-      <select id="roleSelect" class="bg-slate-800/80 border border-white/10 px-3 py-1.5 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none backdrop-blur-sm">
+      <select id="roleSelect" class="bg-slate-800/80 border border-white/10 px-3 py-1.5 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none backdrop-blur-sm">
         <option value="">Cargando...</option>
       </select>
       <div id="google_translate_element" class="[&_.goog-te-combo]:bg-slate-800/80 [&_.goog-te-combo]:text-slate-200 [&_.goog-te-combo]:text-sm [&_.goog-te-combo]:border [&_.goog-te-combo]:border-white/10 [&_.goog-te-combo]:rounded-xl [&_.goog-te-combo]:px-3 [&_.goog-te-combo]:py-1.5"></div>
-      <button id="globalSearchBtn" onclick="document.dispatchEvent(new KeyboardEvent('keydown', {ctrlKey: true, key: 'k'}))" class="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white px-3 py-2 rounded-xl border border-white/5 transition-all text-xs font-medium" title="Buscar (Ctrl+K)">
+      <button id="globalSearchBtn" onclick="document.dispatchEvent(new KeyboardEvent('keydown', {ctrlKey: true, key: 'k'}))" class="flex items-center gap-2 bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-900 px-3 py-2 rounded-xl border border-gray-200 transition-all text-xs font-medium" title="Buscar (Ctrl+K)">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         <span class="hidden md:inline">Buscar</span>
-        <kbd class="hidden lg:inline-flex px-1.5 py-0.5 bg-slate-950 rounded text-[9px] font-mono border border-white/5">Ctrl+K</kbd>
+        <kbd class="hidden lg:inline-flex px-1.5 py-0.5 bg-gray-100 rounded text-[9px] font-mono border border-gray-200 text-gray-600">Ctrl+K</kbd>
       </button>
 
       <button onclick="logout()" class="bg-rose-600/10 hover:bg-rose-600 text-rose-300 hover:text-white font-semibold px-4 py-2 rounded-xl border border-rose-500/20 hover:border-rose-500/40 transition-all">
@@ -395,16 +369,16 @@
       </button>
       
       <div class="relative">
-        <button id="notifButton" class="relative bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white p-2.5 rounded-xl border border-white/5 transition-all">
+        <button id="notifButton" class="relative bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-900 p-2.5 rounded-xl border border-gray-200 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
           <span id="notifCount" class="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center animate-pulse">0</span>
         </button>
-        <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-slate-900/95 backdrop-blur-lg shadow-2xl rounded-xl border border-white/10 overflow-hidden z-50">
+        <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-white backdrop-blur-lg shadow-xl rounded-xl border border-gray-200 overflow-hidden z-50">
           <div class="px-4 py-3 border-b border-white/5">
             <h3 class="text-sm font-semibold text-slate-200">Notificaciones</h3>
           </div>
-          <div id="notifList" class="flex flex-col divide-y divide-white/5 max-h-80 overflow-y-auto"></div>
-          <div id="notifEmpty" class="text-center py-6 px-4 text-xs text-slate-500">No tienes notificaciones pendientes</div>
+          <div id="notifList" class="flex flex-col divide-y divide-gray-200 max-h-80 overflow-y-auto"></div>
+          <div id="notifEmpty" class="text-center py-6 px-4 text-xs text-gray-500">No tienes notificaciones pendientes</div>
         </div>
       </div>
     </div>
@@ -413,25 +387,25 @@
   <div id="customToastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
   <div class="flex min-h-[calc(100vh-80px)]">
-    <aside class="w-72 flex flex-col border-r border-white/5 backdrop-blur-md bg-slate-900/40">
+    <aside class="w-72 flex flex-col border-r border-gray-200 backdrop-blur-md bg-white/80">
       <div class="flex flex-col items-center py-8 relative overflow-hidden border-b border-white/5">
                 <div class="relative mb-3">
-            <div class="absolute -inset-1 bg-gradient-to-tr from-indigo-500 to-emerald-500 rounded-full blur opacity-40"></div>
-            <div class="relative bg-slate-800 rounded-full w-20 h-20 flex items-center justify-center border-2 border-indigo-400/30 shadow-lg shadow-indigo-500/10">
+            <div class="absolute -inset-1 bg-gradient-to-tr from-indigo-600 to-emerald-500 rounded-full blur opacity-40"></div>
+            <div class="relative bg-slate-800 rounded-full w-20 h-20 flex items-center justify-center border-2 border-indigo-600/30">
               <img id="sidebarAvatar" src="" alt="Perfil"
                    class="w-16 h-16 rounded-full border-2 border-slate-700 object-cover shadow"
                    onerror="this.onerror=null;this.src='/assets/default_avatar.png';">
             </div>
           </div>
-        <span id="sidebarName" class="text-slate-200 font-semibold text-base tracking-wide">Perfil</span>
-        <button onclick="verMiPerfil()" class="mt-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 hover:text-white px-4 py-2 rounded-xl border border-indigo-500/20 transition-all text-sm">
+        <span id="sidebarName" class="text-gray-800 font-semibold text-base tracking-wide">Perfil</span>
+        <button onclick="verMiPerfil()" class="mt-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-600 hover:text-white px-4 py-2 rounded-xl border border-indigo-600/20 transition-all text-sm">
           Ver mi perfil
         </button>
       </div>
       <nav id="dynamic-sidebar-menu" class="flex-1 px-3 py-4 space-y-2.5 overflow-y-auto max-h-[calc(100vh-320px)]"></nav>
     </aside>
     <main class="flex-1 p-6 relative z-10">
-      <div class="bg-slate-950/80 backdrop-blur-lg shadow-2xl rounded-2xl border border-white/5 h-full w-full overflow-hidden flex flex-col flex-1 relative">
+      <div class="bg-white shadow-sm rounded-2xl border border-gray-200 h-full w-full overflow-hidden flex flex-col flex-1 relative">
         <iframe id="mainFrame" src="tutorial/index.html"></iframe>
       </div>
     </main>
@@ -480,16 +454,16 @@
           <!-- Input con Micrófono SVG Integrado -->
           <div class="relative flex items-center">
             <input id="chatInput" type="text" placeholder="Escribe o graba un audio..."
-                   class="w-full border border-gray-300 rounded-lg py-2.5 pl-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all" />
+                   class="w-full border border-gray-300 rounded-lg py-2.5 pl-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 shadow-sm transition-all" />
             
-            <button id="micButton" class="absolute right-2 p-1.5 rounded-full text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors focus:outline-none" title="Iniciar grabación con IA">
+            <button id="micButton" class="absolute right-2 p-1.5 rounded-full text-gray-400 hover:text-indigo-600 hover:bg-indigo-600 transition-colors focus:outline-none" title="Iniciar grabación con IA">
               <!-- Icono por defecto (Gris) -->
               <svg id="micIconDefault" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
             </button>
           </div>
 
           <!-- Botón de Enviar -->
-          <button onclick="enviarMensaje()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow-sm transition-colors flex justify-center items-center gap-2">
+          <button onclick="enviarMensaje()" class="w-full bg-indigo-600 hover:bg-indigo-600 text-white font-medium py-2.5 rounded-lg shadow-sm transition-colors flex justify-center items-center gap-2">
             <span>Enviar Mensaje</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
           </button>
@@ -719,11 +693,11 @@
         const hasAnyPermission = sectionPermissions.some(p => permissionsToRender.has(p));
         
         if (section.url && section.permission && permissionsToRender.has(section.permission)) {
-          sidebarMenu.innerHTML += `<a href="#" onclick="selectMenu(this); cargarVista('${section.url}')" class="menu-item flex items-center text-slate-300 hover:text-white hover:bg-white/5 py-2.5 px-4 rounded-xl"><span class="mr-3">${section.icon}</span>${section.label}</a>`;
+          sidebarMenu.innerHTML += `<a href="#" onclick="selectMenu(this); cargarVista('${section.url}')" class="menu-item flex items-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 py-2.5 px-4 rounded-xl"><span class="mr-3">${section.icon}</span>${section.label}</a>`;
         } else if (section.items && hasAnyPermission) {
           const visibleItems = section.items.filter(item => permissionsToRender.has(item.permission));
           if (visibleItems.length > 0) {
-            let sectionItemsHTML = visibleItems.map(item => `<a href="#" onclick="selectMenu(this); cargarVista('${item.url}')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">${item.label}</a>`).join('');
+            let sectionItemsHTML = visibleItems.map(item => `<a href="#" onclick="selectMenu(this); cargarVista('${item.url}')" class="menu-item block text-gray-200 hover:text-indigo-600 py-1">${item.label}</a>`).join('');
             sidebarMenu.innerHTML += `
               <div class="menu-container">
                 <button onclick="toggleMenu('${sectionId}')" class="flex items-center w-full text-slate-300 hover:text-white py-2.5 px-4 rounded-xl hover:bg-white/5 transition-all duration-150">
@@ -910,7 +884,7 @@
 
     function appendBubble(originalTxt, who = "IA") {
       const d = document.createElement("div");
-      d.className = who === "Tú" ? "chat-bubble bg-indigo-100 p-3 rounded-lg text-sm text-gray-800" : "chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-800 relative border border-gray-100";
+      d.className = who === "Tú" ? "chat-bubble bg-indigo-600 p-3 rounded-lg text-sm text-gray-800" : "chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-800 relative border border-gray-100";
       const id = `respuesta-${Date.now()}`;
       const textoParaMostrar = convertMarkdownToHtml(originalTxt);
       const contenido = `<strong>${who}:</strong> <span id="${id}">${textoParaMostrar}</span>`;
@@ -920,13 +894,13 @@
         const btnCopy = document.createElement("button");
         btnCopy.textContent = "📋 Copiar";
         btnCopy.title = "Copiar al portapapeles";
-        btnCopy.className = "ml-2 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors";
+        btnCopy.className = "ml-2 text-xs text-indigo-600 hover:text-indigo-600 font-medium transition-colors";
         btnCopy.onclick = () => copiarTexto(id);
         
         const btnSpeak = document.createElement("button");
         btnSpeak.innerHTML = "🔊 Escuchar";
         btnSpeak.title = "Escuchar esta respuesta";
-        btnSpeak.className = "ml-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors";
+        btnSpeak.className = "ml-3 text-xs text-indigo-600 hover:text-indigo-600 font-medium transition-colors";
         btnSpeak.onclick = () => speakText(originalTxt, btnSpeak);
         
         const buttonsContainer = document.createElement("div");
@@ -954,7 +928,7 @@
       const t = document.createElement("div");
       t.id = "typing";
       t.className = "chat-bubble bg-gray-50 p-3 rounded-lg italic text-gray-500 text-sm flex items-center gap-2";
-      t.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Procesando respuesta...`;
+      t.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Procesando respuesta...`;
       chatBox.appendChild(t);
       chatBox.scrollTop = chatBox.scrollHeight;
       
@@ -1243,7 +1217,7 @@
     });
     
     document.getElementById('resetAccessibility').addEventListener('click', () => {
-      ['contrast', 'large-text', 'grayscale', 'dyslexia', 'reduce-motion', 'dark-mode', 'large-cursor', 'highlight-links', 'reading-guide', 'paragraph-spacing', 'no-flashing', 'focus-highlight', 'show-keys', 'screen-reader'].forEach(c => {
+      ['contrast', 'large-text', 'grayscale', 'dyslexia', 'reduce-motion', 'large-cursor', 'highlight-links', 'reading-guide', 'paragraph-spacing', 'no-flashing', 'focus-highlight', 'show-keys', 'screen-reader'].forEach(c => {
         document.body.classList.remove(c);
         panel.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
       });

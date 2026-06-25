@@ -1,0 +1,3 @@
+RewriteEngine On
+# Denegar acceso al listado del directorio raíz r/ (debe dar 403)
+RewriteRule ^$ - [F]

@@ -152,13 +152,13 @@
 <script src="/staging/js/staging-banner.js"></script>
 </head>
 
-<body class="min-h-screen font-[Inter] bg-[#090D16] text-slate-100 flex flex-col overflow-x-hidden">
-
-  <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-900/85 border-b border-indigo-500/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)] flex items-center justify-between px-6 py-4">
+<body class="bg-slate-50 min-h-screen font-['Inter'] text-slate-900 flex flex-col overflow-x-hidden">
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/90 border-b border-slate-200 shadow-sm flex items-center justify-between px-6 py-4">
     <div class="flex items-center space-x-3">
-      <img src="/assets/logo.png" alt="Logo" class="h-10 w-10 rounded-full object-cover">
-      <h1 class="text-xl font-bold text-white/90 tracking-wide">VirtualMind - Abogado</h1>
+      <img src="/assets/logo.png" alt="Logo" class="h-9 w-9 rounded-full object-cover ring-2 ring-indigo-600/30">
+      <h1 class="text-xl font-bold text-slate-900 tracking-wide">VirtualMind - Abogado</h1>
     </div>
+
 
     <div class="flex items-center space-x-3">
       <div id="accessibilityMenu" class="flex items-center">
@@ -173,16 +173,16 @@
       </div>
 
       <label for="roleSelect" class="text-sm font-medium text-slate-300">Cambiar de rol:</label>
-      <select id="roleSelect" class="bg-slate-800/80 border border-white/10 px-3 py-1.5 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none backdrop-blur-sm">
+      <select id="roleSelect" class="bg-slate-800/80 border border-white/10 px-3 py-1.5 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none backdrop-blur-sm">
         <option value="">Cargando...</option>
       </select>
 
       <div id="google_translate_element"></div>
 
-      <button id="globalSearchBtn" onclick="document.dispatchEvent(new KeyboardEvent('keydown', {ctrlKey: true, key: 'k'}))" class="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white px-3 py-2 rounded-xl border border-white/5 transition-all text-xs font-medium" title="Buscar (Ctrl+K)">
+      <button id="globalSearchBtn" onclick="document.dispatchEvent(new KeyboardEvent('keydown', {ctrlKey: true, key: 'k'}))" class="flex items-center gap-2 bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-900 px-3 py-2 rounded-xl border border-gray-200 transition-all text-xs font-medium" title="Buscar (Ctrl+K)">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         <span class="hidden md:inline">Buscar</span>
-        <kbd class="hidden lg:inline-flex px-1.5 py-0.5 bg-slate-950 rounded text-[9px] font-mono border border-white/5">Ctrl+K</kbd>
+        <kbd class="hidden lg:inline-flex px-1.5 py-0.5 bg-gray-100 rounded text-[9px] font-mono border border-gray-200 text-gray-600">Ctrl+K</kbd>
       </button>
 
       <button onclick="logout()" class="bg-rose-600/10 hover:bg-rose-600 text-rose-300 hover:text-white font-semibold px-4 py-2 rounded-xl border border-rose-500/20 hover:border-rose-500/40 transition-all">
@@ -190,28 +190,28 @@
       </button>
 
       <div class="relative">
-        <button id="notifButton" class="relative bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white p-2.5 rounded-xl border border-white/5 transition-all">
+        <button id="notifButton" class="relative bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-900 p-2.5 rounded-xl border border-gray-200 transition-all">
           🔔
           <span id="notifCount" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full px-1.5">0</span>
         </button>
-        <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-slate-900/95 backdrop-blur-lg shadow-2xl rounded-xl border border-white/10 overflow-hidden z-50">
-          <div id="notifList" class="flex flex-col divide-y divide-white/5 max-h-80 overflow-y-auto"></div>
-          <div id="notifEmpty" class="text-center py-6 px-4 text-xs text-slate-500">No tienes notificaciones pendientes</div>
+        <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-white backdrop-blur-lg shadow-xl rounded-xl border border-gray-200 overflow-hidden z-50">
+          <div id="notifList" class="flex flex-col divide-y divide-gray-200 max-h-80 overflow-y-auto"></div>
+          <div id="notifEmpty" class="text-center py-6 px-4 text-xs text-gray-500">No tienes notificaciones pendientes</div>
         </div>
       </div>
     </div>
   </header>
 
   <div class="flex min-h-[calc(100vh-80px)]">
-    <aside class="w-72 flex flex-col border-r border-white/5 backdrop-blur-md bg-slate-900/40">
+    <aside class="w-72 flex flex-col border-r border-gray-200 backdrop-blur-md bg-white/80">
       <div class="flex flex-col items-center py-6 bg-[#23262f] border-b border-gray-700">
-        <div class="relative bg-slate-800 rounded-full w-20 h-20 flex items-center justify-center border-2 border-indigo-400/30 shadow-lg shadow-indigo-500/10">
+        <div class="relative bg-slate-800 rounded-full w-20 h-20 flex items-center justify-center border-2 border-indigo-600/30">
           <img id="sidebarAvatar" src="" alt="Perfil"
                class="w-16 h-16 rounded-full border-2 border-slate-700 object-cover shadow"
                onerror="this.onerror=null;this.src='/assets/default_avatar.png';">
         </div>
-        <span id="sidebarName" class="text-slate-200 font-semibold text-base tracking-wide">Perfil</span>
-        <button onclick="verMiPerfil()" class="mt-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 hover:text-white px-4 py-2 rounded-xl border border-indigo-500/20 transition-all text-sm">
+        <span id="sidebarName" class="text-gray-800 font-semibold text-base tracking-wide">Perfil</span>
+        <button onclick="verMiPerfil()" class="mt-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-600 hover:text-white px-4 py-2 rounded-xl border border-indigo-600/20 transition-all text-sm">
           Ver mi perfil
         </button>
       </div>
@@ -219,7 +219,7 @@
     </aside>
 
     <main class="flex-1 p-6 relative z-10">
-      <div class="bg-slate-950/80 backdrop-blur-lg shadow-2xl rounded-2xl border border-white/5 h-full w-full overflow-hidden flex flex-col flex-1 relative">
+      <div class="bg-white shadow-sm rounded-2xl border border-gray-200 h-full w-full overflow-hidden flex flex-col flex-1 relative">
         <iframe id="mainFrame" src="https://gestordecursos.pegui.edu.co/r/abogado/tutorial/index.html"></iframe>
       </div>
     </main>
@@ -242,9 +242,9 @@
               🎤
             </button>
             <input id="chatInput" type="text" placeholder="Escribe tu mensaje o haz clic en el micrófono para hablar..."
-                   class="flex-1 border rounded-r-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                   class="flex-1 border rounded-r-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
           </div>
-          <button onclick="enviarMensaje()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg">
+          <button onclick="enviarMensaje()" class="w-full bg-indigo-600 hover:bg-indigo-600 text-white py-2 rounded-lg">
             Enviar
           </button>
         </div>
@@ -543,7 +543,7 @@
 
         if (visibleItems.length > 0) {
           let sectionItemsHTML = visibleItems.map(item =>
-            `<a href="#" onclick="selectMenu(this); cargarVista('${item.url}')" class="menu-item block text-gray-200 hover:text-indigo-300 py-1">${item.label}</a>`
+            `<a href="#" onclick="selectMenu(this); cargarVista('${item.url}')" class="menu-item block text-gray-200 hover:text-indigo-600 py-1">${item.label}</a>`
           ).join('');
 
           sidebarMenu.innerHTML += `
@@ -704,7 +704,7 @@
     function appendBubble(originalTxt, who = "IA") {
       const d = document.createElement("div");
       d.className = who === "Tú"
-        ? "chat-bubble bg-indigo-100 p-3 rounded-lg text-sm text-gray-800"
+        ? "chat-bubble bg-indigo-600 p-3 rounded-lg text-sm text-gray-800"
         : "chat-bubble bg-white p-3 rounded-lg shadow text-sm text-gray-800 relative";
 
       const id = `respuesta-${Date.now()}`;
