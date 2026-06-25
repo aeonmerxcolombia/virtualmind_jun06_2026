@@ -1,0 +1,4 @@
+Nombre: Juan Perez
+Email: juan@test.com
+Telefono: 3001234567
+Experiencia: 5 años como desarrollador

@@ -1,35 +1,9 @@
-# === Dependencias ===
-node_modules/
-package-lock.json
-
-# === Archivos de compilación / build ===
-output.css
-dist/
-build/
-.next/
-out/
-
-# === Logs ===
-*.log
-nohup.out
-frontend.log
-
-# === Carpetas locales que no van al repo ===
-backups/
-example/
-middleware/
-
-# === Archivos de sistema ===
-.DS_Store
-Thumbs.db
-
-# === Archivos de entorno ===
 .env
-.env.local
-
-# Three.js vendored copies (have their own .git)
-r/*/animaciones3d/three.js/
-
-# Secrets
-r/superadmin/i.a/clave.txt
-
+env/
+uploads/
+static/
+__pycache__/
+*.pyc
+.venv/
+token.txt
+documentos/archivos/
