@@ -42,7 +42,7 @@
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(243, 244, 246, 1);
     }
     ::-webkit-scrollbar-thumb {
       background: rgba(99, 102, 241, 0.4);
@@ -111,14 +111,7 @@
     body.focus-highlight *:focus { outline: 3px solid #4f46e5 !important; outline-offset: 2px !important; }
     body.show-keys { -webkit-user-select: none; user-select: none; }
     body.show-keys kbd { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; padding: 2px 6px; font-family: monospace; box-shadow: 0 2px 0 #d1d5db; margin: 0 2px; }
-    body.screen-reader * { pointer-events: auto !important; }
-    
-    /* Temas para compatibilidad */
-    body.dark-mode { background-color: #05070c !important; }
-    body.dark-mode .bg-gray-100 { background-color: #0b0f19 !important; }
-    body.dark-mode .bg-white { background-color: rgba(15, 23, 42, 0.9) !important; }
-    
-    /* Chat Widget Posición e Interacciones */
+    body.screen-reader * { pointer-events: auto !important; }/* Chat Widget Posición e Interacciones */
     #chatWidgetContainer {
       position: fixed;
       bottom: 1.5rem;
@@ -145,7 +138,7 @@
     #chatWidget {
       width: 26rem;
       height: 36rem;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -204,7 +197,7 @@
     }
     #voiceNavPanel {
       width: 280px;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -256,7 +249,7 @@
       top: calc(100% + 0.75rem);
       right: 0;
       width: 18rem;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -282,8 +275,9 @@
       z-index: 0;
     }
   </style>
+<script src="/staging/js/staging-banner.js"></script>
 </head>
-<body class="min-h-screen font-[Inter] bg-[#090D16] text-slate-100 flex flex-col overflow-x-hidden">
+<body class="min-h-screen font-[Inter] bg-white text-gray-900 flex flex-col overflow-x-hidden">
   
   <!-- Glowing blobs for background styling -->
   <div class="glow-blob top-10 left-10"></div>
@@ -293,14 +287,14 @@
   <div id="customToastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
   <!-- HEADER Premium con Glassmorphism -->
-  <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-900/85 border-b border-indigo-500/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)] flex items-center justify-between px-6 py-4">
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/90 border-b border-indigo-600 shadow-sm flex items-center justify-between px-6 py-4">
     <div class="flex items-center space-x-3 z-10">
       <div class="relative group">
-        <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
+        <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-600 to-emerald-500 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
         <img src="/assets/logo.png" alt="Logo" class="relative h-10 w-10 rounded-full object-cover border border-white/20">
       </div>
-      <h1 class="text-xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent tracking-wide">
-        Virtualmind <span class="text-xs text-indigo-400 font-semibold px-2 py-0.5 bg-indigo-500/10 rounded-full border border-indigo-500/20 ml-2">Diseñador Gráfico</span>
+      <h1 class="text-xl font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-indigo-600 bg-clip-text text-transparent tracking-wide">
+        Virtualmind <span class="text-xs text-indigo-600 font-semibold px-2 py-0.5 bg-indigo-600/10 rounded-full border border-indigo-600/20 ml-2">Diseñador Gráfico</span>
       </h1>
     </div>
     
@@ -309,10 +303,10 @@
       <!-- Panel de Accesibilidad Premium -->
       <div id="accessibilityMenu" class="flex items-center">
         <button id="accessibilityToggle" aria-expanded="false" aria-label="Opciones de accesibilidad" 
-           class="flex items-center gap-2 px-3.5 py-2 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 text-indigo-300 hover:text-indigo-200 rounded-xl transition-all shadow-sm">
+           class="flex items-center gap-2 px-3.5 py-2 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-600/20 text-indigo-600 hover:text-indigo-600 rounded-xl transition-all shadow-sm">
           <span class="text-base">♿</span>
           <span class="text-xs font-semibold hidden md:inline">Accesibilidad</span>
-          <svg class="w-4 h-4 text-indigo-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-indigo-600 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
           </svg>
         </button>
@@ -330,73 +324,59 @@
           <div class="p-4 space-y-4 max-h-96 overflow-y-auto">
             <div class="border-b border-white/5 pb-3 mb-3">
               <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">👁️ Herramientas de Vista</h4>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition mb-2">
-                <div class="flex items-center gap-2"><span class="text-base">🌗</span><span class="block text-xs font-medium text-slate-200">Alto Contraste</span></div>
-                <input type="checkbox" data-act="contrast" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
-              </label>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition mb-2">
-                <div class="flex items-center gap-2"><span class="text-base">🔠</span><span class="block text-xs font-medium text-slate-200">Texto Grande (+15%)</span></div>
-                <input type="checkbox" data-act="large-text" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
-              </label>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition mb-2">
-                <div class="flex items-center gap-2"><span class="text-base">⚫</span><span class="block text-xs font-medium text-slate-200">Escala de Grises</span></div>
-                <input type="checkbox" data-act="grayscale" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
-              </label>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition mb-2">
-                <div class="flex items-center gap-2"><span class="text-base">🌙</span><span class="block text-xs font-medium text-slate-200">Tema Oscuro</span></div>
-                <input type="checkbox" data-act="dark-mode" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
-              </label>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition mb-2">
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
+</label>
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-base">🔍</span><span class="block text-xs font-medium text-slate-200">Cursor Grande</span></div>
-                <input type="checkbox" data-act="large-cursor" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                <input type="checkbox" data-act="large-cursor" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-600">
               </label>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition">
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition">
                 <div class="flex items-center gap-2"><span class="text-base">🔗</span><span class="block text-xs font-medium text-slate-200">Resaltar Enlaces</span></div>
-                <input type="checkbox" data-act="highlight-links" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                <input type="checkbox" data-act="highlight-links" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-600">
               </label>
             </div>
             
             <div class="border-b border-white/5 pb-3 mb-3">
               <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">📖 Asistentes de Lectura</h4>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition mb-2">
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-base">📖</span><span class="block text-xs font-medium text-slate-200">Fuente Disléxica</span></div>
-                <input type="checkbox" data-act="dyslexia" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                <input type="checkbox" data-act="dyslexia" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-600">
               </label>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition mb-2">
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-base">📏</span><span class="block text-xs font-medium text-slate-200">Guías de Lectura</span></div>
-                <input type="checkbox" data-act="reading-guide" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                <input type="checkbox" data-act="reading-guide" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-600">
               </label>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition">
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition">
                 <div class="flex items-center gap-2"><span class="text-base">📝</span><span class="block text-xs font-medium text-slate-200">Espaciado de Párrafos</span></div>
-                <input type="checkbox" data-act="paragraph-spacing" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                <input type="checkbox" data-act="paragraph-spacing" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-600">
               </label>
             </div>
             
             <div class="border-b border-white/5 pb-3 mb-3">
               <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">⏸️ Modos Dinámicos</h4>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition mb-2">
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-base">⏸️</span><span class="block text-xs font-medium text-slate-200">Reducir Animaciones</span></div>
-                <input type="checkbox" data-act="reduce-motion" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                <input type="checkbox" data-act="reduce-motion" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-600">
               </label>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition">
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition">
                 <div class="flex items-center gap-2"><span class="text-base">🚫</span><span class="block text-xs font-medium text-slate-200">Evitar Parpadeo</span></div>
-                <input type="checkbox" data-act="no-flashing" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                <input type="checkbox" data-act="no-flashing" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-600">
               </label>
             </div>
             
             <div class="pb-2">
               <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">⌨️ Navegación Interactiva</h4>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition mb-2">
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-base">🎯</span><span class="block text-xs font-medium text-slate-200">Resaltar Enfoque</span></div>
-                <input type="checkbox" data-act="focus-highlight" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                <input type="checkbox" data-act="focus-highlight" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-600">
               </label>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition mb-2">
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition mb-2">
                 <div class="flex items-center gap-2"><span class="text-base">⌨️</span><span class="block text-xs font-medium text-slate-200">Mostrar Teclas</span></div>
-                <input type="checkbox" data-act="show-keys" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                <input type="checkbox" data-act="show-keys" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-600">
               </label>
-              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition">
+              <label class="flex items-center justify-between p-2 bg-white/5 rounded-lg cursor-pointer hover:bg-gray-100 transition">
                 <div class="flex items-center gap-2"><span class="text-base">🔊</span><span class="block text-xs font-medium text-slate-200">Lector de Pantalla</span></div>
-                <input type="checkbox" id="screenReaderToggle" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                <input type="checkbox" id="screenReaderToggle" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-600">
               </label>
             </div>
           </div>
@@ -414,8 +394,8 @@
       
       <!-- Selector de Rol Modernizado -->
       <div class="flex items-center space-x-2">
-        <label for="roleSelect" class="text-xs font-semibold text-slate-400 uppercase tracking-wider hidden lg:inline">Rol:</label>
-        <select id="roleSelect" class="border border-white/10 px-3 py-1.5 rounded-xl bg-slate-800/90 text-sm text-slate-200 font-medium shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+        <label for="roleSelect" class="text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:inline">Rol:</label>
+        <select id="roleSelect" class="border border-gray-300 px-3 py-1.5 rounded-xl bg-white text-sm text-gray-700 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all">
           <option value="">Cargando...</option>
         </select>
       </div>
@@ -425,27 +405,27 @@
       
       <!-- Botón Notificaciones -->
       <div class="relative">
-        <button id="notifButton" class="relative bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white p-2.5 rounded-xl border border-white/5 transition-all">
+        <button id="notifButton" class="relative bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-900 p-2.5 rounded-xl border border-gray-200 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
           <span id="notifCount" class="absolute -top-1 -right-1 bg-rose-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center animate-pulse">0</span>
         </button>
-        <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-slate-900/95 backdrop-blur-lg shadow-2xl rounded-xl border border-white/10 overflow-hidden z-50">
-          <div class="px-4 py-3 border-b border-white/5 bg-slate-950/40">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Notificaciones</h3>
+        <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-white backdrop-blur-lg shadow-xl rounded-xl border border-gray-200 overflow-hidden z-50">
+          <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500">Notificaciones</h3>
           </div>
-          <div id="notifList" class="flex flex-col divide-y divide-white/5 max-h-80 overflow-y-auto"></div>
-          <div id="notifEmpty" class="text-center py-6 px-4 text-xs text-slate-500">No tienes notificaciones pendientes</div>
+          <div id="notifList" class="flex flex-col divide-y divide-gray-200 max-h-80 overflow-y-auto"></div>
+          <div id="notifEmpty" class="text-center py-6 px-4 text-xs text-gray-500">No tienes notificaciones pendientes</div>
         </div>
       </div>
 
       <!-- Botón Cerrar Sesión -->
-      <button id="globalSearchBtn" onclick="document.dispatchEvent(new KeyboardEvent('keydown', {ctrlKey: true, key: 'k'}))" class="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white px-3 py-2 rounded-xl border border-white/5 transition-all text-xs font-medium" title="Buscar (Ctrl+K)">
+      <button id="globalSearchBtn" onclick="document.dispatchEvent(new KeyboardEvent('keydown', {ctrlKey: true, key: 'k'}))" class="flex items-center gap-2 bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-900 px-3 py-2 rounded-xl border border-gray-200 transition-all text-xs font-medium" title="Buscar (Ctrl+K)">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         <span class="hidden md:inline">Buscar</span>
-        <kbd class="hidden lg:inline-flex px-1.5 py-0.5 bg-slate-950 rounded text-[9px] font-mono border border-white/5">Ctrl+K</kbd>
+        <kbd class="hidden lg:inline-flex px-1.5 py-0.5 bg-gray-100 rounded text-[9px] font-mono border border-gray-200 text-gray-600">Ctrl+K</kbd>
       </button>
 
-      <button onclick="logout()" class="bg-rose-600/10 hover:bg-rose-600 border border-rose-500/20 hover:border-transparent text-rose-300 hover:text-white font-medium text-sm px-4 py-2 rounded-xl transition-all shadow-sm">
+      <button onclick="logout()" class="bg-white hover:bg-rose-600 border border-rose-200 hover:border-transparent text-rose-600 hover:text-white font-medium text-sm px-4 py-2 rounded-xl transition-all shadow-sm">
         Cerrar sesión
       </button>
     </div>
@@ -455,21 +435,21 @@
   <div class="flex flex-1 min-h-[calc(100vh-80px)] z-10 relative">
     
     <!-- SIDEBAR Premium Transparente / Glassmorphic -->
-    <aside class="w-72 flex flex-col border-r border-white/5 backdrop-blur-md bg-slate-900/40">
+    <aside class="w-72 flex flex-col border-r border-gray-200 backdrop-blur-md bg-white/80">
       
       <!-- Panel de Perfil del Sidebar -->
-      <div class="flex flex-col items-center py-6 border-b border-white/5 bg-slate-950/30">
+      <div class="flex flex-col items-center py-6 border-b border-gray-200 bg-gray-50">
         <div class="relative group mb-3">
-          <div class="absolute -inset-1 bg-gradient-to-tr from-indigo-500 to-indigo-700 rounded-full blur opacity-40 group-hover:opacity-75 transition duration-300"></div>
-          <div class="relative bg-slate-900 rounded-full w-20 h-20 flex items-center justify-center border-2 border-indigo-500/20 shadow-xl overflow-hidden">
+          <div class="absolute -inset-1 bg-gradient-to-tr from-indigo-600 to-indigo-600 rounded-full blur opacity-40 group-hover:opacity-75 transition duration-300"></div>
+          <div class="relative bg-white rounded-full w-20 h-20 flex items-center justify-center border-2 border-indigo-600 overflow-hidden">
             <img id="sidebarAvatar" src="" alt="Perfil" 
                  class="w-full h-full rounded-full object-cover transition duration-300 group-hover:scale-110" 
                  onerror="this.onerror=null;this.src='/assets/default_avatar.png';">
           </div>
         </div>
-        <span id="sidebarName" class="text-slate-200 font-semibold text-base tracking-wide">Perfil</span>
+        <span id="sidebarName" class="text-gray-800 font-semibold text-base tracking-wide">Perfil</span>
         
-        <button onclick="verMiPerfil()" class="mt-3 flex items-center gap-1.5 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 hover:border-transparent text-indigo-300 hover:text-white text-xs font-medium px-4 py-1.5 rounded-lg transition-all">
+        <button onclick="verMiPerfil()" class="mt-3 flex items-center gap-1.5 bg-white hover:bg-indigo-600 border border-indigo-600 hover:border-transparent text-indigo-600 hover:text-white text-xs font-medium px-4 py-1.5 rounded-lg transition-all">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
           Ver mi perfil
         </button>
@@ -481,8 +461,8 @@
     
     <!-- VIEWPORT CENTRAL (IFrame) -->
     <main class="flex-1 p-6 flex flex-col">
-      <div class="bg-slate-950/80 backdrop-blur-lg shadow-2xl rounded-2xl border border-white/5 h-full w-full overflow-hidden flex flex-col flex-1 relative">
-        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-emerald-500"></div>
+      <div class="bg-white shadow-sm rounded-2xl border border-gray-200 h-full w-full overflow-hidden flex flex-col flex-1 relative">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-emerald-500"></div>
         <iframe id="mainFrame" src="tutorial/index.html" class="flex-1"></iframe>
       </div>
     </main>
@@ -515,43 +495,43 @@
     
     <div id="chatWidget">
       <!-- Chat Header -->
-      <div class="p-4 border-b border-white/5 bg-slate-950/50 flex items-center justify-between">
+      <div class="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
         <div class="flex items-center space-x-2.5">
           <div class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
           <div>
-            <h2 class="text-sm font-bold text-slate-100 tracking-wide">Asistente Virtual</h2>
-            <p class="text-[10px] text-indigo-400 font-semibold tracking-wider uppercase">VIRTUALMIND IA & VOICE</p>
+            <h2 class="text-sm font-bold text-gray-800 tracking-wide">Asistente Virtual</h2>
+            <p class="text-[10px] text-indigo-600 font-semibold tracking-wider uppercase">VIRTUALMIND IA & VOICE</p>
           </div>
         </div>
-        <span class="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md font-mono">v1.4.2</span>
+        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md font-mono">v1.4.2</span>
       </div>
       
       <!-- Chat Body -->
       <div class="p-4 flex flex-col h-full overflow-hidden">
         <!-- Messages Display -->
-        <div id="chatBoxWidget" class="bg-slate-950/50 rounded-xl p-4 overflow-y-auto space-y-3 scrollbar-hide flex-1 border border-white/5 shadow-inner"></div>
+        <div id="chatBoxWidget" class="bg-gray-50 rounded-xl p-4 overflow-y-auto space-y-3 scrollbar-hide flex-1 border border-gray-200 shadow-inner"></div>
         
         <!-- Controls & Input Area -->
         <div class="space-y-3 mt-4">
           <div class="relative">
-              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
             </div>
-              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
           </div>
           
           <!-- Input Bar & Mic Integration -->
           <div class="relative flex items-center">
             <input id="chatInput" type="text" placeholder="Escribe o graba un comando de voz..." 
-                   class="w-full border border-white/10 rounded-xl py-2.5 pl-4 pr-12 text-xs bg-slate-900/90 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-inner transition-all" />
+                   class="w-full border border-gray-300 rounded-xl py-2.5 pl-4 pr-12 text-xs bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 shadow-inner transition-all" />
             
-            <button id="micButton" class="absolute right-2 p-1.5 rounded-full text-slate-400 hover:text-indigo-400 hover:bg-white/5 transition-all focus:outline-none" title="Iniciar grabación con IA">
+            <button id="micButton" class="absolute right-2 p-1.5 rounded-full text-gray-400 hover:text-indigo-600 hover:bg-gray-100 transition-all focus:outline-none" title="Iniciar grabación con IA">
               <svg id="micIconDefault" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
             </button>
           </div>
           
           <!-- Send Action Button -->
-          <button onclick="enviarMensaje()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-xl shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 transition-all flex justify-center items-center gap-2 text-xs">
+          <button onclick="enviarMensaje()" class="w-full bg-indigo-600 hover:bg-indigo-600 text-white font-semibold py-2.5 rounded-xl shadow-md transition-all flex justify-center items-center gap-2 text-xs">
             <span>Enviar comando</span>
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
           </button>
@@ -574,8 +554,8 @@
       const toast = document.createElement('div');
       toast.className = `flex items-center p-4 rounded-xl shadow-xl border backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
         type === 'success' 
-          ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' 
-          : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+          ? 'bg-emerald-50 border-emerald-300 text-emerald-700' 
+          : 'bg-rose-50 border-rose-300 text-rose-700'
       }`;
       toast.innerHTML = `
         <span class="mr-3 text-lg">${type === 'success' ? '✨' : '⚠️'}</span>
@@ -814,7 +794,7 @@
         if (section.url && section.permission && permissionsToRender.has(section.permission)) {
           sidebarMenu.innerHTML += `
             <a href="#" onclick="selectMenu(this); cargarVista('${section.url}')" 
-               class="menu-item flex items-center text-slate-300 hover:text-white hover:bg-white/5 py-2.5 px-4 rounded-xl transition duration-150">
+               class="menu-item flex items-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 py-2.5 px-4 rounded-xl transition duration-150">
               <span class="mr-3.5 text-lg">${section.icon}</span>
               <span class="font-medium text-sm">${section.label}</span>
             </a>`;
@@ -823,18 +803,18 @@
           if (visibleItems.length > 0) {
             let sectionItemsHTML = visibleItems.map(item => `
               <a href="#" onclick="selectMenu(this); cargarVista('${item.url}')" 
-                 class="menu-item block text-slate-400 hover:text-white hover:bg-indigo-500/10 py-2 pl-4 pr-3 rounded-lg text-xs font-medium transition duration-150">
+                 class="menu-item block text-gray-500 hover:text-indigo-600 hover:bg-indigo-600 py-2 pl-4 pr-3 rounded-lg text-xs font-medium transition duration-150">
                 ${item.label}
               </a>`).join('');
             
             sidebarMenu.innerHTML += `
               <div class="menu-container">
-                <button onclick="toggleMenu('${sectionId}')" class="flex items-center w-full text-slate-300 py-2.5 px-4 rounded-xl hover:bg-white/5 transition duration-150">
+                <button onclick="toggleMenu('${sectionId}')" class="flex items-center w-full text-gray-600 py-2.5 px-4 rounded-xl hover:bg-gray-100 transition duration-150">
                   <span class="mr-3.5 text-lg">${section.icon}</span>
                   <span class="flex-1 text-left font-medium text-sm">${section.label}</span>
-                  <svg id="icon-${sectionId}" class="w-3.5 h-3.5 ml-auto text-slate-500 transition-transform" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                  <svg id="icon-${sectionId}" class="w-3.5 h-3.5 ml-auto text-gray-500 transition-transform" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
                 </button>
-                <div id="${sectionId}" class="ml-9 mt-1 space-y-1 hidden border-l border-white/5 pl-2">
+                <div id="${sectionId}" class="ml-9 mt-1 space-y-1 hidden border-l border-gray-200 pl-2">
                   ${sectionItemsHTML}
                 </div>
               </div> `;
@@ -912,10 +892,10 @@
         notifEmpty.style.display = "none";
         notifs.forEach(n => {
           const div = document.createElement("div");
-          div.className = "px-4 py-3 hover:bg-slate-800/80 cursor-pointer text-xs border-b border-white/5 transition-colors";
+          div.className = "px-4 py-3 hover:bg-gray-100 cursor-pointer text-xs border-b border-gray-200 transition-colors";
           div.innerHTML = `
-            <div class="text-slate-300 font-medium">${n.descripcion}</div>
-            <small class="text-indigo-400 font-mono mt-1 block">${new Date(n.fecha).toLocaleString()}</small>
+            <div class="text-gray-600 font-medium">${n.descripcion}</div>
+            <small class="text-indigo-600 font-mono mt-1 block">${new Date(n.fecha).toLocaleString()}</small>
           `;
           if (n.link) {
             div.onclick = () => {
@@ -1003,7 +983,7 @@
     });
 
     window.addEventListener("DOMContentLoaded", () => {
-      chatBox.innerHTML = localStorage.getItem(KEY) || `<div class="chat-bubble bg-indigo-950/40 border border-indigo-500/20 text-slate-300 p-3 rounded-xl shadow-lg text-xs leading-relaxed">🤖 Hola William Andrés, soy tu Asistente Inteligente. ¿En qué comando del sistema puedo asistirte hoy?</div>`;
+      chatBox.innerHTML = localStorage.getItem(KEY) || `<div class="chat-bubble bg-indigo-600 border border-indigo-600 text-gray-600 p-3 rounded-xl shadow-sm text-xs leading-relaxed">🤖 Hola William Andrés, soy tu Asistente Inteligente. ¿En qué comando del sistema puedo asistirte hoy?</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
     });
 
@@ -1018,27 +998,27 @@
       const d = document.createElement("div");
       
       if (who === "Tú") {
-        d.className = "chat-bubble bg-indigo-600 text-white p-3 rounded-xl ml-auto text-xs shadow-md border border-indigo-500/10";
+        d.className = "chat-bubble bg-indigo-600 text-white p-3 rounded-xl ml-auto text-xs shadow-md border border-indigo-600";
       } else {
-        d.className = "chat-bubble bg-slate-900 border border-white/5 text-slate-200 p-3 rounded-xl shadow-lg text-xs relative";
+        d.className = "chat-bubble bg-white border border-gray-200 text-gray-700 p-3 rounded-xl shadow-sm text-xs relative";
       }
       
       const id = `respuesta-${Date.now()}`;
       const textoParaMostrar = convertMarkdownToHtml(originalTxt);
-      const contenido = `<strong class="text-indigo-400 font-bold">${who}:</strong> <span id="${id}" class="block mt-1 whitespace-pre-line">${textoParaMostrar}</span>`;
+      const contenido = `<strong class="text-indigo-600 font-bold">${who}:</strong> <span id="${id}" class="block mt-1 whitespace-pre-line">${textoParaMostrar}</span>`;
       d.innerHTML = contenido;
       
       if (who === "IA") {
         const btnCopy = document.createElement("button");
         btnCopy.textContent = "📋 Copiar";
         btnCopy.title = "Copiar al portapapeles";
-        btnCopy.className = "text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold mr-3 hover:underline";
+        btnCopy.className = "text-[10px] text-indigo-600 hover:text-indigo-600 font-semibold mr-3 hover:underline";
         btnCopy.onclick = () => copiarTexto(id);
         
         const btnSpeak = document.createElement("button");
         btnSpeak.innerHTML = "🔊 Escuchar";
         btnSpeak.title = "Escuchar esta respuesta";
-        btnSpeak.className = "text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold hover:underline";
+        btnSpeak.className = "text-[10px] text-indigo-600 hover:text-indigo-600 font-semibold hover:underline";
         btnSpeak.onclick = () => speakText(originalTxt, btnSpeak);
         
         const buttonsContainer = document.createElement("div");
@@ -1065,11 +1045,11 @@
       
       const t = document.createElement("div");
       t.id = "typing";
-      t.className = "chat-bubble bg-slate-900/60 border border-white/5 p-3 rounded-xl italic text-slate-400 text-xs flex items-center gap-2";
+      t.className = "chat-bubble bg-gray-100 border border-gray-200 p-3 rounded-xl italic text-gray-500 text-xs flex items-center gap-2";
       t.innerHTML = `
         <span class="flex h-2 w-2 relative">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-600 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
         </span>
         Procesando comando...
       `;
@@ -1270,7 +1250,7 @@
         } else {
           micButton.innerHTML = `<svg id="micIconDefault" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>`;
           micButton.title = 'Iniciar grabación de voz';
-          micButton.className = "absolute right-2 p-1.5 rounded-full text-slate-400 hover:text-indigo-400 hover:bg-white/5 transition-all focus:outline-none";
+          micButton.className = "absolute right-2 p-1.5 rounded-full text-gray-400 hover:text-indigo-600 hover:bg-gray-100 transition-all focus:outline-none";
         }
       }
     }
@@ -1369,7 +1349,7 @@
     });
     
     document.getElementById('resetAccessibility').addEventListener('click', () => {
-      ['contrast', 'large-text', 'grayscale', 'dyslexia', 'reduce-motion', 'dark-mode', 'large-cursor', 'highlight-links', 'reading-guide', 'paragraph-spacing', 'no-flashing', 'focus-highlight', 'show-keys', 'screen-reader'].forEach(c => {
+      ['contrast', 'large-text', 'grayscale', 'dyslexia', 'reduce-motion', 'large-cursor', 'highlight-links', 'reading-guide', 'paragraph-spacing', 'no-flashing', 'focus-highlight', 'show-keys', 'screen-reader'].forEach(c => {
         document.body.classList.remove(c);
         panel.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
       });

@@ -33,3 +33,6 @@ r/*/animaciones3d/three.js/
 # Secrets
 r/superadmin/i.a/clave.txt
 
+# Large log files
+frontend.log
+nohup.out

@@ -1,0 +1,2020 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proyectos & Gestión - VirtualMind</title>
+        
+    <!-- Dependencias -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/fetch-con-token.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #090D16;
+            color: #cbd5e1;
+            overflow-x: hidden;
+        }
+                
+        .gradient-bg { 
+            background: linear-gradient(135deg, #090d16 0%, #0f172a 100%); 
+        }
+                
+        .card-glass {             
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+                
+        .input-focus {             
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(15, 23, 42, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #f8fafc !important;
+        }
+                
+        .input-focus:focus {             
+            transform: translateY(-1px);             
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
+            background: rgba(15, 23, 42, 0.95) !important;
+        }
+                
+        .section-card {             
+            transition: all 0.3s ease;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+                
+        .section-card:hover {             
+            border-color: rgba(99, 102, 241, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);         
+        }
+                
+        /* Checkboxes & Radios Customizados Tecnológicos */
+        .checkbox-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
+        .checkbox-custom input[type=checkbox] { opacity: 0; position: absolute; }
+        .checkbox-custom .checkmark {             
+            display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8);             
+            border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 6px; margin-right: 8px; transition: all 0.3s ease;         
+        }
+        .checkbox-custom input:checked + .checkmark { 
+            background: #4f46e5; 
+            border-color: #6366f1; 
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+        .checkbox-custom input:checked + .checkmark:after {             
+            content: "✓"; color: #fff; font-size: 13px; font-weight: bold; position: absolute; left: 4px; top: 0px;         
+        }
+                
+        .radio-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
+        .radio-custom input[type=radio] { opacity: 0; position: absolute; }
+        .radio-custom .radiomark {             
+            display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8);             
+            border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 50%; margin-right: 8px; transition: all 0.3s ease;         
+        }
+        .radio-custom input:checked + .radiomark { 
+            background: #4f46e5; 
+            border-color: #6366f1; 
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+        .radio-custom input:checked + .radiomark:after {             
+            content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff;             
+            position: absolute; left: 6px; top: 6px;         
+        }
+                
+        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+                
+        /* Utilidad Modal y Ayuda */
+        .hidden { display: none !important; }
+        .help-icon {             
+            display: inline-flex; align-items: center; justify-content: center;             
+            width: 16px; height: 16px; background: #3b82f6; color: #fff; border-radius: 50%;             
+            font-size: 10px; font-weight: 700; cursor: help; margin-left: 4px; flex-shrink: 0;         
+        }
+        .help-icon:hover { background: #2563eb; }
+
+        /* Estilos Grabación Whisper Premium (Siempre Visibles y Estéticos) */
+        .btn-mic-premium {
+            background-color: rgba(99, 102, 241, 0.1) !important;
+            border: 1px solid rgba(99, 102, 241, 0.25) !important;
+            color: #818cf8 !important;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3.5rem;
+            height: 3rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .btn-mic-premium:hover {
+            background-color: rgba(99, 102, 241, 0.25) !important;
+            border-color: rgba(99, 102, 241, 0.5) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+        .mic-recording {            
+            animation: micPulse 1.2s infinite ease-in-out !important;            
+            background-color: rgba(239, 68, 68, 0.25) !important;            
+            color: #fca5a5 !important;            
+            border-color: rgba(239, 68, 68, 0.5) !important;        
+        }
+        .mic-processing {            
+            background-color: rgba(234, 179, 8, 0.2) !important;            
+            color: #fef08a !important;            
+            border-color: rgba(234, 179, 8, 0.4) !important;        
+        }
+        @keyframes micPulse {            
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }            
+            50% { transform: scale(1.04); box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }            
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }        
+        }
+
+        /* Ambient glowing background blobs */
+        .glow-blob {
+            position: absolute;
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Tema Custom para el Tutorial Interactivo Driver.js */
+        .driverjs-theme { 
+            font-family: 'Inter', sans-serif; 
+            border-radius: 16px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+            padding: 20px; 
+            background: rgba(15, 23, 42, 0.95) !important;
+            color: #f1f5f9 !important;
+        }
+        .driverjs-theme .driver-popover-title { font-size: 18px; font-weight: 700; color: #818cf8; margin-bottom: 8px; }
+        .driverjs-theme .driver-popover-description { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+        .driverjs-theme .driver-popover-next-btn, .driverjs-theme .driver-popover-prev-btn { 
+            background-color: #4f46e5; color: white; border-radius: 8px; text-shadow: none; border: none; padding: 6px 14px; font-weight: 600; 
+            transition: all 0.2s;
+        }
+        .driverjs-theme .driver-popover-next-btn:hover, .driverjs-theme .driver-popover-prev-btn:hover { background-color: #6366f1; }
+        .driverjs-theme .driver-popover-close-btn { color: #64748b; }
+
+        /* Badges de Estados en Modo Oscuro */
+        .badge-status { padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+        .badge-planificado { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
+        .badge-desarrollo { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+        .badge-aprobado { background-color: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
+        .badge-aplazado { background-color: rgba(249, 115, 22, 0.15); color: #ff9d43; border: 1px solid rgba(249, 115, 22, 0.25); }
+        .badge-finalizado { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.25); }
+        .badge-cancelado { background-color: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.25); }
+
+        .hidden-view { display: none !important; }
+
+        /* Estilo de Pestaña Activa */
+        .tab-active { background-color: rgba(255, 255, 255, 0.08); border-bottom: 2px solid #6366f1; color: #ffffff !important; }
+        .tab-inactive { background-color: transparent; border-bottom: 2px solid transparent; color: #94a3b8; }
+        .tab-inactive:hover { background-color: rgba(255, 255, 255, 0.03); color: #ffffff; }
+
+        /* Custom premium select menu scroll */
+        select option {
+            background-color: #0f172a;
+            color: #cbd5e1;
+        }
+
+        /* Tooltip System CSS */
+        .vm-tooltip { position:absolute; background:#0f172a; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.45); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; white-space:nowrap; border: 1px solid rgba(255, 255, 255, 0.08); }
+        .vm-tooltip.visible { opacity:1; transform:translateY(0); }
+    </style>
+    <!-- Driver.js para Tutorial Interactivo -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+</head>
+<body class="gradient-bg min-h-screen relative pb-12">
+
+    <div class="glow-blob top-10 left-10"></div>
+    <div class="glow-blob bottom-10 right-10"></div>
+
+    <!-- Custom Notification Container (Toasts) -->
+    <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- HEADER PREMIUM GLASSMORPHIC -->
+    <div class="backdrop-blur-md bg-slate-900/80 shadow-xl border-b border-indigo-500/10 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="p-2 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20 text-xl">🚀</span>
+                    <div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent tracking-wide">VirtualMind</h1>
+                        <p class="text-indigo-400 text-xs font-semibold">Gestión inteligente de proyectos E-learning</p>
+                    </div>
+                </div>
+                        
+                <div class="flex gap-2">
+                    <button onclick="switchView('dashboard')" id="btnTabDashboard" class="tab-active px-5 py-2.5 rounded-t-lg font-semibold transition-all">
+                        📊 Tablero
+                    </button>
+                    <button onclick="switchView('creacion')" id="btnTabCreacion" class="tab-inactive px-5 py-2.5 rounded-t-lg font-semibold transition-all">
+                        ➕ Crear Proyecto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISTA 1: TABLERO (DASHBOARD) -->
+    <div id="vistaDashboard" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        
+        <!-- Filtros y Controles -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 card-glass p-4 rounded-2xl">
+            <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                <div class="relative">
+                    <select id="filtroEstado" title="Filtra los proyectos por estado" class="appearance-none bg-slate-900/80 text-slate-200 px-4 py-3 pr-10 rounded-xl border border-white/5 focus:ring-2 focus:ring-indigo-500 cursor-pointer text-sm outline-none">
+                        <option value="">📋 Todos los estados</option>
+                        <option value="Planificado">📋 Planificado</option>
+                        <option value="En desarrollo">⚡ En desarrollo</option>
+                        <option value="Aprobado">✅ Aprobado</option>
+                        <option value="Aplazado">⏸️ Aplazado</option>
+                        <option value="Finalizado">🎉 Finalizado</option>
+                        <option value="Cancelado">❌ Cancelado</option>
+                    </select>
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</div>
+                </div>
+                
+                <input type="text" id="filtroCliente" data-tooltip="Busca proyectos por nombre del cliente" data-tooltip-position="bottom" placeholder="🔍 Buscar por Cliente..." class="bg-slate-900/80 text-slate-200 px-4 py-3 rounded-xl border border-white/5 focus:ring-2 focus:ring-indigo-500 w-full md:w-48 text-sm outline-none">
+                <input type="text" id="filtroNombre" data-tooltip="Busca proyectos por nombre del proyecto" data-tooltip-position="bottom" placeholder="🔍 Buscar Proyecto..." class="bg-slate-900/80 text-slate-200 px-4 py-3 rounded-xl border border-white/5 focus:ring-2 focus:ring-indigo-500 w-full md:w-48 text-sm outline-none">
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="cargarProyectos()" class="bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 text-indigo-300 px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all text-sm">
+                    <span>🔄</span> Actualizar
+                </button>
+                <button onclick="exportarPDF()" class="bg-rose-600/10 hover:bg-rose-600 border border-rose-500/20 hover:border-transparent text-rose-300 hover:text-white px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all text-sm shadow-md">
+                    <span>📄</span> Exportar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="card-glass rounded-2xl p-5 flex flex-col items-center justify-center">
+                <div class="text-3xl font-bold text-indigo-400" id="statTotal">0</div>
+                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider text-center mt-1">Total Proyectos</div>
+            </div>
+            <div class="card-glass rounded-2xl p-5 flex flex-col items-center justify-center">
+                <div class="text-3xl font-bold text-blue-400" id="statPlanificado">0</div>
+                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider text-center mt-1">Planificados</div>
+            </div>
+            <div class="card-glass rounded-2xl p-5 flex flex-col items-center justify-center">
+                <div class="text-3xl font-bold text-amber-400" id="statDesarrollo">0</div>
+                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider text-center mt-1">En Desarrollo</div>
+            </div>
+            <div class="card-glass rounded-2xl p-5 flex flex-col items-center justify-center">
+                <div class="text-3xl font-bold text-emerald-400" id="statFinalizado">0</div>
+                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider text-center mt-1">Finalizados</div>
+            </div>
+        </div>
+
+        <!-- Grid de Proyectos -->
+        <div id="proyectosGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div class="col-span-full py-20 text-center">
+                <div class="inline-flex items-center gap-3 text-slate-400 text-lg">
+                    <div class="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full loading-spinner"></div>
+                    Cargando proyectos desde el servidor...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISTA 2: CREACIÓN DE PROYECTO -->
+    <div id="vistaCreacion" class="max-w-6xl mx-auto px-4 py-8 hidden-view animate-fade-in">
+        <div class="card-glass rounded-3xl p-8">
+            <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4 border-b border-white/5 pb-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-md">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">
+                        Crear Nuevo Proyecto
+                    </h2>
+                </div>
+                <button type="button" onclick="verTutorial('crear_proyecto')" class="group flex items-center gap-2 bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 hover:border-transparent px-5 py-2.5 rounded-full shadow-md transition-all text-indigo-300 hover:text-white font-bold cursor-pointer">
+                    <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm">?</span>
+                    <span>Ver Tutorial</span>
+                </button>
+            </div>
+
+            <!-- Formulario Principal -->
+            <form id="formProyecto" class="space-y-8">
+                
+                <!-- Sección 1: Información Básica -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                        <span class="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center mr-3 border border-blue-500/20">
+                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </span>
+                        Información Básica del Proyecto
+                    </h3>
+                                        
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Nombre del Proyecto -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="name">
+                                Nombre del Proyecto <span class="help-icon" title="Nombre único para identificar el proyecto. Ej: Curso de Inglés">?</span>
+                            </label>
+                            <div class="flex gap-2.5">
+                                <input type="text" id="name" name="name" required class="flex-1 px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus" placeholder="Ingresa el nombre del proyecto"/>
+                                                                
+                                <button type="button" onclick="gestionarGrabacionWhisper(event,'name')" id="btn-mic-name" class="btn-mic-premium" title="Grabar con Whisper IA">
+                                    <i id="ico-mic-name" class="fas fa-microphone text-lg"></i>
+                                </button>
+                                                                
+                                <button type="button" onclick="generarNombreConIA()" id="btnGenerarNombreIA" class="px-4 py-2 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-xl flex items-center gap-2 transition-all font-semibold text-sm">
+                                    <i class="fas fa-robot"></i> IA
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cliente -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="clienteSelect">Cliente</label>
+                            <select id="clienteSelect" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                                <option value="">Seleccione un cliente…</option>
+                            </select>
+                        </div>
+
+                        <!-- ID Cliente -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="clientId">ID Cliente (uid)</label>
+                            <input type="text" id="clientId" name="client_id" readonly required class="w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-950/60 text-slate-400 font-mono outline-none border-white/5"/>
+                        </div>
+
+                        <!-- Código Referencia -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="codigoReferencia">Código Interno/Referencia</label>
+                            <input type="text" id="codigoReferencia" name="codigo_referencia" readonly class="w-full px-4 py-3 border border-slate-700 rounded-xl bg-slate-950/60 text-slate-400 font-mono outline-none border-white/5"/>
+                        </div>
+
+                        <!-- Fechas -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="start_date">Fecha de Inicio</label>
+                            <input type="date" id="start_date" name="start_date" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="end_date">Fecha de Finalización</label>
+                            <input type="date" id="end_date" name="end_date" class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus"/>
+                        </div>
+
+                        <!-- Tipo Proyecto -->
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="tipoProyecto">Tipo de Proyecto</label>
+                            <select id="tipoProyecto" name="tipo_proyecto" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                                <option value="">Selecciona...</option>
+                                <optgroup label="Cursos" class="bg-slate-900">
+                                    <option value="Curso virtual">Curso virtual</option>
+                                    <option value="Mooc">MOOC</option>
+                                    <option value="OVA">OVA</option>
+                                    <option value="Microlearning">Microlearning</option>
+                                    <option value="VideoLearning">Video learning</option>
+                                    <option value="Gamificados">Gamificados</option>
+                                </optgroup>
+                                <optgroup label="Otros" class="bg-slate-900">
+                                    <option value="AppEducativa">App Educativa</option>
+                                    <option value="Podcast">Podcast</option>
+                                    <option value="EbookEducativo">Ebook</option>
+                                    <option value="Otro">Otro (especificar)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Tipo Personalizado -->
+                        <div id="divTipoProyectoPersonalizado" style="display:none;" class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="tipoProyectoPersonalizado">Tipo de Proyecto Personalizado</label>
+                            <div class="flex gap-2.5">
+                                <input type="text" id="tipoProyectoPersonalizado" name="tipo_proyecto_personalizado" placeholder="Especifique el tipo" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                <button type="button" onclick="gestionarGrabacionWhisper(event,'tipoProyectoPersonalizado')" id="btn-mic-tipoProyectoPersonalizado" class="btn-mic-premium" title="Grabar con Whisper IA">
+                                    <i id="ico-mic-tipoProyectoPersonalizado" class="fas fa-microphone text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-300" for="estado">Estado Inicial</label>
+                            <select id="estado" name="estado" required class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 input-focus">
+                                <option value="Planificado">Planificado</option>
+                                <option value="En desarrollo">En desarrollo</option>
+                                <option value="Aprobado">Aprobado</option>
+                                <option value="Finalizado">Finalizado</option>
+                            </select>
+                            <div id="estadoWarning" class="hidden text-xs text-amber-400 bg-amber-900/20 border border-amber-700/30 rounded-lg px-3 py-2 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i> Debes agregar colaboradores al proyecto después de crearlo para poder cambiar a este estado.</div>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="mt-6 space-y-2">
+                        <label class="block text-sm font-semibold text-slate-300" for="description">Descripción</label>
+                        <div class="flex gap-2.5 items-start">
+                            <div class="relative flex-1">
+                                <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus resize-none" placeholder="Describe brevemente..."></textarea>
+                                <button type="button" onclick="generarDescripcionConIA()" id="btnGenerarDescIA" class="absolute top-2.5 right-2.5 px-3 py-1 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-all">
+                                    <i class="fas fa-robot"></i> IA
+                                </button>
+                            </div>
+                            <button type="button" onclick="gestionarGrabacionWhisper(event,'description')" id="btn-mic-description" class="btn-mic-premium h-[104px]" title="Grabar descripción con Whisper IA">
+                                <i id="ico-mic-description" class="fas fa-microphone text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 2: Configuración de Lenguaje e Inclusión -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                        <span class="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center mr-3 border border-green-500/20">
+                            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        </span>
+                        Configuración de Lenguaje e Inclusión
+                    </h3>
+                                        
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Lenguaje Inclusivo -->
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-slate-300 text-sm">Lenguaje Inclusivo</h4>
+                            <div class="flex space-x-6">
+                                <label class="radio-custom flex items-center text-slate-300">
+                                    <input type="radio" name="lenguaje_incluyente" value="true" id="incluyenteSi">
+                                    <span class="radiomark"></span> Sí
+                                </label>
+                                <label class="radio-custom flex items-center text-slate-300">
+                                    <input type="radio" name="lenguaje_incluyente" value="false" id="incluyenteNo" checked>
+                                    <span class="radiomark"></span> No
+                                </label>
+                            </div>
+                            <select name="lenguaje_inclusivo_tipo" id="tipoLenguajeSelect" disabled class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                <option value="">Selecciona…</option>
+                                <option value="Tradicional">Tradicional</option>
+                                <option value="Doble mención">Doble mención</option>
+                                <option value="Neutro">Neutro</option>
+                                <option value="No binario">No binario</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                                                        
+                            <!-- Input Otro Lenguaje -->
+                            <div class="flex gap-2.5" id="divOtroLenguaje" style="display:none;">
+                                <input type="text" id="otroLenguajeInput" name="lenguaje_inclusivo_otro" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus" placeholder="Especificar"/>
+                                <button type="button" onclick="gestionarGrabacionWhisper(event,'otroLenguajeInput')" id="btn-mic-otroLenguajeInput" class="btn-mic-premium" title="Grabar con Whisper IA">
+                                    <i id="ico-mic-otroLenguajeInput" class="fas fa-microphone text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Idioma -->
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-slate-300 text-sm">Idioma</h4>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="radio-custom flex items-center text-slate-300">
+                                    <input type="radio" name="idioma" value="Español" checked id="idiomaEs">
+                                    <span class="radiomark"></span> Español
+                                </label>
+                                <label class="radio-custom flex items-center text-slate-300">
+                                    <input type="radio" name="idioma" value="Inglés" id="idiomaEn">
+                                    <span class="radiomark"></span> Inglés
+                                </label>
+                                <label class="radio-custom flex items-center text-slate-300">
+                                    <input type="radio" name="idioma" value="Bilingüe" id="idiomaBi">
+                                    <span class="radiomark"></span> Bilingüe
+                                </label>
+                            </div>
+                            <div class="flex gap-2.5 mt-2">
+                                <input type="text" id="idioma_otro" name="idioma_otro" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus" placeholder="Otro idioma"/>
+                                <button type="button" onclick="gestionarGrabacionWhisper(event,'idioma_otro')" id="btn-mic-idioma_otro" class="btn-mic-premium" title="Grabar con Whisper IA">
+                                    <i id="ico-mic-idioma_otro" class="fas fa-microphone text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inclusión Digital -->
+                    <div class="mt-8 space-y-4">
+                        <h4 class="font-semibold text-slate-300 text-sm">Inclusión Digital</h4>
+                        <div class="flex space-x-6 mb-4">
+                            <label class="radio-custom flex items-center text-slate-300">
+                                <input type="radio" name="inclusion_digital" value="true" id="inclusionSi">
+                                <span class="radiomark"></span> Sí
+                            </label>
+                            <label class="radio-custom flex items-center text-slate-300">
+                                <input type="radio" name="inclusion_digital" value="false" id="inclusionNo" checked>
+                                <span class="radiomark"></span> No
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 border border-white/5 rounded-2xl p-4 bg-slate-950/40">
+                            <label class="checkbox-custom flex items-center text-slate-300">
+                                <input type="checkbox" name="inclusion_digital_web" value="true" id="inclWeb">
+                                <span class="checkmark"></span> Accesibilidad web
+                            </label>
+                            <label class="checkbox-custom flex items-center text-slate-300">
+                                <input type="checkbox" name="inclusion_digital_asistiva" value="true" id="inclAsist">
+                                <span class="checkmark"></span> Tecnología asistiva
+                            </label>
+                            <label class="checkbox-custom flex items-center text-slate-300">
+                                <input type="checkbox" name="inclusion_digital_universal" value="true" id="inclUniv">
+                                <span class="checkmark"></span> Diseño universal
+                            </label>
+                            <label class="checkbox-custom flex items-center text-slate-300">
+                                <input type="checkbox" name="inclusion_digital_educativa" value="true" id="inclEdu">
+                                <span class="checkmark"></span> Educación digital inclusiva
+                            </label>
+                        </div>
+                        <div class="flex gap-2.5 mt-4">
+                            <input type="text" id="inclusion_digital_otro" name="inclusion_digital_otro" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus" placeholder="Otro (especificar)" disabled/>
+                            <button type="button" onclick="gestionarGrabacionWhisper(event,'inclusion_digital_otro')" id="btn-mic-inclusion_digital_otro" class="btn-mic-premium" disabled>
+                                <i id="ico-mic-inclusion_digital_otro" class="fas fa-microphone text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 3: Diseño Visual -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                        <span class="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center mr-3 border border-purple-500/20">
+                            <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        </span>
+                        Diseño Visual y Tipografía
+                    </h3>
+                                        
+                    <div class="space-y-6">
+                        <!-- Título -->
+                        <div>
+                            <h4 class="font-semibold text-slate-300 mb-3 text-sm">Tipografía de Título</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start bg-slate-950/20 p-3 rounded-xl border border-white/5">
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-400 block mb-1.5">Fuente</label>
+                                    <select id="tituloFuente" name="tipografia_titulo_fuente" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>Inter</option><option>Roboto</option><option>Open Sans</option><option>Lato</option><option>Montserrat</option><option>Poppins</option><option>Merriweather</option><option>Playfair Display</option><option>Nunito</option><option>Otro</option>
+                                    </select>
+                                    <input id="tituloFuenteOtro" placeholder="Fuente" disabled class="mt-2 hidden w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-400 block mb-1.5">Tamaño</label>
+                                    <select id="tituloTamano" name="tipografia_titulo_tamano" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>24px</option><option>28px</option><option>32px</option><option>36px</option><option>40px</option><option>48px</option><option>Otro</option>
+                                    </select>
+                                    <input id="tituloTamanoOtro" placeholder="Ej: 34px" disabled class="mt-2 hidden w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                </div>
+                                <label class="checkbox-custom flex items-center mt-8 text-slate-300"><input type="checkbox" name="tipografia_titulo_negrita" value="true"><span class="checkmark"></span> Negrita</label>
+                                <label class="checkbox-custom flex items-center mt-8 text-slate-300"><input type="checkbox" name="tipografia_titulo_cursiva" value="true"><span class="checkmark"></span> Cursiva</label>
+                            </div>
+                        </div>
+
+                        <!-- Subtítulo -->
+                        <div>
+                            <h4 class="font-semibold text-slate-300 mb-3 text-sm">Tipografía de Subtítulo</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start bg-slate-950/20 p-3 rounded-xl border border-white/5">
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-400 block mb-1.5">Fuente</label>
+                                    <select id="subtituloFuente" name="tipografia_subtitulo_fuente" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>Inter</option><option>Roboto</option><option>Open Sans</option><option>Lato</option><option>Montserrat</option><option>Poppins</option><option>Merriweather</option><option>Playfair Display</option><option>Nunito</option><option>Otro</option>
+                                    </select>
+                                    <input id="subtituloFuenteOtro" placeholder="Fuente" disabled class="mt-2 hidden w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-400 block mb-1.5">Tamaño</label>
+                                    <select id="subtituloTamano" name="tipografia_subtitulo_tamano" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>18px</option><option>20px</option><option>24px</option><option>28px</option><option>Otro</option>
+                                    </select>
+                                    <input id="subtituloTamanoOtro" placeholder="Ej: 22px" disabled class="mt-2 hidden w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                </div>
+                                <label class="checkbox-custom flex items-center mt-8 text-slate-300"><input type="checkbox" name="tipografia_subtitulo_negrita" value="true"><span class="checkmark"></span> Negrita</label>
+                                <label class="checkbox-custom flex items-center mt-8 text-slate-300"><input type="checkbox" name="tipografia_subtitulo_cursiva" value="true"><span class="checkmark"></span> Cursiva</label>
+                            </div>
+                        </div>
+
+                        <!-- Párrafo -->
+                        <div>
+                            <h4 class="font-semibold text-slate-300 mb-3 text-sm">Tipografía de Párrafo</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start bg-slate-950/20 p-3 rounded-xl border border-white/5">
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-400 block mb-1.5">Fuente</label>
+                                    <select id="parrafoFuente" name="tipografia_parrafo_fuente" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>Inter</option><option>Roboto</option><option>Open Sans</option><option>Lato</option><option>Montserrat</option><option>Poppins</option><option>Merriweather</option><option>Playfair Display</option><option>Nunito</option><option>Otro</option>
+                                    </select>
+                                    <input id="parrafoFuenteOtro" placeholder="Fuente" disabled class="mt-2 hidden w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-400 block mb-1.5">Tamaño</label>
+                                    <select id="parrafoTamano" name="tipografia_parrafo_tamano" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus">
+                                        <option>12px</option><option>14px</option><option>16px</option><option>18px</option><option>Otro</option>
+                                    </select>
+                                    <input id="parrafoTamanoOtro" placeholder="Ej: 16px" disabled class="mt-2 hidden w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                                </div>
+                                <label class="checkbox-custom flex items-center mt-8 text-slate-300"><input type="checkbox" name="tipografia_parrafo_negrita" value="true"><span class="checkmark"></span> Negrita</label>
+                                <label class="checkbox-custom flex items-center mt-8 text-slate-300"><input type="checkbox" name="tipografia_parrafo_cursiva" value="true"><span class="checkmark"></span> Cursiva</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 4: Configuración de Tiempo, Derechos y Permisos -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Configuración de Tiempo -->
+                    <div class="section-card rounded-2xl p-6 shadow-xl h-full">
+                        <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                            <span class="w-8 h-8 bg-orange-500/10 rounded-lg flex items-center justify-center mr-3 border border-orange-500/20">
+                                <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </span>
+                            Configuración de Tiempo
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="space-y-2">
+                                <label for="horas_curso" class="block text-sm font-semibold text-slate-300">Total Horas del Curso</label>
+                                <input type="number" id="horas_curso" name="horas_curso" min="0" step="0.1" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                            </div>
+                            <div class="space-y-2">
+                                <label for="horas_autonomo" class="block text-sm font-semibold text-slate-300">Horas Autónomas</label>
+                                <input type="number" id="horas_autonomo" name="horas_aprendizaje_autonomo_virtual" min="0" step="0.1" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                            </div>
+                            <div class="space-y-2">
+                                <label for="horas_actividades" class="block text-sm font-semibold text-slate-300">Horas Actividades</label>
+                                <input type="number" id="horas_actividades" name="horas_actividades_aprendizaje" min="0" step="0.1" class="w-full px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Derechos y Entregas -->
+                    <div class="section-card rounded-2xl p-6 shadow-xl h-full">
+                        <h3 class="text-xl font-semibold text-slate-100 mb-6 flex items-center border-b border-white/5 pb-3">
+                            <span class="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center mr-3 border border-red-500/20">
+                                <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            </span>
+                            Derechos y Entregas
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Cesión de Derechos</label>
+                                    <div class="flex space-x-4">
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="cesion_derechos" value="true" id="cesionSi"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="cesion_derechos" value="false" checked id="cesionNo"><span class="radiomark"></span> No</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Derechos Patrimon.</label>
+                                    <div class="flex space-x-4">
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="derechos_patrimoniales_autor" value="true"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="derechos_patrimoniales_autor" value="false" checked><span class="radiomark"></span> No</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Confidencialidad</label>
+                                    <div class="flex space-x-4">
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="acuerdo_confidencialidad" value="true"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="acuerdo_confidencialidad" value="false" checked><span class="radiomark"></span> No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Entrega Fuentes</label>
+                                    <div class="flex space-x-4">
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_fuentes" value="true"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_fuentes" value="false" checked><span class="radiomark"></span> No</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Escrito Autor</label>
+                                    <div class="flex space-x-4">
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_escrito_autor" value="true"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_escrito_autor" value="false" checked><span class="radiomark"></span> No</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">Diseño Instruccional</label>
+                                    <div class="flex space-x-4">
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_diseno_instruccional" value="true"><span class="radiomark"></span> Sí</label>
+                                        <label class="radio-custom flex items-center text-slate-300"><input type="radio" name="entrega_diseno_instruccional" value="false" checked><span class="radiomark"></span> No</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 6: Público Objetivo -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-3">
+                        <h3 class="text-xl font-semibold text-slate-100 flex items-center">
+                            <span class="w-8 h-8 bg-indigo-500/10 rounded-lg flex items-center justify-center mr-3 border border-indigo-500/20">
+                                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </span>
+                            Público Objetivo
+                        </h3>
+                        <button type="button" onclick="generarPublicoObjetivoConIA()" id="btnGenerarPublicoIA" class="px-4 py-2 bg-purple-500/10 hover:bg-purple-500 border border-purple-500/20 hover:border-transparent text-purple-300 hover:text-white rounded-xl flex items-center gap-2 text-xs font-semibold transition-all">
+                            <i class="fas fa-robot"></i> Sugerir con IA
+                        </button>
+                    </div>
+                                        
+                    <p class="text-sm text-slate-400 mb-4 font-medium">¿A quién está dirigido el proyecto?</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 rounded-xl p-4 bg-slate-950/40 border border-white/5">
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Primera infancia"><span class="checkmark"></span> Primera infancia (0-5)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Niños 6 a 11 años"><span class="checkmark"></span> Niños (6-11)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Adolescentes"><span class="checkmark"></span> Adolescentes (12-17)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Jóvenes"><span class="checkmark"></span> Jóvenes (18-25)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Adultos"><span class="checkmark"></span> Adultos (26-59)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Mayores"><span class="checkmark"></span> Mayores (60+)</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Docentes"><span class="checkmark"></span> Docentes / Educadores</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Empresas"><span class="checkmark"></span> Empresas / Equipos</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Instituciones educativas"><span class="checkmark"></span> Instituciones</label>
+                        <label class="checkbox-custom flex items-center text-slate-300"><input type="checkbox" name="publico_objetivo" value="Público general"><span class="checkmark"></span> Público general</label>
+                    </div>
+                                        
+                    <div class="flex gap-2.5 mt-4">
+                        <input type="text" id="publico_objetivo_otro" name="publico_objetivo_otro" placeholder="Otro (especificar)" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus"/>
+                        <button type="button" onclick="gestionarGrabacionWhisper(event,'publico_objetivo_otro')" id="btn-mic-publico_objetivo_otro" class="btn-mic-premium" title="Grabar con Whisper IA">
+                            <i id="ico-mic-publico_objetivo_otro" class="fas fa-microphone text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sección 7: Observaciones -->
+                <div class="section-card rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-xl font-semibold text-slate-100 mb-4">Observaciones Adicionales</h3>
+                    <div class="flex gap-2.5 items-start">
+                        <textarea id="observaciones" name="observaciones" rows="3" class="flex-1 px-4 py-3 border border-slate-700 rounded-xl input-focus resize-none" placeholder="Escribe notas adicionales..."></textarea>
+                        <button type="button" onclick="gestionarGrabacionWhisper(event,'observaciones')" id="btn-mic-observaciones" class="btn-mic-premium h-[84px]" title="Grabar observaciones con Whisper IA">
+                            <i id="ico-mic-observaciones" class="fas fa-microphone text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Controles Submit -->
+                <div id="form-message" class="mt-4 text-center"></div>
+                <div class="text-center pt-4">
+                    <button type="submit" id="submitButton" class="px-10 py-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-lg font-bold rounded-2xl shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all transform hover:-translate-y-1">
+                        <span id="submitButtonText">💾 Crear Proyecto</span>
+                    </button>
+                </div>
+                            
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLES -->
+    <div id="modalDetalles" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="card-glass rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-t-2xl flex justify-between items-center text-white border-b border-white/5">
+                <h2 class="text-2xl font-bold" id="modalTitulo text-white">Detalles del Proyecto</h2>
+                <button onclick="cerrarModal()" class="text-white/80 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 text-slate-200" id="modalContenido"></div>
+        </div>
+    </div>
+
+    <!-- MODAL GESTIONAR PARTICIPANTES -->
+    <div id="modalParticipantes" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="card-glass rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 border-b border-white/5">
+                <div class="flex justify-between items-center text-white">
+                    <h2 class="text-2xl font-bold flex items-center gap-2">
+                        <span>👥</span> <span id="participantesModalTitulo">Participantes del Proyecto</span>
+                    </h2>
+                    <button onclick="cerrarModalParticipantes()" class="text-white/80 hover:text-white text-3xl leading-none focus:outline-none">&times;</button>
+                </div>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-6">
+                <!-- Formulario de Asociación -->
+                <div class="bg-slate-950/40 p-5 rounded-2xl border border-white/5 shadow-inner">
+                    <h3 class="font-bold text-slate-200 mb-4 flex items-center gap-2 text-xs uppercase tracking-wider">
+                        <span>➕</span> Asociar Nuevo Colaborador
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Usuario</label>
+                            <select id="partUsuarioSelect" title="Seleccione el usuario" class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 bg-slate-900 text-slate-200 transition-all outline-none text-sm">
+                                <option value="">Seleccione un usuario...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Rol en Proyecto</label>
+                            <select id="partRolSelect" title="Seleccione el rol del participante" class="w-full px-4 py-3 border border-slate-700 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 bg-slate-900 text-slate-200 transition-all outline-none text-sm">
+                                <option value="1">Superadmin</option>
+                                <option value="2">Admin</option>
+                                <option value="3">Coordinador</option>
+                                <option value="4">Cliente</option>
+                                <option value="5">Diseñador Instruccional</option>
+                                <option value="6" selected>Autor</option>
+                                <option value="7">Revisor QA</option>
+                                <option value="8">Editor</option>
+                                <option value="9">Desarrollador Multimedia</option>
+                                <option value="10">Abogado</option>
+                                <option value="11">Diseñador Gráfico</option>
+                                <option value="12">Animador 2D</option>
+                                <option value="13">Animador 3D</option>
+                                <option value="14">Video</option>
+                                <option value="16">Corrector de Estilo</option>
+                                <option value="17">Ingeniero LMS</option>
+                                <option value="18">Registrado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="agregarColaboradorProyecto()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-98 text-sm">
+                        <span>✨</span> Asociar Colaborador
+                    </button>
+                </div>
+
+                <!-- Tabla de Participantes -->
+                <div>
+                    <h3 class="font-bold text-slate-300 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
+                        <span>📋</span> Colaboradores Asignados
+                    </h3>
+                    <div class="border border-white/5 rounded-2xl overflow-hidden bg-slate-900/35 shadow-sm">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-950/60 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5">
+                                    <th class="p-4">Colaborador</th>
+                                    <th class="p-4">Rol asignado</th>
+                                    <th class="p-4 text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="participantesTablaBody">
+                                <tr>
+                                    <td colspan="3" class="p-4 text-center text-slate-500 text-sm">Cargando participantes...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TUTORIAL -->
+    <div id="tutorialModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onclick="cerrarTutorial()"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0 animate-fade-in">
+                <div class="relative transform overflow-hidden rounded-2xl bg-slate-900 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-white/10">
+                    <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center border-b border-white/5">
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2"><span>🎓</span> <span id="tutTitle">Tutorial</span></h3>
+                        <button type="button" class="text-indigo-100 hover:text-white text-2xl leading-none focus:outline-none" onclick="cerrarTutorial()">&times;</button>
+                    </div>
+                    <div class="px-6 py-6 text-slate-300">
+                        <div id="tutVideoContainer" class="aspect-video w-full rounded-xl overflow-hidden bg-black mb-6 shadow-md hidden">
+                            <iframe id="tutVideoFrame" class="w-full h-full" src="" title="Video Tutorial" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-slate-200 border-b border-white/5 pb-2">Pasos a seguir:</h4>
+                            <ul id="tutSteps" class="list-none space-y-3 text-sm text-slate-400"></ul>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950/60 px-6 py-3 flex justify-end border-t border-white/5">
+                        <button type="button" class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500" onclick="cerrarTutorial()">Entendido</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        // ==========================================
+        // 1. CONFIGURACIÓN Y CONSTANTES GLOBALES
+        // ==========================================
+        const API_URL = 'https://gestordecursos.pegui.edu.co:8000';
+        const API_GEMINI = `${API_URL}/chat/gemini`;
+        const API_WHISPER = `${API_URL}/whisper/transcribir`;
+
+        // Almacenamiento de proyectos y caché
+        let todosProyectos = [];
+        let clientesCache = {};
+        let peticionesEnCurso = {};
+        
+        // Variables para Participantes y Grabación Whisper
+        let usuariosSistema = [];
+        let idProyectoParticipantesActivo = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let idCampoDestino = null;
+        let temporizadorMaximo = null;
+        let estaGrabando = false; // Declarada de forma única y global
+
+        const rolesMap = {
+            1: "Superadmin",
+            2: "Admin",
+            3: "Coordinador",
+            4: "Cliente",
+            5: "Diseñador Instruccional",
+            6: "Autor",
+            7: "Revisor QA",
+            8: "Editor",
+            9: "Desarrollador Multimedia",
+            10: "Abogado",
+            11: "Diseñador Gráfico",
+            12: "Animador 2D",
+            13: "Animador 3D",
+            14: "Video",
+            16: "Corrector de Estilo",
+            17: "Ingeniero LMS",
+            18: "Registrado"
+        };
+
+        function getToken() {
+            return localStorage.getItem('token') || sessionStorage.getItem('token');
+        }
+
+        // --- SISTEMAS DE GRABACIÓN WHISPER (PRO - UNIFICADO Y CORREGIDO) ---
+        async function gestionarGrabacionWhisper(e, idCampo) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            if (estaGrabando && idCampoDestino === idCampo) {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+                return;
+            }
+            if (estaGrabando) {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+                await new Promise(r => setTimeout(r, 150));
+            }
+
+            idCampoDestino = idCampo;
+            audioChunks = [];
+            estaGrabando = true;
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+                
+                mediaRecorder.ondataavailable = (ev) => {
+                    if (ev.data && ev.data.size > 0) audioChunks.push(ev.data);
+                };
+
+                mediaRecorder.onstart = () => {
+                    resetearIconosMic();
+                    const btn = document.getElementById(`btn-mic-${idCampoDestino}`);
+                    const ico = document.getElementById(`ico-mic-${idCampoDestino}`);
+                    if (btn) btn.classList.add('mic-recording');
+                    if (ico) ico.className = 'fas fa-stop text-lg';
+                    temporizadorMaximo = setTimeout(() => {
+                        if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+                    }, 10000);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    clearTimeout(temporizadorMaximo);
+                    estaGrabando = false;
+                    const btn = document.getElementById(`btn-mic-${idCampoDestino}`);
+                    const ico = document.getElementById(`ico-mic-${idCampoDestino}`);
+                    if (btn) {
+                        btn.classList.remove('mic-recording');
+                        btn.classList.add('mic-processing');
+                    }
+                    if (ico) ico.className = 'fas fa-spinner fa-spin text-lg';
+                    const blob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
+                    stream.getTracks().forEach(t => t.stop());
+                    
+                    if (blob.size > 100) {
+                        await enviarAudioAWhisper(blob);
+                    } else {
+                        resetearIconosMic();
+                    }
+                };
+
+                mediaRecorder.start();
+            } catch (err) {
+                estaGrabando = false;
+                console.error('Whisper error:', err);
+                resetearIconosMic();
+            }
+        }
+
+        async function enviarAudioAWhisper(blob) {
+            if (!blob || blob.size === 0) {
+                resetearIconosMic();
+                return;
+            }
+            const token = getToken();
+            const fd = new FormData();
+            fd.append('audio', blob, 'dictado.webm');
+            try {
+                const res = await fetch(API_WHISPER, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: fd
+                });
+                if (!res.ok) throw new Error('Error Whisper');
+                const data = await res.json();
+                const texto = (data.texto || '').trim();
+                if (texto) {
+                    const input = document.getElementById(idCampoDestino);
+                    if (input) {
+                        input.value = input.value.trim() ? input.value.trim() + ' ' + texto : texto;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            } catch (err) {
+                console.error('Whisper fetch error:', err);
+            } finally {
+                resetearIconosMic();
+            }
+        }
+
+        function resetearIconosMic() {
+            document.querySelectorAll('[id^="btn-mic-"]').forEach(function(b) {
+                const id = b.id.replace('btn-mic-', '');
+                b.className = "btn-mic-premium h-12";
+                if (id === 'description') {
+                    b.className = "btn-mic-premium h-[104px]";
+                }
+                if (id === 'observaciones') {
+                    b.className = "btn-mic-premium h-[84px]";
+                }
+            });
+            document.querySelectorAll('[id^="ico-mic-"]').forEach(function(i) {
+                i.className = 'fas fa-microphone text-lg';
+            });
+            if (!estaGrabando) idCampoDestino = null;
+        }
+
+        // --- LÓGICA DE NAVEGACIÓN (TABS) ---
+        function switchView(viewName) {
+            const vistaDashboard = document.getElementById('vistaDashboard');
+            const vistaCreacion = document.getElementById('vistaCreacion');
+            const btnTabDashboard = document.getElementById('btnTabDashboard');
+            const btnTabCreacion = document.getElementById('btnTabCreacion');
+
+            if(viewName === 'dashboard') {
+                vistaDashboard.classList.remove('hidden-view');
+                vistaCreacion.classList.add('hidden-view');
+                btnTabDashboard.classList.add('tab-active');
+                btnTabDashboard.classList.remove('tab-inactive');
+                btnTabCreacion.classList.add('tab-inactive');
+                btnTabCreacion.classList.remove('tab-active');
+                cargarProyectos(); // Refrescar tablero al reingresar
+            } else {
+                vistaDashboard.classList.add('hidden-view');
+                vistaCreacion.classList.remove('hidden-view');
+                btnTabCreacion.classList.add('tab-active');
+                btnTabCreacion.classList.remove('tab-inactive');
+                btnTabDashboard.classList.add('tab-inactive');
+                btnTabDashboard.classList.remove('tab-active');
+            }
+        }
+
+        // --- FUNCIONES DEL DASHBOARD ---
+        function getBadge(estado) {
+            const badges = {
+                'Planificado': 'badge-planificado',
+                'En desarrollo': 'badge-desarrollo',
+                'Aprobado': 'badge-aprobado',
+                'Aplazado': 'badge-aplazado',
+                'Finalizado': 'badge-finalizado',
+                'Cancelado': 'badge-cancelado'
+            };
+            return badges[estado] || 'bg-slate-800 text-slate-300';
+        }
+
+        async function getNombreCliente(client_id) {
+            if (!client_id) return 'Sin cliente';
+            if (clientesCache[client_id]) return clientesCache[client_id];
+            if (peticionesEnCurso[client_id]) return peticionesEnCurso[client_id];
+
+            peticionesEnCurso[client_id] = (async () => {
+                try {
+                    const resp = await fetch(`${API_URL}/users/${client_id}`, {
+                        headers: { "Authorization": "Bearer " + getToken() }
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        const nombre = data.name || data.nombre || 'Cliente';
+                        clientesCache[client_id] = nombre;
+                        return nombre;
+                    }
+                } catch (e) {
+                    console.warn("Error cargando cliente:", client_id);
+                } finally {
+                    delete peticionesEnCurso[client_id];
+                }
+                return 'Cliente';
+            })();
+
+            return peticionesEnCurso[client_id];
+        }
+
+        async function cargarProyectos() {
+            const grid = document.getElementById('proyectosGrid');
+            const token = getToken();
+            if (!token) { window.location.href = '/login.html'; return; }
+
+            grid.innerHTML = `
+                <div class="col-span-full py-20 text-center">
+                    <div class="inline-flex items-center gap-3 text-slate-400 text-lg">
+                        <div class="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full loading-spinner"></div>
+                        Consultando API...
+                    </div>
+                </div>
+            `;
+
+            try {
+                const resp = await fetch(`${API_URL}/projects/`, {
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                        "Content-Type": "application/json"
+                    }
+                });
+                
+                if (!resp.ok) throw new Error("Error en la autenticación o servidor");
+                todosProyectos = await resp.json();
+                
+                const promesasClientes = [...new Set(todosProyectos.map(p => p.client_id))]
+                    .filter(id => id)
+                    .map(id => getNombreCliente(id));
+                    
+                await Promise.all(promesasClientes);
+
+                try {
+                    const resCount = await fetch(`${API_URL}/participantes/counts`, { headers: { "Authorization": "Bearer " + token } });
+                    if (resCount.ok) {
+                        const counts = await resCount.json();
+                        window.participantCounts = counts;
+                    }
+                } catch(e) { window.participantCounts = {}; }
+
+                renderProyectos();
+                actualizarStats();
+            } catch (e) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-20 text-center">
+                        <div class="text-rose-500 text-4xl mb-4">⚠️</div>
+                        <div class="text-rose-600 text-xl font-bold">Error de Conexión</div>
+                        <p class="text-slate-400 mt-2">${e.message}</p>
+                        <button onclick="cargarProyectos()" class="mt-6 bg-indigo-600 text-white px-8 py-3 rounded-xl hover:bg-indigo-700 transition-all shadow-lg text-sm font-semibold">Reintentar</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderProyectos() {
+            const grid = document.getElementById('proyectosGrid');
+            const estadoFiltro = document.getElementById('filtroEstado').value;
+            const clienteFiltro = document.getElementById('filtroCliente').value.toLowerCase();
+            const nombreFiltro = document.getElementById('filtroNombre').value.toLowerCase();
+
+            let proyectos = todosProyectos.filter(p => {
+                const nombreCliente = (clientesCache[p.client_id] || '').toLowerCase();
+                const matchEstado = !estadoFiltro || p.estado === estadoFiltro;
+                const matchCliente = !clienteFiltro || nombreCliente.includes(clienteFiltro);
+                const matchNombre = !nombreFiltro || (p.name || '').toLowerCase().includes(nombreFiltro);
+                return matchEstado && matchCliente && matchNombre;
+            });
+
+            if (!proyectos.length) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-20 text-center text-slate-500"> 
+                         <span class="text-6xl block mb-4">📋</span>
+                         <p class="text-lg font-medium">No se encontraron proyectos con estos criterios.</p>
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = proyectos.map((proj, idx) => {
+                const clienteNombre = clientesCache[proj.client_id] || 'Cliente VirtualMind';
+                const inicial = clienteNombre.charAt(0).toUpperCase();
+                
+                return `
+                    <div class="card-glass rounded-2xl overflow-hidden transition-all duration-300 hover:border-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/5 animate-fade-in" style="animation-delay: ${idx * 0.03}s">
+                        <div class="bg-slate-950/40 p-4 border-b border-white/5">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-md">${proj.id}</span>
+                                    <span class="ml-2.5 badge-status ${getBadge(proj.estado)}">${proj.estado || 'Planificado'}</span>
+                                    ${(window.participantCounts || {})[proj.id] > 0 ? '' : '<span class="ml-1.5 badge-status bg-amber-900/40 text-amber-400 border border-amber-600/30 text-[10px] px-2 py-0.5 rounded-full">⚠️ Sin colaboradores</span>'}
+                                </div>
+                                <span class="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-md uppercase tracking-wide">${proj.tipo_proyecto || 'E-learning'}</span>
+                            </div>
+                        </div>
+                                                
+                        <div class="p-5">
+                            <h3 class="font-bold text-base text-slate-100 mb-3 truncate" title="${proj.name}">${proj.name || 'Sin título'}</h3>
+                                                    
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-md">${inicial}</div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-300">${clienteNombre}</div>
+                                    <div class="text-[10px] text-slate-500 font-mono mt-0.5">${proj.codigo_referencia || 'VM-PROJECT'}</div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 text-xs mb-4">
+                                <div class="bg-slate-950/40 rounded-xl p-3 border border-white/5 shadow-inner">
+                                    <div class="text-[10px] text-slate-500 font-semibold uppercase mb-1">📅 Inicio</div>
+                                    <div class="font-bold text-slate-300 font-mono">${proj.start_date || '—'}</div>
+                                </div>
+                                <div class="bg-slate-950/40 rounded-xl p-3 border border-white/5 shadow-inner">
+                                    <div class="text-[10px] text-slate-500 font-semibold uppercase mb-1">🏁 Fin</div>
+                                    <div class="font-bold text-slate-300 font-mono">${proj.end_date || '—'}</div>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-slate-400 line-clamp-2 mb-5 h-8 italic">"${proj.description || 'Sin descripción disponible'}"</p>
+
+                            <div class="flex flex-wrap gap-1.5 border-t border-white/5 pt-4">
+                                <button onclick="verProyecto(${proj.id})" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-3 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95">👁️ Ver</button>
+                                <button onclick="verDocumentos(${proj.id})" class="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-blue-500/20" title="Documentos del Proyecto">📁</button>
+                                <button onclick="gestionarParticipantes(${proj.id}, '${proj.name.replace(/'/g, "\\'")}')" class="bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-purple-500/20" title="Gestionar Participantes">👥</button>
+                                <button onclick="actualizarProyecto(${proj.id})" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-white/5" title="Editar">✏️</button>
+                                <button onclick="crearPlanFormacion(${proj.id})" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-2 rounded-xl text-xs font-bold transition-all border border-emerald-500/20" title="Plan de Formación">📋</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function actualizarStats() {
+            const total = todosProyectos.length;
+            const planificado = todosProyectos.filter(p => p.estado === 'Planificado').length;
+            const desarrollo = todosProyectos.filter(p => p.estado === 'En desarrollo').length;
+            const finalizado = todosProyectos.filter(p => p.estado === 'Finalizado').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statPlanificado').textContent = planificado;
+            document.getElementById('statDesarrollo').textContent = desarrollo;
+            document.getElementById('statFinalizado').textContent = finalizado;
+        }
+
+        function verProyecto(id) { window.location.href = `read.html?id=${id}`; }
+        function verDocumentos(id) { window.location.href = `../documentos/i.html?project_id=${id}`; }
+        function actualizarProyecto(id) { window.location.href = `edit.html?id=${id}`; }
+        function crearPlanFormacion(id) { window.location.href = `../studyplan/index.html?project_id=${id}`; }
+        function cerrarModal() { document.getElementById('modalDetalles').classList.add('hidden'); }
+
+        // --- GESTIÓN DE PARTICIPANTES ---
+        async function cargarUsuariosSistema() {
+            try {
+                const r = await fetch(`${API_URL}/users/`, { headers: { Authorization: 'Bearer ' + getToken() } });
+                if (r.ok) {
+                    usuariosSistema = await r.json();
+                    const select = document.getElementById('partUsuarioSelect');
+                    if (select) {
+                        select.innerHTML = '<option value="">Seleccione un colaborador...</option>';
+                        usuariosSistema.forEach(u => {
+                            select.innerHTML += `<option value="${u.uid}">${u.nombre || u.email} (${u.email})</option>`;
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('Error cargando usuarios del sistema:', e);
+            }
+        }
+
+        async function gestionarParticipantes(projectId, projectName) {
+            idProyectoParticipantesActivo = projectId;
+            document.getElementById('participantesModalTitulo').textContent = `Participantes: ${projectName}`;
+            document.getElementById('modalParticipantes').classList.remove('hidden');
+            document.getElementById('modalParticipantes').classList.add('flex');
+            
+            document.getElementById('partUsuarioSelect').value = '';
+            document.getElementById('partRolSelect').value = '6'; 
+
+            cargarParticipantesProyecto(projectId);
+        }
+
+        function cerrarModalParticipantes() {
+            document.getElementById('modalParticipantes').classList.add('hidden');
+            document.getElementById('modalParticipantes').classList.remove('flex');
+            idProyectoParticipantesActivo = null;
+        }
+
+        async function cargarParticipantesProyecto(projectId) {
+            const tbody = document.getElementById('participantesTablaBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="p-4 text-center text-slate-400 text-sm">
+                        <span class="inline-block animate-spin mr-2">🔄</span> Cargando participantes...
+                    </td>
+                </tr>
+            `;
+
+            try {
+                const res = await fetch(`${API_URL}/participantes/${projectId}`, {
+                    headers: { "Authorization": "Bearer " + getToken() }
+                });
+                if (!res.ok) throw new Error("Error al obtener participantes");
+                const data = await res.json();
+
+                if (data.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="p-6 text-center text-slate-500 text-sm">
+                                No hay colaboradores asociados a este proyecto.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = data.map(p => {
+                    const userObj = usuariosSistema.find(u => u.uid === p.user_uid);
+                    const userName = userObj ? (userObj.nombre || userObj.email) : p.user_uid;
+                    const userEmail = userObj ? `(${userObj.email})` : '';
+                    const roleName = rolesMap[p.role_id] || `Rol ${p.role_id}`;
+
+                    return `
+                        <tr class="border-b border-white/5 hover:bg-white/5 text-sm text-slate-300">
+                            <td class="p-4">
+                                <div class="font-bold text-slate-200">${userName}</div>
+                                <div class="text-[10px] text-slate-500 font-mono mt-0.5">${userEmail}</div>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 bg-purple-500/10 text-purple-300 text-xs font-semibold rounded-full border border-purple-500/20">${roleName}</span>
+                            </td>
+                            <td class="p-4 text-right">
+                                <button onclick="eliminarColaboradorProyecto(${p.project_id}, '${p.user_uid}')" class="p-2 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-400 rounded-xl transition-all border border-rose-500/20" title="Eliminar del proyecto">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (e) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="p-4 text-center text-rose-400 text-sm">
+                            Error al cargar los participantes: ${e.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        async function agregarColaboradorProyecto() {
+            const userUid = document.getElementById('partUsuarioSelect').value;
+            const roleId = document.getElementById('partRolSelect').value;
+
+            if (!idProyectoParticipantesActivo) return;
+            if (!userUid) {
+                alert("Por favor, selecciona un colaborador de la lista.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/participantes/`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({
+                        project_id: parseInt(idProyectoParticipantesActivo),
+                        user_uid: userUid,
+                        role_id: parseInt(roleId)
+                    })
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Error al asociar participante");
+                }
+
+                showSuccessMessage("¡Colaborador asociado exitosamente!");
+                cargarParticipantesProyecto(idProyectoParticipantesActivo);
+                document.getElementById('partUsuarioSelect').value = '';
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        }
+
+        async function eliminarColaboradorProyecto(projectId, userUid) {
+            if (!confirm("¿Estás seguro de que deseas desvincular a este colaborador del proyecto?")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/participantes/${projectId}/${userUid}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + getToken() }
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Error al eliminar participante");
+                }
+
+                showSuccessMessage("¡Colaborador desvinculado con éxito!");
+                cargarParticipantesProyecto(projectId);
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        }
+
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(20);
+            doc.setTextColor(79, 70, 229);
+            doc.text("Reporte General de Proyectos - VirtualMind", 14, 20);
+            
+            const data = todosProyectos.map(p => [
+                p.id, p.name || 'N/A', clientesCache[p.client_id] || 'N/A', p.estado || 'N/A', p.start_date || '—'
+            ]);
+
+            doc.autoTable({
+                head: [['ID', 'Proyecto', 'Cliente', 'Estado', 'Fecha Inicio']],
+                body: data,
+                startY: 30,
+                theme: 'grid',
+                headStyles: { fillColor: [79, 70, 229] }
+            });
+            doc.save(`VirtualMind_Proyectos_${new Date().toISOString().slice(0,10)}.pdf`);
+        }
+
+        // Escuchadores de Filtros del Dashboard
+        document.getElementById('filtroEstado').addEventListener('change', renderProyectos);
+        document.getElementById('filtroCliente').addEventListener('input', renderProyectos);
+        document.getElementById('filtroNombre').addEventListener('input', renderProyectos);
+
+        // --- SISTEMAS DE IA (GEMINI) ---
+        async function generarNombreConIA() {
+            const tipoProyecto = document.getElementById('tipoProyecto').value;
+            const clienteSelect = document.getElementById('clienteSelect');
+            const clienteNombre = clienteSelect.options[clienteSelect.selectedIndex]?.text || '';
+            const descripcion = document.getElementById('description').value;
+
+            if (!tipoProyecto && !descripcion) {
+                alert('Por favor, selecciona un tipo de proyecto o escribe una descripción para que la IA genere un nombre.');
+                return;
+            }
+
+            const btn = document.getElementById('btnGenerarNombreIA');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            const prompt = `Eres un experto en naming de proyectos educativos. Genera un nombre creativo y profesional para un proyecto educativo.${tipoProyecto ? `Tipo de proyecto: ${tipoProyecto}` : ''}${clienteNombre ? `Cliente: ${clienteNombre}` : ''}${descripcion ? `Descripción: ${descripcion}` : ''}Genera SOLO el nombre del proyecto, sin explicaciones ni comillas. El nombre debe ser corto (máximo 6 palabras) y descriptivo.`;
+            try {
+                const response = await fetch(API_GEMINI, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (!response.ok) throw new Error('Error al contactar la IA');
+                const data = await response.json();
+                const nombre = (data.respuesta || '').trim().replace(/^["']|["']$/g, '');
+                if (nombre) document.getElementById('name').value = nombre;
+            } catch (error) {
+                alert('Error al generar nombre: ' + error.message);
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+
+        async function generarDescripcionConIA() {
+            const nombre = document.getElementById('name').value;
+            const tipoProyecto = document.getElementById('tipoProyecto').value;
+
+            if (!nombre && !tipoProyecto) {
+                alert('Por favor, escribe el nombre del proyecto o selecciona un tipo para generar la descripción.');
+                return;
+            }
+
+            const btn = document.getElementById('btnGenerarDescIA');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            const prompt = `Eres un experto en redacción de proyectos educativos. Genera una descripción profesional y concisa (máximo 200 palabras) para un proyecto.${nombre ? `Nombre del proyecto: ${nombre}` : ''}${tipoProyecto ? `Tipo: ${tipoProyecto}` : ''}La descripción debe ser clara, atractiva y profesional.`;
+            try {
+                const response = await fetch(API_GEMINI, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (!response.ok) throw new Error('Error al contactar la IA');
+                const data = await response.json();
+                const descripcion = (data.respuesta || '').trim();
+                if (descripcion) document.getElementById('description').value = descripcion;
+            } catch (error) {
+                alert('Error al generar descripción: ' + error.message);
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+
+        async function generarPublicoObjetivoConIA() {
+            const nombre = document.getElementById('name').value;
+            const descripcion = document.getElementById('description').value;
+            const tipoProyecto = document.getElementById('tipoProyecto').value;
+
+            if (!nombre && !descripcion && !tipoProyecto) {
+                alert('Por favor, completa al menos el nombre o descripción del proyecto.');
+                return;
+            }
+
+            const btn = document.getElementById('btnGenerarPublicoIA');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            const prompt = `Eres un experto en diseño instruccional. Basado en el siguiente proyecto educativo, indica qué público objetivo es el más apropiado. Selecciona de esta lista:- Primera infancia (0-5 años)- Niños 6 a 11 años- Adolescentes (12-17 años)- Jóvenes (18-25 años)- Adultos (26-59 años)- Mayores (60+)- Docentes / Educadores- Empresas / Equipos- Instituciones educativas- Público generalProyecto: ${nombre || 'Por definir'}Tipo: ${tipoProyecto || 'Por definir'}Descripción: ${descripcion || 'Por definir'}Responde SOLO con los nombres del público objetivo, uno por línea, sin números ni viñetas. Selecciona entre 1 y 3 opciones.`;
+            const opcionesValidas = [
+                'Primera infancia', 'Niños 6 a 11 años', 'Adolescentes', 'Jóvenes',
+                'Adultos', 'Mayores', 'Docentes', 'Empresas', 'Instituciones educativas', 'Público general'
+            ];
+            try {
+                const response = await fetch(API_GEMINI, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (!response.ok) throw new Error('Error al contactar la IA');
+                const data = await response.json();
+                const respuesta = (data.respuesta || '').trim();
+                const lineas = respuesta.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+                document.querySelectorAll('input[name="publico_objetivo"]').forEach(cb => { cb.checked = false; });
+                lineas.forEach(linea => {
+                    const limpio = linea.replace(/^[\d\.\)\-\*\•]+\s*/, '').trim();
+                    opcionesValidas.forEach(opcion => {
+                        if (limpio.toLowerCase().includes(opcion.toLowerCase()) || opcion.toLowerCase().includes(limpio.toLowerCase())) {
+                            const cb = document.querySelector(`input[name="publico_objetivo"][value="${opcion}"]`);
+                            if (cb) cb.checked = true;
+                        }
+                    });
+                });
+            } catch (error) {
+                alert('Error al generar público objetivo: ' + error.message);
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+
+        // --- TUTORIAL INTERACTIVO INTEGRADO (DRIVER.JS) ---
+        window.verTutorial = function(key) {
+            if (key !== 'crear_proyecto') return;
+
+            // Aseguramos que la vista activa sea el Formulario de Creación
+            switchView('creacion');
+
+            const driver = window.driver.js.driver;
+            const tour = driver({
+                showProgress: true,
+                animate: true,
+                nextBtnText: 'Siguiente &rarr;',
+                prevBtnText: '&larr; Anterior',
+                doneBtnText: '¡Entendido!',
+                progressText: 'Paso {{current}} de {{total}}',
+                popoverClass: 'driverjs-theme',
+                steps: [
+                    { 
+                        element: '#btnTabDashboard', 
+                        popover: { title: '📊 El Tablero', description: 'Aquí podrás ver el estado de todos tus proyectos, filtrar por cliente, actualizar datos y exportar reportes en PDF.', side: "bottom", align: 'center' } 
+                    },
+                    { 
+                        element: '#name', 
+                        popover: { title: 'Nombre del Proyecto', description: 'Ingresa un título claro. Recuerda que tienes botones al lado para <b>dictarlo con tu voz</b> (Whisper) o generarlo con <b>Inteligencia Artificial</b>.', side: "bottom", align: 'start' } 
+                    },
+                    { 
+                        element: '#clienteSelect', 
+                        popover: { title: 'Asignación de Cliente', description: 'Selecciona la empresa o usuario al que le pertenece este proyecto. Si vienes del módulo CRM, esto ya estará lleno.', side: "bottom", align: 'start' } 
+                    },
+                    { 
+                        element: '#start_date', 
+                        popover: { title: 'Cronograma', description: 'Fija al menos la fecha de inicio oficial. La fecha de finalización es opcional pero muy recomendada para las métricas.', side: "top", align: 'start' } 
+                    },
+                    { 
+                        element: '#tipoProyecto', 
+                        popover: { title: 'Tipo de Formación', description: '¿Es un curso virtual, un MOOC, un Podcast? Selecciona la categoría principal de desarrollo.', side: "bottom", align: 'start' } 
+                    },
+                    { 
+                        element: '#description', 
+                        popover: { title: 'Descripción', description: 'Escribe un resumen del alcance. ¡Nuestra IA puede redactarlo por ti automáticamente si se lo pides!', side: "top", align: 'start' } 
+                    },
+                    { 
+                        element: '#submitButton', 
+                        popover: { title: '¡Todo listo!', description: 'Haz clic aquí para crear y guardar. Una vez procesado, el sistema te redirigirá a armar el Plan de Estudios a detalle.', side: "top", align: 'center' } 
+                    }
+                ]
+            });                        
+            tour.drive();
+        };
+
+        // Lógica Mostrar/Ocultar "Otros" Inputs
+        function setupToggleOtro(selectId, inputId) {
+            const sel = document.getElementById(selectId);
+            const inp = document.getElementById(inputId);
+            if (!sel || !inp) return;
+            const apply = () => {
+                if (sel.value === 'Otro') {
+                    inp.classList.remove('hidden');
+                    inp.disabled = false;
+                    inp.required = true;
+                } else {
+                    inp.classList.add('hidden');
+                    inp.disabled = true;
+                    inp.required = false;
+                    inp.value = '';
+                }
+            };
+            sel.addEventListener('change', apply);
+            apply();
+        }
+
+        function setupLenguajeInclusivo() {
+            const incl1 = document.getElementById('incluyenteSi');
+            const incl0 = document.getElementById('incluyenteNo');
+            const tipoLenguaje = document.getElementById('tipoLenguajeSelect');
+            const otroLenguaje = document.getElementById('otroLenguajeInput');
+            const micOtro = document.getElementById('btn-mic-otroLenguajeInput');
+            if (!incl1 || !incl0 || !tipoLenguaje || !otroLenguaje) return;
+            incl1.addEventListener('change', () => { tipoLenguaje.disabled = false; });
+            incl0.addEventListener('change', () => { 
+                tipoLenguaje.disabled = true; 
+                tipoLenguaje.value = ''; 
+                otroLenguaje.disabled = true; 
+                otroLenguaje.value = ''; 
+                if (micOtro) {
+                    micOtro.disabled = true;
+                    micOtro.setAttribute('disabled', 'disabled');
+                }
+            });
+            tipoLenguaje.addEventListener('change', () => {
+                const acts = tipoLenguaje.value === 'Otro';
+                otroLenguaje.disabled = !acts;
+                if (micOtro) {
+                    if (!acts) {
+                        micOtro.setAttribute('disabled', 'disabled');
+                        micOtro.disabled = true;
+                    } else {
+                        micOtro.removeAttribute('disabled');
+                        micOtro.disabled = false;
+                    }
+                }
+                if (!acts) otroLenguaje.value = '';
+            });
+        }
+
+        function setupInclusionDigital() {
+            const inclSi = document.getElementById('inclusionSi');
+            const inclNo = document.getElementById('inclusionNo');
+            const checkboxes = document.querySelectorAll('input[name^="inclusion_digital_"]');
+            const otroInput = document.querySelector('input[name="inclusion_digital_otro"]');
+            const micOtro = document.getElementById('btn-mic-inclusion_digital_otro');
+            if (!inclSi || !inclNo) return;
+            function setEnabled(enabled) {
+                checkboxes.forEach(ch => { ch.disabled = !enabled; if (!enabled) ch.checked = false; });
+                if (otroInput) { 
+                    otroInput.disabled = !enabled; 
+                    if (!enabled) otroInput.value = ''; 
+                }
+                if (micOtro) {
+                    if (!enabled) {
+                        micOtro.setAttribute('disabled', 'disabled');
+                        micOtro.disabled = true;
+                    } else {
+                        micOtro.removeAttribute('disabled');
+                        micOtro.disabled = false;
+                    }
+                }
+            }
+            inclSi.addEventListener('change', () => setEnabled(true));
+            inclNo.addEventListener('change', () => setEnabled(false));
+            setEnabled(inclSi.checked);
+        }
+
+        // --- SUBMIT DE CREACIÓN AL SERVIDOR ---
+        document.getElementById('formProyecto').addEventListener('submit', async e => {
+            e.preventDefault();
+            const token = getToken();
+            if (!token) return;
+
+            const submitButton = document.getElementById('submitButton');
+            const mensajeDiv = document.getElementById('form-message');
+            submitButton.disabled = true;
+            document.getElementById('submitButtonText').textContent = "⏳ Creando Proyecto...";
+            mensajeDiv.innerHTML = "";
+
+            const f = e.target;
+            const lenguajeIncl = getRadioValue(f, 'lenguaje_incluyente') === 'true';
+            const inclusionDig = getRadioValue(f, 'inclusion_digital') === 'true';
+            const publico = Array.from(f.querySelectorAll('input[name="publico_objetivo"]:checked')).map(c => c.value);                  
+            const tipoLenguajeSelect = document.getElementById('tipoLenguajeSelect');
+            const otroLenguajeInput = document.getElementById('otroLenguajeInput');
+            const tipoLeng = lenguajeIncl ? (tipoLenguajeSelect?.value || null) : null;
+            const tipoLengOtro = lenguajeIncl && tipoLeng === 'Otro' ? (otroLenguajeInput?.value || null) : null;
+
+            function getSelectConOtro(selectId, inputId) {
+                const sel = document.getElementById(selectId);
+                const inp = document.getElementById(inputId);
+                if (!sel) return null;
+                if (sel.value === 'Otro') return inp?.value || null;
+                return sel.value || null;
+            }
+
+            const data = {
+                name: f.name.value,
+                client_id: document.getElementById('clientId').value,
+                codigo_referencia: document.getElementById('codigoReferencia').value,
+                start_date: f.start_date.value,
+                end_date: f.end_date.value || null,
+                tipo_proyecto: f.tipo_proyecto.value,
+                tipo_proyecto_personalizado: f.tipo_proyecto.value === 'Otro' ? (f.tipo_proyecto_personalizado.value || null) : null,
+                estado: f.estado.value,
+                description: f.description.value || null,
+                lenguaje_incluyente: lenguajeIncl,
+                lenguaje_inclusivo_tipo: tipoLeng,
+                lenguaje_inclusivo_otro: tipoLengOtro,
+                inclusion_digital: inclusionDig,
+                inclusion_digital_web: getCheckboxValue(f, 'inclusion_digital_web'),
+                inclusion_digital_asistiva: getCheckboxValue(f, 'inclusion_digital_asistiva'),
+                inclusion_digital_universal: getCheckboxValue(f, 'inclusion_digital_universal'),
+                inclusion_digital_educativa: getCheckboxValue(f, 'inclusion_digital_educativa'),
+                inclusion_digital_otro: f['inclusion_digital_otro']?.value || null,
+                idioma: getRadioValue(f, 'idioma'),
+                idioma_otro: f['idioma_otro']?.value || null,
+                tipografia_titulo_fuente: getSelectConOtro('tituloFuente', 'tituloFuenteOtro'),
+                tipografia_titulo_tamano: getSelectConOtro('tituloTamano', 'tituloTamanoOtro'),
+                tipografia_titulo_negrita: getCheckboxValue(f, 'tipografia_titulo_negrita'),
+                tipografia_titulo_cursiva: getCheckboxValue(f, 'tipografia_titulo_cursiva'),
+                tipografia_subtitulo_fuente: getSelectConOtro('subtituloFuente', 'subtituloFuenteOtro'),
+                tipografia_subtitulo_tamano: getSelectConOtro('subtituloTamano', 'subtituloTamanoOtro'),
+                tipografia_subtitulo_negrita: getCheckboxValue(f, 'tipografia_subtitulo_negrita'),
+                tipografia_subtitulo_cursiva: getCheckboxValue(f, 'tipografia_subtitulo_cursiva'),
+                tipografia_parrafo_fuente: getSelectConOtro('parrafoFuente', 'parrafoFuenteOtro'),
+                tipografia_parrafo_tamano: getSelectConOtro('parrafoTamano', 'parrafoTamanoOtro'),
+                tipografia_parrafo_negrita: getCheckboxValue(f, 'tipografia_parrafo_negrita'),
+                tipografia_parrafo_cursiva: getCheckboxValue(f, 'tipografia_parrafo_cursiva'),
+                horas_curso: f.horas_curso.value ? parseFloat(f.horas_curso.value) : null,
+                horas_aprendizaje_autonomo_virtual: f.horas_aprendizaje_autonomo_virtual.value ? parseFloat(f.horas_aprendizaje_autonomo_virtual.value) : null,
+                horas_actividades_aprendizaje: f.horas_actividades_aprendizaje.value ? parseFloat(f.horas_actividades_aprendizaje.value) : null,
+                cesion_derechos: getRadioValue(f, 'cesion_derechos') === 'true',
+                derechos_patrimoniales_autor: getRadioValue(f, 'derechos_patrimoniales_autor') === 'true',
+                acuerdo_confidencialidad: getRadioValue(f, 'acuerdo_confidencialidad') === 'true',
+                entrega_fuentes: getRadioValue(f, 'entrega_fuentes') === 'true',
+                entrega_escrito_autor: getRadioValue(f, 'entrega_escrito_autor') === 'true',
+                entrega_diseno_instruccional: getRadioValue(f, 'entrega_diseno_instruccional') === 'true',
+                publico_objetivo: publico,
+                publico_objetivo_otro: f['publico_objetivo_otro']?.value || null,
+                observaciones: f.observaciones?.value || null
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/projects/`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.detail || `Error ${res.status}`);
+                }
+
+                const proyecto = await res.json();
+                const project_id = proyecto.id;
+                const project_name = encodeURIComponent(data.name || '');
+                const project_desc = encodeURIComponent(data.description || '');
+                const project_horas = data.horas_curso || '';
+
+                mensajeDiv.innerHTML = `<p class="text-lg font-semibold text-emerald-400">✅ Proyecto creado con éxito (ID: ${project_id}). Redirigiendo a planificación...</p>`;
+                const urlHijo = "https://gestordecursos.pegui.edu.co/r/superadmin/studyplan/";
+                setTimeout(() => {
+                    window.location.href = `${urlHijo}?project_id=${project_id}&project_name=${project_name}&project_desc=${project_desc}&project_horas=${project_horas}`;
+                }, 2000);
+
+            } catch (err) {
+                console.error('Error al crear proyecto:', err);
+                mensajeDiv.innerHTML = `<p class="text-rose-500 font-semibold mb-2">❌ Error: ${err.message}</p>`;
+                submitButton.disabled = false;
+                document.getElementById('submitButtonText').textContent = '💾 Crear Proyecto';
+            }
+        });
+
+        // --- CONFIGURACIÓN DE LENGUAJE NOTIFICACIONES ---
+        function showNotification(type, message) {
+            const container = document.getElementById('customToastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `flex items-center p-3 rounded-xl shadow-xl border backdrop-blur-md transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+                type === 'success' 
+                    ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' 
+                    : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+            }`;
+            toast.innerHTML = `
+                <span class="mr-2 text-lg">${type === 'success' ? '✨' : '⚠️'}</span>
+                <div class="text-xs font-semibold tracking-wide">${message}</div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+        
+        window.alert = function(msg) {
+            const isSuccess = msg.includes('✅') || msg.toLowerCase().includes('éxito') || msg.toLowerCase().includes('copiado');
+            showNotification(isSuccess ? 'success' : 'error', msg.replace(/[✅❌]/g, '').trim());
+        };
+
+        function showSuccessMessage(message) {
+            showNotification('success', message);
+        }
+
+        // --- CARGAR CLIENTES DE LA API ---
+        async function loadClients() {
+            try {
+                const r = await fetch(`${API_URL}/users/`, { headers: { Authorization: 'Bearer ' + getToken() } });
+                if (!r.ok) return [];
+                const users = await r.json();
+                return users.filter(u => Array.isArray(u.roles) && u.roles.includes('cliente') && u.estado);
+            } catch (e) {
+                console.error('Error cargando clientes:', e);
+                return [];
+            }
+        }
+
+        function populateClientSelect(clientes) {
+            const sel = document.getElementById('clienteSelect');
+            if (!sel) return;
+            sel.innerHTML = '<option value="">Seleccione un cliente…</option>';
+            clientes.forEach(c => {
+                sel.innerHTML += `<option value="${c.uid}">${c.nombre || c.name} (${c.email})</option>`;
+            });
+            sel.addEventListener('change', e => {
+                document.getElementById('clientId').value = e.target.value;
+                document.getElementById('codigoReferencia').value = generarCodigoReferencia(12);
+            });
+        }
+
+        function generarCodigoReferencia(length = 12) {
+            const array = new Uint8Array(length / 2);
+            crypto.getRandomValues(array);
+            return Array.from(array, b => b.toString(16).padStart(2, "0")).join("");
+        }
+
+        // ==================== INICIALIZACIÓN PRINCIPAL ====================
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = getToken();
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+                        
+            // Iniciar V1 (Dashboard)
+            cargarProyectos();
+            
+            // Cargar lista general de usuarios para participantes
+            await cargarUsuariosSistema();
+
+            // Iniciar V2 (Formulario)
+            const clientes = await loadClients();
+            populateClientSelect(clientes);
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('start_date').min = today;
+            document.getElementById('start_date').value = today;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const clientIdFromUrl = urlParams.get('clientId');
+            const clientNameFromUrl = decodeURIComponent(urlParams.get('clientName') || '');
+
+            if (clientIdFromUrl) {
+                const clienteSelect = document.getElementById('clienteSelect');
+                const clientIdInput = document.getElementById('clientId');
+                if (clientNameFromUrl && !clienteSelect.querySelector(`option[value="${clientIdFromUrl}"]`)) {
+                    const newOption = new Option(`${clientNameFromUrl} (ID: ${clientIdFromUrl})`, clientIdFromUrl, true, true);
+                    clienteSelect.appendChild(newOption);
+                }
+                clienteSelect.value = clientIdFromUrl;
+                if (clientIdInput) clientIdInput.value = clientIdFromUrl;
+                document.getElementById('codigoReferencia').value = generarCodigoReferencia(12);
+                clienteSelect.disabled = true;
+                clienteSelect.classList.add("bg-slate-950/60", "text-slate-400", "cursor-not-allowed");
+                
+                // Si viene del CRM, saltar directo al formulario
+                switchView('creacion');
+            }
+
+            setupLenguajeInclusivo();
+            setupInclusionDigital();
+
+            const estadoSelect = document.getElementById('estado');
+            const estadoWarning = document.getElementById('estadoWarning');
+            if (estadoSelect && estadoWarning) {
+                estadoSelect.addEventListener('change', function() {
+                    const warns = ['En desarrollo', 'Aprobado', 'Finalizado'];
+                    estadoWarning.classList.toggle('hidden', !warns.includes(this.value));
+                });
+            }
+            setupToggleOtro('tipoProyecto', 'tipoProyectoPersonalizado');
+            setupToggleOtro('tituloFuente', 'tituloFuenteOtro');
+            setupToggleOtro('tituloTamano', 'tituloTamanoOtro');
+            setupToggleOtro('subtituloFuente', 'subtituloFuenteOtro');
+            setupToggleOtro('subtituloTamano', 'subtituloTamanoOtro');
+            setupToggleOtro('parrafoFuente', 'parrafoFuenteOtro');
+            setupToggleOtro('parrafoTamano', 'parrafoTamanoOtro');
+
+            resetearIconosMic();
+        });
+    </script>
+    <script src="/js/roles.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const permissions = payload.permissions || [];
+                const hasAnyPermission = (perms) => perms.some(p => permissions.includes(p));
+
+                const menuPermissions = {
+                    'menu-proyectos': ['proyectos_crear', 'proyectos_consultar'],
+                    'menu-crear-proyecto': ['proyectos_crear'],
+                    'menu-ia': ['ia_produccion_imagen', 'ia_linguistica_usar'],
+                    'menu-drive': ['archivos_drive_personal_ver', 'archivos_drive_global_ver'],
+                    'menu-entidades': ['autor_crear', 'diseno_instruccional_crear'],
+                    'menu-plan-estudio': ['proyectos_planes_formacion_listar', 'diseno_instruccional_ver'],
+                    'menu-evaluaciones': ['proyectos_evaluaciones_listar'],
+                };
+                                
+                Object.entries(menuPermissions).forEach(([id, required]) => {
+                    const el = document.getElementById(id);
+                    if (el && !hasAnyPermission(required)) el.style.display = 'none';
+                });
+            } catch(e) {
+                console.error("Error validando token/roles: ", e);
+            }
+        });
+    </script>
+
+    <!-- Tooltips Dinámicos Estables -->
+    <script>
+        (function(){
+            if(window.__ttLoaded) return;
+            window.__ttLoaded=true;
+            let el=null;
+            document.addEventListener('mouseover',function(e){
+                var t=e.target.closest('[data-tooltip]');
+                if(!t)return;
+                var txt=t.getAttribute('data-tooltip');
+                if(!txt)return;
+                if(el)el.remove();
+                el=document.createElement('div');
+                el.className='vm-tooltip';
+                el.textContent=txt;
+                document.body.appendChild(el);
+                var r=t.getBoundingClientRect(),pos=t.getAttribute('data-tooltip-position')||'top';
+                requestAnimationFrame(function(){
+                    if(!el)return;
+                    var tr=el.getBoundingClientRect(),top=0,left=0;
+                    if(pos==='top'){
+                        top=r.top+window.scrollY-tr.height-8;
+                        left=r.left+window.scrollX+(r.width/2)-(tr.width/2);
+                    }else if(pos==='bottom'){
+                        top=r.bottom+window.scrollY+8;
+                        left=r.left+window.scrollX+(r.width/2)-(tr.width/2);
+                    }else if(pos==='left'){
+                        top=r.top+window.scrollY+(r.height/2)-(tr.height/2);
+                        left=r.left+window.scrollX-tr.width-8;
+                    }else if(pos==='right'){
+                        top=r.top+window.scrollY+(r.height/2)-(r.height/2);
+                        left=r.right+window.scrollX+8;
+                    }
+                    if(left<5)left=5;
+                    if(left+tr.width>window.innerWidth-5)left=window.innerWidth-tr.width-5;
+                    el.style.top=top+'px';
+                    el.style.left=left+'px';
+                    el.classList.add('visible');
+                });
+            });
+            document.addEventListener('mouseout',function(e){
+                if(e.target.closest('[data-tooltip]')&&el){
+                    el.classList.remove('visible');
+                    setTimeout(function(){if(el){el.remove();el=null}},150);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

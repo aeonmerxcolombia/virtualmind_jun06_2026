@@ -120,11 +120,11 @@
   <div class="w-full max-w-5xl bg-white rounded-2xl shadow-lg p-8">
     <header class="flex justify-between items-center mb-6 border-b pb-4">
       <div class="flex items-center gap-4">
-        <h1 class="text-2xl font-bold text-slate-800">Registro de Cliente</h1>
+        <h1 class="text-2xl font-normal text-slate-800">Registro de Cliente</h1>
         <button id="resetFormBtn" type="button" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-300" title="Borra todos los datos guardados y empieza de nuevo">Empezar de Nuevo</button>
       </div>
       <div class="text-right">
-        <p id="progressText" class="text-sm text-slate-500 font-semibold">Paso 1 de 5</p>
+        <p id="progressText" class="text-sm text-slate-500 font-normal">Paso 1 de 5</p>
         <span id="saveIndicator" class="text-xs text-green-600 opacity-0 font-medium">✓ Progreso guardado</span>
       </div>
     </header>
@@ -137,7 +137,7 @@
     <form id="clientForm" class="space-y-10">
             
       <section class="step" data-step="1">
-        <h2 class="text-lg font-semibold text-slate-700 mb-4">🏢 Datos de la Empresa</h2>
+        <h2 class="text-lg font-normal text-slate-700 mb-4">🏢 Datos de la Empresa</h2>
         <div class="grid md:grid-cols-2 gap-6">
           <div>
             <label for="razon_social" class="block text-sm">Razón Social *</label>
@@ -212,12 +212,12 @@
         </div>
         <div class="flex justify-between mt-8 items-center">
           <div> <button type="button" data-action="clear" data-step="1" class="bg-slate-100 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-200 transition-colors">🧹 Limpiar Paso</button> </div>
-          <div class="flex gap-2"> <button type="button" data-action="save" class="bg-blue-100 text-blue-800 px-5 py-2 rounded-lg hover:bg-blue-200 transition-colors font-semibold">💾 Guardar Progreso</button> <button type="button" data-action="next" data-step="1" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button> </div>
+          <div class="flex gap-2"> <button type="button" data-action="save" class="bg-blue-100 text-blue-800 px-5 py-2 rounded-lg hover:bg-blue-200 transition-colors font-normal">💾 Guardar Progreso</button> <button type="button" data-action="next" data-step="1" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button> </div>
         </div>
       </section>
             
       <section class="step" data-step="2">
-        <h2 class="text-lg font-semibold text-slate-700 mb-4">👔 Representante Legal</h2>
+        <h2 class="text-lg font-normal text-slate-700 mb-4">👔 Representante Legal</h2>
         <div class="grid md:grid-cols-2 gap-6">
           <div> <label for="rep_legal_pnombre" class="block text-sm">Primer Nombre *</label> <input id="rep_legal_pnombre" name="rep_legal_pnombre" class="mt-1 w-full rounded-lg px-3 py-2" required spellcheck="true" title="Primer nombre del representante legal"> <p class="error-text">Este campo es obligatorio.</p> </div>
           <div> <label for="rep_legal_snombre" class="block text-sm">Segundo Nombre</label> <input id="rep_legal_snombre" name="rep_legal_snombre" class="mt-1 w-full rounded-lg px-3 py-2" spellcheck="true" title="Segundo nombre del representante legal"> </div>
@@ -232,12 +232,12 @@
         </div>
         <div class="flex justify-between mt-8 items-center">
           <div> <button type="button" data-action="back" data-step="2" class="bg-slate-200 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-300 transition-colors">⬅️ Anterior</button> <button type="button" data-action="clear" data-step="2" class="bg-slate-100 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-200 transition-colors ml-2">🧹 Limpiar Paso</button> </div>
-          <div class="flex gap-2"> <button type="button" data-action="save" class="bg-blue-100 text-blue-800 px-5 py-2 rounded-lg hover:bg-blue-200 transition-colors font-semibold">💾 Guardar Progreso</button> <button type="button" data-action="next" data-step="2" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button> </div>
+          <div class="flex gap-2"> <button type="button" data-action="save" class="bg-blue-100 text-blue-800 px-5 py-2 rounded-lg hover:bg-blue-200 transition-colors font-normal">💾 Guardar Progreso</button> <button type="button" data-action="next" data-step="2" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button> </div>
         </div>
       </section>
             
       <section class="step" data-step="3">
-         <h2 class="text-lg font-semibold text-slate-700 mb-4">👤 Contacto Principal / Usuario de la Plataforma</h2>
+         <h2 class="text-lg font-normal text-slate-700 mb-4">👤 Contacto Principal / Usuario de la Plataforma</h2>
         <div class="flex items-center mb-6 p-3 bg-slate-100 rounded-lg"> <input id="heredar_datos" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" title="Usar datos del representante legal"> <label for="heredar_datos" class="ml-2 block text-sm text-slate-800">Usar los mismos datos del representante legal</label> </div>
         <div class="grid md:grid-cols-2 gap-6">
           <div> <label for="pnombre" class="block text-sm">Primer Nombre *</label> <input id="pnombre" name="pnombre" class="mt-1 w-full rounded-lg px-3 py-2" required spellcheck="true" title="Primer nombre del contacto principal"> <p class="error-text">Este campo es obligatorio.</p> </div>
@@ -282,33 +282,33 @@
         </div>
         <div class="flex justify-between mt-8 items-center">
            <div> <button type="button" data-action="back" data-step="3" class="bg-slate-200 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-300 transition-colors">⬅️ Anterior</button> <button type="button" data-action="clear" data-step="3" class="bg-slate-100 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-200 transition-colors ml-2">🧹 Limpiar Paso</button> </div>
-          <div class="flex gap-2"> <button type="button" data-action="save" class="bg-blue-100 text-blue-800 px-5 py-2 rounded-lg hover:bg-blue-200 transition-colors font-semibold">💾 Guardar Progreso</button> <button type="button" data-action="next" data-step="3" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button> </div>
+          <div class="flex gap-2"> <button type="button" data-action="save" class="bg-blue-100 text-blue-800 px-5 py-2 rounded-lg hover:bg-blue-200 transition-colors font-normal">💾 Guardar Progreso</button> <button type="button" data-action="next" data-step="3" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button> </div>
         </div>
       </section>
       
       <section class="step" data-step="4">
-        <h2 class="text-lg font-semibold text-slate-700 mb-4">📄 Documentos Institucionales</h2>
+        <h2 class="text-lg font-normal text-slate-700 mb-4">📄 Documentos Institucionales</h2>
         <p class="text-sm text-slate-600 mb-6 p-3 bg-slate-100 rounded-lg"> Cargue los documentos que considere necesarios. Los archivos **no se guardan** en el progreso, deberá volver a subirlos si recarga la página. </p>
         
-        <h3 class="text-md font-semibold text-slate-600 mb-3">Documentos Institucionales (Opcional)</h3>
+        <h3 class="text-md font-normal text-slate-600 mb-3">Documentos Institucionales (Opcional)</h3>
         <div class="space-y-6"> 
           <div> 
             <label class="block text-sm mb-1">📘 Certificado de Existencia y Representación Legal</label> 
-            <input type="file" id="doc_existencia" name="doc_existencia" accept=".pdf,.jpg,.png" title="Certificado de existencia y representación legal" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500"> 
+            <input type="file" id="doc_existencia" name="doc_existencia" accept=".pdf,.jpg,.png" title="Certificado de existencia y representación legal" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-normal file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500"> 
           </div> 
           <div> 
             <label class="block text-sm mb-1">🧾 Registro Tributario (RUT o equivalente)</label> 
-            <input type="file" id="doc_rut" name="doc_rut" accept=".pdf,.jpg,.png" title="Registro tributario RUT del cliente" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500"> 
+            <input type="file" id="doc_rut" name="doc_rut" accept=".pdf,.jpg,.png" title="Registro tributario RUT del cliente" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-normal file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500"> 
           </div> 
           <div> 
             <label class="block text-sm mb-1">🪪 Documento del Representante Legal</label> 
-            <input type="file" id="doc_identificacion" name="doc_identificacion" accept=".pdf,.jpg,.png" title="Documento del representante legal" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500"> 
+            <input type="file" id="doc_identificacion" name="doc_identificacion" accept=".pdf,.jpg,.png" title="Documento del representante legal" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-normal file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500"> 
           </div> 
         </div>
         
         <hr class="my-8">
         
-        <h3 class="text-md font-semibold text-slate-600 mb-3">Documentos Adicionales (Opcional)</h3>
+        <h3 class="text-md font-normal text-slate-600 mb-3">Documentos Adicionales (Opcional)</h3>
         <div id="documentos_adicionales_container" class="space-y-4">
             </div>
         
@@ -318,12 +318,12 @@
 
         <div class="flex justify-between mt-8 items-center">
           <div> <button type="button" data-action="back" data-step="4" class="bg-slate-200 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-300 transition-colors">⬅️ Anterior</button> <button type="button" data-action="clear" data-step="4" class="bg-slate-100 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-200 transition-colors ml-2">🧹 Limpiar Paso</button> </div>
-          <div class="flex gap-2"> <button type="button" data-action="save" class="bg-blue-100 text-blue-800 px-5 py-2 rounded-lg hover:bg-blue-200 transition-colors font-semibold">💾 Guardar Progreso</button> <button type="button" data-action="next" data-step="4" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button> </div>
+          <div class="flex gap-2"> <button type="button" data-action="save" class="bg-blue-100 text-blue-800 px-5 py-2 rounded-lg hover:bg-blue-200 transition-colors font-normal">💾 Guardar Progreso</button> <button type="button" data-action="next" data-step="4" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">Siguiente ➜</button> </div>
         </div>
       </section>
 
       <section class="step" data-step="5">
-        <h2 class="text-lg font-semibold text-slate-700 mb-4">✅ Resumen y Confirmación</h2>
+        <h2 class="text-lg font-normal text-slate-700 mb-4">✅ Resumen y Confirmación</h2>
         <p class="text-sm text-slate-600 mb-6"> Por favor, revise que toda la información sea correcta antes de crear el cliente. </p>
         <div id="previewContainer" class="space-y-2 p-4 border border-slate-200 rounded-lg bg-slate-50"> </div>
         <div class="flex justify-between mt-8"> <button type="button" data-action="back" data-step="5" class="bg-slate-200 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-300 transition-colors">⬅️ Anterior</button> <button type="button" id="btnSubmit" class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors">💾 Crear Cliente</button> </div>
@@ -467,7 +467,7 @@
       }
       
       // (Función buildPreview sin cambios)
-      function buildPreview() { const container = document.getElementById("previewContainer"); container.innerHTML = ""; const getValue = (id) => document.getElementById(id)?.value || ""; const getRadio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || ""; const getPhone = (itiInstance) => { if (!itiInstance) return ''; if (itiInstance.isValidNumber()) return itiInstance.getNumber(); return itiInstance.getNumber() ? 'Inválido' : 'No ingresado'; }; const previewData = { "<h3>🏢 Datos de la Empresa</h3>": null, "Razón Social": getValue("razon_social"), "País": getValue("pais") === 'Otro' ? getValue("otro_pais") : getValue("pais"), "Ciudad": getValue("ciudad") === 'Otra' ? getValue("otra_ciudad") : getValue("ciudad"), [document.getElementById("nitLabel").textContent.replace(' *', '')]: getValue("nit"), "Dirección": getValue("direccion"), "Tipo Entidad": getValue("tipo_entidad") === 'Otra' ? getValue("tipo_entidad_otra") : getValue("tipo_entidad"), "Carácter Entidad": getRadio("caracter_entidad"), "<h3>👔 Representante Legal</h3>": null, "Nombre Completo": `${getValue("rep_legal_pnombre")} ${getValue("rep_legal_papellido")}`, "Email": getValue("rep_legal_email"), "Cargo": getValue("rep_legal_cargo"), "<h3>👤 Contacto Principal</h3>": null, "Nombre Completo ": `${getValue("pnombre")} ${getValue("papellido")}`, "Email ": getValue("email"), "Cargo ": getValue("cargo"), "Teléfono": getPhone(iti_telefono), "WhatsApp": getPhone(iti_whatsapp) }; for (const label in previewData) { const value = previewData[label]; if (value === null) { container.innerHTML += `<h3 class="font-semibold text-slate-800 pt-4 pb-2 border-b">${label.replace(/<[^>]+>/g, '')}</h3>`; } else { const row = document.createElement("div"); row.className = "flex justify-between py-1.5 text-sm"; row.innerHTML = `<span class='font-medium text-slate-600'>${label.trim()}:</span><span class='text-slate-900 text-right'>${value || 'N/A'}</span>`; container.appendChild(row); } } }
+      function buildPreview() { const container = document.getElementById("previewContainer"); container.innerHTML = ""; const getValue = (id) => document.getElementById(id)?.value || ""; const getRadio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || ""; const getPhone = (itiInstance) => { if (!itiInstance) return ''; if (itiInstance.isValidNumber()) return itiInstance.getNumber(); return itiInstance.getNumber() ? 'Inválido' : 'No ingresado'; }; const previewData = { "<h3>🏢 Datos de la Empresa</h3>": null, "Razón Social": getValue("razon_social"), "País": getValue("pais") === 'Otro' ? getValue("otro_pais") : getValue("pais"), "Ciudad": getValue("ciudad") === 'Otra' ? getValue("otra_ciudad") : getValue("ciudad"), [document.getElementById("nitLabel").textContent.replace(' *', '')]: getValue("nit"), "Dirección": getValue("direccion"), "Tipo Entidad": getValue("tipo_entidad") === 'Otra' ? getValue("tipo_entidad_otra") : getValue("tipo_entidad"), "Carácter Entidad": getRadio("caracter_entidad"), "<h3>👔 Representante Legal</h3>": null, "Nombre Completo": `${getValue("rep_legal_pnombre")} ${getValue("rep_legal_papellido")}`, "Email": getValue("rep_legal_email"), "Cargo": getValue("rep_legal_cargo"), "<h3>👤 Contacto Principal</h3>": null, "Nombre Completo ": `${getValue("pnombre")} ${getValue("papellido")}`, "Email ": getValue("email"), "Cargo ": getValue("cargo"), "Teléfono": getPhone(iti_telefono), "WhatsApp": getPhone(iti_whatsapp) }; for (const label in previewData) { const value = previewData[label]; if (value === null) { container.innerHTML += `<h3 class="font-normal text-slate-800 pt-4 pb-2 border-b">${label.replace(/<[^>]+>/g, '')}</h3>`; } else { const row = document.createElement("div"); row.className = "flex justify-between py-1.5 text-sm"; row.innerHTML = `<span class='font-medium text-slate-600'>${label.trim()}:</span><span class='text-slate-900 text-right'>${value || 'N/A'}</span>`; container.appendChild(row); } } }
 
       // !--- FUNCIÓN CREAR CLIENTE (CORREGIDA CON LOGS Y REDIRECCIÓN) ---!
       async function createClient() {
@@ -728,7 +728,7 @@
           
           const fileDiv = document.createElement('div');
           fileDiv.className = 'md:col-span-1';
-          fileDiv.innerHTML = '<input type="file" name="doc_adicional" accept=".pdf,.jpg,.png" title="Seleccione archivo del documento adicional" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500">';
+          fileDiv.innerHTML = '<input type="file" name="doc_adicional" accept=".pdf,.jpg,.png" title="Seleccione archivo del documento adicional" class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-normal file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 w-full text-slate-500">';
           
           const removeDiv = document.createElement('div');
           removeDiv.className = 'md:col-span-1';

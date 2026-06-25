@@ -17,21 +17,17 @@
   <style>
     body { 
       font-family: 'Inter', sans-serif; 
-      background-color: #090D16;
-      color: #cbd5e1;
+      background-color: #ffffff;
+      color: #000000;
       overflow-x: hidden;
     }
 
-    .gradient-bg { 
-      background: linear-gradient(135deg, #090d16 0%, #0f172a 100%); 
-    }
+    .gradient-bg { background: #ffffff; }
             
-    .card-glass {             
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    .card-glass {
+      background: #ffffff;
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
     .step { display: none; }
@@ -48,9 +44,9 @@
     #clientForm select,
     #clientForm textarea {
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      background: rgba(15, 23, 42, 0.6) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      color: #f8fafc !important;
+      background: #ffffff !important;
+      border: 2px solid #94a3b8 !important;
+      color: #000000 !important;
       border-radius: 0.75rem !important; 
       padding: 0.75rem 1rem !important;
       box-shadow: none !important;
@@ -58,9 +54,9 @@
     }
     #clientForm input[type="tel"] {
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      background: rgba(15, 23, 42, 0.6) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      color: #f8fafc !important;
+      background: #ffffff !important;
+      border: 2px solid #94a3b8 !important;
+      color: #000000 !important;
       border-radius: 0.75rem !important; 
       box-shadow: none !important;
       width: 100%;
@@ -70,18 +66,18 @@
     #clientForm input:focus,
     #clientForm select:focus,
     #clientForm textarea:focus {
-      border-color: #6366f1 !important; 
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.25) !important;
-      background: rgba(15, 23, 42, 0.95) !important;
+      border-color: #4f46e5 !important; 
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
+      background: #ffffff !important;
       outline: none !important;
     }
 
     #clientForm input:disabled,
     #clientForm select:disabled,
     #clientForm textarea:disabled {
-      background-color: rgba(15, 23, 42, 0.3) !important; 
-      color: #64748b !important; 
-      border-color: rgba(255, 255, 255, 0.02) !important; 
+      background-color: #f1f5f9 !important; 
+      color: #94a3b8 !important; 
+      border-color: #e2e8f0 !important; 
       cursor: not-allowed !important;
     }
 
@@ -98,44 +94,44 @@
       padding-left: 3rem !important;
     }
     .iti__flag-container {
-      border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-right: 2px solid #e2e8f0 !important;
       border-radius: 0.75rem 0 0 0.75rem !important;
       padding: 0 8px;
     }
     .iti__country-list { 
-      background-color: #0f172a !important; 
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      color: #f1f5f9 !important;
+      background-color: #ffffff !important; 
+      border: 2px solid #e2e8f0 !important;
+      color: #000000 !important;
       z-index: 100; 
       border-radius: 0.5rem;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
     .iti__country { padding: 10px !important; transition: background-color 0.2s; }
-    .iti__country:hover, .iti__country.iti__highlight { background-color: rgba(99, 102, 241, 0.2) !important; }
-    .iti--separate-dial-code .iti__selected-flag { background-color: transparent !important; color: #f8fafc !important; }
+    .iti__country:hover, .iti__country.iti__highlight { background-color: #eef2ff !important; }
+    .iti--separate-dial-code .iti__selected-flag { background-color: transparent !important; color: #000000 !important; }
 
     /* Custom Radio & Checkbox */
     .radio-custom { position: relative; cursor: pointer; display: inline-flex; align-items: center; }
     .radio-custom input[type=radio] { opacity: 0; position: absolute; }
     .radio-custom .radiomark { 
-      display: inline-block; width: 20px; height: 20px; background: rgba(15, 23, 42, 0.8); 
-      border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 50%; margin-right: 8px; transition: all 0.3s ease; 
+      display: inline-block; width: 20px; height: 20px; background: #ffffff; 
+      border: 2px solid #94a3b8; border-radius: 50%; margin-right: 8px; transition: all 0.3s ease; 
     }
-    .radio-custom input:checked + .radiomark { background: #4f46e5; border-color: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+    .radio-custom input:checked + .radiomark { background: #4f46e5; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
     .radio-custom input:checked + .radiomark:after { 
       content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; 
       position: absolute; left: 6px; top: 6px; 
     }
 
     #caracter_entidad_group { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem; }
-    #caracter_entidad_group label { display: inline-flex; items: center; min-width: 150px; font-weight: 500; color: #cbd5e1; cursor: pointer; transition: color 0.2s; }
-    #caracter_entidad_group label:hover { color: #fff; }
+    #caracter_entidad_group label { display: inline-flex; items: center; min-width: 150px; font-weight: 500; color: #475569; cursor: pointer; transition: color 0.2s; }
+    #caracter_entidad_group label:hover { color: #000000; }
 
     /* Botones y Controles */
     .remove-doc-btn {
-        background-color: rgba(244, 63, 94, 0.1);
-        color: #fda4af;
-        border: 1px solid rgba(244, 63, 94, 0.2);
+        background-color: #fff;
+        color: #e11d48;
+        border: 2px solid #fecaca;
         padding: 0.5rem 1rem;
         border-radius: 0.75rem;
         cursor: pointer;
@@ -143,69 +139,62 @@
         transition: all 0.3s;
         font-size: 0.8rem;
     }
-    .remove-doc-btn:hover { background-color: #e11d48; color: #ffffff; border-color: transparent; }
+    .remove-doc-btn:hover { background-color: #e11d48; color: #ffffff; border-color: #e11d48; }
 
     .help-icon { 
         display: inline-flex; align-items: center; justify-content: center; 
-        width: 18px; height: 18px; background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);
+        width: 18px; height: 18px; background: #4f46e5; color: #ffffff; border: 1px solid #4f46e5;
         border-radius: 50%; font-size: 11px; font-weight: bold; cursor: help; transition: all 0.2s;
     }
-    .help-icon:hover { background: #6366f1; color: #fff; box-shadow: 0 0 8px rgba(99, 102, 241, 0.5); }
+    .help-icon:hover { background: #4338ca; color: #ffffff; box-shadow: 0 0 8px rgba(79, 70, 229, 0.5); }
 
     /* Ambient glowing background blobs */
-    .glow-blob {
-        position: fixed; width: 600px; height: 600px;
-        background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0) 70%);
-        border-radius: 50%; pointer-events: none; z-index: 0;
-    }
+    /* .glow-blob removed */
 
     /* Tooltip System CSS */
-    .vm-tooltip { position:absolute; background:#0f172a; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.45); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; white-space:nowrap; border: 1px solid rgba(255, 255, 255, 0.08); font-weight: 500; }
+    .vm-tooltip { position:absolute; background:#1e293b; color:#fff; font-size:12px; padding:6px 12px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.45); pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity 0.15s ease-out, transform 0.15s ease-out; z-index:10000; max-width:250px; text-align:center; white-space:nowrap; border: 1px solid #334155; font-weight: 500; }
     .vm-tooltip.visible { opacity:1; transform:translateY(0); }
 
     /* Custom File Input Styling */
     input[type=file]::file-selector-button {
-      border: 0; background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2);
+      border: 2px solid #c7d2fe; background: #eef2ff; color: #4f46e5;
       padding: 0.5rem 1rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-right: 1rem;
     }
-    input[type=file]::file-selector-button:hover { background: rgba(99, 102, 241, 0.25); color: #fff; }
+    input[type=file]::file-selector-button:hover { background: #4f46e5; color: #fff; }
   </style>
 </head>
-<body class="gradient-bg min-h-screen py-10 flex justify-center items-start relative">
-
-  <div class="glow-blob top-0 left-0"></div>
-  <div class="glow-blob bottom-0 right-0"></div>
+<body class="bg-white min-h-screen py-10 flex justify-center items-start relative">
 
   <!-- Custom Notification Container (Toasts) -->
   <div id="customToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;" class="flex flex-col gap-3 pointer-events-none"></div>
 
   <!-- Contenedor Principal -->
-  <div class="w-full max-w-5xl card-glass rounded-3xl p-8 z-10 relative">
+  <div class="w-full max-w-5xl card-glass rounded-3xl p-8 z-10 relative bg-white border-2 border-slate-200">
     
-    <header class="flex flex-col sm:flex-row justify-between items-center mb-8 border-b border-white/5 pb-6 gap-4">
+    <header class="flex flex-col sm:flex-row justify-between items-center mb-8 border-b border-slate-200 pb-6 gap-4">
       <div class="flex items-center gap-4">
-        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <div class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
             <i class="fas fa-building text-white text-xl"></i>
         </div>
         <div>
-            <h1 class="text-2xl font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">Registro de Cliente</h1>
-            <p class="text-xs text-indigo-400 font-semibold mt-1">Creación de perfiles corporativos</p>
+            <h1 class="text-2xl font-normal text-slate-900">Registro de Cliente</h1>
+            <p class="text-xs text-indigo-600 font-normal mt-1">Creación de perfiles corporativos</p>
         </div>
       </div>
       <div class="flex items-center gap-4">
         <div class="text-right hidden sm:block">
-            <p id="progressText" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Paso 1 de 5</p>
-            <span id="saveIndicator" class="text-[10px] text-emerald-400 opacity-0 font-medium">✓ Progreso guardado</span>
+            <p id="progressText" class="text-xs font-normal text-slate-500 uppercase tracking-wider">Paso 1 de 5</p>
+            <span id="saveIndicator" class="text-[10px] text-emerald-600 opacity-0 font-medium">✓ Progreso guardado</span>
         </div>
-        <button id="resetFormBtn" type="button" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl border border-white/5 transition-all font-semibold shadow-md flex items-center gap-2" data-tooltip="Borra todos los datos guardados y empieza de nuevo" data-tooltip-position="bottom">
+        <button id="resetFormBtn" type="button" class="text-xs bg-white hover:bg-slate-100 text-slate-600 px-4 py-2.5 rounded-xl border-2 border-slate-300 transition-all font-normal shadow-sm flex items-center gap-2" data-tooltip="Borra todos los datos guardados y empieza de nuevo" data-tooltip-position="bottom">
             <i class="fas fa-redo-alt"></i> <span>Reiniciar</span>
         </button>
       </div>
     </header>
     
     <div class="mb-10">
-      <div class="w-full bg-slate-900/50 rounded-full h-2 border border-white/5 overflow-hidden">
-        <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500 ease-out" style="width: 20%"></div>
+      <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+        <div id="progressBar" class="bg-indigo-600 h-full rounded-full transition-all duration-500 ease-out" style="width: 20%"></div>
       </div>
     </div>
         
@@ -213,19 +202,19 @@
                   
       <!-- ================= PASO 1 ================= -->
       <section class="step" data-step="1">
-        <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
-            <h2 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
-                <i class="fas fa-city text-indigo-400"></i> Datos de la Empresa
+        <div class="bg-white rounded-2xl p-6 border-2 border-slate-200">
+            <h2 class="text-lg font-normal text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-3">
+                <i class="fas fa-city text-indigo-600"></i> Datos de la Empresa
             </h2>
             
             <div class="grid md:grid-cols-2 gap-6">
             <div>
-                <label for="razon_social" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5 flex items-center gap-1">Razón Social <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Razón social registrada de la empresa" data-tooltip-position="top">?</span></label>
+                <label for="razon_social" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5 flex items-center gap-1">Razón Social <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Razón social registrada de la empresa" data-tooltip-position="top">?</span></label>
                 <input type="text" id="razon_social" name="razon_social" required spellcheck="true" placeholder="Ej: TechCorp SAS" data-tooltip="Nombre legal registrado de la empresa ante la cámara de comercio" data-tooltip-position="top">
                 <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p>
             </div>
             <div>
-                <label for="pais" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">País <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Selecciona el país donde está registrada la empresa" data-tooltip-position="top">?</span></label>
+                <label for="pais" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">País <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Selecciona el país donde está registrada la empresa" data-tooltip-position="top">?</span></label>
                 <select id="pais" name="pais" required data-tooltip="Selecciona el país donde está registrada la empresa" data-tooltip-position="top">
                 <option value="">Seleccione...</option>
                 </select>
@@ -236,7 +225,7 @@
             
             <div class="grid md:grid-cols-2 gap-6 mt-6">
             <div>
-                <label for="ciudad" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Ciudad / Estado <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Ciudad o estado donde tiene su sede la empresa" data-tooltip-position="top">?</span></label>
+                <label for="ciudad" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Ciudad / Estado <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Ciudad o estado donde tiene su sede la empresa" data-tooltip-position="top">?</span></label>
                 <select id="ciudad" name="ciudad" disabled required data-tooltip="Ciudad o estado donde tiene su sede la empresa" data-tooltip-position="top">
                 <option value="">Seleccione un país primero...</option>
                 </select>
@@ -244,7 +233,7 @@
                 <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Debe seleccionar una ciudad.</p>
             </div>
             <div>
-                <label id="nitLabel" for="nit" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">NIT / ID Tributario <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Número de identificación tributaria del país seleccionado" data-tooltip-position="top">?</span></label>
+                <label id="nitLabel" for="nit" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">NIT / ID Tributario <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Número de identificación tributaria del país seleccionado" data-tooltip-position="top">?</span></label>
                 <input type="text" id="nit" name="nit" disabled required placeholder="Seleccione un país primero" spellcheck="false" data-tooltip="Número de identificación tributaria del país seleccionado" data-tooltip-position="top">
                 <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p>
             </div>
@@ -252,12 +241,12 @@
             
             <div class="grid md:grid-cols-2 gap-6 mt-6">
             <div>
-                <label for="direccion" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Dirección Oficial <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Dirección física de la sede principal de la empresa" data-tooltip-position="top">?</span></label>
+                <label for="direccion" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Dirección Oficial <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Dirección física de la sede principal de la empresa" data-tooltip-position="top">?</span></label>
                 <input type="text" id="direccion" name="direccion" required spellcheck="true" placeholder="Sede principal" data-tooltip="Dirección física de la sede principal de la empresa" data-tooltip-position="top">
                 <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p>
             </div> 
             <div>
-                <label for="tipo_entidad" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Tipo de Entidad <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Clasificación legal de la empresa según su constitución" data-tooltip-position="top">?</span></label>
+                <label for="tipo_entidad" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Tipo de Entidad <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Clasificación legal de la empresa según su constitución" data-tooltip-position="top">?</span></label>
                 <select id="tipo_entidad" name="tipo_entidad" required data-tooltip="Clasificación legal de la empresa según su constitución" data-tooltip-position="top">
                 <option value="">Seleccionar...</option>
                 <option value="Persona Natural / Independiente">Persona Natural / Independiente</option>
@@ -278,8 +267,8 @@
             </div>
             </div>
             
-            <div class="mt-8 bg-slate-900/50 p-5 rounded-xl border border-white/5">
-            <label class="block text-xs font-bold uppercase tracking-wide text-slate-300 mb-3">Carácter de la Entidad <span class="text-rose-500">*</span></label>
+            <div class="mt-8 bg-slate-50 p-5 rounded-xl border-2 border-slate-200">
+            <label class="block text-xs font-normal uppercase tracking-wide text-slate-300 mb-3">Carácter de la Entidad <span class="text-rose-500">*</span></label>
             <div id="caracter_entidad_group">
                 <label class="radio-custom"><input type="radio" name="caracter_entidad" value="Privada" required><span class="radiomark"></span> Privada</label>
                 <label class="radio-custom"><input type="radio" name="caracter_entidad" value="Pública"><span class="radiomark"></span> Pública</label>
@@ -296,50 +285,50 @@
         </div>
 
         <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4">
-          <button type="button" data-action="clear" data-step="1" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl transition-all font-semibold text-sm border border-white/5"><i class="fas fa-eraser mr-2"></i>Limpiar Paso</button>
+          <button type="button" data-action="clear" data-step="1" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl transition-all font-normal text-sm border border-white/5"><i class="fas fa-eraser mr-2"></i>Limpiar Paso</button>
           <div class="flex w-full sm:w-auto gap-3"> 
-            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-bold text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
-            <button type="button" data-action="next" data-step="1" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all font-bold text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
+            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-normal text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
+            <button type="button" data-action="next" data-step="1" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-sm transition-all font-normal text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
           </div>
         </div>
       </section>
                   
       <!-- ================= PASO 2 ================= -->
       <section class="step" data-step="2">
-        <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
-            <h2 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
-                <i class="fas fa-user-tie text-emerald-400"></i> Representante Legal
+        <div class="bg-white rounded-2xl p-6 border-2 border-slate-200">
+            <h2 class="text-lg font-normal text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-3">
+                <i class="fas fa-user-tie text-emerald-600"></i> Representante Legal
             </h2>
             <div class="grid md:grid-cols-2 gap-6">
                 <div> 
-                    <label for="rep_legal_pnombre" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Primer Nombre <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer nombre del representante legal de la empresa" data-tooltip-position="top">?</span></label> 
+                    <label for="rep_legal_pnombre" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Primer Nombre <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer nombre del representante legal de la empresa" data-tooltip-position="top">?</span></label> 
                     <input type="text" id="rep_legal_pnombre" name="rep_legal_pnombre" required spellcheck="true" placeholder="Ej: Carlos" data-tooltip="Primer nombre del representante legal de la empresa" data-tooltip-position="top"> 
                     <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p> 
                 </div>
                 <div> 
-                    <label for="rep_legal_snombre" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Segundo Nombre <span class="help-icon" data-tooltip="Segundo nombre del representante legal (si aplica)" data-tooltip-position="top">?</span></label> 
+                    <label for="rep_legal_snombre" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Segundo Nombre <span class="help-icon" data-tooltip="Segundo nombre del representante legal (si aplica)" data-tooltip-position="top">?</span></label> 
                     <input type="text" id="rep_legal_snombre" name="rep_legal_snombre" spellcheck="true" placeholder="Opcional" data-tooltip="Segundo nombre del representante legal (si aplica)" data-tooltip-position="top"> 
                 </div>
             </div>
             <div class="grid md:grid-cols-2 gap-6 mt-6">
                 <div> 
-                    <label for="rep_legal_papellido" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Primer Apellido <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer apellido del representante legal" data-tooltip-position="top">?</span></label> 
+                    <label for="rep_legal_papellido" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Primer Apellido <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer apellido del representante legal" data-tooltip-position="top">?</span></label> 
                     <input type="text" id="rep_legal_papellido" name="rep_legal_papellido" required spellcheck="true" placeholder="Ej: Gómez" data-tooltip="Primer apellido del representante legal" data-tooltip-position="top"> 
                     <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p> 
                 </div>
                 <div> 
-                    <label for="rep_legal_sapellido" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Segundo Apellido <span class="help-icon" data-tooltip="Segundo apellido del representante legal (si aplica)" data-tooltip-position="top">?</span></label> 
+                    <label for="rep_legal_sapellido" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Segundo Apellido <span class="help-icon" data-tooltip="Segundo apellido del representante legal (si aplica)" data-tooltip-position="top">?</span></label> 
                     <input type="text" id="rep_legal_sapellido" name="rep_legal_sapellido" spellcheck="true" placeholder="Opcional" data-tooltip="Segundo apellido del representante legal (si aplica)" data-tooltip-position="top"> 
                 </div>
             </div>
             <div class="grid md:grid-cols-2 gap-6 mt-6">
                 <div> 
-                    <label for="rep_legal_email" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Correo Electrónico <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Correo electrónico corporativo del representante legal" data-tooltip-position="top">?</span></label> 
+                    <label for="rep_legal_email" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Correo Electrónico <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Correo electrónico corporativo del representante legal" data-tooltip-position="top">?</span></label> 
                     <input type="email" id="rep_legal_email" name="rep_legal_email" required spellcheck="false" placeholder="representante@empresa.com" data-tooltip="Correo electrónico corporativo del representante legal" data-tooltip-position="top"> 
                     <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Debe ingresar un correo válido.</p> 
                 </div>
                 <div> 
-                    <label for="rep_legal_cargo" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Cargo Oficial <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Cargo oficial que ocupa en la empresa" data-tooltip-position="top">?</span></label> 
+                    <label for="rep_legal_cargo" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Cargo Oficial <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Cargo oficial que ocupa en la empresa" data-tooltip-position="top">?</span></label> 
                     <input type="text" id="rep_legal_cargo" name="rep_legal_cargo" required spellcheck="true" placeholder="Ej: Gerente General" data-tooltip="Cargo oficial que ocupa en la empresa (ej: Gerente General)" data-tooltip-position="top"> 
                     <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Este campo es obligatorio.</p> 
                 </div>
@@ -348,141 +337,141 @@
         
         <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4">
           <div class="flex w-full sm:w-auto gap-3"> 
-            <button type="button" data-action="back" data-step="2" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm"><i class="fas fa-arrow-left mr-1.5"></i>Atrás</button> 
-            <button type="button" data-action="clear" data-step="2" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm" data-tooltip="Limpiar Paso" data-tooltip-position="top"><i class="fas fa-eraser"></i></button> 
+            <button type="button" data-action="back" data-step="2" class="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-slate-600 px-5 py-3 rounded-xl border-2 border-slate-300 transition-all font-normal text-sm"><i class="fas fa-arrow-left mr-1.5"></i>Atrás</button> 
+            <button type="button" data-action="clear" data-step="2" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl border border-white/5 transition-all font-normal text-sm" data-tooltip="Limpiar Paso" data-tooltip-position="top"><i class="fas fa-eraser"></i></button> 
           </div>
           <div class="flex w-full sm:w-auto gap-3"> 
-            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-bold text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
-            <button type="button" data-action="next" data-step="2" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all font-bold text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
+            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-normal text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
+            <button type="button" data-action="next" data-step="2" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-sm transition-all font-normal text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
           </div>
         </div>
       </section>
 
       <!-- ================= PASO 3 ================= -->
       <section class="step" data-step="3">
-        <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
-            <h2 class="text-lg font-bold text-slate-200 mb-6 flex items-center gap-2 border-b border-white/5 pb-3">
-                <i class="fas fa-user-circle text-amber-400"></i> Contacto Principal & Accesos
+        <div class="bg-white rounded-2xl p-6 border-2 border-slate-200">
+            <h2 class="text-lg font-normal text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-3">
+                <i class="fas fa-user-circle text-amber-600"></i> Contacto Principal & Accesos
             </h2>
             
-            <div class="flex items-center mb-6 p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl"> 
+            <div class="flex items-center mb-6 p-4 bg-indigo-50 border-2 border-indigo-200 rounded-xl"> 
                 <label class="checkbox-custom mb-0">
                     <input type="checkbox" id="heredar_datos" data-tooltip="Marca esta opción si el contacto principal es la misma persona que el representante legal" data-tooltip-position="top">
                     <span class="checkmark"></span>
                 </label>
-                <label for="heredar_datos" class="ml-1 text-sm text-indigo-300 font-semibold cursor-pointer select-none">Heredar datos del Representante Legal</label> 
+                <label for="heredar_datos" class="ml-1 text-sm text-indigo-600 font-normal cursor-pointer select-none">Heredar datos del Representante Legal</label> 
             </div>
             
             <div class="grid md:grid-cols-2 gap-6">
-                <div> <label for="pnombre" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Primer Nombre <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer nombre de la persona de contacto para la plataforma" data-tooltip-position="top">?</span></label> <input type="text" id="pnombre" name="pnombre" required spellcheck="true" data-tooltip="Primer nombre de la persona de contacto para la plataforma" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Obligatorio.</p> </div>
-                <div> <label for="snombre" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Segundo Nombre <span class="help-icon" data-tooltip="Segundo nombre del contacto (opcional)" data-tooltip-position="top">?</span></label> <input type="text" id="snombre" name="snombre" spellcheck="true" data-tooltip="Segundo nombre del contacto (opcional)" data-tooltip-position="top"> </div>
+                <div> <label for="pnombre" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Primer Nombre <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer nombre de la persona de contacto para la plataforma" data-tooltip-position="top">?</span></label> <input type="text" id="pnombre" name="pnombre" required spellcheck="true" data-tooltip="Primer nombre de la persona de contacto para la plataforma" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Obligatorio.</p> </div>
+                <div> <label for="snombre" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Segundo Nombre <span class="help-icon" data-tooltip="Segundo nombre del contacto (opcional)" data-tooltip-position="top">?</span></label> <input type="text" id="snombre" name="snombre" spellcheck="true" data-tooltip="Segundo nombre del contacto (opcional)" data-tooltip-position="top"> </div>
             </div>
             <div class="grid md:grid-cols-2 gap-6 mt-6">
-                <div> <label for="papellido" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Primer Apellido <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer apellido del contacto principal" data-tooltip-position="top">?</span></label> <input type="text" id="papellido" name="papellido" required spellcheck="true" data-tooltip="Primer apellido del contacto principal" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Obligatorio.</p> </div>
-                <div> <label for="sapellido" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Segundo Apellido <span class="help-icon" data-tooltip="Segundo apellido del contacto (opcional)" data-tooltip-position="top">?</span></label> <input type="text" id="sapellido" name="sapellido" spellcheck="true" data-tooltip="Segundo apellido del contacto (opcional)" data-tooltip-position="top"> </div>
+                <div> <label for="papellido" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Primer Apellido <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Primer apellido del contacto principal" data-tooltip-position="top">?</span></label> <input type="text" id="papellido" name="papellido" required spellcheck="true" data-tooltip="Primer apellido del contacto principal" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Obligatorio.</p> </div>
+                <div> <label for="sapellido" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Segundo Apellido <span class="help-icon" data-tooltip="Segundo apellido del contacto (opcional)" data-tooltip-position="top">?</span></label> <input type="text" id="sapellido" name="sapellido" spellcheck="true" data-tooltip="Segundo apellido del contacto (opcional)" data-tooltip-position="top"> </div>
             </div>
             <div class="grid md:grid-cols-2 gap-6 mt-6">
-                <div> <label for="cargo" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Cargo <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Cargo del contacto principal dentro de la empresa" data-tooltip-position="top">?</span></label> <input type="text" id="cargo" name="cargo" required spellcheck="true" placeholder="Ej: Director de Proyectos" data-tooltip="Cargo del contacto principal dentro de la empresa" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Obligatorio.</p> </div>
-                <div> <label for="email" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Correo para Accesos <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Correo electrónico que usará el contacto para acceder a VirtualMind" data-tooltip-position="top">?</span></label> <input type="email" id="email" name="email" required spellcheck="false" placeholder="contacto@empresa.com" data-tooltip="Correo electrónico que usará el contacto para acceder a VirtualMind" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Ingrese correo válido.</p> </div>
+                <div> <label for="cargo" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Cargo <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Cargo del contacto principal dentro de la empresa" data-tooltip-position="top">?</span></label> <input type="text" id="cargo" name="cargo" required spellcheck="true" placeholder="Ej: Director de Proyectos" data-tooltip="Cargo del contacto principal dentro de la empresa" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Obligatorio.</p> </div>
+                <div> <label for="email" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Correo para Accesos <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Correo electrónico que usará el contacto para acceder a VirtualMind" data-tooltip-position="top">?</span></label> <input type="email" id="email" name="email" required spellcheck="false" placeholder="contacto@empresa.com" data-tooltip="Correo electrónico que usará el contacto para acceder a VirtualMind" data-tooltip-position="top"> <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Ingrese correo válido.</p> </div>
             </div>
                     
-            <div class="mt-8 bg-indigo-500/5 border border-indigo-500/10 rounded-xl p-5">
+            <div class="mt-8 bg-indigo-50 border-2 border-indigo-200 rounded-xl p-5">
                 <div class="flex items-start gap-3">
-                    <i class="fas fa-envelope text-indigo-400 text-lg mt-0.5"></i>
+                    <i class="fas fa-envelope text-indigo-600 text-lg mt-0.5"></i>
                     <div>
-                        <p class="text-sm font-semibold text-indigo-300">Activación por correo electrónico</p>
-                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">El cliente recibirá un enlace de activación en su correo <strong id="activationEmailDisplay">electrónico</strong> para crear su contraseña y acceder a la plataforma.</p>
+                        <p class="text-sm font-normal text-indigo-600">Activación por correo electrónico</p>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">El cliente recibirá un enlace de activación en su correo <strong id="activationEmailDisplay">electrónico</strong> para crear su contraseña y acceder a la plataforma.</p>
                     </div>
                 </div>
             </div>
                     
             <div class="grid md:grid-cols-2 gap-6 mt-6">
                 <div> 
-                    <label for="telefono" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">Teléfono Fijo <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Número de teléfono fijo de la empresa con código de país" data-tooltip-position="top">?</span></label> 
+                    <label for="telefono" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">Teléfono Fijo <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Número de teléfono fijo de la empresa con código de país" data-tooltip-position="top">?</span></label> 
                     <input type="tel" id="telefono" name="telefono" required data-tooltip="Número de teléfono fijo de la empresa con código de país" data-tooltip-position="top"> 
                     <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Número inválido.</p>
                 </div>
                 <div> 
-                    <label for="whatsapp" class="block text-xs font-bold uppercase tracking-wide text-slate-400 mb-1.5">WhatsApp Móvil <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Número de WhatsApp del contacto con código de país" data-tooltip-position="top">?</span></label> 
+                    <label for="whatsapp" class="block text-xs font-normal uppercase tracking-wide text-slate-500 mb-1.5">WhatsApp Móvil <span class="text-rose-500">*</span> <span class="help-icon" data-tooltip="Número de WhatsApp del contacto con código de país" data-tooltip-position="top">?</span></label> 
                     <input type="tel" id="whatsapp" name="whatsapp" required data-tooltip="Número de WhatsApp del contacto con código de país" data-tooltip-position="top"> 
                     <p class="error-text"><i class="fas fa-exclamation-circle mr-1"></i> Número inválido.</p>
                 </div>
             </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4 border-t border-white/5 pt-6">
+        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4 border-t border-slate-200 pt-6">
            <div class="flex w-full sm:w-auto gap-3"> 
-             <button type="button" data-action="back" data-step="3" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm"><i class="fas fa-arrow-left mr-1.5"></i>Atrás</button> 
-             <button type="button" data-action="clear" data-step="3" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm" data-tooltip="Limpiar Paso" data-tooltip-position="top"><i class="fas fa-eraser"></i></button> 
+             <button type="button" data-action="back" data-step="3" class="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-slate-600 px-5 py-3 rounded-xl border-2 border-slate-300 transition-all font-normal text-sm"><i class="fas fa-arrow-left mr-1.5"></i>Atrás</button> 
+             <button type="button" data-action="clear" data-step="3" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl border border-white/5 transition-all font-normal text-sm" data-tooltip="Limpiar Paso" data-tooltip-position="top"><i class="fas fa-eraser"></i></button> 
            </div>
           <div class="flex w-full sm:w-auto gap-3"> 
-            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-bold text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
-            <button type="button" data-action="next" data-step="3" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all font-bold text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
+            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-normal text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
+            <button type="button" data-action="next" data-step="3" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-sm transition-all font-normal text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
           </div>
         </div>
       </section>
             
       <!-- ================= PASO 4 ================= -->
       <section class="step" data-step="4">
-        <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
-            <h2 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2 border-b border-white/5 pb-3">
-                <i class="fas fa-file-invoice text-rose-400"></i> Documentos Institucionales
+        <div class="bg-white rounded-2xl p-6 border-2 border-slate-200">
+            <h2 class="text-lg font-normal text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-200 pb-3">
+                <i class="fas fa-file-invoice text-rose-600"></i> Documentos Institucionales
             </h2>
-            <p class="text-xs text-slate-400 mb-6 bg-slate-900/80 p-4 rounded-xl border border-white/5 leading-relaxed">
-                <i class="fas fa-shield-alt text-indigo-400 mr-1.5"></i> <b>Nota de Seguridad:</b> Cargue los documentos PDF/JPG requeridos. Los archivos en caché local no se persisten; si recarga la página, deberá seleccionarlos nuevamente.
+            <p class="text-xs text-slate-500 mb-6 bg-slate-900/80 p-4 rounded-xl border border-white/5 leading-relaxed">
+                <i class="fas fa-shield-alt text-indigo-600 mr-1.5"></i> <b>Nota de Seguridad:</b> Cargue los documentos PDF/JPG requeridos. Los archivos en caché local no se persisten; si recarga la página, deberá seleccionarlos nuevamente.
             </p>
                     
-            <h3 class="text-sm font-bold text-slate-300 mb-4 border-l-2 border-indigo-500 pl-2">Archivos Principales</h3>
-            <div class="space-y-4 bg-slate-900/50 p-5 rounded-xl border border-white/5">
+            <h3 class="text-sm font-normal text-slate-700 mb-4 border-l-2 border-indigo-600 pl-2">Archivos Principales</h3>
+            <div class="space-y-4 bg-slate-50 p-5 rounded-xl border-2 border-slate-200">
                <div>
-                  <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">📘 Existencia y Representación Legal <span class="help-icon" data-tooltip="Certificado de existencia y representación legal (PDF/JPG)" data-tooltip-position="top">?</span></label>
-                 <input type="file" id="doc_existencia" name="doc_existencia" accept=".pdf,.jpg,.png" class="w-full text-slate-400 text-xs" data-tooltip="Certificado de existencia y representación legal (PDF/JPG)" data-tooltip-position="top">
+                  <label class="block text-xs font-normal text-slate-500 mb-2 uppercase tracking-wide">📘 Existencia y Representación Legal <span class="help-icon" data-tooltip="Certificado de existencia y representación legal (PDF/JPG)" data-tooltip-position="top">?</span></label>
+                 <input type="file" id="doc_existencia" name="doc_existencia" accept=".pdf,.jpg,.png" class="w-full text-slate-500 text-xs" data-tooltip="Certificado de existencia y representación legal (PDF/JPG)" data-tooltip-position="top">
                </div>
                <div class="pt-2 border-t border-white/5">
-                  <label class="block text-xs font-bold text-slate-400 mb-2 mt-2 uppercase tracking-wide">🧾 Registro Tributario (RUT) <span class="help-icon" data-tooltip="Registro Único Tributario o equivalente (PDF/JPG)" data-tooltip-position="top">?</span></label>
-                 <input type="file" id="doc_rut" name="doc_rut" accept=".pdf,.jpg,.png" class="w-full text-slate-400 text-xs" data-tooltip="Registro Único Tributario o equivalente (PDF/JPG)" data-tooltip-position="top">
+                  <label class="block text-xs font-normal text-slate-500 mb-2 mt-2 uppercase tracking-wide">🧾 Registro Tributario (RUT) <span class="help-icon" data-tooltip="Registro Único Tributario o equivalente (PDF/JPG)" data-tooltip-position="top">?</span></label>
+                 <input type="file" id="doc_rut" name="doc_rut" accept=".pdf,.jpg,.png" class="w-full text-slate-500 text-xs" data-tooltip="Registro Único Tributario o equivalente (PDF/JPG)" data-tooltip-position="top">
                </div>
                <div class="pt-2 border-t border-white/5">
-                  <label class="block text-xs font-bold text-slate-400 mb-2 mt-2 uppercase tracking-wide">🪪 Documento del Representante <span class="help-icon" data-tooltip="Documento de identidad del representante legal (PDF/JPG)" data-tooltip-position="top">?</span></label>
-                 <input type="file" id="doc_identificacion" name="doc_identificacion" accept=".pdf,.jpg,.png" class="w-full text-slate-400 text-xs" data-tooltip="Documento de identidad del representante legal (PDF/JPG)" data-tooltip-position="top">
+                  <label class="block text-xs font-normal text-slate-500 mb-2 mt-2 uppercase tracking-wide">🪪 Documento del Representante <span class="help-icon" data-tooltip="Documento de identidad del representante legal (PDF/JPG)" data-tooltip-position="top">?</span></label>
+                 <input type="file" id="doc_identificacion" name="doc_identificacion" accept=".pdf,.jpg,.png" class="w-full text-slate-500 text-xs" data-tooltip="Documento de identidad del representante legal (PDF/JPG)" data-tooltip-position="top">
                </div>
              </div>
                     
-            <h3 class="text-sm font-bold text-slate-300 mb-4 mt-8 border-l-2 border-emerald-500 pl-2">Anexos Adicionales</h3>
+            <h3 class="text-sm font-normal text-slate-700 mb-4 mt-8 border-l-2 border-emerald-600 pl-2">Anexos Adicionales</h3>
             <div id="documentos_adicionales_container" class="space-y-4"></div>
                     
-            <button type="button" id="add_doc_btn" class="mt-4 bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-2.5 rounded-xl transition-all border border-white/5 text-xs font-bold shadow-md flex items-center gap-2" data-tooltip="Agrega un anexo adicional personalizado" data-tooltip-position="top">
-              <i class="fas fa-plus-circle text-emerald-400"></i> Añadir Anexo Extra
+            <button type="button" id="add_doc_btn" class="mt-4 bg-white hover:bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl transition-all border-2 border-slate-300 text-xs font-normal shadow-sm flex items-center gap-2" data-tooltip="Agrega un anexo adicional personalizado" data-tooltip-position="top">
+              <i class="fas fa-plus-circle text-emerald-600"></i> Añadir Anexo Extra
             </button>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4 border-t border-white/5 pt-6">
+        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4 border-t border-slate-200 pt-6">
           <div class="flex w-full sm:w-auto gap-3"> 
-            <button type="button" data-action="back" data-step="4" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm"><i class="fas fa-arrow-left mr-1.5"></i>Atrás</button> 
-            <button type="button" data-action="clear" data-step="4" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm" data-tooltip="Limpiar Paso" data-tooltip-position="top"><i class="fas fa-eraser"></i></button> 
+            <button type="button" data-action="back" data-step="4" class="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-slate-600 px-5 py-3 rounded-xl border-2 border-slate-300 transition-all font-normal text-sm"><i class="fas fa-arrow-left mr-1.5"></i>Atrás</button> 
+            <button type="button" data-action="clear" data-step="4" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl border border-white/5 transition-all font-normal text-sm" data-tooltip="Limpiar Paso" data-tooltip-position="top"><i class="fas fa-eraser"></i></button> 
           </div>
           <div class="flex w-full sm:w-auto gap-3"> 
-            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-bold text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
-            <button type="button" data-action="next" data-step="4" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all font-bold text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
+            <button type="button" data-action="save" class="flex-1 sm:flex-none bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 border border-indigo-500/20 px-5 py-3 rounded-xl transition-all font-normal text-sm"><i class="fas fa-save mr-1.5"></i>Guardar</button> 
+            <button type="button" data-action="next" data-step="4" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-sm transition-all font-normal text-sm">Siguiente <i class="fas fa-arrow-right ml-1.5"></i></button> 
           </div>
         </div>
       </section>
 
       <!-- ================= PASO 5 ================= -->
       <section class="step" data-step="5">
-        <div class="bg-slate-950/40 rounded-2xl p-6 border border-white/5 shadow-inner">
-            <h2 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2 border-b border-white/5 pb-3">
-                <i class="fas fa-check-double text-emerald-400"></i> Resumen y Confirmación Final
+        <div class="bg-white rounded-2xl p-6 border-2 border-slate-200">
+            <h2 class="text-lg font-normal text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-200 pb-3">
+                <i class="fas fa-check-double text-emerald-600"></i> Resumen y Confirmación Final
             </h2>
-            <p class="text-xs text-slate-400 mb-6 leading-relaxed">
+            <p class="text-xs text-slate-500 mb-6 leading-relaxed">
                 Por favor, revise detalladamente que toda la información consignada sea correcta antes de firmar y autorizar la inserción del cliente en las bases de datos cifradas de VirtualMind.
             </p>
-            <div id="previewContainer" class="space-y-1 p-5 border border-white/5 rounded-2xl bg-slate-900/60 shadow-inner"></div>
+            <div id="previewContainer" class="space-y-1 p-5 border-2 border-slate-200 rounded-2xl bg-slate-50"></div>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4 border-t border-white/5 pt-6"> 
-          <button type="button" data-action="back" data-step="5" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-300 px-6 py-3 rounded-xl border border-white/5 transition-all font-semibold text-sm"><i class="fas fa-arrow-left mr-2"></i>Regresar a editar</button> 
-          <button type="button" id="btnSubmit" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all transform hover:-translate-y-0.5"><i class="fas fa-cloud-upload-alt mr-2"></i> Crear y Guardar Cliente</button> 
+        <div class="flex flex-col sm:flex-row justify-between mt-8 items-center gap-4 border-t border-slate-200 pt-6"> 
+          <button type="button" data-action="back" data-step="5" class="w-full sm:w-auto bg-white hover:bg-slate-100 text-slate-600 px-6 py-3 rounded-xl border-2 border-slate-300 transition-all font-normal text-sm"><i class="fas fa-arrow-left mr-2"></i>Regresar a editar</button> 
+          <button type="button" id="btnSubmit" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl font-normal text-sm shadow-sm transition-all transform hover:-translate-y-0.5"><i class="fas fa-cloud-upload-alt mr-2"></i> Crear y Guardar Cliente</button> 
         </div>
       </section>
     </form>
@@ -490,15 +479,15 @@
 
   <!-- MODAL DE CONFIRMACIÓN CUSTOM -->
   <div id="confirmModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-[150] hidden items-center justify-center p-4 animate-fade-in">
-    <div class="card-glass rounded-2xl max-w-md w-full p-6 text-center border border-white/10 shadow-2xl">
-      <div class="w-16 h-16 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto mb-5 border border-rose-500/20 shadow-inner">
+    <div class="card-glass rounded-2xl max-w-md w-full p-6 text-center border-2 border-slate-200 shadow-2xl bg-white">
+      <div class="w-16 h-16 rounded-full bg-rose-500/10 text-rose-600 flex items-center justify-center mx-auto mb-5 border border-rose-500/20 shadow-inner">
         <i class="fas fa-exclamation-triangle text-2xl animate-pulse"></i>
       </div>
-      <h3 class="text-lg font-bold text-slate-100 mb-2" id="confirmTitle">Confirmar Acción</h3>
-      <p class="text-sm text-slate-400 mb-8 leading-relaxed" id="confirmText">¿Estás seguro de realizar esta acción?</p>
+      <h3 class="text-lg font-normal text-slate-800 mb-2" id="confirmTitle">Confirmar Acción</h3>
+      <p class="text-sm text-slate-500 mb-8 leading-relaxed" id="confirmText">¿Estás seguro de realizar esta acción?</p>
       <div class="flex gap-3 justify-center">
-        <button id="btnConfirmCancel" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-semibold border border-white/5 transition-all">Cancelar</button>
-        <button id="btnConfirmAccept" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-rose-600/20">Sí, proceder</button>
+        <button id="btnConfirmCancel" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-normal border border-white/5 transition-all">Cancelar</button>
+        <button id="btnConfirmAccept" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-normal transition-all shadow-lg shadow-rose-600/20">Sí, proceder</button>
       </div>
     </div>
   </div>
@@ -535,7 +524,7 @@
           }`;
           toast.innerHTML = `
               <span class="mr-3 text-xl">${type === 'success' ? '✨' : '⚠️'}</span>
-              <div class="text-xs font-semibold tracking-wide">${message}</div>
+              <div class="text-xs font-normal tracking-wide">${message}</div>
           `;
           container.appendChild(toast);
           setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 50);
@@ -754,11 +743,11 @@
           for (const label in previewData) { 
               const value = previewData[label]; 
               if (value === null) { 
-                  container.innerHTML += `<h3 class="font-bold text-xs uppercase tracking-wider text-indigo-400 pt-5 pb-2 border-b border-white/5 mt-2">${label.replace(/<[^>]+>/g, '')}</h3>`; 
+                  container.innerHTML += `<h3 class="font-normal text-xs uppercase tracking-wider text-indigo-600 pt-5 pb-2 border-b border-white/5 mt-2">${label.replace(/<[^>]+>/g, '')}</h3>`; 
               } else { 
                   const row = document.createElement("div"); 
                   row.className = "flex justify-between py-2 text-xs border-b border-white/5 last:border-0"; 
-                  row.innerHTML = `<span class='font-bold text-slate-400'>${label.trim()}:</span><span class='text-slate-200 text-right font-medium'>${value || 'N/A'}</span>`; 
+                  row.innerHTML = `<span class='font-normal text-slate-500'>${label.trim()}:</span><span class='text-slate-200 text-right font-medium'>${value || 'N/A'}</span>`; 
                   container.appendChild(row); 
               } 
           } 
@@ -1001,7 +990,7 @@
           
           const fileDiv = document.createElement('div'); 
           fileDiv.className = 'md:col-span-1'; 
-          fileDiv.innerHTML = '<input type="file" name="doc_adicional" accept=".pdf,.jpg,.png" title="Seleccione archivo del documento adicional" class="w-full text-xs text-slate-400 file:bg-indigo-500/10 file:text-indigo-400 file:border-0 file:rounded-xl file:px-4 file:py-2.5 hover:file:bg-indigo-500/20 cursor-pointer">'; 
+          fileDiv.innerHTML = '<input type="file" name="doc_adicional" accept=".pdf,.jpg,.png" title="Seleccione archivo del documento adicional" class="w-full text-xs text-slate-500 file:bg-indigo-500/10 file:text-indigo-600 file:border-0 file:rounded-xl file:px-4 file:py-2.5 hover:file:bg-indigo-500/20 cursor-pointer">'; 
           
           const removeDiv = document.createElement('div'); 
           removeDiv.className = 'md:col-span-1 text-right'; 
