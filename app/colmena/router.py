@@ -6,8 +6,14 @@ from pydantic import BaseModel
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Depends
 from app.colmena.config import settings
 from app.colmena.security import (
-    ShadowGuardrail, CryptoAdnGuard, WebSocketSymmetricRotator,
-    LymphocyteBehavioralMonitor, AgentContext, get_ws_agent_context, check_ws_permission, get_token_from_header
+    ShadowGuardrail,
+    CryptoAdnGuard,
+    WebSocketSymmetricRotator,
+    LymphocyteBehavioralMonitor,
+    AgentContext,
+    get_ws_agent_context,
+    check_ws_permission,
+    get_token_from_header,
 )
 from app.colmena.orchestrator import event_bus, InsectoPlanificador, HibernadorSinaptico
 from app.colmena.dispatcher import dispatcher, connection_manager
@@ -24,16 +30,20 @@ rotator = WebSocketSymmetricRotator(settings.CODE_SIGN_KEY)
 
 active_ram_contexts: Dict[str, Any] = {}
 
+
 async def audit_honeypot_triggered(client_ip: str):
     try:
         async with AsyncSessionLocal() as session:
-            result = await session.execute(text("SELECT triggered_at FROM sys_security_honeypot WHERE id = 1;"))
+            result = await session.execute(
+                text("SELECT triggered_at FROM sys_security_honeypot WHERE id = 1;")
+            )
             row = result.fetchone()
             if row and row[0] is not None:
                 print(f"[AUDITORÍA] HONEYPOT DETONADO! Baneo IP: {client_ip}")
                 lymphocyte.banned_ips.add(client_ip)
     except Exception:
         pass
+
 
 @router.websocket("/ws/agent/{role}")
 async def websocket_agent_endpoint(websocket: WebSocket, role: str):
@@ -55,13 +65,19 @@ async def websocket_agent_endpoint(websocket: WebSocket, role: str):
 
     if role in settings.ROLES_INTERFAZ and role not in agent_ctx.roles:
         is_superadmin = "superadmin" in agent_ctx.roles
-        print(f"[DEBUG] User {agent_ctx.email} roles: {agent_ctx.roles} | Requested role: {role} | Superadmin: {is_superadmin}")
+        print(
+            f"[DEBUG] User {agent_ctx.email} roles: {agent_ctx.roles} | Requested role: {role} | Superadmin: {is_superadmin}"
+        )
         if not is_superadmin:
-            await websocket.close(code=4003, reason="Rol no autorizado para este usuario")
+            await websocket.close(
+                code=4003, reason="Rol no autorizado para este usuario"
+            )
             return
 
     await websocket.accept()
-    print(f"[COLMENA] Canal seguro establecido para Rol: {role} Usuario: {agent_ctx.email} IP: {client_ip}")
+    print(
+        f"[COLMENA] Canal seguro establecido para Rol: {role} Usuario: {agent_ctx.email} IP: {client_ip}"
+    )
 
     connection_manager.add(role, websocket)
 
@@ -74,7 +90,13 @@ async def websocket_agent_endpoint(websocket: WebSocket, role: str):
                 decrypted_data = rotator.decrypt(raw_data)
                 message_packet = json.loads(decrypted_data)
             except Exception:
-                await websocket.send_text(rotator.encrypt(json.dumps({"type": "error", "message": "Formato de mensaje inválido"})))
+                await websocket.send_text(
+                    rotator.encrypt(
+                        json.dumps(
+                            {"type": "error", "message": "Formato de mensaje inválido"}
+                        )
+                    )
+                )
                 continue
 
             action = message_packet.get("action")
@@ -99,31 +121,60 @@ async def websocket_agent_endpoint(websocket: WebSocket, role: str):
 
             elif action == "get_hardware_telemetry":
                 if not check_ws_permission(agent_ctx, "colmena:view_telemetry"):
-                    response = {"type": "error", "message": "Permiso 'colmena:view_telemetry' requerido"}
+                    response = {
+                        "type": "error",
+                        "message": "Permiso 'colmena:view_telemetry' requerido",
+                    }
                     await websocket.send_text(rotator.encrypt(json.dumps(response)))
                     continue
                 telemetry = await scheduler.get_hardware_telemetry()
-                await websocket.send_text(rotator.encrypt(json.dumps({"type": "telemetry", "data": telemetry})))
+                await websocket.send_text(
+                    rotator.encrypt(
+                        json.dumps({"type": "telemetry", "data": telemetry})
+                    )
+                )
                 continue
 
             input_text = command or text_input
             if not input_text:
-                await websocket.send_text(rotator.encrypt(json.dumps({"type": "error", "message": "Envia un comando o texto"})))
+                await websocket.send_text(
+                    rotator.encrypt(
+                        json.dumps(
+                            {"type": "error", "message": "Envia un comando o texto"}
+                        )
+                    )
+                )
                 continue
 
             if len(input_text) > 4096:
-                await websocket.send_text(rotator.encrypt(json.dumps({"type": "error", "message": "Texto demasiado largo (máx 4096 caracteres)"})))
+                await websocket.send_text(
+                    rotator.encrypt(
+                        json.dumps(
+                            {
+                                "type": "error",
+                                "message": "Texto demasiado largo (máx 4096 caracteres)",
+                            }
+                        )
+                    )
+                )
                 continue
 
             is_safe = await ShadowGuardrail.validate_semantic_safety(input_text, role)
             if not is_safe:
-                response = {"type": "security_alert", "message": "Invasión Semántica Interceptada"}
+                response = {
+                    "type": "security_alert",
+                    "message": "Invasión Semántica Interceptada",
+                }
                 await websocket.send_text(rotator.encrypt(json.dumps(response)))
                 continue
 
             telemetry = await scheduler.get_hardware_telemetry()
             if telemetry["system_stress_critical"]:
-                response = {"type": "system_action", "action": "degrade_ui", "reason": "RAM/CPU en niveles límite"}
+                response = {
+                    "type": "system_action",
+                    "action": "degrade_ui",
+                    "reason": "RAM/CPU en niveles límite",
+                }
                 await websocket.send_text(rotator.encrypt(json.dumps(response)))
                 continue
 
@@ -140,6 +191,7 @@ class NLURequest(BaseModel):
     role: str
     context_id: Optional[str] = None
 
+
 class NLUResponse(BaseModel):
     corrected_text: str
     intent: str
@@ -150,11 +202,14 @@ class NLUResponse(BaseModel):
     response: str = ""
     role: str = ""
 
+
 _nlu_contexts: Dict[str, list] = {}
+
 
 async def _get_tools_for_role(role: str, token: str) -> list:
     registry = create_colmena_tools(token=token)
     return registry.list_tools(role=role)
+
 
 @router.post("/colmena/nlu", response_model=NLUResponse)
 async def colmena_nlu(req: NLURequest, token: str = Depends(get_token_from_header)):
@@ -168,12 +223,19 @@ async def colmena_nlu(req: NLURequest, token: str = Depends(get_token_from_heade
         _nlu_contexts[ctx_id] = []
 
     tools_list = await _get_tools_for_role(role, token)
-    tools_json = json.dumps([{
-        "name": t["name"],
-        "description": t["description"],
-        "parameters": t.get("parameters", {}),
-        "category": t.get("category", "general")
-    } for t in tools_list], indent=2, ensure_ascii=False)
+    tools_json = json.dumps(
+        [
+            {
+                "name": t["name"],
+                "description": t["description"],
+                "parameters": t.get("parameters", {}),
+                "category": t.get("category", "general"),
+            }
+            for t in tools_list
+        ],
+        indent=2,
+        ensure_ascii=False,
+    )
 
     context_history = _nlu_contexts[ctx_id][-5:]
     history_str = "\n".join(context_history) if context_history else "Sin historial."
@@ -188,7 +250,7 @@ async def colmena_nlu(req: NLURequest, token: str = Depends(get_token_from_heade
         f"4. EXTRAER los parámetros de la herramienta\n\n"
         f"HISTORIAL DE LA CONVERSACIÓN:\n{history_str}\n\n"
         f"HERRAMIENTAS DISPONIBLES PARA ROL '{role}':\n{tools_json}\n\n"
-        f"COMANDO DEL USUARIO: \"{text}\"\n\n"
+        f'COMANDO DEL USUARIO: "{text}"\n\n'
         f"Responde EXACTAMENTE con este JSON (sin markdown):\n"
         f"{{\n"
         f'  "corrected_text": "comando corregido con ortografía correcta",\n'
@@ -227,7 +289,9 @@ async def colmena_nlu(req: NLURequest, token: str = Depends(get_token_from_heade
     explanation = result.get("explanation", "")
     response_text = result.get("response", "")
 
-    _nlu_contexts[ctx_id].append(f"User: {text} -> NLU: {corrected} (tool: {tool_name}, intent: {intent})")
+    _nlu_contexts[ctx_id].append(
+        f"User: {text} -> NLU: {corrected} (tool: {tool_name}, intent: {intent})"
+    )
 
     return NLUResponse(
         corrected_text=corrected,
@@ -246,8 +310,9 @@ async def get_required_permissions():
     return {
         "colmena:view_telemetry": "Ver telemetría del hardware",
         "colmena:background_task": "Ejecutar tareas pesadas en segundo plano",
-        "colmena:admin": "Operaciones de administración de la colmena"
+        "colmena:admin": "Operaciones de administración de la colmena",
     }
+
 
 @router.get("/colmena/health")
 async def colmena_health():
@@ -258,5 +323,37 @@ async def colmena_health():
         "hibernated_agents": hibernator.db_path,
         "banned_ips": list(lymphocyte.banned_ips),
         "active_ram_contexts": list(active_ram_contexts.keys()),
-        "telemetry": telemetry
+        "telemetry": telemetry,
     }
+
+
+class ExecuteRequest(BaseModel):
+    tool_name: str
+    parameters: Dict[str, Any] = {}
+    role: str
+
+
+@router.post("/colmena/execute")
+async def colmena_execute(
+    req: ExecuteRequest, token: str = Depends(get_token_from_header)
+):
+    from app.colmena.orchestrator import AgentBrain
+
+    brain = AgentBrain(token=token)
+    tool = brain.tools.get_tool(req.tool_name)
+
+    if not tool:
+        raise HTTPException(
+            status_code=404, detail=f"Herramienta '{req.tool_name}' no encontrada"
+        )
+
+    if not brain.tools.bridge:
+        raise HTTPException(status_code=401, detail="Token JWT inválido o expirado")
+
+    try:
+        result = await tool.execute(brain.tools.bridge, **req.parameters)
+        return {"status": "success", "tool": req.tool_name, "result": result}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error ejecutando herramienta: {str(e)}"
+        )
