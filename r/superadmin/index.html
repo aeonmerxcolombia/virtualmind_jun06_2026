@@ -943,8 +943,28 @@
               <span class="mr-3 text-xl">${section.icon}</span>              
               <span class="text-sm font-medium">${section.label}</span>            
             </a>`;        
-        }
-        }
+        } else if (section.items) {          
+          const visibleItems = section.items.filter(item => permissionsToRender.has(item.permission));          
+          if (visibleItems.length > 0) {            
+            let sectionItemsHTML = visibleItems.map(item => `              
+              <a href="#" onclick="selectMenu(this); cargarVista('${item.url}')"                  
+                   class="submenu-item">
+                <span class="submenu-label">${item.label}</span>              
+              </a>`).join('');                        
+            sidebarMenu.innerHTML += `              
+              <div class="menu-section">                
+                <button onclick="toggleMenu('${sectionId}')" class="menu-header-btn">                  
+                  <span class="mr-2 text-lg">${section.icon}</span>                  
+                  <span class="flex-1 text-left text-sm font-medium">${section.label}</span>                  
+                  <svg id="icon-${sectionId}" class="menu-chevron w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>                
+                </button>                
+                <div id="${sectionId}" class="submenu-container hidden">                  
+                  ${sectionItemsHTML}                
+                </div>              
+              </div>            
+            `;          
+          }        
+        }      
       }    
     }    
     
